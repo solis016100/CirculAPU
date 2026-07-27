@@ -1,0 +1,713 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Jul 27, 2026 at 09:57 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `circulapu_db`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `achievementbadges`
+--
+
+CREATE TABLE `achievementbadges` (
+  `achieveBadgeID` varchar(10) NOT NULL,
+  `achieveBadgeName` varchar(50) NOT NULL,
+  `achieveBadgeDescription` varchar(255) NOT NULL,
+  `achieveBadgeRequirement` varchar(255) NOT NULL,
+  `achieveBadgeIcon` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `achievementbadges`
+--
+
+INSERT INTO `achievementbadges` (`achieveBadgeID`, `achieveBadgeName`, `achieveBadgeDescription`, `achieveBadgeRequirement`, `achieveBadgeIcon`) VALUES
+('BADGE01', 'First Recycling Mission', 'Awarded for completing your first green campus mission', 'Complete 1 mission', 'badge_first_mission.png'),
+('BADGE02', 'Master Trader', 'Awarded for successfully exchanging 5 items', 'Complete 5 exchanges', 'badge_master_trader.png'),
+('BADGE03', 'Eco Pioneer', 'Earned 500 total EcoPoints', 'Reach 500 EcoPoints', 'badge_pioneer.png');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assets`
+--
+
+CREATE TABLE `assets` (
+  `assetID` varchar(10) NOT NULL,
+  `ownerID` varchar(10) NOT NULL,
+  `categoryID` varchar(10) NOT NULL,
+  `assetName` varchar(100) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `assetCondition` varchar(100) NOT NULL,
+  `imageURL` varchar(255) DEFAULT NULL,
+  `availabilityStatus` varchar(50) NOT NULL,
+  `listingStatus` varchar(50) NOT NULL,
+  `createdDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updatedDate` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `verificationStatus` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `assets`
+--
+
+INSERT INTO `assets` (`assetID`, `ownerID`, `categoryID`, `assetName`, `description`, `assetCondition`, `imageURL`, `availabilityStatus`, `listingStatus`, `createdDate`, `updatedDate`, `verificationStatus`) VALUES
+('AST001', 'U004', 'CAT001', 'Dell Wireless Mouse', 'Lightly used wireless mouse with USB dongle', 'Good', 'uploads/assets/mouse.jpg', 'Available', 'Active', '2026-07-27 07:01:16', NULL, 'Approved'),
+('AST002', 'U005', 'CAT002', 'Java Programming Textbook', '8th Edition Java reference guide in good condition', 'Like New', 'uploads/assets/book.jpg', 'Borrowed', 'Active', '2026-07-27 07:01:16', NULL, 'Approved'),
+('AST003', 'U004', 'CAT001', 'USB-C Fast Charger', 'Original 65W power brick', 'Good', 'uploads/assets/charger.jpg', 'Pending Verification', 'Active', '2026-07-27 07:01:16', NULL, 'Pending');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assetstatushistory`
+--
+
+CREATE TABLE `assetstatushistory` (
+  `historyID` varchar(10) NOT NULL,
+  `assetID` varchar(10) NOT NULL,
+  `updatedBy` varchar(10) NOT NULL,
+  `oldAvailabilityStatus` varchar(50) NOT NULL,
+  `newAvailabilityStatus` varchar(50) NOT NULL,
+  `statusChangeReason` varchar(255) DEFAULT NULL,
+  `updatedDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `assetstatushistory`
+--
+
+INSERT INTO `assetstatushistory` (`historyID`, `assetID`, `updatedBy`, `oldAvailabilityStatus`, `newAvailabilityStatus`, `statusChangeReason`, `updatedDate`) VALUES
+('ASH001', 'AST002', 'U002', 'Available', 'Borrowed', 'Approved borrow request TR001', '2026-07-27 07:01:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `borrowings`
+--
+
+CREATE TABLE `borrowings` (
+  `borrowID` varchar(10) NOT NULL,
+  `assetID` varchar(10) NOT NULL,
+  `borrowerID` varchar(10) NOT NULL,
+  `transactionID` varchar(10) NOT NULL,
+  `borrowDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `expectedReturnDate` timestamp NULL DEFAULT NULL,
+  `actualReturnDate` timestamp NULL DEFAULT NULL,
+  `borrowingStatus` varchar(50) NOT NULL DEFAULT 'Active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `borrowings`
+--
+
+INSERT INTO `borrowings` (`borrowID`, `assetID`, `borrowerID`, `transactionID`, `borrowDate`, `expectedReturnDate`, `actualReturnDate`, `borrowingStatus`) VALUES
+('BOR001', 'AST002', 'U004', 'TR001', '2026-07-27 07:01:17', '2026-08-10 04:00:00', NULL, 'Active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `categories`
+--
+
+CREATE TABLE `categories` (
+  `categoryID` varchar(10) NOT NULL,
+  `categoryName` varchar(50) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Active',
+  `createdDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`categoryID`, `categoryName`, `description`, `status`, `createdDate`) VALUES
+('CAT001', 'Electronics', 'Laptops, chargers, phones, and hardware accessories', 'Active', '2026-07-27 07:01:16'),
+('CAT002', 'Books & Stationery', 'Textbooks, revision guides, and note pads', 'Active', '2026-07-27 07:01:16'),
+('CAT003', 'Household & Living', 'Dorm essentials, mini kettles, and lamps', 'Active', '2026-07-27 07:01:16'),
+('CAT004', 'Sports Equipment', 'Rackets, balls, and athletic gear', 'Active', '2026-07-27 07:01:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ecopointstransaction`
+--
+
+CREATE TABLE `ecopointstransaction` (
+  `transactionID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `points` int(11) NOT NULL,
+  `transactionType` varchar(50) NOT NULL,
+  `sourceType` varchar(50) NOT NULL,
+  `referenceID` varchar(10) DEFAULT NULL,
+  `transactionDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ecopointstransaction`
+--
+
+INSERT INTO `ecopointstransaction` (`transactionID`, `userID`, `points`, `transactionType`, `sourceType`, `referenceID`, `transactionDate`) VALUES
+('EPT001', 'U004', 50, 'Earned', 'Mission', 'MS001', '2026-07-27 07:01:17'),
+('EPT002', 'U004', -100, 'Spent', 'RewardRedemption', 'RR001', '2026-07-27 07:01:17'),
+('EPT003', 'U003', 100, 'Earned', 'Exchange', 'AST001', '2026-07-27 07:01:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `missions`
+--
+
+CREATE TABLE `missions` (
+  `missionID` varchar(10) NOT NULL,
+  `missionName` varchar(100) NOT NULL,
+  `missionDescription` varchar(255) NOT NULL,
+  `missionRequirement` varchar(255) NOT NULL,
+  `ecoPointsReward` int(11) NOT NULL DEFAULT 0,
+  `status` varchar(50) NOT NULL DEFAULT 'Active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `missions`
+--
+
+INSERT INTO `missions` (`missionID`, `missionName`, `missionDescription`, `missionRequirement`, `ecoPointsReward`, `status`) VALUES
+('M001', 'Bring Your Own Bottle', 'Use a reusable water bottle on campus for a week', 'Upload photo of bottle at APU refill station', 50, 'Active'),
+('M002', 'E-Waste Recycling Drive', 'Drop off old electronics or batteries at the hub', 'Upload photo of items dropped at recycling bin', 100, 'Active'),
+('M003', 'Campus Eco-Clean Walk', 'Participate in the weekly campus litter collection', 'Upload selfie at event check-in point', 150, 'Active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `missionsubmission`
+--
+
+CREATE TABLE `missionsubmission` (
+  `submissionID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `missionID` varchar(10) NOT NULL,
+  `evidencePath` varchar(255) NOT NULL,
+  `submissionDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `submissionStatus` varchar(50) NOT NULL DEFAULT 'Pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `missionsubmission`
+--
+
+INSERT INTO `missionsubmission` (`submissionID`, `userID`, `missionID`, `evidencePath`, `submissionDate`, `submissionStatus`) VALUES
+('MS001', 'U004', 'M001', 'uploads/submissions/ms1_proof.jpg', '2026-07-27 07:01:16', 'Verified'),
+('MS002', 'U005', 'M002', 'uploads/submissions/ms2_proof.jpg', '2026-07-27 07:01:16', 'Pending');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notification`
+--
+
+CREATE TABLE `notification` (
+  `notificationID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `content` varchar(255) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Unread',
+  `createdDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notification`
+--
+
+INSERT INTO `notification` (`notificationID`, `userID`, `title`, `content`, `status`, `createdDate`) VALUES
+('NOT001', 'U004', 'Mission Approved!', 'Your submission for Bring Your Own Bottle was approved. +50 EcoPoints awarded.', 'Unread', '2026-07-27 07:01:17'),
+('NOT002', 'U005', 'Borrow Request Update', 'Your request to borrow Java Programming Textbook has been approved.', 'Read', '2026-07-27 07:01:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `report`
+--
+
+CREATE TABLE `report` (
+  `reportID` varchar(10) NOT NULL,
+  `reporterID` varchar(10) NOT NULL,
+  `verificationID` varchar(10) DEFAULT NULL,
+  `reason` varchar(255) NOT NULL,
+  `evidencePath` varchar(255) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `timeCreated` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rewardredemption`
+--
+
+CREATE TABLE `rewardredemption` (
+  `redemptionID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `rewardID` varchar(10) NOT NULL,
+  `redemptionDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rewardredemption`
+--
+
+INSERT INTO `rewardredemption` (`redemptionID`, `userID`, `rewardID`, `redemptionDate`) VALUES
+('RR001', 'U004', 'REW001', '2026-07-27 07:01:16'),
+('RR002', 'U003', 'REW002', '2026-07-27 07:01:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rewards`
+--
+
+CREATE TABLE `rewards` (
+  `rewardID` varchar(10) NOT NULL,
+  `rewardName` varchar(100) NOT NULL,
+  `rewardDescription` varchar(255) NOT NULL,
+  `ecoPointsCost` int(11) NOT NULL DEFAULT 0,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `availability` varchar(50) NOT NULL DEFAULT 'Available'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rewards`
+--
+
+INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `ecoPointsCost`, `quantity`, `availability`) VALUES
+('REW001', 'Campus Cafe RM5 Voucher', 'Redeemable at APU main cafeteria food stalls', 100, 50, 'Available'),
+('REW002', 'CirculAPU Tote Bag', 'Eco-friendly canvas bag with official logo', 200, 15, 'Available'),
+('REW003', 'APU Parking Pass (1 Day)', 'Single-day parking pass waiver for campus garage', 300, 5, 'Available');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `systemlog`
+--
+
+CREATE TABLE `systemlog` (
+  `logID` varchar(10) NOT NULL,
+  `adminID` varchar(10) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `timeLogged` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `systemlog`
+--
+
+INSERT INTO `systemlog` (`logID`, `adminID`, `description`, `timeLogged`) VALUES
+('LOG001', 'U001', 'Created new system category: Electronics', '2026-07-27 07:01:17'),
+('LOG002', 'U001', 'Adjusted EcoPoints balance for user U004 (+50)', '2026-07-27 07:01:17'),
+('LOG003', 'U001', 'Updated account status for user U006 to Suspended', '2026-07-27 07:01:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tiers`
+--
+
+CREATE TABLE `tiers` (
+  `tierID` varchar(10) NOT NULL,
+  `tierName` varchar(50) NOT NULL,
+  `tierDescription` varchar(255) NOT NULL,
+  `tierIcon` varchar(255) NOT NULL,
+  `minimumEcoPoints` int(11) NOT NULL DEFAULT 0,
+  `minimumExchanges` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tiers`
+--
+
+INSERT INTO `tiers` (`tierID`, `tierName`, `tierDescription`, `tierIcon`, `minimumEcoPoints`, `minimumExchanges`) VALUES
+('T001', 'Eco Beginner', 'Starting milestone for new sustainability participants', 'icon_tier1.png', 0, 0),
+('T002', 'Green Enthusiast', 'Active participant contributing to campus recycling', 'icon_tier2.png', 100, 3),
+('T003', 'Eco Champion', 'High-impact user making frequent asset exchanges', 'icon_tier3.png', 300, 10),
+('T004', 'Sustainability Leader', 'Top tier user leading campus eco-initiatives', 'icon_tier4.png', 600, 20);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `transactionrequests`
+--
+
+CREATE TABLE `transactionrequests` (
+  `transactionID` varchar(10) NOT NULL,
+  `assetID` varchar(10) NOT NULL,
+  `requesterID` varchar(10) NOT NULL,
+  `requestDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `requestStatus` varchar(50) NOT NULL DEFAULT 'Pending',
+  `managerRemark` varchar(255) DEFAULT NULL,
+  `decisionDate` timestamp NULL DEFAULT NULL,
+  `requestMessage` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `transactionrequests`
+--
+
+INSERT INTO `transactionrequests` (`transactionID`, `assetID`, `requesterID`, `requestDate`, `requestStatus`, `managerRemark`, `decisionDate`, `requestMessage`) VALUES
+('TR001', 'AST002', 'U004', '2026-07-27 07:01:17', 'Approved', 'Request granted for 14-day study period.', NULL, 'Hi, I need this textbook for my upcoming exam week.'),
+('TR002', 'AST001', 'U005', '2026-07-27 07:01:17', 'Pending', NULL, NULL, 'Can I borrow this mouse for a few days?');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user`
+--
+
+CREATE TABLE `user` (
+  `userID` varchar(10) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` varchar(50) NOT NULL DEFAULT 'Member',
+  `status` varchar(50) NOT NULL DEFAULT 'Active',
+  `ecopoint` int(11) NOT NULL DEFAULT 0,
+  `dateCreated` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user`
+--
+
+INSERT INTO `user` (`userID`, `name`, `email`, `password`, `role`, `status`, `ecopoint`, `dateCreated`) VALUES
+('U001', 'Lee Miao Miao', 'admin@mail.apu.edu.my', 'password123', 'Admin', 'Active', 6070, '2026-07-27 07:01:16'),
+('U002', 'Lim Miao Miao', 'manager@mail.apu.edu.my', 'password123', 'Manager', 'Active', 120, '2026-07-27 07:01:16'),
+('U003', 'Ooi Mian Miao', 'auditor@mail.apu.edu.my', 'password123', 'Auditor', 'Active', 450, '2026-07-27 07:01:16'),
+('U004', 'Tan Miao Miao', 'tan@mail.apu.edu.my', 'password123', 'Member', 'Active', 300, '2026-07-27 07:01:16'),
+('U005', 'Teo Miao Miao', 'teo@mail.apu.edu.my', 'password123', 'Member', 'Active', 85, '2026-07-27 07:01:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user achievement badge`
+--
+
+CREATE TABLE `user achievement badge` (
+  `userBadgeID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `achieveBadgeID` varchar(10) NOT NULL,
+  `awardedDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user achievement badge`
+--
+
+INSERT INTO `user achievement badge` (`userBadgeID`, `userID`, `achieveBadgeID`, `awardedDate`) VALUES
+('UAB001', 'U004', 'BADGE01', '2026-07-27 07:01:16'),
+('UAB002', 'U003', 'BADGE01', '2026-07-27 07:01:16'),
+('UAB003', 'U001', 'BADGE03', '2026-07-27 07:01:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `usertier`
+--
+
+CREATE TABLE `usertier` (
+  `userTierID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `tierID` varchar(10) NOT NULL,
+  `assignedDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `usertier`
+--
+
+INSERT INTO `usertier` (`userTierID`, `userID`, `tierID`, `assignedDate`) VALUES
+('UT001', 'U001', 'T004', '2026-07-27 07:01:16'),
+('UT002', 'U003', 'T003', '2026-07-27 07:01:16'),
+('UT003', 'U004', 'T002', '2026-07-27 07:01:16'),
+('UT004', 'U005', 'T001', '2026-07-27 07:01:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `verificationrecords`
+--
+
+CREATE TABLE `verificationrecords` (
+  `verificationID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `verifiedBy` varchar(10) NOT NULL,
+  `targetID` varchar(10) NOT NULL,
+  `targetType` varchar(50) NOT NULL,
+  `status` varchar(50) NOT NULL,
+  `remarks` varchar(255) DEFAULT NULL,
+  `verifiedDate` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `verificationrecords`
+--
+
+INSERT INTO `verificationrecords` (`verificationID`, `userID`, `verifiedBy`, `targetID`, `targetType`, `status`, `remarks`, `verifiedDate`) VALUES
+('VR001', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Approved', 'Clear photo proof of refill station usage.', '2026-07-27 07:03:20'),
+('VR002', 'U004', 'U003', 'AST001', 'Asset', 'Approved', 'Asset condition verified in person.', '2026-07-27 07:03:20');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `achievementbadges`
+--
+ALTER TABLE `achievementbadges`
+  ADD PRIMARY KEY (`achieveBadgeID`);
+
+--
+-- Indexes for table `assets`
+--
+ALTER TABLE `assets`
+  ADD PRIMARY KEY (`assetID`),
+  ADD KEY `fk_assets_owner` (`ownerID`),
+  ADD KEY `fk_assets_category` (`categoryID`);
+
+--
+-- Indexes for table `assetstatushistory`
+--
+ALTER TABLE `assetstatushistory`
+  ADD PRIMARY KEY (`historyID`),
+  ADD KEY `fk_ash_asset` (`assetID`),
+  ADD KEY `fk_ash_user` (`updatedBy`);
+
+--
+-- Indexes for table `borrowings`
+--
+ALTER TABLE `borrowings`
+  ADD PRIMARY KEY (`borrowID`),
+  ADD KEY `fk_borr_asset` (`assetID`),
+  ADD KEY `fk_borr_borrower` (`borrowerID`),
+  ADD KEY `fk_borr_transaction` (`transactionID`);
+
+--
+-- Indexes for table `categories`
+--
+ALTER TABLE `categories`
+  ADD PRIMARY KEY (`categoryID`);
+
+--
+-- Indexes for table `ecopointstransaction`
+--
+ALTER TABLE `ecopointstransaction`
+  ADD PRIMARY KEY (`transactionID`),
+  ADD KEY `fk_ept_user` (`userID`);
+
+--
+-- Indexes for table `missions`
+--
+ALTER TABLE `missions`
+  ADD PRIMARY KEY (`missionID`);
+
+--
+-- Indexes for table `missionsubmission`
+--
+ALTER TABLE `missionsubmission`
+  ADD PRIMARY KEY (`submissionID`),
+  ADD KEY `fk_msub_user` (`userID`),
+  ADD KEY `fk_msub_mission` (`missionID`);
+
+--
+-- Indexes for table `notification`
+--
+ALTER TABLE `notification`
+  ADD PRIMARY KEY (`notificationID`),
+  ADD KEY `fk_notif_user` (`userID`);
+
+--
+-- Indexes for table `report`
+--
+ALTER TABLE `report`
+  ADD PRIMARY KEY (`reportID`),
+  ADD KEY `fk_rep_reporter` (`reporterID`),
+  ADD KEY `fk_rep_verification` (`verificationID`);
+
+--
+-- Indexes for table `rewardredemption`
+--
+ALTER TABLE `rewardredemption`
+  ADD PRIMARY KEY (`redemptionID`),
+  ADD KEY `fk_rred_user` (`userID`),
+  ADD KEY `fk_rred_reward` (`rewardID`);
+
+--
+-- Indexes for table `rewards`
+--
+ALTER TABLE `rewards`
+  ADD PRIMARY KEY (`rewardID`);
+
+--
+-- Indexes for table `systemlog`
+--
+ALTER TABLE `systemlog`
+  ADD PRIMARY KEY (`logID`),
+  ADD KEY `fk_syslog_admin` (`adminID`);
+
+--
+-- Indexes for table `tiers`
+--
+ALTER TABLE `tiers`
+  ADD PRIMARY KEY (`tierID`);
+
+--
+-- Indexes for table `transactionrequests`
+--
+ALTER TABLE `transactionrequests`
+  ADD PRIMARY KEY (`transactionID`),
+  ADD KEY `fk_treq_asset` (`assetID`),
+  ADD KEY `fk_treq_requester` (`requesterID`);
+
+--
+-- Indexes for table `user`
+--
+ALTER TABLE `user`
+  ADD PRIMARY KEY (`userID`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Indexes for table `user achievement badge`
+--
+ALTER TABLE `user achievement badge`
+  ADD PRIMARY KEY (`userBadgeID`),
+  ADD KEY `fk_uab_user` (`userID`),
+  ADD KEY `fk_uab_badge` (`achieveBadgeID`);
+
+--
+-- Indexes for table `usertier`
+--
+ALTER TABLE `usertier`
+  ADD PRIMARY KEY (`userTierID`),
+  ADD KEY `fk_usertier_user` (`userID`),
+  ADD KEY `fk_usertier_tier` (`tierID`);
+
+--
+-- Indexes for table `verificationrecords`
+--
+ALTER TABLE `verificationrecords`
+  ADD PRIMARY KEY (`verificationID`),
+  ADD KEY `fk_vrec_user` (`userID`),
+  ADD KEY `fk_vrec_auditor` (`verifiedBy`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `assets`
+--
+ALTER TABLE `assets`
+  ADD CONSTRAINT `fk_assets_category` FOREIGN KEY (`categoryID`) REFERENCES `categories` (`categoryID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_assets_owner` FOREIGN KEY (`ownerID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `assetstatushistory`
+--
+ALTER TABLE `assetstatushistory`
+  ADD CONSTRAINT `fk_ash_asset` FOREIGN KEY (`assetID`) REFERENCES `assets` (`assetID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_ash_user` FOREIGN KEY (`updatedBy`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `borrowings`
+--
+ALTER TABLE `borrowings`
+  ADD CONSTRAINT `fk_borr_asset` FOREIGN KEY (`assetID`) REFERENCES `assets` (`assetID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_borr_borrower` FOREIGN KEY (`borrowerID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_borr_transaction` FOREIGN KEY (`transactionID`) REFERENCES `transactionrequests` (`transactionID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `ecopointstransaction`
+--
+ALTER TABLE `ecopointstransaction`
+  ADD CONSTRAINT `fk_ept_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `missionsubmission`
+--
+ALTER TABLE `missionsubmission`
+  ADD CONSTRAINT `fk_msub_mission` FOREIGN KEY (`missionID`) REFERENCES `missions` (`missionID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_msub_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `notification`
+--
+ALTER TABLE `notification`
+  ADD CONSTRAINT `fk_notif_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `report`
+--
+ALTER TABLE `report`
+  ADD CONSTRAINT `fk_rep_reporter` FOREIGN KEY (`reporterID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_rep_verification` FOREIGN KEY (`verificationID`) REFERENCES `verificationrecords` (`verificationID`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `rewardredemption`
+--
+ALTER TABLE `rewardredemption`
+  ADD CONSTRAINT `fk_rred_reward` FOREIGN KEY (`rewardID`) REFERENCES `rewards` (`rewardID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_rred_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `systemlog`
+--
+ALTER TABLE `systemlog`
+  ADD CONSTRAINT `fk_syslog_admin` FOREIGN KEY (`adminID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `transactionrequests`
+--
+ALTER TABLE `transactionrequests`
+  ADD CONSTRAINT `fk_treq_asset` FOREIGN KEY (`assetID`) REFERENCES `assets` (`assetID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_treq_requester` FOREIGN KEY (`requesterID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user achievement badge`
+--
+ALTER TABLE `user achievement badge`
+  ADD CONSTRAINT `fk_uab_badge` FOREIGN KEY (`achieveBadgeID`) REFERENCES `achievementbadges` (`achieveBadgeID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_uab_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `usertier`
+--
+ALTER TABLE `usertier`
+  ADD CONSTRAINT `fk_usertier_tier` FOREIGN KEY (`tierID`) REFERENCES `tiers` (`tierID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_usertier_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `verificationrecords`
+--
+ALTER TABLE `verificationrecords`
+  ADD CONSTRAINT `fk_vrec_auditor` FOREIGN KEY (`verifiedBy`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_vrec_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
