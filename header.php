@@ -13,9 +13,16 @@ $userRole = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'Member';
 ?>
 
 <header class="dashboard-header">
-    <div class="welcome-container">
-        <h2>Welcome, <span class="user-name"><?php echo htmlspecialchars($userName); ?></span></h2>
-        <span class="role-badge"><?php echo htmlspecialchars($userRole); ?></span>
+    <div class="welcome-container" style="display: flex; align-items: center; gap: 16px;">
+        <!-- Logo Branding in Nav Header -->
+        <a href="dashboard.php" style="display: flex; align-items: center;">
+            <img src="assets/images/logo.png" alt="CirculAPU Logo" style="height: 36px; width: auto;">
+        </a>
+        
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <h2>Welcome, <span class="user-name"><?php echo htmlspecialchars($userName); ?></span></h2>
+            <span class="role-badge"><?php echo htmlspecialchars($userRole); ?></span>
+        </div>
     </div>
 
     <div class="header-actions">

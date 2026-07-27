@@ -291,6 +291,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reset_password'])) {
 <body class="reset-page-body">
 
     <div class="reset-header">
+        <div style="margin-bottom: 16px;">
+            <img src="assets/images/logo.png" alt="CirculAPU Logo" style="max-width: 130px; height: auto;">
+        </div>
         <h1>Reset Password</h1>
         <p>Recover your account password</p>
     </div>

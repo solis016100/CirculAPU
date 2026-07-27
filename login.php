@@ -84,32 +84,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .hero-section {
             flex: 1;
-            background-color: #dcdcdc;
+            background-color: #f8fafc; /* Matches your light theme background */
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            border-right: 1px solid #ccc;
+            overflow: hidden;
+            padding: 20px; /* Gives the square image nice padding from screen edges */
         }
 
-        .hero-placeholder {
-            position: relative;
+        .hero-section img {
             width: 100%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 1.2rem;
-        }
-
-        .hero-placeholder::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border-top: 1px solid #a0a0a0;
-            transform-origin: top left;
-            transform: rotate(atan2(100vh, 50vw));
+            max-width: 1254px;
+            max-height: 1254px;
+            object-fit: contain; /* Keeps 100% of the graphic visible without cropping */
+            object-position: center;
         }
 
         .login-section {
@@ -236,11 +225,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="auth-page">
 
     <div class="hero-section">
-        <div class="hero-placeholder">Image</div>
+        <img src="assets/images/hero-banner.png" alt="CirculAPU Hero Banner">
     </div>
 
     <div class="login-section">
         <div class="login-container">
+            <div style="text-align: center; margin-bottom: 16px;">
+                <img src="assets/images/logo.png" alt="CirculAPU Logo" style="max-width: 140px; height: auto;">
+            </div>
             <h1 class="login-title">Welcome</h1>
 
             <?php if (!empty($error_message)): ?>

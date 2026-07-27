@@ -317,6 +317,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
 <body class="signup-page-body">
 
     <div class="signup-header">
+        <div style="margin-bottom: 16px;">
+            <img src="assets/images/logo.png" alt="CirculAPU Logo" style="max-width: 130px; height: auto;">
+        </div>
         <h1>Sign up</h1>
         <p>Sign up to continue</p>
     </div>
