@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// 1. Protection: Redirect to login if user is not authenticated
+// Redirect to login if user is not authenticated
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
 
 $role = $_SESSION['user_role'];
 
-// 2. Route user to their role-specific dashboard file
+// Route based on User Role
 switch ($role) {
     case 'Admin':
         header("Location: admin_dashboard.php");
@@ -28,9 +28,8 @@ switch ($role) {
         exit();
 
     default:
-        // Fallback or error handling
         session_destroy();
-        header("Location: login.php?error=invalid_role");
+        header("Location: login.php");
         exit();
 }
 ?>

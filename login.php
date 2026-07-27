@@ -1,14 +1,14 @@
 <?php
 session_start();
 
-// 1. AUTO-LOGIN CHECK (Restore session from "Remember Me" cookie if active session expired)
+// Auto-login check via "Remember Me" cookie
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
     $_SESSION['user_id']   = $_COOKIE['remember_user_id'];
     $_SESSION['user_name'] = $_COOKIE['remember_user_name'];
     $_SESSION['user_role'] = $_COOKIE['remember_user_role'];
 }
 
-// Redirect user if already logged in
+// Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit();
@@ -16,14 +16,8 @@ if (isset($_SESSION['user_id'])) {
 
 $error_message = '';
 
-// 2. PROCESS LOGIN REQUEST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $servername = "localhost";
-    $username   = "root";
-    $password   = "";
-    $dbname     = "circulapu_db";
-
-    $conn = new mysqli($servername, $username, $password, $dbname);
+    $conn = new mysqli("localhost", "root", "", "circulapu_db");
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
@@ -41,17 +35,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
 
-            // Flexible authentication check (BCrypt Hash, Master Pass, or Direct Plain Text)
             if ($user_password === 'password123' || 
                 password_verify($user_password, $user['password']) || 
                 $user_password === $user['password']) {
 
-                // Set active PHP session
                 $_SESSION['user_id']   = $user['userID'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];
 
-                // HANDLE "REMEMBER ME" COOKIE (Valid for 30 Days)
                 if (isset($_POST['remember_me'])) {
                     $cookie_time = time() + (86400 * 30); // 30 Days
                     setcookie('remember_user_id',   $user['userID'], $cookie_time, "/");
@@ -81,15 +72,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome - Login</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        body {
+        body.auth-page {
             display: flex;
             height: 100vh;
             width: 100vw;
@@ -97,7 +82,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             overflow: hidden;
         }
 
-        /* Left Hero/Image Section */
         .hero-section {
             flex: 1;
             background-color: #dcdcdc;
@@ -119,21 +103,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 1.2rem;
         }
 
-        .hero-placeholder::before, .hero-placeholder::after {
+        .hero-placeholder::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             border-top: 1px solid #a0a0a0;
             transform-origin: top left;
-        }
-        .hero-placeholder::before {
             transform: rotate(atan2(100vh, 50vw));
         }
 
-        /* Right Form Section */
         .login-section {
             flex: 1;
             display: flex;
@@ -167,7 +145,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .input-group {
             margin-bottom: 20px;
-            position: relative;
         }
 
         .input-group label {
@@ -228,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-decoration: underline;
         }
 
-        .login-btn {
+        .login-submit-btn {
             width: 100%;
             padding: 12px;
             background-color: #dcdcdc;
@@ -239,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transition: background 0.2s;
         }
 
-        .login-btn:hover {
+        .login-submit-btn:hover {
             background-color: #c8c8c8;
         }
 
@@ -254,22 +231,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: bold;
             text-decoration: none;
         }
-
-        .register-prompt a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
-<body>
+<body class="auth-page">
 
-    <!-- Left Hero Image Container -->
     <div class="hero-section">
-        <div class="hero-placeholder">
-            Image
-        </div>
+        <div class="hero-placeholder">Image</div>
     </div>
 
-    <!-- Right Login Form Section -->
     <div class="login-section">
         <div class="login-container">
             <h1 class="login-title">Welcome</h1>
@@ -279,7 +248,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php endif; ?>
 
             <form action="login.php" method="POST">
-                <!-- Email Input -->
                 <div class="input-group">
                     <label for="email">Email</label>
                     <div class="input-wrapper">
@@ -291,7 +259,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
-                <!-- Password Input -->
                 <div class="input-group">
                     <label for="password">Password</label>
                     <div class="input-wrapper">
@@ -303,7 +270,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
-                <!-- Remember Me & Forgot Password Row -->
                 <div class="options-row">
                     <label class="remember-me">
                         <input type="checkbox" name="remember_me" value="1">
@@ -312,10 +278,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <a href="reset_password.php" class="forgot-password">Forgot your password?</a>
                 </div>
 
-                <!-- Login Button -->
-                <button type="submit" class="login-btn">LOGIN</button>
+                <button type="submit" class="login-submit-btn">LOGIN</button>
 
-                <!-- Registration Route -->
                 <div class="register-prompt">
                     Don't have an account? <a href="signup.php">Register Now</a>
                 </div>
