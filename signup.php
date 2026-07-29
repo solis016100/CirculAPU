@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'leegynpaul123456@gmail.com'; // <--- Your Gmail address
-        $mail->Password   = 'simwhsbszxrwmatu';               // <--- App Password
+        $mail->Username   = 'leegynpaul123456@gmail.com'; // Your Gmail address
+        $mail->Password   = 'simwhsbszxrwmatu';               // Your App Password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
@@ -66,70 +66,94 @@ if (isset($_SESSION['user_id'])) {
 $error_message = '';
 $success_message = '';
 
-// 2. FORM SUBMISSION HANDLER
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
+$step = isset($_POST['step']) ? (int)$_POST['step'] : 1;
 
-    if ($conn->connect_error) {
-        die("Database Connection failed: " . $conn->connect_error);
-    }
+$name = isset($_POST['name']) ? trim($_POST['name']) : '';
+$email = isset($_POST['email']) ? trim($_POST['email']) : '';
+$verification_code = isset($_POST['verification_code']) ? trim($_POST['verification_code']) : '';
 
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $user_password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-    $verification_code = trim($_POST['verification_code']);
+// 2. FORM SUBMISSION HANDLERS
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    if (empty($name) || empty($email) || empty($user_password) || empty($confirm_password) || empty($verification_code)) {
-        $error_message = "Please fill in all required fields including the verification code.";
-    } elseif (!isset($_SESSION['generated_otp']) || $_SESSION['generated_otp'] !== $verification_code || $_SESSION['otp_email'] !== $email) {
-        $error_message = "Invalid or expired verification code.";
-    } elseif ($user_password !== $confirm_password) {
-        $error_message = "Passwords do not match.";
-    } elseif (strlen($user_password) < 8 || 
-              !preg_match('/[A-Z]/', $user_password) || 
-              !preg_match('/[a-z]/', $user_password) || 
-              !preg_match('/[0-9!\@\#\$\%\^\&\*]/', $user_password)) {
-        $error_message = "Password does not meet all security requirements.";
-    } else {
-        $check_stmt = $conn->prepare("SELECT userID FROM User WHERE email = ?");
-        $check_stmt->bind_param("s", $email);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-
-        if ($check_result->num_rows > 0) {
-            $error_message = "An account with this email already exists.";
+    // Step 1 -> Step 2 Validation
+    if (isset($_POST['go_to_step2'])) {
+        if (empty($name) || empty($email) || empty($verification_code)) {
+            $error_message = "Please fill in all required fields including the verification code.";
+            $step = 1;
+        } elseif (!isset($_SESSION['generated_otp']) || $_SESSION['generated_otp'] !== $verification_code || $_SESSION['otp_email'] !== $email) {
+            $error_message = "Invalid or expired verification code.";
+            $step = 1;
         } else {
-            $id_query = "SELECT MAX(CAST(SUBSTRING(userID, 2) AS UNSIGNED)) as max_id FROM User";
-            $id_result = $conn->query($id_query);
-            $row = $id_result->fetch_assoc();
-            $next_num = ($row['max_id'] ? $row['max_id'] : 6) + 1;
-            $new_user_id = sprintf("U%03d", $next_num);
-
-            $hashed_password = password_hash($user_password, PASSWORD_BCRYPT);
-
-            $insert_stmt = $conn->prepare("INSERT INTO User (userID, name, email, password, role, status, ecopoint) VALUES (?, ?, ?, ?, 'Member', 'Active', 0)");
-            $insert_stmt->bind_param("ssss", $new_user_id, $name, $email, $hashed_password);
-
-            if ($insert_stmt->execute()) {
-                $tier_stmt = $conn->prepare("INSERT INTO UserTier (userTierID, userID, tierID) VALUES (CONCAT('UT', ?), ?, 'T001')");
-                $tier_stmt->bind_param("ss", $new_user_id, $new_user_id);
-                $tier_stmt->execute();
-                $tier_stmt->close();
-
-                unset($_SESSION['generated_otp']);
-                unset($_SESSION['otp_email']);
-
-                $success_message = "Account created successfully! Redirecting to login...";
-                header("refresh:2;url=login.php");
-            } else {
-                $error_message = "Error creating account. Please try again.";
-            }
-            $insert_stmt->close();
+            $step = 2;
         }
-        $check_stmt->close();
     }
-    $conn->close();
+
+    // Final Registration Submission (Step 2)
+    if (isset($_POST['signup'])) {
+        $user_password = $_POST['password'];
+        $confirm_password = $_POST['confirm_password'];
+
+        if (empty($user_password) || empty($confirm_password)) {
+            $error_message = "Please enter and confirm your password.";
+            $step = 2;
+        } elseif ($user_password !== $confirm_password) {
+            $error_message = "Passwords do not match.";
+            $step = 2;
+        } elseif (strlen($user_password) < 8 || 
+                  !preg_match('/[A-Z]/', $user_password) || 
+                  !preg_match('/[a-z]/', $user_password) || 
+                  !preg_match('/[0-9!\@\#\$\%\^\&\*]/', $user_password)) {
+            $error_message = "Password does not meet all security requirements.";
+            $step = 2;
+        } else {
+            // Direct MySQLi connection without db.php
+            $conn = new mysqli("localhost", "root", "", "circulapu_db");
+
+            if ($conn->connect_error) {
+                die("Database Connection failed: " . $conn->connect_error);
+            }
+
+            $check_stmt = $conn->prepare("SELECT userID FROM User WHERE email = ?");
+            $check_stmt->bind_param("s", $email);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
+
+            if ($check_result->num_rows > 0) {
+                $error_message = "An account with this email already exists.";
+                $step = 1;
+            } else {
+                $id_query = "SELECT MAX(CAST(SUBSTRING(userID, 2) AS UNSIGNED)) as max_id FROM User";
+                $id_result = $conn->query($id_query);
+                $row = $id_result->fetch_assoc();
+                $next_num = ($row['max_id'] ? $row['max_id'] : 6) + 1;
+                $new_user_id = sprintf("U%03d", $next_num);
+
+                $hashed_password = password_hash($user_password, PASSWORD_BCRYPT);
+
+                $insert_stmt = $conn->prepare("INSERT INTO User (userID, name, email, password, role, status, ecopoint) VALUES (?, ?, ?, ?, 'Member', 'Active', 0)");
+                $insert_stmt->bind_param("ssss", $new_user_id, $name, $email, $hashed_password);
+
+                if ($insert_stmt->execute()) {
+                    $tier_stmt = $conn->prepare("INSERT INTO UserTier (userTierID, userID, tierID) VALUES (CONCAT('UT', ?), ?, 'T001')");
+                    $tier_stmt->bind_param("ss", $new_user_id, $new_user_id);
+                    $tier_stmt->execute();
+                    $tier_stmt->close();
+
+                    unset($_SESSION['generated_otp']);
+                    unset($_SESSION['otp_email']);
+
+                    $success_message = "Account created successfully! Redirecting to login...";
+                    header("refresh:2;url=login.php");
+                } else {
+                    $error_message = "Error creating account. Please try again.";
+                    $step = 2;
+                }
+                $insert_stmt->close();
+            }
+            $check_stmt->close();
+            $conn->close();
+        }
+    }
 }
 ?>
 
@@ -139,8 +163,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - CirculAPU</title>
-    <link rel="stylesheet" href="style.css">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
         body.signup-page-body {
             background-color: #ffffff;
             display: flex;
@@ -153,23 +183,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
 
         .signup-header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+        }
+
+        .signup-header img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 12px;
         }
 
         .signup-header h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: normal;
             margin-bottom: 4px;
+            color: #000000;
         }
 
         .signup-header p {
             font-size: 0.9rem;
-            color: #555;
+            color: #555555;
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .step-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: #e0e0e0;
+            color: #666666;
+        }
+
+        .step-pill.active {
+            background: #16a34a;
+            color: #ffffff;
         }
 
         .signup-container {
             width: 100%;
-            max-width: 460px;
+            max-width: 420px;
+            margin: 0 auto;
         }
 
         .alert {
@@ -179,25 +239,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
             text-align: center;
             margin-bottom: 20px;
         }
-        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
 
         .field-box {
             position: relative;
-            border: 1px solid #000;
+            border: 1px solid #000000;
             border-radius: 6px;
             padding: 8px 12px;
             margin-bottom: 20px;
+            background-color: #ffffff;
         }
 
         .field-box label {
             position: absolute;
             top: -10px;
             left: 12px;
-            background: #fff;
+            background: #ffffff;
             padding: 0 4px;
             font-size: 0.85rem;
-            color: #000;
+            color: #000000;
         }
 
         .field-box input {
@@ -233,21 +304,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            width: 140px;
+            width: 130px;
         }
 
         .verification-input {
-            border: 1px solid #888;
+            border: 1px solid #888888;
             border-radius: 4px;
             padding: 6px 8px;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             outline: none;
             text-align: center;
         }
 
         .resend-btn {
             background-color: #e0e0e0;
-            border: 1px solid #ccc;
+            border: 1px solid #cccccc;
             border-radius: 4px;
             padding: 5px;
             font-size: 0.75rem;
@@ -255,12 +326,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
             text-align: center;
         }
 
+        .password-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-password-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password-btn svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+        }
+
         .requirements-box {
-            border: 1px solid #000;
+            border: 1px solid #000000;
             border-radius: 6px;
             padding: 14px 16px;
             margin-top: 10px;
             margin-bottom: 25px;
+            background-color: #ffffff;
         }
 
         .requirements-title {
@@ -273,18 +366,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         }
 
         .requirements-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 8px;
             list-style: none;
-            font-size: 0.75rem;
-            color: #333;
+            font-size: 0.8rem;
+            color: #333333;
+            padding-left: 0;
+            margin: 0;
         }
 
         .requirements-list li::before {
             content: "•";
             font-weight: bold;
-            margin-right: 4px;
+            margin-right: 6px;
         }
 
         .submit-btn-wrapper {
@@ -293,13 +388,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         }
 
         .signup-submit-btn {
-            width: 120px;
-            padding: 10px;
+            width: 100%;
+            padding: 12px;
             background-color: #e0e0e0;
-            border: 1px solid #999;
+            border: 1px solid #999999;
             border-radius: 6px;
             font-size: 0.95rem;
+            font-weight: bold;
             cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .signup-submit-btn:hover {
+            background-color: #d0d0d0;
+        }
+
+        .back-step-btn {
+            background: none;
+            border: none;
+            color: #555555;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-bottom: 15px;
         }
 
         .login-prompt {
@@ -308,7 +419,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         }
 
         .login-prompt a {
-            color: #000;
+            color: #000000;
             font-weight: bold;
             text-decoration: none;
         }
@@ -317,11 +428,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
 <body class="signup-page-body">
 
     <div class="signup-header">
-        <div style="margin-bottom: 16px;">
-            <img src="assets/images/logo.png" alt="CirculAPU Logo" style="max-width: 130px; height: auto;">
+        <div>
+            <img src="assets/images/logo.png" alt="CirculAPU Logo">
         </div>
         <h1>Sign up</h1>
         <p>Sign up to continue</p>
+    </div>
+
+    <div class="step-indicator">
+        <span class="step-pill <?php echo $step === 1 ? 'active' : ''; ?>">Step 1: Verification</span>
+        <span class="step-pill <?php echo $step === 2 ? 'active' : ''; ?>">Step 2: Password</span>
     </div>
 
     <div class="signup-container">
@@ -335,62 +451,95 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         <?php endif; ?>
 
         <form action="signup.php" method="POST">
-            <div class="field-box">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" required>
-            </div>
+            <input type="hidden" name="step" id="step_input" value="<?php echo $step; ?>">
 
-            <div style="margin-bottom: 20px;">
-                <div class="email-field-row">
-                    <div class="field-box">
-                        <label for="email">Email</label>
-                        <div style="display: flex; align-items: center;">
-                            <input type="email" id="email" name="email" required>
-                            <button type="button" class="send-icon-btn" title="Send verification code" onclick="triggerSendOTP()">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                            </button>
+            <?php if ($step === 1): ?>
+                <div class="field-box">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($name); ?>" placeholder="Alex Tan" required>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div class="email-field-row">
+                        <div class="field-box">
+                            <label for="email">Email</label>
+                            <div style="display: flex; align-items: center;">
+                                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" placeholder="alex@mail.apu.edu.my" required>
+                                <button type="button" class="send-icon-btn" title="Send verification code" onclick="triggerSendOTP()">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification-sidebar">
+                            <input type="text" class="verification-input" name="verification_code" id="verification_code" value="<?php echo htmlspecialchars($verification_code); ?>" placeholder="Enter code..." required>
+                            <button type="button" class="resend-btn" onclick="triggerSendOTP()">Resend code</button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="verification-sidebar">
-                        <input type="text" class="verification-input" name="verification_code" id="verification_code" placeholder="Enter code..." required>
-                        <button type="button" class="resend-btn" onclick="triggerSendOTP()">Resend code</button>
+                <div class="submit-btn-wrapper">
+                    <button type="submit" name="go_to_step2" class="signup-submit-btn">Continue to Password &rarr;</button>
+                </div>
+
+            <?php else: ?>
+                <input type="hidden" name="name" value="<?php echo htmlspecialchars($name); ?>">
+                <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
+                <input type="hidden" name="verification_code" value="<?php echo htmlspecialchars($verification_code); ?>">
+
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <button type="button" class="back-step-btn" onclick="goBackToStep1()">&larr; Edit Name or Email</button>
+                </div>
+
+                <div class="field-box">
+                    <label for="password">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <div class="field-box">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <div class="field-box">
-                <label for="confirm_password">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" required>
-            </div>
-
-            <div class="requirements-box">
-                <div class="requirements-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        <polyline points="9 12 11 14 15 10"></polyline>
-                    </svg>
-                    <span>Password Requirements</span>
+                <div class="field-box">
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="Show/Hide Password">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <ul class="requirements-list">
-                    <li>Minimum 8 characters</li>
-                    <li>Include at least one lowercase letter (a-z)</li>
-                    <li>Include at least one uppercase letter (A-Z)</li>
-                    <li>Include at least one number (0-9) or special character</li>
-                </ul>
-            </div>
 
-            <div class="submit-btn-wrapper">
-                <button type="submit" name="signup" class="signup-submit-btn">Sign up</button>
-            </div>
+                <div class="requirements-box">
+                    <div class="requirements-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <polyline points="9 12 11 14 15 10"></polyline>
+                        </svg>
+                        <span>Password Requirements</span>
+                    </div>
+                    <ul class="requirements-list">
+                        <li>Minimum 8 characters</li>
+                        <li>Include at least one lowercase letter (a-z)</li>
+                        <li>Include at least one uppercase letter (A-Z)</li>
+                        <li>Include at least one number (0-9) or special character</li>
+                    </ul>
+                </div>
+
+                <div class="submit-btn-wrapper">
+                    <button type="submit" name="signup" class="signup-submit-btn">Complete Sign Up</button>
+                </div>
+            <?php endif; ?>
 
             <div class="login-prompt">
                 Already have an account? <a href="login.php">Sign in</a>
@@ -423,6 +572,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
                 console.error('Error:', error);
                 alert('An error occurred while sending the OTP code.');
             });
+        }
+
+        function togglePasswordVisibility(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                `;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                `;
+            }
+        }
+
+        function goBackToStep1() {
+            document.getElementById('step_input').value = '1';
+            document.querySelector('form').submit();
         }
     </script>
 
