@@ -287,6 +287,7 @@ html, body {
     align-items: center;
     gap: 0.75rem;
     overflow: hidden;
+    background-color: transparent; /* Ensures no solid background fill */
 }
 
 .sidebar-logo {
@@ -294,6 +295,8 @@ html, body {
     height: 42px;
     object-fit: contain;
     flex-shrink: 0;
+    background-color: transparent; /* Removes any fallback background */
+    border: none;                  /* Removes any unwanted box borders */
 }
 
 .sidebar-logo-text {

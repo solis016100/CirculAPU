@@ -93,6 +93,12 @@ body.dark-mode .sidebar {
     border-right-color: #334155 !important;
 }
 
+body.dark-mode .sidebar-logo-container,
+body.dark-mode .sidebar-logo {
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
+
 body.dark-mode .sidebar-logo-text {
     color: #f8fafc !important;
 }
