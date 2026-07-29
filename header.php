@@ -19,141 +19,7 @@ $role_labels = [
 $display_role = $role_labels[$user_role] ?? $user_role;
 ?>
 
-<style>
-  .app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.85rem 1.5rem;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    margin-bottom: 1.5rem;
-  }
-
-  /* Left Search Container */
-  .header-search-container {
-    position: relative;
-    width: 320px;
-  }
-
-  .header-search-container input {
-    width: 100%;
-    padding: 0.55rem 0.85rem 0.55rem 2.5rem;
-    border: 1px solid #1e293b;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    outline: none;
-    color: #0f172a;
-    background-color: #ffffff;
-  }
-
-  .header-search-container input::placeholder {
-    color: #475569;
-  }
-
-  .header-search-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: #0f172a;
-    pointer-events: none;
-  }
-
-  /* Right Side Utilities */
-  .header-right-actions {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-  }
-
-  .header-action-icon {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.35rem;
-    border-radius: 50%;
-    transition: background 0.2s;
-    text-decoration: none;
-  }
-
-  .header-action-icon:hover {
-    background-color: #f1f5f9;
-  }
-
-  .header-action-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .header-divider {
-    width: 1px;
-    height: 32px;
-    background-color: #cbd5e1;
-  }
-
-  /* User Profile Pill */
-  .header-user-profile {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .user-avatar-circle {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 1.5px solid #0f172a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    flex-shrink: 0;
-  }
-
-  .user-avatar-circle svg {
-    width: 22px;
-    height: 22px;
-    color: #0f172a;
-  }
-
-  .user-info-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .user-role-title {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: #0f172a;
-    line-height: 1.2;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  .user-role-title svg {
-    width: 16px;
-    height: 16px;
-    stroke-width: 2.5;
-  }
-
-  .user-email-subtitle {
-    font-size: 0.75rem;
-    color: #64748b;
-    margin-top: 2px;
-  }
-</style>
+<link rel="stylesheet" href="darktheme.css">
 
 <header class="app-header">
   <div class="header-search-container">
@@ -165,6 +31,23 @@ $display_role = $role_labels[$user_role] ?? $user_role;
   </div>
 
   <div class="header-right-actions">
+    <button type="button" id="theme-toggle-btn" class="header-action-icon" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+      <svg id="theme-icon-sun" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+
     <a href="notifications.php" class="header-action-icon" title="Notifications">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -200,3 +83,34 @@ $display_role = $role_labels[$user_role] ?? $user_role;
     </a>
   </div>
 </header>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const themeBtn = document.getElementById("theme-toggle-btn");
+    const sunIcon = document.getElementById("theme-icon-sun");
+    const moonIcon = document.getElementById("theme-icon-moon");
+
+    // Apply saved theme state on page load
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark-mode");
+      sunIcon.style.display = "block";
+      moonIcon.style.display = "none";
+    }
+
+    // Toggle theme on button click
+    themeBtn.addEventListener("click", function() {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+
+      if (isDark) {
+        localStorage.setItem("theme", "dark");
+        sunIcon.style.display = "block";
+        moonIcon.style.display = "none";
+      } else {
+        localStorage.setItem("theme", "light");
+        sunIcon.style.display = "none";
+        moonIcon.style.display = "block";
+      }
+    });
+  });
+</script>
