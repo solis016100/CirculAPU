@@ -3,7 +3,7 @@
    ========================================================================== */
 
 :root {
-  --sidebar-width: 280px; /* Increased from 260px so "Transaction Management" fits cleanly */
+  --sidebar-width: 280px; /* Fits "Transaction Management" cleanly */
   --sidebar-collapsed-width: 80px;
   --header-height: 70px;
   --transition-speed: 0.3s;
@@ -347,7 +347,7 @@ html, body {
   text-decoration: none;
   border-radius: 8px;
   font-weight: 500;
-  font-size: 0.88rem; /* Slightly reduced to let long strings fit comfortably */
+  font-size: 0.88rem;
   white-space: nowrap;
   transition: background 0.2s, color 0.2s;
 }
@@ -403,7 +403,7 @@ html, body {
   flex-shrink: 0;
 }
 
-/* --- COLLAPSED SIDEBAR OVERRIDES --- */
+/* Collapsed Sidebar Overrides */
 .sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
 }
@@ -529,3 +529,395 @@ html, body {
     background-color: var(--primary-hover);
 }
 
+/* ==========================================================================
+   6. AUTHENTICATION PAGES (SIGN UP, LOGIN & RESET PASSWORD)
+   ========================================================================== */
+
+/* Page Bodies */
+body.signup-page-body,
+body.reset-page-body {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+/* Login Hero Split Screen Body */
+body.auth-page {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+/* Header Sections */
+.signup-header,
+.reset-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.signup-header img,
+.reset-header img {
+    max-width: 120px;
+    height: auto;
+    margin-bottom: 12px;
+}
+
+.signup-header h1,
+.reset-header h1 {
+    font-size: 2rem;
+    font-weight: normal;
+    margin-bottom: 4px;
+    color: #000000;
+}
+
+.signup-header p,
+.reset-header p {
+    font-size: 0.9rem;
+    color: #555555;
+}
+
+/* Step Indicators */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.step-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    background: #e0e0e0;
+    color: #666666;
+}
+
+.step-pill.active {
+    background: #16a34a;
+    color: #ffffff;
+}
+
+/* Form Containers */
+.signup-container,
+.reset-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* Alerts */
+.alert {
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.alert-error,
+.error-alert {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Field Boxes & Input Groups */
+.field-box {
+    position: relative;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+}
+
+.field-box label {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: #ffffff;
+    padding: 0 4px;
+    font-size: 0.85rem;
+    color: #000000;
+}
+
+.field-box input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 6px 0;
+    background: transparent;
+}
+
+/* Verification Layout */
+.email-field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-field-row .field-box {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.send-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+}
+
+.verification-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 130px;
+}
+
+.verification-input {
+    border: 1px solid #888888;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    outline: none;
+    text-align: center;
+}
+
+.resend-btn {
+    background-color: #e0e0e0;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+/* Password Wrappers & Toggles */
+.password-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.toggle-password-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+/* Password Requirements Box */
+.requirements-box {
+    border: 1px solid #000000;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    margin-bottom: 25px;
+    background-color: #ffffff;
+}
+
+.requirements-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+    font-size: 0.8rem;
+    color: #333333;
+    padding-left: 0;
+    margin: 0;
+}
+
+.requirements-list li::before {
+    content: "•";
+    font-weight: bold;
+    margin-right: 6px;
+}
+
+/* Action Buttons & Prompts */
+.submit-btn-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.signup-submit-btn,
+.reset-submit-btn,
+.login-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #e0e0e0;
+    border: 1px solid #999999;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.signup-submit-btn:hover,
+.reset-submit-btn:hover,
+.login-submit-btn:hover {
+    background-color: #d0d0d0;
+}
+
+.back-step-btn {
+    background: none;
+    border: none;
+    color: #555555;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-bottom: 15px;
+}
+
+.login-prompt,
+.register-prompt {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+}
+
+.login-prompt a,
+.register-prompt a {
+    color: #000000;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Login Hero Split Layout Components */
+.hero-section {
+    flex: 1;
+    background-color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 20px;
+}
+
+.hero-section img {
+    width: 100%;
+    height: 100%;
+    max-width: 1254px;
+    max-height: 1254px;
+    object-fit: contain;
+    object-position: center;
+}
+
+.login-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 380px;
+}
+
+.login-title {
+    font-size: 2.2rem;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: normal;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #000;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.options-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    margin-bottom: 25px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.forgot-password {
+    color: #000;
+    text-decoration: none;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
