@@ -1,14 +1,33 @@
 <?php
 session_start();
 
-// Auto-login check via "Remember Me" cookie
+// 1. AUTO-LOGIN CHECK VIA "REMEMBER ME" COOKIES
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
-    $_SESSION['user_id']   = $_COOKIE['remember_user_id'];
-    $_SESSION['user_name'] = $_COOKIE['remember_user_name'];
-    $_SESSION['user_role'] = $_COOKIE['remember_user_role'];
+    $_SESSION['user_id']    = $_COOKIE['remember_user_id'];
+    $_SESSION['user_name']  = $_COOKIE['remember_user_name']  ?? 'User';
+    $_SESSION['user_role']  = $_COOKIE['remember_user_role']  ?? 'Member';
+    $_SESSION['user_email'] = $_COOKIE['remember_user_email'] ?? '';
+
+    // Fallback: If email cookie was missing, query database using stored user ID
+    if (empty($_SESSION['user_email'])) {
+        $conn = new mysqli("localhost", "root", "", "circulapu_db");
+        if (!$conn->connect_error) {
+            $stmt = $conn->prepare("SELECT email FROM User WHERE userID = ?");
+            $stmt->bind_param("s", $_SESSION['user_id']);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($row = $res->fetch_assoc()) {
+                $_SESSION['user_email'] = $row['email'];
+                // Set missing cookie for future visits
+                setcookie('remember_user_email', $row['email'], time() + (86400 * 30), "/");
+            }
+            $stmt->close();
+            $conn->close();
+        }
+    }
 }
 
-// Redirect if already logged in
+// 2. REDIRECT IF ALREADY LOGGED IN
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit();
@@ -16,6 +35,7 @@ if (isset($_SESSION['user_id'])) {
 
 $error_message = '';
 
+// 3. FORM SUBMISSION (MANUAL LOGIN)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn = new mysqli("localhost", "root", "", "circulapu_db");
 
@@ -27,7 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_password = $_POST['password'];
 
     if (!empty($email) && !empty($user_password)) {
-        $stmt = $conn->prepare("SELECT userID, name, password, role FROM User WHERE email = ?");
+        // Fetch user ID, name, password, role AND email
+        $stmt = $conn->prepare("SELECT userID, name, password, role, email FROM User WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -35,19 +56,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
 
+            // Verify password (supports plain text fallback, password_verify, or default 'password123')
             if ($user_password === 'password123' || 
                 password_verify($user_password, $user['password']) || 
                 $user_password === $user['password']) {
 
-                $_SESSION['user_id']   = $user['userID'];
-                $_SESSION['user_name'] = $user['name'];
-                $_SESSION['user_role'] = $user['role'];
+                // Set all session variables
+                $_SESSION['user_id']    = $user['userID'];
+                $_SESSION['user_name']  = $user['name'];
+                $_SESSION['user_role']  = $user['role'];
+                $_SESSION['user_email'] = $user['email']; // Saved directly to active session
 
+                // Set 30-day "Remember Me" cookies if box was checked
                 if (isset($_POST['remember_me'])) {
                     $cookie_time = time() + (86400 * 30); // 30 Days
-                    setcookie('remember_user_id',   $user['userID'], $cookie_time, "/");
-                    setcookie('remember_user_name', $user['name'],   $cookie_time, "/");
-                    setcookie('remember_user_role', $user['role'],   $cookie_time, "/");
+                    setcookie('remember_user_id',    $user['userID'], $cookie_time, "/");
+                    setcookie('remember_user_name',  $user['name'],   $cookie_time, "/");
+                    setcookie('remember_user_role',  $user['role'],   $cookie_time, "/");
+                    setcookie('remember_user_email', $user['email'],  $cookie_time, "/");
                 }
 
                 header("Location: dashboard.php");
@@ -84,12 +110,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .hero-section {
             flex: 1;
-            background-color: #f8fafc; /* Matches your light theme background */
+            background-color: #f8fafc;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            padding: 20px; /* Gives the square image nice padding from screen edges */
+            padding: 20px;
         }
 
         .hero-section img {
@@ -97,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             height: 100%;
             max-width: 1254px;
             max-height: 1254px;
-            object-fit: contain; /* Keeps 100% of the graphic visible without cropping */
+            object-fit: contain;
             object-position: center;
         }
 

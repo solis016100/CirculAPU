@@ -1,3 +1,14 @@
+/* ==========================================================================
+   1. GLOBAL SYSTEM VARIABLES & ROLE THEMES
+   ========================================================================== */
+
+:root {
+  --sidebar-width: 280px; /* Increased from 260px so "Transaction Management" fits cleanly */
+  --sidebar-collapsed-width: 80px;
+  --header-height: 70px;
+  --transition-speed: 0.3s;
+}
+
 /* Admin Theme (Dark Purple) */
 body.role-admin {
     --primary-color: #6b21a8;
@@ -53,7 +64,10 @@ body {
     --border-color: #e2e8f0;
 }
 
-/* 2. BASE REBOOT */
+/* ==========================================================================
+   2. BASE REBOOT & LAYOUT GRID
+   ========================================================================== */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -61,78 +75,367 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-body {
-    background-color: var(--bg-color);
-    color: #333;
+html, body {
+    width: 100%;
     min-height: 100vh;
+    background-color: var(--bg-color);
+    color: #333333;
+    overflow-x: hidden;
 }
 
-/* 3. HEADER NAVBAR */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-    margin-bottom: 24px;
-}
-
-.welcome-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.welcome-container h2 {
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #222;
-}
-
-.user-name {
-    font-weight: bold;
-}
-
-.role-badge {
-    background-color: var(--badge-bg);
-    color: var(--badge-text);
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.logout-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #ffffff;
-    color: #d32f2f;
-    border: 1px solid #d32f2f;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.logout-btn:hover {
-    background-color: #d32f2f;
-    color: #ffffff;
-}
-
-/* 4. DASHBOARD CONTAINER & CARDS */
+/* Outer Flex Wrapper */
 .dashboard-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px 40px;
+    display: flex;
+    width: 100vw;
+    min-height: 100vh;
+    position: relative;
+    background-color: var(--bg-color);
 }
+
+/* Right Main Content Area (Header + Body) */
+.main-content {
+    margin-left: var(--sidebar-width);
+    width: calc(100vw - var(--sidebar-width));
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    transition: margin-left var(--transition-speed) ease-in-out, width var(--transition-speed) ease-in-out;
+}
+
+/* Shift Main Content when Sidebar Collapses */
+.dashboard-container.sidebar-collapsed .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100vw - var(--sidebar-collapsed-width));
+}
+
+/* Inner Page Body Section */
+.page-body {
+    padding: 2rem;
+    flex-grow: 1;
+    width: 100%;
+}
+
+/* ==========================================================================
+   3. APP HEADER COMPONENT
+   ========================================================================== */
+
+.app-header {
+    width: 100%;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* Search Bar */
+.header-search-container {
+    position: relative;
+    width: 320px;
+}
+
+.header-search-container input {
+    width: 100%;
+    padding: 0.55rem 0.85rem 0.55rem 2.5rem;
+    border: 1px solid #0f172a;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+    background-color: #ffffff;
+}
+
+.header-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: #0f172a;
+    pointer-events: none;
+}
+
+/* Right Controls */
+.header-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.header-action-icon {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.header-action-icon:hover {
+    background-color: #f1f5f9;
+}
+
+.header-action-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.header-divider {
+    width: 1px;
+    height: 32px;
+    background-color: #cbd5e1;
+}
+
+/* Profile Pill */
+.header-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.user-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+}
+
+.user-avatar-circle svg {
+    width: 22px;
+    height: 22px;
+    color: #0f172a;
+}
+
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-role-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0f172a;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.user-role-title svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.5;
+}
+
+.user-email-subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   4. COLLAPSIBLE SIDEBAR COMPONENT
+   ========================================================================== */
+
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.85rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: width var(--transition-speed) ease-in-out;
+}
+
+/* Header (Logo & Toggle Button) */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.sidebar-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    overflow: hidden;
+}
+
+.sidebar-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sidebar-logo-text {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #0f172a;
+    white-space: nowrap;
+    transition: opacity var(--transition-speed) ease-in-out;
+}
+
+.sidebar-toggle-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-toggle-btn:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+.sidebar-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: transform var(--transition-speed) ease-in-out;
+}
+
+/* Navigation Menu */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  color: #64748b;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.88rem; /* Slightly reduced to let long strings fit comfortably */
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-item:hover, .nav-item.active {
+    background-color: #f1f5f9;
+    color: var(--primary-color, #16a34a);
+}
+
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.nav-text {
+    transition: opacity var(--transition-speed) ease-in-out;
+}
+
+/* Logout Button Footer */
+.sidebar-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sidebar .logout-btn {
+  width: 100%;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0 0.75rem;
+  background-color: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar .logout-btn:hover {
+  background-color: #fee2e2;
+}
+
+.sidebar .logout-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* --- COLLAPSED SIDEBAR OVERRIDES --- */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .sidebar-logo-text,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .logout-text {
+    opacity: 0;
+    display: none;
+    pointer-events: none;
+}
+
+.sidebar.collapsed .sidebar-toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 0.65rem 0;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-logo-container {
+    display: none;
+}
+
+/* ==========================================================================
+   5. DASHBOARD CARDS, STATS & TABLES
+   ========================================================================== */
 
 .stats-grid {
     display: grid;
@@ -178,7 +481,7 @@ body {
     margin-bottom: 20px;
 }
 
-/* 5. TABLES & BUTTONS */
+/* Data Tables */
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -195,6 +498,19 @@ body {
     background-color: #f8fafc;
     color: #475569;
     font-weight: 600;
+}
+
+/* Badges & Buttons */
+.role-badge {
+    background-color: var(--badge-bg);
+    color: var(--badge-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .action-btn {
