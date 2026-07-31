@@ -7,7 +7,8 @@
         exit();
     }
 
-    // Get Auditor's Name from login
+    // Get Auditor's infornation from login
+    $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
     // Default Dashboard Values
@@ -15,39 +16,123 @@
     $pendingMissions = 0;
     $rewardRedemptions = 0;
     $userTierUpgrades = 0;
+    $unreadNotifications = 0;
 
     $recentActivities = [];
+    $notifications = [];
+
+    $databaseError = '';
 
     // Connect to Database
     $conn = new mysqli("localhost", "root", "", "circulapu_db");
-    if (!$conn->connect_error){
+    if ($conn->connect_error){
+        $databaseError = "Unable to connect to the database.";
+    }else {
         // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
-    }
 
-    // Count Function
-    function getCount(mysqli $conn, string $sql): int{
-        $result = $conn->query($sql);
-        if ($result && ($row = $result->fetch_assoc())){
-            return (int) $row['total'];
+        // Count Function
+        function getCount(mysqli $conn, string $sql): int{
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc())){
+                return (int) $row['total'];
+            }
+            return 0;
         }
-        return 0;
+
+        // Count pending asset verification
+        $pendingAssets = getCount($conn, "SELECT COUNT(*) AS total FROM assets WHERE verificationStatus = 'Pending'");
+
+        // Count pending mission submission
+        $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM missionsubmission WHERE submissionStatus = 'Pending'");
+
+        // Count reward redemption
+        $rewardRedemptions = getCount($conn, "SELECT COUNT(*) AS total FROM rewardredemption");
+
+        // Count user tier upgrades
+        $userTierUpgrades = getCount($conn, "SELECT COUNT(*) AS total FROM usertier");
+
+        // Count unread notification
+        $unreadStatement = $conn->prepare("SELECT COUNT(*) AS total FROM notification WHERE userID = ? AND status = 'Unread'");
+        if ($unreadStatement){
+            $unreadStatement->bind_param("s", $auditorID);
+            $unreadStatement->execute();
+            $unreadResult = $unreadStatement->get_result();
+            if ($unreadRow = $unreadResult->fetch_assoc()){
+                $unreadNotifications = (int) $unreadRow['total'];
+            }
+            $unreadStatement->close();
+        }
+
+        // Recent Activities from SystemLog
+        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy
+        FROM systemlog sl
+        INNER JOIN user u ON sl.userID = u.userID
+        WHERE sl.refType IN('Mission', 'Asset', 'Reward', 'Badge', 'Tier', 'Verification')
+        ORDER BY sl.timeLogged DESC
+        LIMIT 5";
+
+        $activityResult = $conn->query($activitySQL);
+        if ($activityResult){
+            while($activityRow = $activityResult->fetch_assoc()){
+                $recentActivities[] = $activityRow;
+            }
+        }
+
+        // Notifications
+        $notificationStatement = $conn->prepare("SELECT notificationID, title, content, status, createdDate
+        FROM notification WHERE userID = ?
+        ORDER BY createdDate DESC
+        LIMIT 4");
+        if ($notificationStatement){
+            $notificationStatement->bind_param("s", $auditorID);
+            $notificationStatement->execute();
+            $notificationResult = $notificationStatement->get_result();
+            while($notificationRow = $notificationResult->fetch_assoc()){
+                $notifications[] = $notificationRow;
+            }
+            $notificationStatement->close();
+        }
+
+        // Disconnect Database
+        $conn->close();
     }
 
-    // Count pending asset verification
-    $pendingAssets = getCount($conn, "SELECT COUNT(*) AS total FROM assets WHERE verificationStatus = 'Pending'");
+    // Action Type function 
+    function getActionClass(string $actionType): string{
+        switch ($actionType){
+            case 'Approve':
+                return 'action-approved';
+            case 'Reject':
+                return 'action-rejected';
+            case 'Submit':
+                return 'action-submitted';
+            case 'Create':
+                return 'action-created';
+            case 'Update':
+                return 'action-updated';
+            case 'Delete':
+                return 'action-deleted';
+            case 'Redeem':
+                return 'action-redeemed';
+            case 'Assign':
+                return 'action-assigned';
+            default:
+                return 'action-default';
+        }
+    }
 
-    // Count pending mission submission
-    $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM missionsubmission WHERE submissionStatus = 'Pending'");
-
-    // Count reward redemption
-    $rewardRedemptions = getCount($conn, "SELECT COUNT(*) AS total FROM rewardredemption");
-
-    // Count user tier records
-    $userTierUpgrades = getCount($conn, "SELECT COUNT(*) AS total FROM usertier");
-
-    // Recent Activities table data
-
+    // Date Display function
+    function formatDashboardDate(?string $date): string{
+        if (empty($date)){
+            return '-';
+        }
+        $timestamp = strtotime($date);
+        if ($timestamp == false){
+            return '-';
+        }
+        return date('d M Y, h:i A', $timestamp);
+    }
 
 ?>
 
@@ -68,8 +153,102 @@
             
             <?php include 'header.php'; ?>
 
-            <main class="page-body">
-                </main>
+            <main class="page-body auditor-dashboard-page">
+                <!-- Welcome Back -->
+                <section class="auditor-welcome-section">
+                    <div>
+                        <h1>
+                            Welcome back, 
+                            <?php
+                                echo htmlspecialchars($auditorName);
+                            ?>
+                        </h1>
+
+                        <p>Here is an overview of  the sustainability activities.</p>
+                    </div>
+                </section>
+
+                <!-- Database Error Message -->
+                <?php if (!empty($databaseError)): ?>
+                    <div class="auditor-error-message">
+                        <?php
+                            echo htmlspecialchars($databaseError);
+                        ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Overview Cards-->
+                <section class="auditor-stat-grid" aria-label="Auditor Dashboard Statistics">
+
+                    <!-- Pending Asset Verification-->
+                    <a href="auditor_verification.php? type=Asset & status=Pending" class="auditor-stat-card">
+                        <div class="auditor-stat-icon">
+                            <img src="assets/images/pendingVerification.png" alt="Pending Verification">
+                        </div>
+
+                        <div class="auditor-stat-content">
+                            <strong>
+                                <?php
+                                    echo $pendingAssets;
+                                ?>
+                            </strong>
+                            <span>Pending Asset Verification</span>
+                        </div>
+                    </a>
+
+
+                    <!-- Pending Mission Submissions-->
+                    <a href="auditor_verification.php? type=Mission & status=Pending" class="auditor-stat-card">
+                        <div class="auditor-stat-icon">
+                            <img src="assets/images/pendingMission.png" alt="Pending Mission">
+                        </div>
+
+                        <div class="auditor-stat-content">
+                            <strong>
+                                <?php
+                                    echo $pendingMissions;
+                                ?>
+                            </strong>
+                            <span>Pending Mission Submissions</span>
+                        </div>
+                    </a>
+
+
+                    <!-- Reward Redemption Number-->
+                    <a href="auditor_rewards.php" class="auditor-stat-card">
+                        <div class="auditor-stat-icon">
+                            <img src="assets/images/reward.png" alt="Reward">
+                        </div>
+
+                        <div class="auditor-stat-content">
+                            <strong>
+                                <?php
+                                    echo $rewardRedemptions;
+                                ?>
+                            </strong>
+                            <span>Reward Redemptions</span>
+                        </div>
+                    </a>
+
+
+                    <!-- User Tier Upgrades -->
+                    <a href="auditor_usertiers.php" class="auditor-stat-card">
+                        <div class="auditor-stat-icon">
+                            <img src="assets/images/tier.png" alt="User Tier">
+                        </div>
+
+                        <div class="auditor-stat-content">
+                            <strong>
+                                <?php
+                                    echo $userTierUpgrades;
+                                ?>
+                            </strong>
+                            <span>User Tier Upgrades</span>
+                        </div>
+                    </a>
+                </section>
+
+            </main>
 
         </div>
     </div>
