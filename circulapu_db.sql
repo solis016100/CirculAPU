@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 28, 2026 at 07:49 AM
+-- Generation Time: Jul 31, 2026 at 07:10 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `circulapu_db`
 --
+CREATE DATABASE IF NOT EXISTS `circulapu_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `circulapu_db`;
 
 -- --------------------------------------------------------
 
@@ -309,7 +311,10 @@ INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `ecoPoints
 
 CREATE TABLE `systemlog` (
   `logID` varchar(10) NOT NULL,
-  `adminID` varchar(10) NOT NULL,
+  `userID` varchar(10) NOT NULL,
+  `actionType` enum('Create','Submit','Approve','Reject','Redeem','Assign','Update','Delete','Login','Logout') NOT NULL,
+  `refType` enum('Mission','Asset','Reward','Badge','Tier','Verification','User','Category') NOT NULL,
+  `refID` varchar(10) DEFAULT NULL,
   `description` varchar(255) NOT NULL,
   `timeLogged` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -318,10 +323,10 @@ CREATE TABLE `systemlog` (
 -- Dumping data for table `systemlog`
 --
 
-INSERT INTO `systemlog` (`logID`, `adminID`, `description`, `timeLogged`) VALUES
-('LOG001', 'U001', 'Created new system category: Electronics', '2026-07-27 07:01:17'),
-('LOG002', 'U001', 'Adjusted EcoPoints balance for user U004 (+50)', '2026-07-27 07:01:17'),
-('LOG003', 'U001', 'Updated account status for user U006 to Suspended', '2026-07-27 07:01:17');
+INSERT INTO `systemlog` (`logID`, `userID`, `actionType`, `refType`, `refID`, `description`, `timeLogged`) VALUES
+('LOG001', 'U001', 'Create', 'Category', NULL, 'Created new system category: Electronics', '2026-07-27 07:01:17'),
+('LOG002', 'U001', 'Update', 'User', 'U004', 'Adjusted EcoPoints balance for user U004 (+50)', '2026-07-27 07:01:17'),
+('LOG003', 'U001', 'Update', 'User', 'U006', 'Updated account status for user U006 to Suspended', '2026-07-27 07:01:17');
 
 -- --------------------------------------------------------
 
@@ -399,7 +404,8 @@ INSERT INTO `user` (`userID`, `name`, `email`, `password`, `role`, `status`, `ec
 ('U002', 'Lim Miao Miao', 'manager@mail.apu.edu.my', 'password123', 'Manager', 'Active', 120, '2026-07-27 07:01:16'),
 ('U003', 'Ooi Mian Miao', 'auditor@mail.apu.edu.my', 'password123', 'Auditor', 'Active', 450, '2026-07-27 07:01:16'),
 ('U004', 'Tan Miao Miao', 'tan@mail.apu.edu.my', 'password123', 'Member', 'Active', 300, '2026-07-27 07:01:16'),
-('U005', 'Teo Miao Miao', 'teo@mail.apu.edu.my', 'password123', 'Member', 'Active', 85, '2026-07-27 07:01:16');
+('U005', 'Teo Miao Miao', 'teo@mail.apu.edu.my', 'password123', 'Member', 'Active', 85, '2026-07-27 07:01:16'),
+('U006', 'Jia Qi Lim', 'limjiaqi735@gmail.com', '$2y$10$PQIKXR2iwXQnxpG0wMksXuX6Jr1FfQmWQfP7dBfBcsUQWuuPiNzFK', 'Member', 'Active', 0, '2026-07-28 05:57:29');
 
 -- --------------------------------------------------------
 
@@ -444,7 +450,8 @@ INSERT INTO `usertier` (`userTierID`, `userID`, `tierID`, `assignedDate`) VALUES
 ('UT001', 'U001', 'T004', '2026-07-27 07:01:16'),
 ('UT002', 'U003', 'T003', '2026-07-27 07:01:16'),
 ('UT003', 'U004', 'T002', '2026-07-27 07:01:16'),
-('UT004', 'U005', 'T001', '2026-07-27 07:01:16');
+('UT004', 'U005', 'T001', '2026-07-27 07:01:16'),
+('UTU006', 'U006', 'T001', '2026-07-28 05:57:29');
 
 -- --------------------------------------------------------
 
@@ -567,7 +574,7 @@ ALTER TABLE `rewards`
 --
 ALTER TABLE `systemlog`
   ADD PRIMARY KEY (`logID`),
-  ADD KEY `fk_syslog_admin` (`adminID`);
+  ADD KEY `fk_systemlog_user` (`userID`);
 
 --
 -- Indexes for table `tiers`
@@ -677,7 +684,7 @@ ALTER TABLE `rewardredemption`
 -- Constraints for table `systemlog`
 --
 ALTER TABLE `systemlog`
-  ADD CONSTRAINT `fk_syslog_admin` FOREIGN KEY (`adminID`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_systemlog_user` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `transactionrequests`
