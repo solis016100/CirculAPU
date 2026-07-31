@@ -181,7 +181,7 @@
                 <section class="auditor-stat-grid" aria-label="Auditor Dashboard Statistics">
 
                     <!-- Pending Asset Verification-->
-                    <a href="auditor_verification.php? type=Asset & status=Pending" class="auditor-stat-card">
+                    <a href="auditor_verification.php?type=Asset&status=Pending" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
                             <img src="assets/images/pendingVerification.png" alt="Pending Verification">
                         </div>
@@ -248,11 +248,144 @@
                     </a>
                 </section>
 
-            </main>
+                
+                <section class="auditor-lower-grid">
+                    <!-- Recent Activities -->
+                    <article class="auditor-panel auditor-activities-panel">
+                        <div class="auditor-panel-header">
+                            <div>
+                                <h2>Recent Activities</h2>
+                            </div>
+                            <a href="auditor_verification.php">View All</a>
+                        </div>
 
+                        <div class="auditor-table-wrapper">
+                            <table class="auditor-activity-table">
+                                <thead>
+                                    <tr>
+                                        <th>Activity</th>
+                                        <th>Related To</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <?php if(empty($recentActivities)):?>
+                                        <tr>
+                                            <td colspan="5" class="auditor-empty-state">No system activities have been recorded yet.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach($recentActivities as $activity):?>
+                                            <tr>
+                                                <td>
+                                                    <span class="auditor-action-badge <?php echo htmlspecialchars(getActionClass($activity['actionType']));?>">
+                                                        <?php echo htmlspecialchars($activity['actionType']);?>
+                                                    </span>
+                                                </td>
+
+                                                <td class="activity-description">
+                                                    <?php
+                                                        echo htmlspecialchars($activity['description']);
+                                                    ?>
+                                                </td>
+
+                                                <td>
+                                                    <div class="auditor-reference">
+                                                        <strong>
+                                                            <?php
+                                                                echo htmlspecialchars($activity['refType']);
+                                                            ?>
+                                                        </strong>
+
+                                                        <?php if (!empty($activity['refID'])):?>
+                                                            <span>
+                                                                <?php
+                                                                    echo htmlspecialchars($activity['refID']);
+                                                                ?>
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <?php
+                                                        echo htmlspecialchars($activity['performedBy']);
+                                                    ?>
+                                                </td>
+
+                                                <td>
+                                                    <?php
+                                                        echo htmlspecialchars(formatDashboardDate($activity['timeLogged']));
+                                                    ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <!-- Notification Panel -->
+                    <article class="auditor-panel auditor-notification-panel">
+                        <div class="auditor-panel-header">
+                            <div>
+                                <h2>Notifications</h2>
+                                <p>
+                                    <?php
+                                        echo $unreadNotifications;
+                                    ?>
+
+                                    unread notification
+                                    <?php 
+                                        echo ($unreadNotifications === 1) ? '' : 's'; 
+                                    ?>
+                                </p>
+                            </div>
+
+                            <a href="notification.php">View All</a>
+                        </div>
+
+                        <div class="auditor-notification-list">
+                            <?php if (empty($notifications)): ?>
+                                <div class="auditor-empty-notification">
+                                    <p>No notification found</p>
+                                </div>
+                            <?php else: ?>
+                                <?php
+                                    foreach($notifications as $notification):
+                                ?>
+                                    <a href="notification.php" class="auditor-notification-item <?php echo ($notification['status'] === 'Unread') ? 'notification-unread' : ''; ?>">
+                                        <div class="auditor-notification-content">
+                                            <div class="notification-title-row">
+                                                <strong>
+                                                    <?php
+                                                        echo htmlspecialchars($notification['title']);
+                                                    ?>
+                                                </strong>
+
+                                                <?php if ($notification['status'] === 'Unread'): ?>
+                                                    <span class="unread-indicator" title="Unread"></span>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <p>
+                                                <?php echo htmlspecialchars($notification['content']); ?>
+                                            </p>
+
+                                            <time>
+                                                <?php echo htmlspecialchars(formatDashboardDate($notification['createdDate'])); ?>
+                                            </time>
+                                        </div>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                </section>
+            </main>
         </div>
     </div>
-
 </body>
 </html>
 
