@@ -80,7 +80,6 @@ html, body {
     min-height: 100vh;
     background-color: var(--bg-color);
     color: #333333;
-    overflow-x: hidden;
 }
 
 /* Outer Flex Wrapper */
@@ -1087,7 +1086,7 @@ body.auth-page {
     color: #b45309;
     font-size: 14px;
     font-weight: 700;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .auditor-panel-header a:hover {
