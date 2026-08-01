@@ -7,7 +7,7 @@
         exit();
     }
 
-    // Get Auditor's infornation from login
+    // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 

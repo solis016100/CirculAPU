@@ -50,7 +50,7 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span class="nav-text">Dashboard</span>
         </a>
-        <a href="auditor_verification.php" class="nav-item <?php echo ($current_page == 'auditor_verification.php') ? 'active' : ''; ?>">
+        <a href="auditor_verification_management.php" class="nav-item <?php echo ($current_page == 'auditor_verification_management.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           <span class="nav-text">Verification</span>
         </a>
