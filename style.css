@@ -925,7 +925,7 @@ body.auth-page {
 }
 
 /* ==========================================================================
-   7. Auditor
+   7. Auditor Dashboard Management
    ========================================================================== */
 .auditor-dashboard-page{
     padding: 28px;
@@ -1305,3 +1305,227 @@ body.auth-page {
     font-size: 14px;
 }
 
+/* ==========================================================================
+   8. Auditor Verification Management
+   ========================================================================== */
+.auditor-verification-page {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.verification-heading h1 {
+    margin: 0;
+    font-size: 30px;
+    color: #222;
+}
+
+.verification-heading p {
+    margin: 7px 0 0;
+    color: #666;
+    font-size: 15px;
+}
+
+.verification-filter-panel {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 12px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 18px;
+    align-items: end;
+}
+
+.verification-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.verification-filter-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333333;
+}
+
+.verification-filter-group input,
+.verification-filter-group select {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid #cccccc;
+    border-radius: 7px;
+    background: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.verification-filter-group input:focus,
+.verification-filter-group select:focus {
+    border-color: #777777;
+}
+
+.verification-filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.verification-reset-btn {
+    text-decoration: none;
+    color: inherit;
+}
+
+.verification-filter-btn,
+.verification-reset-btn {
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.verification-filter-btn img,
+.verification-reset-btn img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.verification-filter-btn:hover,
+.verification-reset-btn:hover {
+    background: #f2f4f7;
+}
+
+.verification-record-panel {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.verification-record-header {
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #dddddd;
+}
+
+.verification-record-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.verification-record-header strong {
+    font-size: 14px;
+}
+
+.verification-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.verification-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+.verification-table th,
+.verification-table td {
+    padding: 14px 12px;
+    text-align: center;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.verification-table th {
+    background: #f4f4f4;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.verification-table td {
+    font-size: 14px;
+    color: #444444;
+}
+
+.verification-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.verification-status {
+    display: inline-block;
+    min-width: 85px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-pending {
+    background: #fff8e1;
+    color: #b77900;
+}
+
+.status-rejected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.verification-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.verification-action-btn {
+    padding: 2px 6px;
+    border: 0px;
+    border-radius: 5px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.verification-action-btn img,
+.verification-action-btn img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.verification-action-btn:hover {
+    background: #eeeeee;
+}
+
+.verification-action-btn.delete:hover {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.verification-empty-state {
+    padding: 35px !important;
+    color: #777777 !important;
+}
+
+.verification-table-footer {
+    padding: 15px 20px;
+    font-size: 13px;
+    color: #555555;
+}

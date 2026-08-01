@@ -15,6 +15,12 @@
     $verificationRecords = [];
     $databaseError = '';
 
+    // Filter Values
+    $search = trim($_GET['search'] ?? '');
+    $userFilter = $_GET['user'] ?? '';
+    $typeFilter = $_GET['type'] ?? '';
+    $statusFilter = $_GET['status'] ?? '';
+
     // Connect to Database
     $conn = new mysqli("localhost", "root", "", "circulapu_db");
     if ($conn->connect_error){
@@ -24,19 +30,67 @@
         $conn->set_charset("utf8mb4");
 
         // Get all verification records with user name
-        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate FROM verificationrecords vr
-        INNER JOIN user u ON vr.userID = u.userID
-        ORDER BY vr.verifiedDate DESC";
+        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate
+        FROM verificationrecords vr
+        INNER JOIN user u ON vr.userID = u.userID WHERE 1=1";
+
+
+        // Search (filter)
+        if ($search !== '') {
+            $safeSearch = $conn->real_escape_string($search);
+            $sql .= " AND (vr.verificationID LIKE '%$safeSearch%'
+                    OR u.name LIKE '%$safeSearch%'
+                    OR vr.targetType LIKE '%$safeSearch%'
+                    OR vr.status LIKE '%$safeSearch%')";
+        }
+
+
+        // Filter by User
+        if ($userFilter !== '') {
+            $safeUser = $conn->real_escape_string($userFilter);
+            $sql .= " AND vr.userID = '$safeUser'";
+        }
+
+        $users = [];
+
+        $userSql = "SELECT DISTINCT u.userID, u.name FROM verificationrecords vr
+                    INNER JOIN user u ON vr.userID = u.userID
+                    ORDER BY u.name ASC";
+
+        $userResult = $conn->query($userSql);
+
+        if ($userResult) {
+            while ($user = $userResult->fetch_assoc()) {
+                $users[] = $user;
+            }
+        }
+
+
+        // Filter by Type
+        if ($typeFilter !== '') {
+            $safeType = $conn->real_escape_string($typeFilter);
+            $sql .= " AND vr.targetType = '$safeType'";
+        }
+
+
+        // Filter by Status
+        if ($statusFilter !== '') {
+            $safeStatus = $conn->real_escape_string($statusFilter);
+            $sql .= " AND vr.status = '$safeStatus'";
+        }
+
+        $sql .= " ORDER BY vr.verifiedDate DESC";
 
         $result = $conn->query($sql);
 
-        if ($result){
-            while ($row = $result->fetch_assoc()){
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
                 $verificationRecords[] = $row;
             }
-        }else {
+        } else {
             $databaseError = "Unable to retrieve verification records.";
         }
+
         $conn->close();
     }
 
@@ -54,7 +108,7 @@
 
         return date('d M Y', $timestamp);
     }
-
+?>
 
 
 <!DOCTYPE html>
@@ -63,13 +117,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditor Verification Management Dashboard - CirculAPU</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="role-auditor">
     <div class="dashboard-container">
-        <div class="dashboard-container">
 
         <?php include 'sidebar.php'; ?>
 
@@ -80,14 +132,14 @@
             <main class="page-body auditor-verification-page">
 
 
-                // Page Heading
+                <!-- Page Heading -->
                 <section class="verification-heading">
                     <h1>Verification Management Dashboard</h1>
                     <p>Manage all verification records on the platform</p>
                 </section>
 
 
-                // Database Error
+                <!-- Database Error -->
                 <?php if (!empty($databaseError)): ?>
                     <div class="auditor-error-message">
                         <?php echo htmlspecialchars($databaseError); ?>
@@ -95,51 +147,82 @@
                 <?php endif; ?>
 
 
-                // Search and Filter
-                <section class="verification-filter-panel">
+                <!-- Search and Filter -->
+                <form class="verification-filter-panel" method="get" action="auditor_verification_management.php">
                     <div class="verification-filter-group verification-search-group">
                         <label for="verificationSearch">Search Verification Record</label>
-                        <input type="text" id="verificationSearch" placeholder="Search by user, type, status...">
+                        <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status, date...">
                     </div>
 
-                    // Filter by User
+                    <!-- Filter by User -->
                     <div class="verification-filter-group">
                         <label for="userFilter">User</label>
-                        <select id="userFilter">
+                        <select id="userFilter" name="user">
                             <option value="">All Users</option>
+                            <?php foreach ($users as $user): ?>
+                                <option value="<?php echo htmlspecialchars($user['userID']); ?>"
+                                    <?php echo ($userFilter === $user['userID']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($user['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
-                    // Filter by Type of verification record
+                    <!-- Filter by Type of verification record -->
                     <div class="verification-filter-group">
                         <label for="typeFilter">Type</label>
-                        <select id="typeFilter">
-                            <option value="">All Type</option>
-                            <option value="Asset">Asset</option>
-                            <option value="MissionSubmission">Mission</option>
+                        <select id="typeFilter" name="type">
+                            <option value="">
+                                All Type
+                            </option>
+
+                            <option value="Asset" <?php echo ($typeFilter === 'Asset') ? 'selected' : ''; ?>>
+                                Asset 
+                            </option>
+
+                            <option value="MissionSubmission" <?php echo ($typeFilter === 'MissionSubmission') ? 'selected' : ''; ?>>
+                                Mission
+                            </option>
                         </select>
                     </div>
 
-                    // Filter by Status
+                    <!-- Filter by Status -->
                     <div class="verification-filter-group">
                         <label for="statusFilter">Status</label>
-                        <select id="statusFilter">
-                            <option value="">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
+                        <select id="statusFilter" name="status">
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="Pending" <?php echo ($statusFilter === 'Pending') ?'selected' : ''; ?>>
+                                Pending
+                            </option>
+
+                            <option value="Approved" <?php echo ($statusFilter === 'Approved') ? 'selected' : ''; ?>>
+                                Approved
+                            </option>
+
+                            <option value="Rejected" <?php echo ($statusFilter === 'Rejected') ? 'selected' : ''; ?>>
+                                Rejected
+                            </option>
                         </select>
                     </div>
 
-                    // Filter buttons - Filter/Reset
+                    <!-- Filter buttons - Filter/Reset -->
                     <div class="verification-filter-buttons">
-                        <button type="button" class="verification-filter-btn">Filter</button>
-                        <button type="button" class="verification-reset-btn">Reset</button>
+                        <button type="submit" class="verification-filter-btn">
+                            <img src="assets/images/filter.png" alt="Filter">
+                            Filter
+                        </button>
+                        <a href="auditor_verification_management.php" class="verification-reset-btn">
+                            <img src="assets/images/reset.png" alt="Reset">
+                            Reset
+                        </a>
                     </div>
-                </section>
+                </form>
 
 
-                // Verification Record List
+                <!-- Verification Record List -->
                 <section class="verification-record-panel">
                     <div class="verification-record-header">
                         <h2>Verification Record List</h2>
@@ -150,11 +233,8 @@
                     </div>
 
                     <div class="verification-table-wrapper">
-
                         <table class="verification-table">
-
                             <thead>
-
                                 <tr>
                                     <th>#</th>
                                     <th>Verification ID</th>
@@ -164,170 +244,128 @@
                                     <th>Date</th>
                                     <th>Action</th>
                                 </tr>
-
                             </thead>
 
-
                             <tbody>
-
                                 <?php if (!empty($verificationRecords)): ?>
-
                                     <?php
-                                    $number = 1;
-
-                                    foreach ($verificationRecords as $record):
+                                        $number = 1;
+                                        foreach ($verificationRecords as $record):
                                     ?>
-
                                         <tr>
-
                                             <td>
                                                 <?php echo $number; ?>
                                             </td>
 
-
                                             <td>
                                                 <?php
-                                                echo htmlspecialchars(
-                                                    $record['verificationID']
-                                                );
-                                                ?>
-                                            </td>
-
-
-                                            <td>
-                                                <?php
-                                                echo htmlspecialchars(
-                                                    $record['userName']
-                                                );
-                                                ?>
-                                            </td>
-
-
-                                            <td>
-                                                <?php
-                                                if ($record['targetType'] === 'MissionSubmission') {
-                                                    echo 'Mission';
-                                                } else {
                                                     echo htmlspecialchars(
-                                                        $record['targetType']
+                                                        $record['verificationID']
                                                     );
-                                                }
                                                 ?>
                                             </td>
 
+                                            <td>
+                                                <?php
+                                                    echo htmlspecialchars(
+                                                        $record['userName']
+                                                    );
+                                                ?>
+                                            </td>
 
                                             <td>
+                                                <?php
+                                                    if ($record['targetType'] === 'MissionSubmission') {
+                                                        echo 'Mission';
+                                                    } else {
+                                                        echo htmlspecialchars(
+                                                            $record['targetType']
+                                                        );
+                                                    }
+                                                ?>
+                                            </td>
 
+                                            <td>
                                                 <span class="verification-status 
                                                     status-<?php echo strtolower(
                                                         $record['status']
                                                     ); ?>">
 
                                                     <?php
-                                                    echo htmlspecialchars(
-                                                        $record['status']
-                                                    );
+                                                        echo htmlspecialchars(
+                                                            $record['status']
+                                                        );
                                                     ?>
-
                                                 </span>
-
                                             </td>
-
 
                                             <td>
                                                 <?php
-                                                echo formatVerificationDate(
-                                                    $record['verifiedDate']
+                                                    echo formatVerificationDate(
+                                                        $record['verifiedDate']
                                                 );
                                                 ?>
                                             </td>
 
-
                                             <td>
-
                                                 <div class="verification-actions">
-
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn"
                                                         title="View">
-
-                                                        View
-
+                                                        <img src="assets/images/view.png" alt="View">
                                                     </button>
-
 
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn"
                                                         title="Edit">
-
-                                                        Edit
-
+                                                        <img src="assets/images/edit.png" alt="Edit">
                                                     </button>
-
 
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn"
                                                         title="Print">
-
-                                                        Print
-
+                                                        <img src="assets/images/print.png" alt="Print">
                                                     </button>
-
 
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn delete"
                                                         title="Delete">
-
-                                                        Delete
-
+                                                        <img src="assets/images/delete.png" alt="Delete">
                                                     </button>
-
                                                 </div>
-
                                             </td>
-
                                         </tr>
 
                                         <?php $number++; ?>
 
                                     <?php endforeach; ?>
 
-
                                 <?php else: ?>
 
                                     <tr>
-
                                         <td colspan="7" class="verification-empty-state">
                                             No verification records found.
                                         </td>
-
                                     </tr>
 
                                 <?php endif; ?>
 
                             </tbody>
-
                         </table>
-
                     </div>
 
-
-                    <!-- Temporary Footer -->
+                    <!-- Temporary Footer for verification table -->
                     <div class="verification-table-footer">
-
                         <span>
                             Showing
                             <?php echo count($verificationRecords); ?>
                             record(s)
                         </span>
-
                     </div>
-
-                </section>
                 </section>
             </main>
         </div>
