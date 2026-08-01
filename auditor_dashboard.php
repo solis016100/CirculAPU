@@ -181,7 +181,7 @@
                 <section class="auditor-stat-grid" aria-label="Auditor Dashboard Statistics">
 
                     <!-- Pending Asset Verification-->
-                    <a href="auditor_verification.php?type=Asset&status=Pending" class="auditor-stat-card">
+                    <a href="auditor_verification_management.php?type=Asset&status=Pending" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
                             <img src="assets/images/pendingVerification.png" alt="Pending Verification">
                         </div>
@@ -198,7 +198,7 @@
 
 
                     <!-- Pending Mission Submissions-->
-                    <a href="auditor_verification.php? type=Mission & status=Pending" class="auditor-stat-card">
+                    <a href="auditor_verification_management.php? type=Mission & status=Pending" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
                             <img src="assets/images/pendingMission.png" alt="Pending Mission">
                         </div>
@@ -256,7 +256,7 @@
                             <div>
                                 <h2>Recent Activities</h2>
                             </div>
-                            <a href="auditor_verification.php">View All</a>
+                            <a href="auditor_verification_management.php">View All</a>
                         </div>
 
                         <div class="auditor-table-wrapper">
