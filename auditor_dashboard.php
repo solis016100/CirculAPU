@@ -23,6 +23,15 @@
 
     $databaseError = '';
 
+    // Count Function
+    function getCount(mysqli $conn, string $sql): int{
+        $result = $conn->query($sql);
+        if ($result && ($row = $result->fetch_assoc())){
+            return (int) $row['total'];
+        }
+        return 0;
+    }
+
     // Connect to Database
     $conn = new mysqli("localhost", "root", "", "circulapu_db");
     if ($conn->connect_error){
@@ -31,14 +40,6 @@
         // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
 
-        // Count Function
-        function getCount(mysqli $conn, string $sql): int{
-            $result = $conn->query($sql);
-            if ($result && ($row = $result->fetch_assoc())){
-                return (int) $row['total'];
-            }
-            return 0;
-        }
 
         // Count pending asset verification
         $pendingAssets = getCount($conn, "SELECT COUNT(*) AS total FROM assets WHERE verificationStatus = 'Pending'");
@@ -128,7 +129,7 @@
             return '-';
         }
         $timestamp = strtotime($date);
-        if ($timestamp == false){
+        if ($timestamp === false){
             return '-';
         }
         return date('d M Y, h:i A', $timestamp);
@@ -198,7 +199,7 @@
 
 
                     <!-- Pending Mission Submissions-->
-                    <a href="auditor_verification_management.php? type=Mission & status=Pending" class="auditor-stat-card">
+                    <a href="auditor_mission_management.php?type=Mission&status=Pending" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
                             <img src="assets/images/pendingMission.png" alt="Pending Mission">
                         </div>
@@ -256,7 +257,7 @@
                             <div>
                                 <h2>Recent Activities</h2>
                             </div>
-                            <a href="auditor_verification_management.php">View All</a>
+                            <a href="auditor_recent_activities.php">View All</a>
                         </div>
 
                         <div class="auditor-table-wrapper">
@@ -272,7 +273,7 @@
                                 <tbody>
                                     <?php if(empty($recentActivities)):?>
                                         <tr>
-                                            <td colspan="5" class="auditor-empty-state">No system activities have been recorded yet.</td>
+                                            <td colspan="3" class="auditor-empty-state">No system activities have been recorded yet.</td>
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach($recentActivities as $activity):?>
@@ -343,7 +344,7 @@
                                 </p>
                             </div>
 
-                            <a href="notification.php">View All</a>
+                            <a href="auditor_notification.php">View All</a>
                         </div>
 
                         <div class="auditor-notification-list">
@@ -355,7 +356,7 @@
                                 <?php
                                     foreach($notifications as $notification):
                                 ?>
-                                    <a href="notification.php" class="auditor-notification-item <?php echo ($notification['status'] === 'Unread') ? 'notification-unread' : ''; ?>">
+                                    <a href="auditor_notification.php" class="auditor-notification-item <?php echo ($notification['status'] === 'Unread') ? 'notification-unread' : ''; ?>">
                                         <div class="auditor-notification-content">
                                             <div class="notification-title-row">
                                                 <strong>

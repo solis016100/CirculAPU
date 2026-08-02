@@ -159,3 +159,13 @@ body.dark-mode .data-table td {
     border-bottom-color: #334155 !important;
     color: #e2e8f0 !important;
 }
+
+/* Auditor Dashboard Welcome Section */
+body.dark-mode .auditor-welcome-section h1 {
+    color: #f8fafc !important;
+}
+
+body.dark-mode .auditor-welcome-section p {
+    color: #94a3b8 !important;
+}
+

@@ -924,8 +924,37 @@ body.auth-page {
     text-decoration: underline;
 }
 
+
 /* ==========================================================================
-   7. Auditor Dashboard Management
+   7. Breadcrumbs
+   ========================================================================== */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.breadcrumb a {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.breadcrumb .breadcrumb-current {
+    color: #334155;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   8. Auditor Dashboard Management
    ========================================================================== */
 .auditor-dashboard-page{
     padding: 28px;
@@ -1306,7 +1335,7 @@ body.auth-page {
 }
 
 /* ==========================================================================
-   8. Auditor Verification Management
+   9. Auditor Verification Management
    ========================================================================== */
 .auditor-verification-page {
     display: flex;

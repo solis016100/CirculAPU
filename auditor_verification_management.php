@@ -151,7 +151,7 @@
                 <form class="verification-filter-panel" method="get" action="auditor_verification_management.php">
                     <div class="verification-filter-group verification-search-group">
                         <label for="verificationSearch">Search Verification Record</label>
-                        <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status, date...">
+                        <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status...">
                     </div>
 
                     <!-- Filter by User -->
