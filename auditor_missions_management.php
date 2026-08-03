@@ -78,7 +78,7 @@
                 <p>Manage all Missions on the platform</p>
 
                 <a href="auditor_mission_create.php">
-                    <img src="assets/images/create.png" alt="Create">
+                    <img src="assets/icons/create.png" alt="Create">
                     Create New Mission
                 </a>
 
@@ -112,19 +112,19 @@
                                     <td><?php echo htmlspecialchars($mission['status']); ?></td>
                                     <td>
                                         <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/images/view.png" alt="View">
+                                            <img src="assets/icons/view.png" alt="View">
                                         </a>
 
                                         <a href="auditor_mission_edit.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/images/edit.png" alt="Edit">
+                                            <img src="assets/icons/edit.png" alt="Edit">
                                         </a>
 
                                         <a href="auditor_mission_print.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/images/print.png" alt="Print">
+                                            <img src="assets/icons/print.png" alt="Print">
                                         </a>
 
                                         <a href="auditor_mission_delete.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/images/delete.png" alt="Delete">
+                                            <img src="assets/icons/delete.png" alt="Delete">
                                         </a>
                                     </td>
                                 </tr>

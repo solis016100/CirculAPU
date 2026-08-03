@@ -191,11 +191,11 @@
                     <!-- Filter buttons - Filter/Reset -->
                     <div class="verification-filter-buttons">
                         <button type="submit" class="verification-filter-btn">
-                            <img src="assets/images/filter.png" alt="Filter">
+                            <img src="assets/icons/filter.png" alt="Filter">
                             Filter
                         </button>
                         <a href="auditor_activity_log.php" class="verification-reset-btn">
-                            <img src="assets/images/reset.png" alt="Reset">
+                            <img src="assets/icons/reset.png" alt="Reset">
                             Reset
                         </a>
                     </div>

@@ -184,7 +184,7 @@
                     <div class="notification-filter-group notification-search-group">
                         <label for="notificationSearch">Search Notification</label>
                         <div class="notification-search-box">
-                            <img src="assets/images/search.png" alt="Search">
+                            <img src="assets/icons/search.png" alt="Search">
                             <input
                                 type="text"
                                 id="notificationSearch"
@@ -221,11 +221,11 @@
                     <!-- Reset Button -->
                     <div class="notification-filter-buttons">
                         <button type="button" class="notification-filter-btn" id="filterNotification">
-                            <img src="assets/images/filter.png" alt="">
+                            <img src="assets/icons/filter.png" alt="">
                             <span>Filter</span>
                         </button>
                         <button type="button" class="notification-reset-btn" id="resetNotification">
-                            <img src="assets/images/reset.png" alt="">
+                            <img src="assets/icons/reset.png" alt="">
                             <span>Reset</span>
                         </button>
                     </div>
@@ -388,25 +388,25 @@
 
                             <!-- Mark Selected as Read -->
                             <button type="button" id="markSelectedRead">
-                                <img src="assets/images/mark_as_read.png" alt="Mark Selected as Read" >
+                                <img src="assets/icons/mark_as_read.png" alt="Mark Selected as Read" >
                                 <span>Mark Selected as Read</span>
                             </button>
 
                             <!-- Mark All as Read -->
                             <button type="button" id="markAllRead">
-                                <img src="assets/images/envelope.png" alt="Mark All as Read">
+                                <img src="assets/icons/envelope.png" alt="Mark All as Read">
                                 <span>Mark All as Read</span>
                             </button>
 
                             <!-- Print -->
                             <button type="button" id="printNotifications">
-                                <img  src="assets/images/print.png" alt="Print">
+                                <img  src="assets/icons/print.png" alt="Print">
                                 <span>Print</span>
                             </button>
 
                             <!-- Delete -->
                             <button type="button" id="deleteNotifications">
-                                <img src="assets/images/delete.png" alt="Delete Selected">
+                                <img src="assets/icons/delete.png" alt="Delete Selected">
                                 <span>Delete Selected</span>
                             </button>
 
