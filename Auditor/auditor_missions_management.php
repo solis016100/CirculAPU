@@ -20,6 +20,45 @@
         $conn->set_charset("utf8mb4");
     }
 
+    // Get filter values from URL
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $missionName = isset($_GET['missionName']) ? trim($_GET['missionName']) : '';
+    $ecoPoints = isset($_GET['ecoPoints']) ? trim($_GET['ecoPoints']) : '';
+    $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+
+    // Store filter conditions
+    $conditions = [];
+
+    // Search Mission
+    if ($search !== '') {
+        $safeSearch = mysqli_real_escape_string($conn, $search);
+        $conditions[] = "(missionName LIKE '%$safeSearch%'OR ecoPointsReward LIKE '%$safeSearch%')";
+    }
+
+    // Filter by Mission Name
+    if ($missionName !== '') {
+        $safeMissionName = mysqli_real_escape_string($conn, $missionName);
+        $conditions[] = "missionName = '$safeMissionName'";
+    }
+
+    // Filter by EcoPoints
+    if ($ecoPoints !== '') {
+        $safeEcoPoints = (int) $ecoPoints;
+        $conditions[] = "ecoPointsReward = $safeEcoPoints";
+    }
+
+    // Filter by Status
+    if ($status !== '') {
+        $safeStatus = mysqli_real_escape_string($conn, $status);
+        $conditions[] = "status = '$safeStatus'";
+    }
+
+    // Combine all conditions
+    $whereClause = '';
+    if (!empty($conditions)) {
+        $whereClause = "WHERE " . implode(" AND ", $conditions);
+    }
+
 
     // Number of missions displayed per page
     $recordsPerPage = 8;
@@ -33,7 +72,7 @@
     }
 
     // Count total missions
-    $countQuery = "SELECT COUNT(*) AS total FROM missions";
+    $countQuery = "SELECT COUNT(*) AS total FROM missions $whereClause";
     $countResult = mysqli_query($conn, $countQuery);
     $countRow = mysqli_fetch_assoc($countResult);
 
@@ -48,12 +87,25 @@
 
     // Retrieve missions for current page
     $query = "SELECT missionID, missionName, ecoPointsReward, status
-            FROM missions
-            ORDER BY missionID ASC
-            LIMIT $recordsPerPage OFFSET $offset";
+          FROM missions
+          $whereClause
+          ORDER BY missionID ASC
+          LIMIT $recordsPerPage OFFSET $offset";
 
     $result = mysqli_query($conn, $query);
-    ?>
+
+
+    // Get Mission Names for dropdown from database
+    $missionNameQuery = "SELECT DISTINCT missionName FROM missions ORDER BY missionName ASC";
+    $missionNameResult = mysqli_query($conn, $missionNameQuery);
+
+    // Get EcoPoints values for dropdown from database
+    $ecoPointsQuery = "SELECT DISTINCT ecoPointsReward FROM missions ORDER BY ecoPointsReward ASC";
+    $ecoPointsResult = mysqli_query($conn, $ecoPointsQuery);
+
+    // Get Status values for dropdown from database
+    $statusQuery = "SELECT DISTINCT status FROM missions ORDER BY status ASC";
+    $statusResult = mysqli_query($conn, $statusQuery);
 ?>
 
 <!DOCTYPE html>
@@ -62,121 +114,268 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditor Mission Management Dashboard - CirculAPU</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body class="role-auditor">
     <div class="dashboard-container">
 
-        <?php include 'sidebar.php'; ?>
+        <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <?php include 'header.php'; ?>
+            <?php include '../header.php'; ?>
 
 
-                <h1>Mission Management</h1>
-                <p>Manage all Missions on the platform</p>
+                <main class="mission-content">
 
-                <a href="auditor_mission_create.php">
-                    <img src="assets/icons/create.png" alt="Create">
-                    Create New Mission
-                </a>
-
-                <!-- Mission Table Header -->
-                <div class="mission-list">
-                    <div class="mission-list-header">
-                        <h2>Mission List</h2>
-                        <p>Total Mission: <?php echo $totalMissions; ?></p>
-                    </div>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Mission ID</th>
-                                <th>Mission Name</th>
-                                <th>EcoPoints Awarded</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)) {?>
-                                <tr>
-                                    <td><?php echo $number; ?></td>
-                                    <td><?php echo htmlspecialchars($mission['missionID']); ?></td>
-                                    <td><?php echo htmlspecialchars($mission['missionName']); ?></td>
-                                    <td><?php echo htmlspecialchars($mission['ecoPointsReward']); ?></td>
-                                    <td><?php echo htmlspecialchars($mission['status']); ?></td>
-                                    <td>
-                                        <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/icons/view.png" alt="View">
-                                        </a>
-
-                                        <a href="auditor_mission_edit.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/icons/edit.png" alt="Edit">
-                                        </a>
-
-                                        <a href="auditor_mission_print.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/icons/print.png" alt="Print">
-                                        </a>
-
-                                        <a href="auditor_mission_delete.php?id=<?php echo urlencode($mission['missionID']); ?>">
-                                            <img src="assets/icons/delete.png" alt="Delete">
-                                        </a>
-                                    </td>
-                                </tr>
-
-                            <?php $number++; }?>
-
-                        </tbody>
-                    </table>
-
-                    <!-- Automatic Page Buttons -->
-                    <?php
-                        if ($totalMissions > 0) {
-                            $startRecord = $offset + 1;
-                            $endRecord = min($offset + $recordsPerPage, $totalMissions);
-                        } else {
-                            $startRecord = 0;
-                            $endRecord = 0;
-                        }
-                        ?>
-
-                        <div class="table-footer">
-                            <p>
-                                Showing <?php echo $startRecord; ?>
-                                to <?php echo $endRecord; ?>
-                                of <?php echo $totalMissions; ?> entries
-                            </p>
-                            <div class="pagination">
-
-                                <?php if ($page > 1) { ?>
-                                    <a href="?page=<?php echo $page - 1; ?>">
-                                        &lt;
-                                    </a>
-                                <?php } ?>
-
-                                <?php for ($i = 1; $i <= $totalPages; $i++) { ?>
-                                    <a href="?page=<?php echo $i; ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
-                                        <?php echo $i; ?>
-                                    </a>
-
-                                <?php } ?>
-
-                                <?php if ($page < $totalPages) { ?>
-                                    <a href="?page=<?php echo $page + 1; ?>">
-                                        &gt;
-                                    </a>
-                                <?php } ?>
-
-                            </div>
-
+                    <div class="mission-heading">
+                        <div>
+                            <h1>Mission Management</h1>
+                            <p>Manage all Missions on the platform</p>
                         </div>
 
+                        <a href="auditor_mission_create.php" class="create-mission-btn">
+                            <img src="../assets/icons/create.png" alt="Create">
+                            Create New Mission
+                        </a>
+                    </div>
+
+                    <!-- Search and Filter -->
+                    <div class="mission-filter">
+                        <form method="GET" action="auditor_missions_management.php">
+
+                            <!-- Search Mission -->
+                            <div class="filter-group search-group">
+                                <label for="search">Search Mission</label>
+                                <div class="search-input">
+                                    <img src="../assets/icons/search.png" alt="Search">
+                                    <input
+                                        type="text"
+                                        id="search"
+                                        name="search"
+                                        placeholder="Search by mission name, ecopoints..."
+                                        value="<?php echo htmlspecialchars($search); ?>"
+                                    >
+                                </div>
+                            </div>
+
+
+                            <!-- Filter by Mission Name -->
+                            <div class="filter-group">
+                                <label for="missionName">Mission Name</label>
+                                <select id="missionName" name="missionName">
+                                    <option value="">All Mission</option>
+                                    <?php while ($row = mysqli_fetch_assoc($missionNameResult)) { ?>
+                                        <option
+                                            value="<?php echo htmlspecialchars($row['missionName']); ?>"
+                                            <?php
+                                                if ($missionName === $row['missionName']) {
+                                                    echo 'selected';
+                                                }
+                                            ?>
+                                        >
+                                            <?php echo htmlspecialchars($row['missionName']); ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+
+
+                            <!-- Filter by EcoPoints -->
+                            <div class="filter-group">
+                                <label for="ecoPoints">EcoPoints Awarded</label>
+                                <select id="ecoPoints" name="ecoPoints">
+                                    <option value="">All EcoPoints</option>
+                                    <?php while ($row = mysqli_fetch_assoc($ecoPointsResult)) { ?>
+                                        <option
+                                            value="<?php echo $row['ecoPointsReward']; ?>"
+                                            <?php
+                                                if ($ecoPoints == $row['ecoPointsReward']) {
+                                                    echo 'selected';
+                                                }
+                                            ?>
+                                        >
+                                            <?php echo $row['ecoPointsReward']; ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+
+
+                            <!-- Filter by Status -->
+                            <div class="filter-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status">
+                                    <option value="">All Status</option>
+                                    <?php while ($row = mysqli_fetch_assoc($statusResult)) { ?>
+                                        <option
+                                            value="<?php echo htmlspecialchars($row['status']); ?>"
+                                            <?php
+                                                if ($status === $row['status']) {
+                                                    echo 'selected';
+                                                }
+                                            ?>
+                                        >
+                                            <?php echo htmlspecialchars($row['status']); ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+
+
+                            <!-- Filter Buttons -->
+                            <div class="filter-buttons">
+                                <button type="submit" class="filter-btn">
+                                    <img src="../assets/icons/filter.png" alt="Filter">
+                                    Filter
+                                </button>
+
+                                <a href="auditor_missions_management.php" class="reset-btn">
+                                    <img src="../assets/icons/reset.png" alt="Reset">
+                                    Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Mission Table Header -->
+                    <div class="mission-list">
+                        <div class="mission-list-header">
+                            <h2>Mission List</h2>
+                            <p>Total Mission: <?php echo $totalMissions; ?></p>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="mission-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Mission ID</th>
+                                        <th>Mission Name</th>
+                                        <th>EcoPoints Awarded</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)) {?>
+                                        <tr>
+                                            <td><?php echo $number; ?></td>
+                                            <td><?php echo htmlspecialchars($mission['missionID']); ?></td>
+                                            <td><?php echo htmlspecialchars($mission['missionName']); ?></td>
+                                            <td><?php echo htmlspecialchars($mission['ecoPointsReward']); ?></td>
+                                            <td><?php echo htmlspecialchars($mission['status']); ?></td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    title="View">
+                                                        <img src="../assets/icons/view.png" alt="View">
+                                                    </a>
+
+                                                    <a href="auditor_mission_edit.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    title="Edit">
+                                                        <img src="../assets/icons/edit.png" alt="Edit">
+                                                    </a>
+
+                                                    <a href="auditor_mission_print.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    title="Print">
+                                                        <img src="../assets/icons/print.png" alt="Print">
+                                                    </a>
+
+                                                    <a href="auditor_mission_delete.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    title="Delete">
+                                                        <img src="../assets/icons/delete.png" alt="Delete">
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    <?php $number++; }?>
+
+                                </tbody>
+                            </table>
+
+                            <!-- Automatic Page Buttons -->
+                            <?php
+                                if ($totalMissions > 0) {
+                                    $startRecord = $offset + 1;
+                                    $endRecord = min($offset + $recordsPerPage, $totalMissions);
+                                } else {
+                                    $startRecord = 0;
+                                    $endRecord = 0;
+                                }
+                            ?>
+
+                                <div class="table-footer">
+                                    <p>
+                                        Showing <?php echo $startRecord; ?>
+                                        to <?php echo $endRecord; ?>
+                                        of <?php echo $totalMissions; ?> entries
+                                    </p>
+
+                                    <?php
+                                        // Keep filter values when changing pages
+                                        $paginationParams = [];
+
+                                        if ($search !== '') {
+                                            $paginationParams['search'] = $search;
+                                        }
+
+                                        if ($missionName !== '') {
+                                            $paginationParams['missionName'] = $missionName;
+                                        }
+
+                                        if ($ecoPoints !== '') {
+                                            $paginationParams['ecoPoints'] = $ecoPoints;
+                                        }
+
+                                        if ($status !== '') {
+                                            $paginationParams['status'] = $status;
+                                        }
+                                    ?>
+
+                                    <div class="pagination">
+                                        <!-- Previous -->
+                                        <?php if ($page > 1) {
+                                            $previousParams = $paginationParams;
+                                            $previousParams['page'] = $page - 1;
+                                        ?>
+                                            <a href="?<?php echo http_build_query($previousParams); ?>">
+                                                &lt;
+                                            </a>
+                                        <?php } ?>
+
+                                        <!-- Page Numbers -->
+                                        <?php for ($i = 1; $i <= $totalPages; $i++) {
+                                            $pageParams = $paginationParams;
+                                            $pageParams['page'] = $i;
+                                        ?>
+                                            <a
+                                                href="?<?php echo http_build_query($pageParams); ?>"
+                                                class="<?php echo ($i == $page) ? 'active' : ''; ?>"
+                                            >
+                                                <?php echo $i; ?>
+                                            </a>
+
+                                        <?php } ?>
+
+                                        <!-- Next -->
+                                        <?php if ($page < $totalPages) {
+                                            $nextParams = $paginationParams;
+                                            $nextParams['page'] = $page + 1;
+                                        ?>
+                                            <a href="?<?php echo http_build_query($nextParams); ?>">
+                                                &gt;
+                                            </a>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </main>
         </div>
-    
+    </div>
 </body>
 </html>

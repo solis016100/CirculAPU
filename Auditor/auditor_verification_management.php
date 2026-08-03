@@ -117,17 +117,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditor Verification Management Dashboard - CirculAPU</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 
 <body class="role-auditor">
     <div class="dashboard-container">
 
-        <?php include 'sidebar.php'; ?>
+        <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <?php include 'header.php'; ?>
+            <?php include '../header.php'; ?>
 
             <main class="page-body auditor-verification-page">
 
@@ -211,11 +211,11 @@
                     <!-- Filter buttons - Filter/Reset -->
                     <div class="verification-filter-buttons">
                         <button type="submit" class="verification-filter-btn">
-                            <img src="assets/icons/filter.png" alt="Filter">
+                            <img src="../assets/icons/filter.png" alt="Filter">
                             Filter
                         </button>
                         <a href="auditor_verification_management.php" class="verification-reset-btn">
-                            <img src="assets/icons/reset.png" alt="Reset">
+                            <img src="../assets/icons/reset.png" alt="Reset">
                             Reset
                         </a>
                     </div>
@@ -313,28 +313,28 @@
                                                         type="button"
                                                         class="verification-action-btn"
                                                         title="View">
-                                                        <img src="assets/icons/view.png" alt="View">
+                                                        <img src="../assets/icons/view.png" alt="View">
                                                     </button>
 
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn"
                                                         title="Edit">
-                                                        <img src="assets/icons/edit.png" alt="Edit">
+                                                        <img src="../assets/icons/edit.png" alt="Edit">
                                                     </button>
 
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn"
                                                         title="Print">
-                                                        <img src="assets/icons/print.png" alt="Print">
+                                                        <img src="../assets/icons/print.png" alt="Print">
                                                     </button>
 
                                                     <button
                                                         type="button"
                                                         class="verification-action-btn delete"
                                                         title="Delete">
-                                                        <img src="assets/icons/delete.png" alt="Delete">
+                                                        <img src="../assets/icons/delete.png" alt="Delete">
                                                     </button>
                                                 </div>
                                             </td>

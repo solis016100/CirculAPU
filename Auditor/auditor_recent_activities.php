@@ -116,16 +116,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditor Activity Log - CirculAPU</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body class="role-auditor">
 
     <div class="dashboard-container">
-        <?php include 'sidebar.php'; ?>
+        <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <?php include 'header.php'; ?>
+            <?php include '../header.php'; ?>
 
             <main class="page-body auditor-verification-page">
 
