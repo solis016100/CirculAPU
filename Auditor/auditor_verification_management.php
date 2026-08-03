@@ -133,7 +133,7 @@
 
 
                 <!-- Page Heading -->
-                <section class="verification-heading">
+                <section class="management-heading">
                     <h1>Verification Management Dashboard</h1>
                     <p>Manage all verification records on the platform</p>
                 </section>
@@ -148,14 +148,14 @@
 
 
                 <!-- Search and Filter -->
-                <form class="verification-filter-panel" method="get" action="auditor_verification_management.php">
-                    <div class="verification-filter-group verification-search-group">
+                <form class="management-filter" method="get" action="auditor_verification_management.php">
+                    <div class="management-filter-group search">
                         <label for="verificationSearch">Search Verification Record</label>
                         <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status...">
                     </div>
 
                     <!-- Filter by User -->
-                    <div class="verification-filter-group">
+                    <div class="management-filter-group">
                         <label for="userFilter">User</label>
                         <select id="userFilter" name="user">
                             <option value="">All Users</option>
@@ -169,7 +169,7 @@
                     </div>
 
                     <!-- Filter by Type of verification record -->
-                    <div class="verification-filter-group">
+                    <div class="management-filter-group">
                         <label for="typeFilter">Type</label>
                         <select id="typeFilter" name="type">
                             <option value="">
@@ -187,7 +187,7 @@
                     </div>
 
                     <!-- Filter by Status -->
-                    <div class="verification-filter-group">
+                    <div class="management-filter-group">
                         <label for="statusFilter">Status</label>
                         <select id="statusFilter" name="status">
                             <option value="">
@@ -209,12 +209,12 @@
                     </div>
 
                     <!-- Filter buttons - Filter/Reset -->
-                    <div class="verification-filter-buttons">
-                        <button type="submit" class="verification-filter-btn">
+                    <div class="management-filter-buttons">
+                        <button type="submit" class="management-filter-btn">
                             <img src="../assets/icons/filter.png" alt="Filter">
                             Filter
                         </button>
-                        <a href="auditor_verification_management.php" class="verification-reset-btn">
+                        <a href="auditor_verification_management.php" class="management-reset-btn">
                             <img src="../assets/icons/reset.png" alt="Reset">
                             Reset
                         </a>
@@ -223,8 +223,8 @@
 
 
                 <!-- Verification Record List -->
-                <section class="verification-record-panel">
-                    <div class="verification-record-header">
+                <section class="management-list">
+                    <div class="management-list-header">
                         <h2>Verification Record List</h2>
                         <strong>
                             Total Records:
@@ -232,8 +232,8 @@
                         </strong>
                     </div>
 
-                    <div class="verification-table-wrapper">
-                        <table class="verification-table">
+                    <div class="management-table-wrapper">
+                        <table class="management-table verification-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -308,31 +308,31 @@
                                             </td>
 
                                             <td>
-                                                <div class="verification-actions">
+                                                <div class="management-actions">
                                                     <button
                                                         type="button"
-                                                        class="verification-action-btn"
+                                                        class="management-action-btn"
                                                         title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
                                                     </button>
 
                                                     <button
                                                         type="button"
-                                                        class="verification-action-btn"
+                                                        class="management-action-btn"
                                                         title="Edit">
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </button>
 
                                                     <button
                                                         type="button"
-                                                        class="verification-action-btn"
+                                                        class="management-action-btn"
                                                         title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </button>
 
                                                     <button
                                                         type="button"
-                                                        class="verification-action-btn delete"
+                                                        class="management-action-btn delete"
                                                         title="Delete">
                                                         <img src="../assets/icons/delete.png" alt="Delete">
                                                     </button>
@@ -347,7 +347,7 @@
                                 <?php else: ?>
 
                                     <tr>
-                                        <td colspan="7" class="verification-empty-state">
+                                        <td colspan="7" class="management-empty-state">
                                             No verification records found.
                                         </td>
                                     </tr>
@@ -359,7 +359,7 @@
                     </div>
 
                     <!-- Temporary Footer for verification table -->
-                    <div class="verification-table-footer">
+                    <div class="management-table-footer">
                         <span>
                             Showing
                             <?php echo count($verificationRecords); ?>
