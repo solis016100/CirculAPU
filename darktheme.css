@@ -169,3 +169,23 @@ body.dark-mode .auditor-welcome-section p {
     color: #94a3b8 !important;
 }
 
+body.dark-mode .manager-welcome-section h1,
+body.dark-mode .manager-stat-content strong {
+    color: #f8fafc;
+}
+
+body.dark-mode .manager-welcome-section p,
+body.dark-mode .manager-stat-label,
+body.dark-mode .manager-stat-content small {
+    color: #94a3b8;
+}
+
+body.dark-mode .manager-stat-card {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .manager-stat-icon {
+    background-color: #0c4a6e;
+    color: #38bdf8;
+}
