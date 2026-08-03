@@ -143,16 +143,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditor Dashboard - CirculAPU</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body class="role-auditor">
 
     <div class="dashboard-container">
-        <?php include 'sidebar.php'; ?>
+        <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <?php include 'header.php'; ?>
+            <?php include '../header.php'; ?>
 
             <main class="page-body auditor-dashboard-page">
                 <!-- Welcome Back -->
@@ -184,7 +184,7 @@
                     <!-- Pending Asset Verification-->
                     <a href="auditor_verification_management.php?type=Asset&status=Pending" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
-                            <img src="assets/icons/pendingVerification.png" alt="Pending Verification">
+                            <img src="../assets/icons/pendingVerification.png" alt="Pending Verification">
                         </div>
 
                         <div class="auditor-stat-content">
@@ -201,7 +201,7 @@
                     <!-- Pending Mission Submissions-->
                     <a href="auditor_mission_management.php?type=Mission&status=Pending" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
-                            <img src="assets/icons/pendingMission.png" alt="Pending Mission">
+                            <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
                         </div>
 
                         <div class="auditor-stat-content">
@@ -218,7 +218,7 @@
                     <!-- Reward Redemption Number-->
                     <a href="auditor_rewards.php" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
-                            <img src="assets/icons/reward.png" alt="Reward">
+                            <img src="../assets/icons/reward.png" alt="Reward">
                         </div>
 
                         <div class="auditor-stat-content">
@@ -235,7 +235,7 @@
                     <!-- User Tier Upgrades -->
                     <a href="auditor_usertiers.php" class="auditor-stat-card">
                         <div class="auditor-stat-icon">
-                            <img src="assets/icons/tier.png" alt="User Tier">
+                            <img src="../assets/icons/tier.png" alt="User Tier">
                         </div>
 
                         <div class="auditor-stat-content">

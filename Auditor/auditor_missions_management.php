@@ -134,6 +134,48 @@
                         </tbody>
                     </table>
 
+                    <!-- Automatic Page Buttons -->
+                    <?php
+                        if ($totalMissions > 0) {
+                            $startRecord = $offset + 1;
+                            $endRecord = min($offset + $recordsPerPage, $totalMissions);
+                        } else {
+                            $startRecord = 0;
+                            $endRecord = 0;
+                        }
+                        ?>
+
+                        <div class="table-footer">
+                            <p>
+                                Showing <?php echo $startRecord; ?>
+                                to <?php echo $endRecord; ?>
+                                of <?php echo $totalMissions; ?> entries
+                            </p>
+                            <div class="pagination">
+
+                                <?php if ($page > 1) { ?>
+                                    <a href="?page=<?php echo $page - 1; ?>">
+                                        &lt;
+                                    </a>
+                                <?php } ?>
+
+                                <?php for ($i = 1; $i <= $totalPages; $i++) { ?>
+                                    <a href="?page=<?php echo $i; ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
+                                        <?php echo $i; ?>
+                                    </a>
+
+                                <?php } ?>
+
+                                <?php if ($page < $totalPages) { ?>
+                                    <a href="?page=<?php echo $page + 1; ?>">
+                                        &gt;
+                                    </a>
+                                <?php } ?>
+
+                            </div>
+
+                        </div>
+
         </div>
     
 </body>
