@@ -125,29 +125,28 @@
             
             <?php include '../header.php'; ?>
 
-
                 <main class="mission-content">
 
-                    <div class="mission-heading">
+                    <div class="management-heading">
                         <div>
                             <h1>Mission Management</h1>
                             <p>Manage all Missions on the platform</p>
                         </div>
 
-                        <a href="auditor_mission_create.php" class="create-mission-btn">
+                        <a href="auditor_mission_create.php" class="management-create-btn">
                             <img src="../assets/icons/create.png" alt="Create">
                             Create New Mission
                         </a>
                     </div>
 
                     <!-- Search and Filter -->
-                    <div class="mission-filter">
+                    <div class="management-filter">
                         <form method="GET" action="auditor_missions_management.php">
 
                             <!-- Search Mission -->
-                            <div class="filter-group search-group">
+                            <div class="management-filter-group search">
                                 <label for="search">Search Mission</label>
-                                <div class="search-input">
+                                <div class="management-search-input">
                                     <img src="../assets/icons/search.png" alt="Search">
                                     <input
                                         type="text"
@@ -161,7 +160,7 @@
 
 
                             <!-- Filter by Mission Name -->
-                            <div class="filter-group">
+                            <div class="management-filter-group">
                                 <label for="missionName">Mission Name</label>
                                 <select id="missionName" name="missionName">
                                     <option value="">All Mission</option>
@@ -182,7 +181,7 @@
 
 
                             <!-- Filter by EcoPoints -->
-                            <div class="filter-group">
+                            <div class="management-filter-group">
                                 <label for="ecoPoints">EcoPoints Awarded</label>
                                 <select id="ecoPoints" name="ecoPoints">
                                     <option value="">All EcoPoints</option>
@@ -203,7 +202,7 @@
 
 
                             <!-- Filter by Status -->
-                            <div class="filter-group">
+                            <div class="management-filter-group">
                                 <label for="status">Status</label>
                                 <select id="status" name="status">
                                     <option value="">All Status</option>
@@ -224,13 +223,13 @@
 
 
                             <!-- Filter Buttons -->
-                            <div class="filter-buttons">
-                                <button type="submit" class="filter-btn">
+                            <div class="management-filter-buttons">
+                                <button type="submit" class="management-filter-btn">
                                     <img src="../assets/icons/filter.png" alt="Filter">
                                     Filter
                                 </button>
 
-                                <a href="auditor_missions_management.php" class="reset-btn">
+                                <a href="auditor_missions_management.php" class="management-reset-btn">
                                     <img src="../assets/icons/reset.png" alt="Reset">
                                     Reset
                                 </a>
@@ -239,14 +238,14 @@
                     </div>
 
                     <!-- Mission Table Header -->
-                    <div class="mission-list">
-                        <div class="mission-list-header">
+                    <div class="management-list">
+                        <div class="management-list-header">
                             <h2>Mission List</h2>
                             <p>Total Mission: <?php echo $totalMissions; ?></p>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="mission-table">
+                            <table class="management-table mission-table">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -268,7 +267,7 @@
                                             <td><?php echo htmlspecialchars($mission['ecoPointsReward']); ?></td>
                                             <td><?php echo htmlspecialchars($mission['status']); ?></td>
                                             <td>
-                                                <div class="action-buttons">
+                                                <div class="management-action-buttons">
                                                     <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>"
                                                     title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
@@ -308,7 +307,7 @@
                                 }
                             ?>
 
-                                <div class="table-footer">
+                                <div class="management-table-footer">
                                     <p>
                                         Showing <?php echo $startRecord; ?>
                                         to <?php echo $endRecord; ?>

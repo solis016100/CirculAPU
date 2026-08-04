@@ -144,10 +144,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditor Dashboard - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../darktheme.css">
 </head>
 <body class="role-auditor">
 
     <div class="dashboard-container">
+
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
@@ -156,7 +158,7 @@
 
             <main class="page-body auditor-dashboard-page">
                 <!-- Welcome Back -->
-                <section class="auditor-welcome-section">
+                <section class="dashboard-welcome">
                     <div>
                         <h1>
                             Welcome back, 
@@ -179,89 +181,76 @@
                 <?php endif; ?>
 
                 <!-- Overview Cards-->
-                <section class="auditor-stat-grid" aria-label="Auditor Dashboard Statistics">
-
-                    <!-- Pending Asset Verification-->
-                    <a href="auditor_verification_management.php?type=Asset&status=Pending" class="auditor-stat-card">
-                        <div class="auditor-stat-icon">
+                <section class="stats-grid" aria-label="Auditor Dashboard Statistics">
+                    <!-- Pending Asset Verification -->
+                    <a href="auditor_verification_management.php?type=Asset&status=Pending" class="stat-card">
+                        <div class="stat-icon">
                             <img src="../assets/icons/pendingVerification.png" alt="Pending Verification">
                         </div>
 
-                        <div class="auditor-stat-content">
-                            <strong>
-                                <?php
-                                    echo $pendingAssets;
-                                ?>
+                        <div class="stat-content">
+                            <strong class="stat-value">
+                                <?php echo $pendingAssets; ?>
                             </strong>
-                            <span>Pending Asset Verification</span>
+                            <h3>Pending Asset Verification</h3>
                         </div>
                     </a>
 
-
-                    <!-- Pending Mission Submissions-->
-                    <a href="auditor_mission_management.php?type=Mission&status=Pending" class="auditor-stat-card">
-                        <div class="auditor-stat-icon">
+                    <!-- Pending Mission Submissions -->
+                    <a href="auditor_mission_management.php?type=Mission&status=Pending" class="stat-card">
+                        <div class="stat-icon">
                             <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
                         </div>
 
-                        <div class="auditor-stat-content">
-                            <strong>
-                                <?php
-                                    echo $pendingMissions;
-                                ?>
+                        <div class="stat-content">
+                            <strong class="stat-value">
+                                <?php echo $pendingMissions; ?>
                             </strong>
-                            <span>Pending Mission Submissions</span>
+                            <h3>Pending Mission Submissions</h3>
                         </div>
                     </a>
 
-
-                    <!-- Reward Redemption Number-->
-                    <a href="auditor_rewards.php" class="auditor-stat-card">
-                        <div class="auditor-stat-icon">
+                    <!-- Reward Redemptions -->
+                    <a href="auditor_rewards.php" class="stat-card">
+                        <div class="stat-icon">
                             <img src="../assets/icons/reward.png" alt="Reward">
                         </div>
 
-                        <div class="auditor-stat-content">
-                            <strong>
-                                <?php
-                                    echo $rewardRedemptions;
-                                ?>
+                        <div class="stat-content">
+                            <strong class="stat-value">
+                                <?php echo $rewardRedemptions; ?>
                             </strong>
-                            <span>Reward Redemptions</span>
+                            <h3>Reward Redemptions</h3>
                         </div>
                     </a>
 
-
                     <!-- User Tier Upgrades -->
-                    <a href="auditor_usertiers.php" class="auditor-stat-card">
-                        <div class="auditor-stat-icon">
+                    <a href="auditor_usertiers.php" class="stat-card">
+                        <div class="stat-icon">
                             <img src="../assets/icons/tier.png" alt="User Tier">
                         </div>
 
-                        <div class="auditor-stat-content">
-                            <strong>
-                                <?php
-                                    echo $userTierUpgrades;
-                                ?>
+                        <div class="stat-content">
+                            <strong class="stat-value">
+                                <?php echo $userTierUpgrades; ?>
                             </strong>
-                            <span>User Tier Upgrades</span>
+                            <h3>User Tier Upgrades</h3>
                         </div>
                     </a>
                 </section>
-
                 
-                <section class="auditor-lower-grid">
+                <section class="dashboard-lower-grid">
                     <!-- Recent Activities -->
-                    <article class="auditor-panel auditor-activities-panel">
-                        <div class="auditor-panel-header">
+                    <article class="content-card">
+                        <div class="card-header">
                             <div>
                                 <h2>Recent Activities</h2>
                             </div>
                             <a href="auditor_recent_activities.php">View All</a>
                         </div>
 
-                        <div class="auditor-table-wrapper">
-                            <table class="auditor-activity-table">
+                        <div class="table-wrapper">
+                            <table class="data-table">
                                 <thead>
                                     <tr>
                                         <th>Activity</th>
@@ -271,25 +260,23 @@
                                 </thead>
 
                                 <tbody>
-                                    <?php if(empty($recentActivities)):?>
+                                    <?php if (empty($recentActivities)): ?>
                                         <tr>
-                                            <td colspan="3" class="auditor-empty-state">No system activities have been recorded yet.</td>
+                                            <td colspan="3" class="auditor-empty-state">
+                                                No system activities have been recorded yet.
+                                            </td>
                                         </tr>
                                     <?php else: ?>
-                                        <?php foreach($recentActivities as $activity):?>
+                                        <?php foreach ($recentActivities as $activity): ?>
                                             <tr>
-                                                <td>
-                                                    <span class="auditor-action-badge <?php echo htmlspecialchars(getActionClass($activity['actionType']));?>">
-                                                        <?php echo htmlspecialchars($activity['actionType']);?>
-                                                    </span>
-                                                </td>
-
+                                                <!-- Activity -->
                                                 <td class="activity-description">
                                                     <?php
                                                         echo htmlspecialchars($activity['description']);
                                                     ?>
                                                 </td>
 
+                                                <!-- Related To -->
                                                 <td>
                                                     <div class="auditor-reference">
                                                         <strong>
@@ -298,29 +285,30 @@
                                                             ?>
                                                         </strong>
 
-                                                        <?php if (!empty($activity['refID'])):?>
+                                                        <?php if (!empty($activity['refID'])): ?>
+
                                                             <span>
                                                                 <?php
                                                                     echo htmlspecialchars($activity['refID']);
                                                                 ?>
                                                             </span>
+
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
 
+                                                <!-- Date -->
                                                 <td>
                                                     <?php
-                                                        echo htmlspecialchars($activity['performedBy']);
-                                                    ?>
-                                                </td>
-
-                                                <td>
-                                                    <?php
-                                                        echo htmlspecialchars(formatDashboardDate($activity['timeLogged']));
+                                                        echo htmlspecialchars(
+                                                            formatDashboardDate($activity['timeLogged'])
+                                                        );
                                                     ?>
                                                 </td>
                                             </tr>
+
                                         <?php endforeach; ?>
+
                                     <?php endif; ?>
                                 </tbody>
                             </table>
@@ -328,18 +316,14 @@
                     </article>
 
                     <!-- Notification Panel -->
-                    <article class="auditor-panel auditor-notification-panel">
-                        <div class="auditor-panel-header">
+                    <article class="content-card">
+                        <div class="card-header">
                             <div>
                                 <h2>Notifications</h2>
                                 <p>
                                     <?php
-                                        echo $unreadNotifications;
-                                    ?>
-
-                                    unread notification
-                                    <?php 
-                                        echo ($unreadNotifications === 1) ? '' : 's'; 
+                                        echo $unreadNotifications . ' unread notification' .
+                                            ($unreadNotifications === 1 ? '' : 's');
                                     ?>
                                 </p>
                             </div>
@@ -347,7 +331,7 @@
                             <a href="auditor_notification.php">View All</a>
                         </div>
 
-                        <div class="auditor-notification-list">
+                        <div class="notification-list">
                             <?php if (empty($notifications)): ?>
                                 <div class="auditor-empty-notification">
                                     <p>No notification found</p>
@@ -356,8 +340,8 @@
                                 <?php
                                     foreach($notifications as $notification):
                                 ?>
-                                    <a href="auditor_notification.php" class="auditor-notification-item <?php echo ($notification['status'] === 'Unread') ? 'notification-unread' : ''; ?>">
-                                        <div class="auditor-notification-content">
+                                    <a href="auditor_notification.php" class="notification-item <?php echo ($notification['status'] === 'Unread') ? 'notification-unread' : ''; ?>">
+                                        <div class="notification-content">
                                             <div class="notification-title-row">
                                                 <strong>
                                                     <?php
@@ -366,16 +350,27 @@
                                                 </strong>
 
                                                 <?php if ($notification['status'] === 'Unread'): ?>
-                                                    <span class="unread-indicator" title="Unread"></span>
+
+                                                    <span
+                                                        class="unread-indicator"
+                                                        title="Unread">
+                                                    </span>
+
                                                 <?php endif; ?>
                                             </div>
 
                                             <p>
-                                                <?php echo htmlspecialchars($notification['content']); ?>
+                                                <?php
+                                                    echo htmlspecialchars($notification['content']);
+                                                ?>
                                             </p>
 
                                             <time>
-                                                <?php echo htmlspecialchars(formatDashboardDate($notification['createdDate'])); ?>
+                                                <?php
+                                                    echo htmlspecialchars(
+                                                        formatDashboardDate($notification['createdDate'])
+                                                    );
+                                                ?>
                                             </time>
                                         </div>
                                     </a>

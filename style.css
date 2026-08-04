@@ -110,7 +110,7 @@ html, body {
 
 /* Inner Page Body Section */
 .page-body {
-    padding: 2rem;
+    padding: 1.5rem;
     flex-grow: 1;
     width: 100%;
 }
@@ -436,54 +436,143 @@ html, body {
 }
 
 /* ==========================================================================
-   5. DASHBOARD CARDS, STATS & TABLES
+   5. SHARED DASHBOARD CARDS, STATS & TABLES
    ========================================================================== */
 
+/* ================
+   STAT CARDS
+   ================ */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
 }
 
 .stat-card {
-    background: var(--card-bg);
-    padding: 20px;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+    min-height: 145px;
+    padding: 22px;
+    background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+/* Stat Icon */
+.stat-icon {
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background-color: var(--badge-bg);
+}
+
+.stat-icon img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+/* Stat Content */
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
 }
 
 .stat-card h3 {
-    font-size: 0.85rem;
-    color: #64748b;
-    text-transform: uppercase;
-    margin-bottom: 8px;
+    margin: 0;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .stat-card .stat-value {
-    font-size: 1.8rem;
-    font-weight: bold;
     color: var(--primary-color);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
 }
 
+.stat-description {
+    margin: 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+
+/* ================
+   CONTENT CARD
+   ================ */
 .content-card {
-    background: var(--card-bg);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    min-width: 0;
     margin-bottom: 30px;
+    padding: 24px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
 }
 
+/* ================
+   CARD HEADER
+   ================ */
 .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 15px;
     margin-bottom: 20px;
 }
 
-/* Data Tables */
+.card-header h2,
+.card-header h3 {
+    margin: 0;
+    color: #172033;
+    font-size: 20px;
+}
+
+.card-header a {
+    flex-shrink: 0;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.card-header a:hover {
+    color: var(--primary-hover);
+}
+
+
+/* ================
+   DATA TABLE
+   ================ */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -491,9 +580,11 @@ html, body {
     font-size: 0.9rem;
 }
 
-.data-table th, .data-table td {
+.data-table th,
+.data-table td {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
 .data-table th {
@@ -502,20 +593,38 @@ html, body {
     font-weight: 600;
 }
 
-/* Badges & Buttons */
+.data-table tbody tr:hover {
+    background-color: #fafafa;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ================
+   ROLE BADGE
+   ================ */
 .role-badge {
+    display: inline-block;
+    padding: 4px 10px;
     background-color: var(--badge-bg);
     color: var(--badge-text);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
+/* ================
+   ACTION BUTTON
+   ================ */
 .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 8px 16px;
     background-color: var(--primary-color);
     color: #ffffff;
@@ -524,7 +633,7 @@ html, body {
     font-size: 0.85rem;
     cursor: pointer;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: background-color 0.2s ease;
 }
 
 .action-btn:hover {
@@ -924,9 +1033,159 @@ body.auth-page {
     text-decoration: underline;
 }
 
+/* ==========================================================================
+   7. SHARED DASHBOARD LAYOUT
+   ========================================================================== */
+
+/* Welcome */
+.dashboard-welcome {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.dashboard-welcome h1 {
+    margin: 0 0 3px;
+    color: #172033;
+    font-size: clamp(26px, 3vw, 36px);
+    line-height: 1.2;
+}
+
+.dashboard-welcome p {
+    margin: 0;
+    color: #64748b;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* Date */
+.dashboard-date {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: #53645c;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Lower Dashboard */
+.dashboard-lower-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.6fr)
+        minmax(310px, 0.8fr);
+    gap: 22px;
+    align-items: stretch;
+}
+
+
 
 /* ==========================================================================
-   7. Breadcrumbs
+   8. DASHBOARD NOTIFICATIONS
+   ========================================================================== */
+.notification-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 18px 0;
+    gap: 13px;
+    border-bottom: 1px solid var(--border-color);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:first-child {
+    padding-top: 0;
+}
+
+.notification-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: #f8fafc;
+}
+
+
+/* Notification Icon */
+.notification-icon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background-color: var(--badge-bg);
+}
+
+.notification-icon img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+
+/* Notification Content */
+.notification-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.notification-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.notification-title-row strong {
+    overflow: hidden;
+    color: #25352d;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notification-content p {
+    margin: 5px 0 8px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.notification-content time {
+    color: #8a9891;
+    font-size: 11px;
+}
+
+
+/* Unread Notification*/
+.notification-unread {
+    background-color: #f8fafc;
+}
+
+.unread-indicator {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+}
+
+/* ==========================================================================
+   9. Breadcrumbs
    ========================================================================== */
 .breadcrumb {
     display: flex;
@@ -953,545 +1212,447 @@ body.auth-page {
     font-weight: 600;
 }
 
+
 /* ==========================================================================
-   8. Auditor Dashboard Management
+   10. SHARED MANAGEMENT PAGE STYLES
+   Used by Admin, Manager and Auditor management pages
    ========================================================================== */
-.auditor-dashboard-page{
-    padding: 28px;
-}
 
-.auditor-welcome-section{
+/* ===================
+   PAGE HEADING
+   ===================*/
+.management-heading {
     display: flex;
+    flex-direction: column;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
+    gap: 5px;
     margin-bottom: 24px;
 }
 
-.auditor-welcome-section h1{
-    margin: 0 0 8px;
-    color: #172033;
-    font-size: clamp(26px, 3vw, 36px);
-    line-height: 1.2;
+.management-heading h1 {
+    margin: 0 0 3px;
+    font-size: 30px;
+    color: #222222;
 }
 
-.auditor-welcome-section p{
+.management-heading p {
     margin: 0;
-    color: #64748b;
+    color: #666666;
     font-size: 15px;
-    line-height: 1.6;
 }
 
-.auditor-welcome-date{
-    flex-shrink: 0;
-    padding: 10px 14px;
-    border: 1px solid #dce4e0;
-    border-radius: 8px;
-    background-color: #ffffff;
-    color: #53645c;
-    font-size: 14px;
-    font-weight: 600;
-}
 
-.auditor-error-message{
-    margin-bottom: 20px;
-    padding: 14px 16px;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    background-color: #fef2f2;
-    color: #b91c1c;
-    font-size: 14px;
-    font-weight: 600;
-}
+/* ===================
+   CREATE BUTTON
+   =================== */
 
-.auditor-stat-grid{
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 24px;
-}
-
-.auditor-stat-card{
+.management-create-btn {
     display: flex;
     align-items: center;
-    min-width: none;
-    min-height: 145px;
-    padding: 22px;
-    gap: 18px;
-    border: 1px solid #dce4e0;
-    border-radius: 12px;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border: 1px solid #333333;
+    border-radius: 6px;
     background-color: #ffffff;
-    color: inherit;
+    color: #222222;
+    font-size: 15px;
+    font-weight: 500;
     text-decoration: none;
-    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
-    transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
 }
 
-.auditor-stat-card:hover{
-    transform: translateY(-3px);
+.management-create-btn img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.management-create-btn:hover {
+    background-color: #f5f5f5;
     border-color: var(--primary-color);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
-}
-
-.auditor-stat-icon{
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    width: 62px;
-    height: 62px;
-    border-radius: 14px;
-    background-color: #fef3c7;
     color: var(--primary-color);
 }
 
-.auditor-stat-icon img{
-    width:32px;
-    height:32px;
-    object-fit:contain;
-}
 
-.auditor-stat-content{
+/* ===================
+   FILTER PANEL
+   =================== */
+.management-filter {
     display: flex;
-    flex-direction: column;
-    min-width: 0;
-    gap: 7px;
-}
-
-.auditor-stat-content strong{
-    color: #172033;
-    font-size: 32px;
-    line-height: 1;
-}
-
-.auditor-stat-content span{
-    color: #475569;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-}
-
-.auditor-lower-grid{
-    display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(310px, 0.8fr);
-    gap: 22px;
-    align-items: stretch;
-}
-
-.auditor-panel{
-    min-width: 0;
-    overflow: hidden;
-    border: 1px solid #dce4e0;
-    border-radius: 12px;
+    align-items: flex-end;
+    gap: 18px;
+    margin-bottom: 22px;
+    padding: 20px;
     background-color: #ffffff;
-    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.auditor-panel-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 20px 22px;
-    gap: 16px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.auditor-panel-header h2 {
-    margin: 0 0 5px;
-    color: #172033;
-    font-size: 20px;
-}
-
-.auditor-panel-header p {
-    margin: 0;
-    color: #64748b;
-    font-size: 13px;
-}
-
-.auditor-panel-header a {
-    flex-shrink: 0;
-    color: #b45309;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: underline;
-}
-
-.auditor-panel-header a:hover {
-    text-decoration: underline;
-}
-
-.auditor-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    flex: 1;
-    overflow:auto;
-}
-
-.auditor-activity-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.auditor-activity-table th,
-.auditor-activity-table td {
-    padding: 15px 16px;
-    border-bottom: 1px solid #e8eeeb;
-    color: #475569;
-    font-size: 13px;
-    text-align: left;
-    vertical-align: middle;
-}
-
-.auditor-activity-table th {
-    background-color: #f6f9f7;
-    color: #34443c;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.auditor-activity-table tbody tr:hover {
-    background-color: #fbfdfc;
-}
-
-.auditor-activity-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-.activity-description {
-    min-width: 230px;
-
-    color: #25352d !important;
-    font-weight: 500;
-}
-
-.auditor-action-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 68px;
-    padding: 6px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.action-approved {
-    background-color: #dcfce7;
-    color: #15803d;
-}
-
-.action-rejected,
-.action-deleted {
-    background-color: #fee2e2;
-    color: #b91c1c;
-}
-
-.action-submitted {
-    background-color: #dbeafe;
-    color: #1d4ed8;
-}
-
-.action-created {
-    background-color: #f3e8ff;
-    color: #7e22ce;
-}
-
-.action-updated {
-    background-color: #fef3c7;
-    color: #a16207;
-}
-
-.action-redeemed {
-    background-color: #fce7f3;
-    color: #be185d;
-}
-
-.action-assigned {
-    background-color: #e0f2fe;
-    color: #0369a1;
-}
-
-.action-default {
-    background-color: #f1f5f9;
-    color: #475569;
-}
-
-.auditor-reference {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.auditor-reference strong {
-    color: #34443c;
-    font-size: 13px;
-}
-
-.auditor-reference span {
-    color: #84928b;
-    font-size: 11px;
-}
-
-.auditor-empty-state {
-    padding: 45px 20px !important;
-    color: #7b8b83 !important;
-    text-align: center !important;
-}
-
-.auditor-notification-list {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow:auto;
-}
-
-.auditor-notification-item {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    padding: 18px 20px;
-    gap: 13px;
-    border-bottom: 1px solid #e8eeeb;
-    color: inherit;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-}
-
-.auditor-notification-item:last-child {
-    border-bottom: 0;
-}
-
-.auditor-notification-item:hover {
-    background-color: #f8fbf9;
-}
-
-.notification-unread {
-    background-color: #f0faf4;
-}
-
-.auditor-notification-content {
-    min-width: 0;
-    flex: 1;
-}
-
-.notification-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.notification-title-row strong {
-    overflow: hidden;
-    color: #25352d;
-    font-size: 14px;
-    line-height: 1.4;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.auditor-notification-content p {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    margin: 5px 0 8px;
-    color: #64748b;
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-.auditor-notification-content time {
-    color: #8a9891;
-    font-size: 11px;
-}
-
-.unread-indicator {
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #159947;
-}
-
-.auditor-empty-notification {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 260px;
-    padding: 35px 20px;
-    color: #829088;
-    text-align: center;
-}
-
-.auditor-empty-notification p {
-    margin: 0;
-    font-size: 14px;
-}
-
-/* ==========================================================================
-   9. Auditor Verification Management
-   ========================================================================== */
-.auditor-verification-page {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-}
-
-.verification-heading h1 {
-    margin: 0;
-    font-size: 30px;
-    color: #222;
-}
-
-.verification-heading p {
-    margin: 7px 0 0;
-    color: #666;
-    font-size: 15px;
-}
-
-.verification-filter-panel {
-    background: #ffffff;
     border: 1px solid #dddddd;
     border-radius: 12px;
-    padding: 20px;
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
-    gap: 18px;
-    align-items: end;
 }
 
-.verification-filter-group {
+.management-filter form {
     display: flex;
+    align-items: flex-end;
+    gap: 18px;
+}
+
+
+/* ===================
+   FILTER GROUP
+   =================== */
+.management-filter-group {
+    display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 8px;
 }
 
-.verification-filter-group label {
+.management-filter-group.search {
+    flex: 1.7;
+}
+
+.management-filter-group label {
     font-size: 14px;
     font-weight: 600;
     color: #333333;
 }
 
-.verification-filter-group input,
-.verification-filter-group select {
+
+/* ===================
+   FILTER INPUT
+   =================== */
+
+.management-filter-group input,
+.management-filter-group select {
     width: 100%;
     height: 44px;
     padding: 0 12px;
     border: 1px solid #cccccc;
     border-radius: 7px;
-    background: #ffffff;
+    background-color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    color: #333333;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.management-filter-group input:focus,
+.management-filter-group select:focus {
+    border-color: var(--primary-color);
+}
+
+
+/* ===================
+   SEARCH INPUT WITH ICON
+   =================== */
+.management-search-input {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border: 1px solid #cccccc;
+    border-radius: 7px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease;
+}
+
+.management-search-input:focus-within {
+    border-color: var(--primary-color);
+}
+
+.management-search-input img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.management-search-input input {
+    width: 100%;
+    height: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    font-family: inherit;
     font-size: 14px;
     outline: none;
 }
 
-.verification-filter-group input:focus,
-.verification-filter-group select:focus {
-    border-color: #777777;
+.management-search-input input:focus {
+    border: none;
 }
 
-.verification-filter-buttons {
+
+/* ===================
+   FILTER AND RESET BUTTONS
+   =================== */
+.management-filter-buttons {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.verification-reset-btn {
-    text-decoration: none;
-    color: inherit;
-}
-
-.verification-filter-btn,
-.verification-reset-btn {
+.management-filter-btn,
+.management-reset-btn {
     height: 38px;
+    min-width: 90px;
     padding: 0 12px;
-    border: 1px solid #d0d5dd;
-    border-radius: 6px;
-    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 7px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #222222;
     font-family: inherit;
     font-size: 13px;
+    text-decoration: none;
     cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
 }
 
-.verification-filter-btn img,
-.verification-reset-btn img {
+.management-filter-btn img,
+.management-reset-btn img {
     width: 16px;
     height: 16px;
     object-fit: contain;
 }
 
-.verification-filter-btn:hover,
-.verification-reset-btn:hover {
-    background: #f2f4f7;
+.management-filter-btn:hover,
+.management-reset-btn:hover {
+    background-color: #f2f4f7;
+    border-color: var(--primary-color);
 }
 
-.verification-record-panel {
-    background: #ffffff;
+
+/* ===================
+   MANAGEMENT LIST CONTAINER
+   =================== */
+.management-list {
+    width: 100%;
+    background-color: #ffffff;
     border: 1px solid #dddddd;
     border-radius: 12px;
     overflow: hidden;
 }
 
-.verification-record-header {
+
+/* ===================
+   MANAGEMENT LIST HEADER
+   ===================*/
+.management-list-header {
     padding: 18px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 15px;
     border-bottom: 1px solid #dddddd;
 }
 
-.verification-record-header h2 {
+.management-list-header h2 {
     margin: 0;
     font-size: 20px;
+    font-weight: 600;
+    color: #222222;
 }
 
-.verification-record-header strong {
+.management-list-header p,
+.management-list-header strong {
+    margin: 0;
     font-size: 14px;
+    font-weight: 600;
+    color: #333333;
 }
 
-.verification-table-wrapper {
+
+/* ===================
+   TABLE WRAPPER
+   =================== */
+.management-table-wrapper {
     width: 100%;
     overflow-x: auto;
 }
 
-.verification-table {
+
+/* ===================
+   MANAGEMENT TABLE
+   =================== */
+.management-table {
     width: 100%;
-    border-collapse: collapse;
     min-width: 850px;
+    border-collapse: collapse;
+    background-color: #ffffff;
 }
 
-.verification-table th,
-.verification-table td {
+.management-table th,
+.management-table td {
     padding: 14px 12px;
-    text-align: center;
     border-bottom: 1px solid #e5e5e5;
+    text-align: center;
+    vertical-align: middle;
 }
 
-.verification-table th {
-    background: #f4f4f4;
+.management-table th {
+    background-color: #f4f4f4;
     color: #333333;
     font-size: 14px;
     font-weight: 600;
 }
 
-.verification-table td {
-    font-size: 14px;
+.management-table td {
     color: #444444;
+    font-size: 14px;
 }
 
-.verification-table tbody tr:hover {
-    background: #fafafa;
+.management-table tbody tr {
+    transition: background-color 0.2s ease;
 }
 
+.management-table tbody tr:hover {
+    background-color: #fafafa;
+}
+
+.management-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ===================
+   MANAGEMENT ACTION BUTTONS
+   =================== */
+
+.management-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.management-action-btn {
+    padding: 5px 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 5px;
+    background-color: #ffffff;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.management-action-btn img {
+    width: 16px;
+    height: 16px;
+    display: block;
+    object-fit: contain;
+}
+
+.management-action-btn:hover {
+    transform: scale(1.08);
+}
+
+.management-action-btn.delete:hover {
+    background-color: #ffebee;
+}
+
+
+/* ===================
+   EMPTY TABLE STATE
+   =================== */
+
+.management-empty-state {
+    padding: 35px !important;
+    color: #777777 !important;
+    text-align: center !important;
+}
+
+
+/* ===================
+   MANAGEMENT TABLE FOOTER
+   =================== */
+
+.management-table-footer {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid #e5e5e5;
+    background-color: #ffffff;
+    color: #555555;
+    font-size: 13px;
+}
+
+.management-table-footer p {
+    margin: 0;
+    font-size: 13px;
+}
+
+
+/* ===================
+   PAGINATION
+   =================== */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pagination a {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    background-color: #ffffff;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.pagination a:hover {
+    background-color: #f3f3f3;
+    border-color: var(--primary-color);
+}
+
+.pagination a.active {
+    background-color: var(--badge-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+
+
+/* ==========================================================================
+   11. AUDITOR VERIFICATION MANAGEMENT
+   ========================================================================== */
+
+/* ===================
+   VERIFICATION STATUS
+   =================== */
 .verification-status {
     display: inline-block;
     min-width: 85px;
@@ -1499,395 +1660,149 @@ body.auth-page {
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
+    text-align: center;
 }
 
+/* Approved */
 .status-approved {
-    background: #e8f5e9;
+    background-color: #e8f5e9;
     color: #2e7d32;
 }
 
+/* Pending */
 .status-pending {
-    background: #fff8e1;
+    background-color: #fff8e1;
     color: #b77900;
 }
 
+/* Rejected */
 .status-rejected {
-    background: #ffebee;
+    background-color: #ffebee;
     color: #c62828;
 }
 
-.verification-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.verification-action-btn {
-    padding: 2px 6px;
-    border: 0px;
-    border-radius: 5px;
-    background: #ffffff;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.verification-action-btn img,
-.verification-action-btn img {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-}
-
-.verification-action-btn:hover {
-    background: #eeeeee;
-}
-
-.verification-action-btn.delete:hover {
-    background: #ffebee;
-    color: #c62828;
-}
-
-.verification-empty-state {
-    padding: 35px !important;
-    color: #777777 !important;
-}
-
-.verification-table-footer {
-    padding: 15px 20px;
-    font-size: 13px;
-    color: #555555;
-}
 
 /* ==========================================================================
-   Auditor Mission Management
+   12. AUDITOR MISSION MANAGEMENT
    ========================================================================== */
-.mission-content {
-    padding: 24px 28px 40px;
-}
 
-/* PAGE HEADING */
-.mission-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 20px;
-    margin-bottom: 24px;
-}
+/* ===================
+   MISSION TABLE COLUMN WIDTHS
+   =================== */
 
-.mission-heading h1 {
-    margin: 0 0 5px;
-    font-size: 30px;
-}
-
-.mission-heading p {
-    margin: 0;
-    font-size: 16px;
-}
-
-
-/* Create Mission */
-.create-mission-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 14px;
-    border: 1px solid #222;
-    border-radius: 5px;
-    text-decoration: none;
-    color: #222;
-    background: white;
-    font-size: 16px;
-}
-
-.create-mission-btn img {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-}
-
-.create-mission-btn:hover {
-    background: #f2f2f2;
-}
-
-
-
-/* FILTER BOX */
-.mission-filter {
-    border: 1px solid #222;
-    border-radius: 7px;
-    padding: 16px 12px;
-    margin-bottom: 22px;
-    background: white;
-}
-
-.mission-filter form {
-    display: flex;
-    align-items: flex-end;
-    gap: 18px;
-}
-
-
-/* Individual filter */
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.filter-group label {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-
-/* Search */
-.search-group {
-    flex: 1.7;
-}
-
-/* Other Dropdowns */
-.filter-group:not(.search-group) {
-    flex: 1;
-}
-
-/* Search Input */
-.search-input {
-    height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid #222;
-    border-radius: 5px;
-    padding: 0 12px;
-}
-
-.search-input img {
-    width: 23px;
-    height: 23px;
-    object-fit: contain;
-}
-
-.search-input input {
-    width: 100%;
-    border: none;
-    outline: none;
-    font-size: 14px;
-    background: transparent;
-}
-
-
-/* Dropdowns */
-.filter-group select {
-    height: 44px;
-    border: 1px solid #222;
-    border-radius: 5px;
-    padding: 0 10px;
-    font-size: 14px;
-    background: white;
-}
-
-
-
-/* FILTER & RESET BUTTONS */
-.filter-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.filter-btn,
-.reset-btn {
-    height: 42px;
-    min-width: 90px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid #222;
-    border-radius: 5px;
-    background: white;
-    color: #222;
-    font-size: 14px;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.filter-btn img,
-.reset-btn img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-}
-
-.filter-btn:hover,
-.reset-btn:hover {
-    background: #f2f2f2;
-}
-
-
-
-/* Mission List */
-.mission-list {
-    background: #ffffff;
-    border: 1px solid #dddddd;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-
-/* Mission List Header */
-.mission-list-header {
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #dddddd;
-}
-
-.mission-list-header h2 {
-    margin: 0;
-    font-size: 20px;
-}
-
-.mission-list-header p {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-
-/* Table Wrapper */
-.table-responsive {
-    width: 100%;
-    overflow-x: auto;
-}
-
-
-/* Mission Table */
-.mission-table {
-    width: 100%;
-    min-width: 850px;
-    border-collapse: collapse;
-}
-
-
-/* Table Cells */
-.mission-table th,
-.mission-table td {
-    padding: 14px 12px;
-    text-align: center;
-    border-bottom: 1px solid #e5e5e5;
-}
-
-
-/* Table Header */
-.mission-table th {
-    background: #f4f4f4;
-    color: #333333;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-
-/* Table Data */
-.mission-table td {
-    color: #444444;
-    font-size: 14px;
-}
-
-
-/* Hover Effect */
-.mission-table tbody tr:hover {
-    background: #fafafa;
-}
-
-
-/* Remove border from last row */
-.mission-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-
-/* Column Sizes */
-.mission-table th:nth-child(1) {
+/* Number */
+.mission-table th:nth-child(1),
+.mission-table td:nth-child(1) {
     width: 5%;
 }
 
-.mission-table th:nth-child(2) {
+/* Mission ID / Name */
+.mission-table th:nth-child(2),
+.mission-table td:nth-child(2) {
     width: 15%;
 }
 
-.mission-table th:nth-child(3) {
+/* Description */
+.mission-table th:nth-child(3),
+.mission-table td:nth-child(3) {
     width: 27%;
 }
 
-.mission-table th:nth-child(4) {
+/* Requirement */
+.mission-table th:nth-child(4),
+.mission-table td:nth-child(4) {
     width: 20%;
 }
 
-.mission-table th:nth-child(5) {
+/* EcoPoints */
+.mission-table th:nth-child(5),
+.mission-table td:nth-child(5) {
     width: 15%;
 }
 
-.mission-table th:nth-child(6) {
+/* Action */
+.mission-table th:nth-child(6),
+.mission-table td:nth-child(6) {
     width: 18%;
 }
 
-/* Action Icons */
-.action-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+
+/* ==========================================================================
+   13. AUDITOR REWARD MANAGEMENT
+   ========================================================================== */
+
+/* ===================
+   REWARD TABLE COLUMN WIDTHS
+   =================== */
+
+/* Number */
+.reward-table th:nth-child(1),
+.reward-table td:nth-child(1) {
+    width: 5%;
 }
 
-.action-buttons a {
-    padding: 5px 7px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 5px;
-    background: #ffffff;
-    text-decoration: none;
+/* Reward ID */
+.reward-table th:nth-child(2),
+.reward-table td:nth-child(2) {
+    width: 12%;
 }
 
-.action-buttons img {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
+/* Reward Name */
+.reward-table th:nth-child(3),
+.reward-table td:nth-child(3) {
+    width: 22%;
 }
 
-.action-buttons a:hover {
-    background: #eeeeee;
+/* EcoPoints Cost */
+.reward-table th:nth-child(4),
+.reward-table td:nth-child(4) {
+    width: 14%;
 }
 
-/* Delete hover */
-.action-buttons a:last-child:hover {
-    background: #ffebee;
+/* Quantity */
+.reward-table th:nth-child(5),
+.reward-table td:nth-child(5) {
+    width: 10%;
 }
 
-/* No mission record */
-.no-record {
-    padding: 30px !important;
+/* Availability */
+.reward-table th:nth-child(6),
+.reward-table td:nth-child(6) {
+    width: 14%;
+}
+
+/* Action */
+.reward-table th:nth-child(7),
+.reward-table td:nth-child(7) {
+    width: 23%;
+}
+
+
+/* ===================
+   REWARD AVAILABILITY STATUS
+   =================== */
+.reward-availability {
+    display: inline-block;
+    min-width: 90px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
     text-align: center;
 }
 
-/* Table Footer */
-.table-footer {
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-    color: #555555;
+
+/* Available */
+.availability-available {
+    background-color: #e8f5e9;
+    color: #2e7d32;
 }
 
-.table-footer p {
-    margin: 0;
-    font-size: 13px;
+/* Unavailable */
+.availability-unavailable {
+    background-color: #ffebee;
+    color: #c62828;
 }
-
 
 /* Pagination */
 .pagination {
