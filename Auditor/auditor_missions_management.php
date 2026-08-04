@@ -125,7 +125,6 @@
             
             <?php include '../header.php'; ?>
 
-
                 <main class="mission-content">
 
                     <div class="management-heading">
