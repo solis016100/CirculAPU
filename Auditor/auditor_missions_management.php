@@ -128,13 +128,13 @@
                 <main class="mission-content">
 
                     <div class="management-heading">
-                        <div>
-                            <h1>Mission Management</h1>
-                            <p>Manage all Missions on the platform</p>
-                        </div>
+                        <h1>Mission Management</h1>
+                        <p>Manage all Missions on the platform</p>
+                    </div>
 
+                    <div class="management-toolbar">
                         <a href="auditor_mission_create.php" class="management-create-btn">
-                            <img src="../assets/icons/create.png" alt="Create">
+                            <img src="../assets/icons/create.png" alt="">
                             Create New Mission
                         </a>
                     </div>
@@ -244,7 +244,7 @@
                             <p>Total Mission: <?php echo $totalMissions; ?></p>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="management-table-wrapper">
                             <table class="management-table mission-table">
                                 <thead>
                                     <tr>
@@ -267,23 +267,27 @@
                                             <td><?php echo htmlspecialchars($mission['ecoPointsReward']); ?></td>
                                             <td><?php echo htmlspecialchars($mission['status']); ?></td>
                                             <td>
-                                                <div class="management-action-buttons">
+                                                <div class="management-actions">
                                                     <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    class="management-action-btn"
                                                     title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
                                                     </a>
 
                                                     <a href="auditor_mission_edit.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    class="management-action-btn"
                                                     title="Edit">
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </a>
 
                                                     <a href="auditor_mission_print.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    class="management-action-btn"
                                                     title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </a>
 
                                                     <a href="auditor_mission_delete.php?id=<?php echo urlencode($mission['missionID']); ?>"
+                                                    class="management-action-btn delete"
                                                     title="Delete">
                                                         <img src="../assets/icons/delete.png" alt="Delete">
                                                     </a>

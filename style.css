@@ -1241,6 +1241,16 @@ body.auth-page {
     font-size: 15px;
 }
 
+/* ===================
+   MANAGEMENT TOOLBAR
+   =================== */
+
+.management-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+}
+
 
 /* ===================
    CREATE BUTTON
@@ -1696,25 +1706,25 @@ body.auth-page {
     width: 5%;
 }
 
-/* Mission ID / Name */
+/* Mission ID */
 .mission-table th:nth-child(2),
 .mission-table td:nth-child(2) {
     width: 15%;
 }
 
-/* Description */
+/* Mission Name */
 .mission-table th:nth-child(3),
 .mission-table td:nth-child(3) {
     width: 27%;
 }
 
-/* Requirement */
+/* EcoPoints Awarded */
 .mission-table th:nth-child(4),
 .mission-table td:nth-child(4) {
     width: 20%;
 }
 
-/* EcoPoints */
+/* Status */
 .mission-table th:nth-child(5),
 .mission-table td:nth-child(5) {
     width: 15%;
@@ -1804,34 +1814,11 @@ body.auth-page {
     color: #c62828;
 }
 
-/* Pagination */
-.pagination {
-    display: flex;
-    gap: 5px;
-}
 
-.pagination a {
-    min-width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #222;
-    border-radius: 4px;
-    color: #222;
-    text-decoration: none;
-    background: white;
-}
 
-.pagination a:hover {
-    background: #eeeeee;
-}
-
-.pagination a.active {
-    background: #d9d9d9;
-    font-weight: 600;
-}
-
+/* ==========================================================================
+   14. RESOURCE MANAGER DASHBOARD MANAGEMENT
+   ========================================================================== */
 /*  Resource Manager Dashboard */
 
 .manager-dashboard-page {
