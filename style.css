@@ -1841,6 +1841,75 @@ body.auth-page {
     flex-shrink: 0;
 }
 
+/* ==========================================================================
+   AUDITOR ACHIEVEMENT BADGE MANAGEMENT
+   ========================================================================== */
+/* ===================
+   BADGE TABLE COLUMN WIDTHS
+   =================== */
+.badge-table th:nth-child(1),
+.badge-table td:nth-child(1) {
+    width: 5%;
+}
+
+.badge-table th:nth-child(2),
+.badge-table td:nth-child(2) {
+    width: 12%;
+}
+
+.badge-table th:nth-child(3),
+.badge-table td:nth-child(3) {
+    width: 14%;
+}
+
+.badge-table th:nth-child(4),
+.badge-table td:nth-child(4) {
+    width: 20%;
+}
+
+.badge-table th:nth-child(5),
+.badge-table td:nth-child(5) {
+    width: 29%;
+}
+
+.badge-table th:nth-child(6),
+.badge-table td:nth-child(6) {
+    width: 20%;
+}
+
+
+/* ===================
+   BADGE ICON
+   =================== */
+.badge-icon {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    transition: transform 0.2s ease;
+}
+
+.badge-icon:hover {
+    transform: scale(1.1);
+}
+
+
+/* ===================
+   BADGE NAME
+   =================== */
+.badge-table td:nth-child(4) {
+    font-weight: 600;
+}
+
+
+/* ===================
+   BADGE REQUIREMENT
+   =================== */
+.badge-table td:nth-child(5) {
+    white-space: normal;
+    line-height: 1.4;
+}
 
 
 /* ==========================================================================
