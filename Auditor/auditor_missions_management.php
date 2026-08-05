@@ -125,16 +125,16 @@
             
             <?php include '../header.php'; ?>
 
-                <main class="mission-content">
+                <main class="page-body auditor-mission-page">
 
-                    <div class="management-heading">
-                        <h1>Mission Management</h1>
-                        <p>Manage all Missions on the platform</p>
-                    </div>
+                    <div class="management-heading management-heading-action">
+                        <div class="management-heading-text">
+                            <h1>Mission Management</h1>
+                            <p>Manage all Missions on the platform</p>
+                        </div>
 
-                    <div class="management-toolbar">
                         <a href="auditor_mission_create.php" class="management-create-btn">
-                            <img src="../assets/icons/create.png" alt="">
+                            <img src="../assets/icons/create.png" alt="Create">
                             Create New Mission
                         </a>
                     </div>

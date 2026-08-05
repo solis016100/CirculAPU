@@ -1229,6 +1229,23 @@ body.auth-page {
     margin-bottom: 24px;
 }
 
+.management-heading-action {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.management-heading-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.management-heading-action .management-create-btn {
+    flex-shrink: 0;
+}
+
 .management-heading h1 {
     margin: 0 0 3px;
     font-size: 30px;
@@ -1241,15 +1258,6 @@ body.auth-page {
     font-size: 15px;
 }
 
-/* ===================
-   MANAGEMENT TOOLBAR
-   =================== */
-
-.management-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 18px;
-}
 
 
 /* ===================
@@ -1307,6 +1315,7 @@ body.auth-page {
     display: flex;
     align-items: flex-end;
     gap: 18px;
+    width: 100%;
 }
 
 
@@ -1812,6 +1821,24 @@ body.auth-page {
 .availability-unavailable {
     background-color: #ffebee;
     color: #c62828;
+}
+
+/* Reward filter sizing */
+.auditor-reward-page .management-filter form {
+    gap: 12px;
+}
+
+.auditor-reward-page .management-filter-group {
+    min-width: 120px;
+}
+
+.auditor-reward-page .management-filter-group.search {
+    flex: 1.8;
+    min-width: 240px;
+}
+
+.auditor-reward-page .management-filter-buttons {
+    flex-shrink: 0;
 }
 
 
