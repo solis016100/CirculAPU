@@ -36,6 +36,60 @@ function getManagerDashboardCount(mysqli $conn, string $query): int
     return 0;
 }
 
+// Convert database action into a readable dashboard label
+function getManagerActivityLabel(
+    string $actionType,
+    string $referenceType
+): string {
+    $actionLabels = [
+        'Create' => 'Created',
+        'Update' => 'Updated',
+        'Delete' => 'Removed',
+        'Approve' => 'Approved',
+        'Reject' => 'Rejected',
+        'Submit' => 'Submitted'
+    ];
+
+    $action = $actionLabels[$actionType] ?? $actionType;
+
+    return $referenceType . ' ' . $action;
+}
+
+
+// Select a local icon based on the activity
+function getManagerActivityIcon(string $actionType): string
+{
+    switch ($actionType) {
+        case 'Create':
+            return 'create.png';
+
+        case 'Update':
+            return 'edit.png';
+
+        case 'Delete':
+            return 'delete.png';
+
+        default:
+            return 'notification.png';
+    }
+}
+
+// Display a readable date and time
+function formatManagerDashboardDate(?string $date): string
+{
+    if (empty($date)) {
+        return '-';
+    }
+
+    $timestamp = strtotime($date);
+
+    if ($timestamp === false) {
+        return '-';
+    }
+
+    return date('d M Y, h:i A', $timestamp);
+}
+
 // Database connection
 $conn = null;
 
@@ -81,6 +135,56 @@ try {
         FROM assets
         WHERE availabilityStatus = 'Borrowed'"
     );
+    
+    // Retrieve recent Asset and Category activities
+    $activityQuery = "
+        SELECT
+            sl.logID,
+            sl.actionType,
+            sl.refType,
+            sl.refID,
+            sl.description,
+            sl.timeLogged,
+            u.name AS performedBy
+        FROM systemlog sl
+        INNER JOIN user u
+            ON sl.userID = u.userID
+        WHERE sl.refType IN ('Asset', 'Category')
+        ORDER BY sl.timeLogged DESC
+        LIMIT 5
+    ";
+
+    $activityResult = $conn->query($activityQuery);
+
+    while ($activity = $activityResult->fetch_assoc()) {
+        $recentActivities[] = $activity;
+    }
+
+
+    // Retrieve notifications belonging to the logged-in Manager
+    $notificationStatement = $conn->prepare(
+        "SELECT
+            notificationID,
+            title,
+            content,
+            status,
+            createdDate
+        FROM notification
+        WHERE userID = ?
+        ORDER BY createdDate DESC
+        LIMIT 5"
+    );
+
+    $notificationStatement->bind_param("s", $managerID);
+    $notificationStatement->execute();
+
+    $notificationResult = $notificationStatement->get_result();
+
+    while ($notification = $notificationResult->fetch_assoc()) {
+        $notifications[] = $notification;
+    }
+
+    $notificationStatement->close();
 
 } catch (mysqli_sql_exception $error) {
     error_log($error->getMessage());
@@ -136,130 +240,365 @@ if ($conn instanceof mysqli) {
                 <?php endif; ?>
 
                 <!-- Dashboard Overview Statistics -->
-<section class="manager-stat-grid" aria-label="Resource Manager statistics">
+                <section
+                    class="manager-stat-grid"
+                    aria-label="Resource Manager statistics"
+                >
 
-    <!-- Total Assets -->
-    <a href="manager_assets.php" class="manager-stat-card">
-        <div class="manager-stat-icon" aria-hidden="true">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
-        </div>
+                    <!-- Total Assets -->
+                    <a href="manager_assets.php" class="manager-stat-card">
+                        <div class="manager-stat-icon">
+                            <img
+                                src="../assets/icons/totalassets.png"
+                                alt=""
+                            >
+                        </div>
 
-        <div class="manager-stat-content">
-            <span class="manager-stat-label">Total Assets</span>
+                        <div class="manager-stat-content">
+                            <span class="manager-stat-label">
+                                Total Assets
+                            </span>
 
-            <strong>
-                <?php echo $totalAssets; ?>
-            </strong>
+                            <strong>
+                                <?php echo $totalAssets; ?>
+                            </strong>
 
-            <small>All listed assets</small>
-        </div>
-    </a>
+                            <small>All listed assets</small>
+                        </div>
+                    </a>
 
-    <!-- Pending Listings -->
-    <a
-        href="manager_assets.php?verificationStatus=Pending"
-        class="manager-stat-card"
-    >
-        <div class="manager-stat-icon" aria-hidden="true">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-        </div>
+                    <!-- Pending Listings -->
+                    <a
+                        href="manager_assets.php?verificationStatus=Pending"
+                        class="manager-stat-card"
+                    >
+                        <div class="manager-stat-icon">
+                            <img
+                                src="../assets/icons/pendingVerification.png"
+                                alt=""
+                            >
+                        </div>
 
-        <div class="manager-stat-content">
-            <span class="manager-stat-label">Pending Listings</span>
+                        <div class="manager-stat-content">
+                            <span class="manager-stat-label">
+                                Pending Listings
+                            </span>
 
-            <strong>
-                <?php echo $pendingListings; ?>
-            </strong>
+                            <strong>
+                                <?php echo $pendingListings; ?>
+                            </strong>
 
-            <small>Awaiting verification</small>
-        </div>
-    </a>
+                            <small>Awaiting verification</small>
+                        </div>
+                    </a>
 
-    <!-- Active Transactions -->
-    <a href="manager_transactions.php" class="manager-stat-card">
-        <div class="manager-stat-icon" aria-hidden="true">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <polyline points="17 1 21 5 17 9"></polyline>
-                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                <polyline points="7 23 3 19 7 15"></polyline>
-                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-            </svg>
-        </div>
+                    <!-- Active Transactions -->
+                    <a
+                        href="manager_transactions.php"
+                        class="manager-stat-card"
+                    >
+                        <div class="manager-stat-icon">
+                            <img
+                                src="../assets/icons/active-transactions.png"
+                                alt=""
+                            >
+                        </div>
 
-        <div class="manager-stat-content">
-            <span class="manager-stat-label">Active Transactions</span>
+                        <div class="manager-stat-content">
+                            <span class="manager-stat-label">
+                                Active Transactions
+                            </span>
 
-            <strong>
-                <?php echo $activeTransactions; ?>
-            </strong>
+                            <strong>
+                                <?php echo $activeTransactions; ?>
+                            </strong>
 
-            <small>Ongoing lending and borrowing</small>
-        </div>
-    </a>
+                            <small>Ongoing lending and borrowing</small>
+                        </div>
+                    </a>
 
-    <!-- Currently Borrowed -->
-    <a
-        href="manager_assets.php?availabilityStatus=Borrowed"
-        class="manager-stat-card"
-    >
-        <div class="manager-stat-icon" aria-hidden="true">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-            </svg>
-        </div>
+                    <!-- Borrowings -->
+                    <a
+                        href="manager_assets.php?availabilityStatus=Borrowed"
+                        class="manager-stat-card"
+                    >
+                        <div class="manager-stat-icon">
+                            <img
+                                src="../assets/icons/borrowed-assets.png"
+                                alt=""
+                            >
+                        </div>
 
-        <div class="manager-stat-content">
-            <span class="manager-stat-label">Currently Borrowed</span>
+                        <div class="manager-stat-content">
+                            <span class="manager-stat-label">
+                                Borrowings
+                            </span>
 
-            <strong>
-                <?php echo $currentBorrowed; ?>
-            </strong>
+                            <strong>
+                                <?php echo $currentBorrowed; ?>
+                            </strong>
 
-            <small>Assets held by borrowers</small>
-        </div>
-    </a>
+                            <small>Currently borrowed</small>
+                        </div>
+                    </a>
+                </section>
 
-</section>
+                <!-- Dashboard Activities and Notifications -->
+                <section class="manager-dashboard-lower-grid">
+
+                    <!-- Recent Activities -->
+                    <article class="content-card manager-dashboard-panel">
+
+                        <div class="card-header">
+                            <h2>Recent Activities</h2>
+
+                            <a href="manager_recent_activities.php">
+                                View All
+                            </a>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table class="data-table manager-activity-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>Activity</th>
+                                        <th>Details</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <?php if (empty($recentActivities)): ?>
+
+                                        <tr>
+                                            <td
+                                                colspan="3"
+                                                class="manager-empty-state"
+                                            >
+                                                No recent activities available.
+                                            </td>
+                                        </tr>
+
+                                    <?php else: ?>
+
+                                        <?php foreach ($recentActivities as $activity): ?>
+
+                                            <tr>
+                                                <td>
+                                                    <div class="manager-activity-name">
+
+                                                        <span class="manager-activity-icon">
+                                                            <img
+                                                                src="../assets/icons/<?php
+                                                                    echo htmlspecialchars(
+                                                                        getManagerActivityIcon(
+                                                                            $activity['actionType']
+                                                                        )
+                                                                    );
+                                                                ?>"
+                                                                alt=""
+                                                            >
+                                                        </span>
+
+                                                        <strong>
+                                                            <?php
+                                                                echo htmlspecialchars(
+                                                                    getManagerActivityLabel(
+                                                                        $activity['actionType'],
+                                                                        $activity['refType']
+                                                                    )
+                                                                );
+                                                            ?>
+                                                        </strong>
+
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <?php
+                                                        echo htmlspecialchars(
+                                                            $activity['description']
+                                                        );
+                                                    ?>
+                                                </td>
+
+                                                <td>
+                                                    <?php
+                                                        echo htmlspecialchars(
+                                                            formatManagerDashboardDate(
+                                                                $activity['timeLogged']
+                                                            )
+                                                        );
+                                                    ?>
+                                                </td>
+                                            </tr>
+
+                                        <?php endforeach; ?>
+
+                                    <?php endif; ?>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+
+                    <!-- Notifications -->
+                    <article class="content-card manager-dashboard-panel">
+
+                        <div class="card-header">
+                            <h2>Notifications</h2>
+
+                            <a href="manager_notifications.php">
+                                View All
+                            </a>
+                        </div>
+
+                        <div class="notification-list">
+
+                            <?php if (empty($notifications)): ?>
+
+                                <div class="manager-notification-empty">
+                                    <img
+                                        src="../assets/icons/notification.png"
+                                        alt=""
+                                    >
+
+                                    <p>No notifications available.</p>
+                                </div>
+
+                            <?php else: ?>
+
+                                <?php foreach ($notifications as $notification): ?>
+
+                                    <a
+                                        href="manager_notifications.php"
+                                        class="notification-item <?php
+                                            echo $notification['status'] === 'Unread'
+                                                ? 'notification-unread'
+                                                : '';
+                                        ?>"
+                                    >
+                                        <div class="notification-icon">
+                                            <img
+                                                src="../assets/icons/notification.png"
+                                                alt=""
+                                            >
+                                        </div>
+
+                                        <div class="notification-content">
+
+                                            <div class="notification-title-row">
+                                                <strong>
+                                                    <?php
+                                                        echo htmlspecialchars(
+                                                            $notification['title']
+                                                        );
+                                                    ?>
+                                                </strong>
+
+                                                <?php
+                                                    if (
+                                                        $notification['status'] === 'Unread'
+                                                    ):
+                                                ?>
+                                                    <span
+                                                        class="unread-indicator"
+                                                        title="Unread notification"
+                                                    ></span>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <p>
+                                                <?php
+                                                    echo htmlspecialchars(
+                                                        $notification['content']
+                                                    );
+                                                ?>
+                                            </p>
+
+                                            <time>
+                                                <?php
+                                                    echo htmlspecialchars(
+                                                        formatManagerDashboardDate(
+                                                            $notification['createdDate']
+                                                        )
+                                                    );
+                                                ?>
+                                            </time>
+
+                                        </div>
+                                    </a>
+
+                                <?php endforeach; ?>
+
+                            <?php endif; ?>
+
+                        </div>
+                    </article>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="content-card manager-quick-actions">
+
+                    <div class="card-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+
+                    <div class="manager-quick-action-grid">
+
+                        <a
+                            href="manager_asset_create.php"
+                            class="manager-quick-action"
+                        >
+                            <img
+                                src="../assets/icons/create.png"
+                                alt=""
+                            >
+
+                            <span>Add New Asset</span>
+                        </a>
+
+                        <a
+                            href="manager_transactions.php"
+                            class="manager-quick-action"
+                        >
+                            <img
+                                src="../assets/icons/view.png"
+                                alt=""
+                            >
+
+                            <span>View Transaction Requests</span>
+                        </a>
+
+                        <a
+                            href="manager_reports.php"
+                            class="manager-quick-action"
+                        >
+                            <img
+                                src="../assets/icons/report.png"
+                                alt=""
+                            >
+
+                            <span>Generate Report</span>
+                        </a>
+
+                        <a
+                            href="manager_categories.php"
+                            class="manager-quick-action"
+                        >
+                            <img
+                                src="../assets/icons/edit.png"
+                                alt=""
+                            >
+
+                            <span>Manage Categories</span>
+                        </a>
+
+                    </div>
+                </section>
 
             </main>
 
