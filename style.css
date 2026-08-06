@@ -1913,6 +1913,44 @@ body.auth-page {
 
 
 /* ==========================================================================
+   AUDITOR USER TIER MANAGEMENT
+   ========================================================================== */
+/* ===================
+   USER TIER TABLE COLUMN WIDTHS
+   =================== */
+
+/* Number */
+.usertier-table th:nth-child(1),
+.usertier-table td:nth-child(1) {
+    width: 8%;
+}
+
+/* User Tier ID */
+.usertier-table th:nth-child(2),
+.usertier-table td:nth-child(2) {
+    width: 20%;
+}
+
+/* User ID */
+.usertier-table th:nth-child(3),
+.usertier-table td:nth-child(3) {
+    width: 20%;
+}
+
+/* Tier */
+.usertier-table th:nth-child(4),
+.usertier-table td:nth-child(4) {
+    width: 25%;
+}
+
+/* Date Assigned */
+.usertier-table th:nth-child(5),
+.usertier-table td:nth-child(5) {
+    width: 27%;
+}
+
+
+/* ==========================================================================
    14. RESOURCE MANAGER DASHBOARD MANAGEMENT
    ========================================================================== */
 /*  Resource Manager Dashboard */

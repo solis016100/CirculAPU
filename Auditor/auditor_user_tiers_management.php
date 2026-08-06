@@ -181,14 +181,11 @@
                         <!-- Filter Buttons -->
                         <div class="management-filter-buttons">
                             <button type="submit" class="management-filter-btn">
-                                <img src="../assets/icons/filter.png" alt="">
+                                <img src="../assets/icons/filter.png" alt="Filter">
                                 Filter
                             </button>
-                            <a
-                                href="auditor_usertier_management.php"
-                                class="management-reset-btn"
-                            >
-                                <img src="../assets/icons/reset.png" alt="">
+                            <a href="auditor_user_tiers_management.php" class="management-reset-btn">
+                                <img src="../assets/icons/reset.png" alt="Reset">
                                 Reset
                             </a>
                         </div>

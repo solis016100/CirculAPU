@@ -13,13 +13,30 @@
 
     // Connect to Database
     $conn = new mysqli("localhost", "root", "", "circulapu_db");
-    if ($conn->connect_error){
+
+    $totalBadges = 0;
+    $badgeResult = null;
+
+    // Get search and filter values
+    $search = trim($_GET['search'] ?? '');
+    $badgeFilter = trim($_GET['badge'] ?? '');
+
+    if ($conn->connect_error) {
         $databaseError = "Unable to connect to the database.";
-    }else {
-        // (UTF-8) allows the database to handle different languages
+    } else {
+        // Allow database to handle different languages
         $conn->set_charset("utf8mb4");
 
-        // Retrieve all achievement badges
+        // Retrieve achievement badges for filter dropdown
+        $badgeFilterQuery = "
+            SELECT achieveBadgeID, achieveBadgeName
+            FROM achievementbadges
+            ORDER BY achieveBadgeName ASC
+        ";
+
+        $badgeFilterResult = mysqli_query($conn, $badgeFilterQuery);
+
+        // Base query
         $badgeQuery = "
             SELECT
                 achieveBadgeID,
@@ -28,19 +45,38 @@
                 achieveBadgeRequirement,
                 achieveBadgeIcon
             FROM achievementbadges
-            ORDER BY achieveBadgeID ASC
+            WHERE 1=1
         ";
 
-        $badgeResult = $conn->query($badgeQuery);
 
-
-        // Get total number of achievement badges
-        if ($badgeResult){
-            $totalBadges = $badgeResult->num_rows;
-        } else {
-            $totalBadges = 0;
-            $databaseError = "Unable to retrieve achievement badges.";
+        // Search
+        if ($search !== '') {
+            $safeSearch = mysqli_real_escape_string($conn, $search);
+            $badgeQuery .= "
+                AND (
+                    achieveBadgeName LIKE '%$safeSearch%'
+                    OR achieveBadgeRequirement LIKE '%$safeSearch%'
+                )
+            ";
         }
+
+
+        // Filter by badge
+        if ($badgeFilter !== '') {
+            $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
+            $badgeQuery .= "
+                AND achieveBadgeID = '$safeBadgeFilter'
+            ";
+        }
+
+
+        $badgeQuery .= " ORDER BY achieveBadgeID ASC";
+
+        // Run query
+        $badgeResult = mysqli_query($conn, $badgeQuery);
+
+        // Total displayed badges
+        $totalBadges = mysqli_num_rows($badgeResult);
     }
 ?>
 
@@ -89,17 +125,25 @@
                                         id="search"
                                         name="search"
                                         placeholder="Search by badge name, requirement..."
-                                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>"
+                                        value="<?php echo htmlspecialchars($search); ?>"
                                     >
                                 </div>
                             </div>
 
 
-                            <!-- Badge Name Filter -->
+                            <!-- Filter by Badge Name -->
                             <div class="management-filter-group">
                                 <label for="badge">Badge Name</label>
                                 <select id="badge" name="badge">
                                     <option value="">All Badges</option>
+                                    <?php while ($badge = mysqli_fetch_assoc($badgeFilterResult)): ?>
+                                        <option
+                                            value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>"
+                                            <?php echo (($badgeFilter ?? '') == $badge['achieveBadgeID']) ? 'selected' : ''; ?>
+                                        >
+                                            <?php echo htmlspecialchars($badge['achieveBadgeName']); ?>
+                                        </option>
+                                    <?php endwhile; ?>
                                 </select>
                             </div>
 
