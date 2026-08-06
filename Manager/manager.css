@@ -1,10 +1,14 @@
-/*1. Manager Dashboard */
+
+/* 
+   1. MANAGER DASHBOARD
+    */
+
 .manager-dashboard-page {
     padding: 32px 36px;
 }
 
 
-/* Database error */
+/* Database error message */
 .manager-error-message {
     margin-bottom: 24px;
     padding: 14px 16px;
@@ -17,33 +21,24 @@
 }
 
 
-/* Slight Manager override for shared statistic icons */
-.manager-dashboard-page .stat-icon {
-    overflow: hidden;
-}
-
-.manager-dashboard-page .stat-icon img {
-    width: 36px;
-    height: 36px;
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    object-fit: contain;
-}
-
-/*2. Dashboard lower section */
+/* 
+   2. DASHBOARD LOWER SECTION
+    */
 
 .manager-dashboard-lower-grid {
     margin-bottom: 24px;
 }
 
 .manager-dashboard-panel {
-    height: 100%;
     margin-bottom: 0;
     overflow: hidden;
 }
 
-/* 3/activities */
+
+/* 
+   3. RECENT ACTIVITIES
+    */
+
 .manager-activity-table {
     min-width: 650px;
 }
@@ -83,7 +78,10 @@
     text-align: center !important;
 }
 
-/* 4. Manager Notification empty state */
+
+/* 
+   4. NOTIFICATION EMPTY STATE
+   */
 
 .manager-notification-empty {
     min-height: 250px;
@@ -103,7 +101,10 @@
     opacity: 0.55;
 }
 
-/* Quick Actions */
+
+/*
+   5. QUICK ACTIONS
+    */
 
 .manager-quick-actions {
     margin-bottom: 0;
@@ -124,7 +125,7 @@
     padding: 14px;
     border: 1px solid var(--border-color);
     border-radius: 9px;
-    background-color: #ffffff;
+    background-color: var(--card-bg);
     color: #334155;
     font-size: 14px;
     font-weight: 600;
@@ -157,7 +158,9 @@
 }
 
 
-/* 6. Manager responsive layout */
+/*
+   6. RESPONSIVE MANAGER LAYOUT
+    */
 
 @media (max-width: 1050px) {
     .manager-quick-action-grid {
