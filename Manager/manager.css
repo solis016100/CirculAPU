@@ -1,0 +1,178 @@
+/*1. Manager Dashboard */
+.manager-dashboard-page {
+    padding: 32px 36px;
+}
+
+
+/* Database error */
+.manager-error-message {
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background-color: #fef2f2;
+    color: #b91c1c;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* Slight Manager override for shared statistic icons */
+.manager-dashboard-page .stat-icon {
+    overflow: hidden;
+}
+
+.manager-dashboard-page .stat-icon img {
+    width: 36px;
+    height: 36px;
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+/*2. Dashboard lower section */
+
+.manager-dashboard-lower-grid {
+    margin-bottom: 24px;
+}
+
+.manager-dashboard-panel {
+    height: 100%;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+/* 3/activities */
+.manager-activity-table {
+    min-width: 650px;
+}
+
+.manager-activity-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.manager-activity-name strong {
+    color: #334155;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.manager-activity-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background-color: var(--badge-bg);
+}
+
+.manager-activity-icon img {
+    width: 18px;
+    height: 18px;
+    display: block;
+    object-fit: contain;
+}
+
+.manager-empty-state {
+    padding: 45px 20px !important;
+    color: #64748b !important;
+    text-align: center !important;
+}
+
+/* 4. Manager Notification empty state */
+
+.manager-notification-empty {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #64748b;
+    text-align: center;
+}
+
+.manager-notification-empty img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    opacity: 0.55;
+}
+
+/* Quick Actions */
+
+.manager-quick-actions {
+    margin-bottom: 0;
+}
+
+.manager-quick-action-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.manager-quick-action {
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    background-color: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.manager-quick-action:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    background-color: var(--badge-bg);
+    color: var(--primary-color);
+}
+
+.manager-quick-action:focus-visible {
+    outline: 3px solid rgba(2, 132, 199, 0.25);
+    outline-offset: 3px;
+}
+
+.manager-quick-action img {
+    width: 25px;
+    height: 25px;
+    display: block;
+    object-fit: contain;
+}
+
+
+/* 6. Manager responsive layout */
+
+@media (max-width: 1050px) {
+    .manager-quick-action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .manager-dashboard-page {
+        padding: 22px 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .manager-quick-action-grid {
+        grid-template-columns: 1fr;
+    }
+}
