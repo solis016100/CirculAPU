@@ -12,13 +12,7 @@
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
     // Connect to Database
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
-    if ($conn->connect_error){
-        $databaseError = "Unable to connect to the database.";
-    }else {
-        // (UTF-8) allows the database to handle different languages
-        $conn->set_charset("utf8mb4");
-    }
+    require_once '../db.php';
 
     // Get filter values
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';

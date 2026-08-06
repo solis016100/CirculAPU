@@ -20,12 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         exit();
     }
 
-    // Direct MySQLi connection without db.php
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
-    if ($conn->connect_error) {
-        echo json_encode(['status' => 'error', 'message' => 'Database connection failed.']);
-        exit();
-    }
+    require_once 'db.php';
 
     $stmt = $conn->prepare("SELECT userID FROM User WHERE email = ?");
     $stmt->bind_param("s", $email);

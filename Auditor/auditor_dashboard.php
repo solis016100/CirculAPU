@@ -3,7 +3,7 @@
 
     // Access Control Guard for Sustainability Auditor Role
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
-        header("Location: login.php");
+        header("Location: ../login.php");
         exit();
     }
 
@@ -33,7 +33,7 @@
     }
 
     // Connect to Database
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
+    require_once '../db.php';
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
