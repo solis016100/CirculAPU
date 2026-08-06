@@ -12,7 +12,7 @@
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
     // Connect to Database
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
+   require_once '../db.php';
 
     $totalBadges = 0;
     $badgeResult = null;

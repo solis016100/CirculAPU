@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+require_once 'db.php';
 // 1. AUTO-LOGIN CHECK VIA "REMEMBER ME" COOKIES
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
     $_SESSION['user_id']    = $_COOKIE['remember_user_id'];
@@ -37,7 +37,6 @@ $error_message = '';
 
 // 3. FORM SUBMISSION (MANUAL LOGIN)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);

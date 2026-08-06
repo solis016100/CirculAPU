@@ -5,13 +5,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
     header("Location: login.php");
     exit();
 }
-
-$conn = new mysqli("localhost", "root", "", "circulapu_db");
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+require_once '../db.php';
 $total_users  = $conn->query("SELECT COUNT(*) as count FROM User")->fetch_assoc()['count'] ?? 0;
 $total_active = $conn->query("SELECT COUNT(*) as count FROM User WHERE status = 'Active'")->fetch_assoc()['count'] ?? 0;
 $user_result  = $conn->query("SELECT userID, name, email, role, status, ecopoint FROM User ORDER BY userID ASC");
