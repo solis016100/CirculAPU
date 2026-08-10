@@ -40,17 +40,8 @@ $availabilityOptions = [
     'Unavailable'
 ];
 
-$listingStatusOptions = [
-    'Draft',
-    'Pending Review',
-    'Ready for Verification',
-    'Approved',
-    'Published',
-    'Rejected',
-    'Removed'
-];
-
 $conn = null;
+$newUploadedFile = '';
 
 try {
     $conn = new mysqli(
@@ -63,19 +54,7 @@ try {
 
     $conn->set_charset("utf8mb4");
 
-    // Retrieve Active Categories
-    $categoryResult = $conn->query("
-        SELECT categoryID, categoryName
-        FROM categories
-        WHERE status = 'Active'
-        ORDER BY categoryName ASC
-    ");
-
-    while ($category = $categoryResult->fetch_assoc()) {
-        $categories[] = $category;
-    }
-
-    // Retrieve Selected Asset
+    // Retrieve Asset
     $statement = $conn->prepare("
         SELECT
             a.assetID,
@@ -90,8 +69,11 @@ try {
             a.verificationStatus,
             a.createdDate,
             a.updatedDate,
+            c.categoryName,
             u.name AS ownerName
         FROM assets a
+        INNER JOIN categories c
+            ON a.categoryID = c.categoryID
         INNER JOIN user u
             ON a.ownerID = u.userID
         WHERE a.assetID = ?
@@ -109,6 +91,33 @@ try {
             "The selected asset record could not be found.";
     }
 
+    // Retrieve Active Categories
+    if ($asset) {
+        $categoryStatement = $conn->prepare("
+            SELECT categoryID, categoryName
+            FROM categories
+            WHERE status = 'Active'
+               OR categoryID = ?
+            ORDER BY categoryName ASC
+        ");
+
+        $categoryStatement->bind_param(
+            "s",
+            $asset['categoryID']
+        );
+
+        $categoryStatement->execute();
+
+        $categoryResult =
+            $categoryStatement->get_result();
+
+        while ($category = $categoryResult->fetch_assoc()) {
+            $categories[] = $category;
+        }
+
+        $categoryStatement->close();
+    }
+
     // Update Asset
     if (
         $asset &&
@@ -116,13 +125,12 @@ try {
     ) {
         $assetName = trim($_POST['assetName'] ?? '');
         $categoryID = trim($_POST['categoryID'] ?? '');
-        $assetCondition = trim($_POST['assetCondition'] ?? '');
+        $assetCondition = trim(
+            $_POST['assetCondition'] ?? ''
+        );
         $description = trim($_POST['description'] ?? '');
         $availabilityStatus = trim(
             $_POST['availabilityStatus'] ?? ''
-        );
-        $listingStatus = trim(
-            $_POST['listingStatus'] ?? ''
         );
 
         // Validation
@@ -139,19 +147,15 @@ try {
             $conditionOptions,
             true
         )) {
-            $formError = "Invalid asset condition.";
+            $formError =
+                "Please select a valid asset condition.";
         } elseif (!in_array(
             $availabilityStatus,
             $availabilityOptions,
             true
         )) {
-            $formError = "Invalid availability status.";
-        } elseif (!in_array(
-            $listingStatus,
-            $listingStatusOptions,
-            true
-        )) {
-            $formError = "Invalid listing status.";
+            $formError =
+                "Please select a valid availability status.";
         }
 
         // Validate Category
@@ -160,13 +164,17 @@ try {
                 SELECT categoryID
                 FROM categories
                 WHERE categoryID = ?
-                AND status = 'Active'
+                AND (
+                    status = 'Active'
+                    OR categoryID = ?
+                )
                 LIMIT 1
             ");
 
             $categoryCheck->bind_param(
-                "s",
-                $categoryID
+                "ss",
+                $categoryID,
+                $asset['categoryID']
             );
 
             $categoryCheck->execute();
@@ -177,86 +185,98 @@ try {
                     ->fetch_assoc()
             ) {
                 $formError =
-                    "Please select a valid active category.";
+                    "Please select a valid category.";
             }
 
             $categoryCheck->close();
         }
 
-        $newImageURL = $asset['imageURL'];
-        $newUploadedFile = '';
+        // Current Image
+        $imageURL = $asset['imageURL'];
 
-        // Validate Replacement Image
+        // Optional Replacement Image
         if (
             $formError === '' &&
             isset($_FILES['assetImage']) &&
             $_FILES['assetImage']['error']
                 !== UPLOAD_ERR_NO_FILE
         ) {
-            $image = $_FILES['assetImage'];
+            $uploadedImage = $_FILES['assetImage'];
 
-            if ($image['error'] !== UPLOAD_ERR_OK) {
+            if ($uploadedImage['error'] !== UPLOAD_ERR_OK) {
                 $formError =
                     "Unable to upload the selected image.";
-            } elseif ($image['size'] > 5 * 1024 * 1024) {
+            } elseif ($uploadedImage['size'] > 5 * 1024 * 1024) {
                 $formError =
                     "Image size must not exceed 5MB.";
             } else {
                 $imageInfo = getimagesize(
-                    $image['tmp_name']
+                    $uploadedImage['tmp_name']
                 );
 
-                $allowedTypes = [
-                    IMAGETYPE_JPEG => 'jpg',
-                    IMAGETYPE_PNG => 'png'
-                ];
-
-                if (
-                    $imageInfo === false ||
-                    !isset(
-                        $allowedTypes[$imageInfo[2]]
-                    )
-                ) {
+                if ($imageInfo === false) {
                     $formError =
-                        "Only JPG and PNG images are allowed.";
+                        "The selected file is not a valid image.";
                 } else {
-                    $extension =
-                        $allowedTypes[$imageInfo[2]];
+                    $mimeType = $imageInfo['mime'];
 
-                    $fileName =
-                        strtolower($assetID)
-                        . '_'
-                        . time()
-                        . '.'
-                        . $extension;
+                    $allowedImageTypes = [
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png'
+                    ];
 
-                    $uploadDirectory =
-                        __DIR__
-                        . '/../assets/managerfile/';
-
-                    if (!is_dir($uploadDirectory)) {
-                        mkdir(
-                            $uploadDirectory,
-                            0775,
-                            true
-                        );
-                    }
-
-                    $newUploadedFile =
-                        $uploadDirectory . $fileName;
-
-                    if (
-                        !move_uploaded_file(
-                            $image['tmp_name'],
-                            $newUploadedFile
-                        )
-                    ) {
+                    if (!isset(
+                        $allowedImageTypes[$mimeType]
+                    )) {
                         $formError =
-                            "Unable to save the uploaded image.";
+                            "Only JPG and PNG images are allowed.";
                     } else {
-                        $newImageURL =
-                            'assets/managerfile/'
-                            . $fileName;
+                        $extension =
+                            $allowedImageTypes[$mimeType];
+
+                        $fileName =
+                            strtolower($assetID)
+                            . '_'
+                            . time()
+                            . '.'
+                            . $extension;
+
+                        $uploadDirectory =
+                            dirname(__DIR__)
+                            . '/assets/managerfile/';
+
+                        if (!is_dir($uploadDirectory)) {
+                            if (
+                                !mkdir(
+                                    $uploadDirectory,
+                                    0775,
+                                    true
+                                )
+                            ) {
+                                $formError =
+                                    "Unable to create the image upload folder.";
+                            }
+                        }
+
+                        if ($formError === '') {
+                            $newUploadedFile =
+                                $uploadDirectory
+                                . $fileName;
+
+                            if (
+                                !move_uploaded_file(
+                                    $uploadedImage['tmp_name'],
+                                    $newUploadedFile
+                                )
+                            ) {
+                                $formError =
+                                    "Unable to save the uploaded image.";
+                            } else {
+                                $imageURL =
+                                    'assets/managerfile/'
+                                    . $fileName;
+                            }
+                        }
                     }
                 }
             }
@@ -264,12 +284,14 @@ try {
 
         // Save Changes
         if ($formError === '') {
-            $oldAvailability =
-                $asset['availabilityStatus'];
-
             try {
                 $conn->begin_transaction();
 
+                $oldAvailabilityStatus =
+                    $asset['availabilityStatus'];
+
+                // Listing Status and Verification Status
+                // are intentionally NOT updated here.
                 $updateStatement = $conn->prepare("
                     UPDATE assets
                     SET
@@ -279,29 +301,27 @@ try {
                         assetCondition = ?,
                         imageURL = ?,
                         availabilityStatus = ?,
-                        listingStatus = ?,
                         updatedDate = CURRENT_TIMESTAMP
                     WHERE assetID = ?
                 ");
 
                 $updateStatement->bind_param(
-                    "ssssssss",
+                    "sssssss",
                     $categoryID,
                     $assetName,
                     $description,
                     $assetCondition,
-                    $newImageURL,
+                    $imageURL,
                     $availabilityStatus,
-                    $listingStatus,
                     $assetID
                 );
 
                 $updateStatement->execute();
                 $updateStatement->close();
 
-                // Record Availability Change
+                // Record Availability Status Change
                 if (
-                    $oldAvailability
+                    $oldAvailabilityStatus
                     !== $availabilityStatus
                 ) {
                     $historyResult = $conn->query("
@@ -327,31 +347,30 @@ try {
                         $nextHistoryNumber
                     );
 
-                    $historyReason =
+                    $statusChangeReason =
                         "Availability updated by Resource Manager.";
 
-                    $historyStatement =
-                        $conn->prepare("
-                            INSERT INTO assetstatushistory
-                            (
-                                historyID,
-                                assetID,
-                                updatedBy,
-                                oldAvailabilityStatus,
-                                newAvailabilityStatus,
-                                statusChangeReason
-                            )
-                            VALUES (?, ?, ?, ?, ?, ?)
-                        ");
+                    $historyStatement = $conn->prepare("
+                        INSERT INTO assetstatushistory
+                        (
+                            historyID,
+                            assetID,
+                            updatedBy,
+                            oldAvailabilityStatus,
+                            newAvailabilityStatus,
+                            statusChangeReason
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
 
                     $historyStatement->bind_param(
                         "ssssss",
                         $historyID,
                         $assetID,
                         $managerID,
-                        $oldAvailability,
+                        $oldAvailabilityStatus,
                         $availabilityStatus,
-                        $historyReason
+                        $statusChangeReason
                     );
 
                     $historyStatement->execute();
@@ -372,8 +391,7 @@ try {
                 $logRow = $logResult->fetch_assoc();
 
                 $nextLogNumber =
-                    ((int) ($logRow['maxID'] ?? 0))
-                    + 1;
+                    ((int) ($logRow['maxID'] ?? 0)) + 1;
 
                 $logID = sprintf(
                     "LOG%03d",
@@ -381,7 +399,7 @@ try {
                 );
 
                 $logDescription =
-                    "Updated asset listing: "
+                    "Updated asset information: "
                     . $assetName;
 
                 $logStatement = $conn->prepare("
@@ -429,6 +447,7 @@ try {
             } catch (Throwable $error) {
                 $conn->rollback();
 
+                // Remove newly uploaded image if DB update fails
                 if (
                     $newUploadedFile !== '' &&
                     file_exists($newUploadedFile)
@@ -449,8 +468,6 @@ try {
             $asset['description'] = $description;
             $asset['availabilityStatus'] =
                 $availabilityStatus;
-            $asset['listingStatus'] =
-                $listingStatus;
         }
     }
 
@@ -458,11 +475,20 @@ try {
     error_log($error->getMessage());
 
     $databaseError =
-        "Unable to update the asset. Please try again.";
+        "Unable to process the asset information. Please try again.";
 }
 
 if ($conn instanceof mysqli) {
     $conn->close();
+}
+
+// Image Preview
+$imagePath = '';
+
+if ($asset && !empty($asset['imageURL'])) {
+    $imagePath =
+        '../assets/managerfile/'
+        . basename($asset['imageURL']);
 }
 ?>
 
@@ -471,7 +497,10 @@ if ($conn instanceof mysqli) {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Edit Asset - CirculAPU</title>
 
@@ -496,21 +525,32 @@ if ($conn instanceof mysqli) {
             <section class="management-heading">
 
                 <div class="breadcrumb">
-                    <a href="manager_assets.php">Asset Management</a>
+                    <a href="manager_assets.php">
+                        Asset Management
+                    </a>
+
                     <span>›</span>
 
-                    <a href="manager_asset_view.php?assetID=<?php echo urlencode($assetID); ?>">
+                    <a
+                        href="manager_asset_view.php?assetID=<?php
+                        echo urlencode($assetID);
+                        ?>"
+                    >
                         Asset Details
                     </a>
 
                     <span>›</span>
-                    <span class="breadcrumb-current">Edit Asset</span>
+
+                    <span class="breadcrumb-current">
+                        Edit Asset
+                    </span>
                 </div>
 
-                <h1>Edit Asset</h1>
+                <h1>Edit Asset Information</h1>
 
                 <p>
-                    Update the selected asset listing information.
+                    Update the asset listing information while
+                    preserving its review and verification status.
                 </p>
 
             </section>
@@ -522,22 +562,33 @@ if ($conn instanceof mysqli) {
                     <?php echo htmlspecialchars($databaseError); ?>
                 </div>
 
+                <a
+                    href="manager_assets.php"
+                    class="management-create-btn"
+                >
+                    Back to Asset Management
+                </a>
+
             <?php elseif ($asset): ?>
 
+                <!-- 3. Form Error -->
                 <?php if (!empty($formError)): ?>
+
                     <div class="alert alert-error">
                         <?php echo htmlspecialchars($formError); ?>
                     </div>
+
                 <?php endif; ?>
 
-                <!-- 3. Edit Asset Form -->
+                <!-- 4. Edit Form -->
                 <section class="content-card asset-form-card">
 
                     <form
-                        action="manager_asset_edit.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
+                        action="manager_asset_edit.php?assetID=<?php
+                        echo urlencode($asset['assetID']);
+                        ?>"
                         method="POST"
                         enctype="multipart/form-data"
-                        class="asset-form"
                     >
 
                         <div class="asset-form-layout">
@@ -547,14 +598,13 @@ if ($conn instanceof mysqli) {
 
                                 <!-- Asset ID -->
                                 <div class="asset-form-row">
-                                    <label for="assetID">
-                                        Asset ID
-                                    </label>
+                                    <label>Asset ID</label>
 
                                     <input
                                         type="text"
-                                        id="assetID"
-                                        value="<?php echo htmlspecialchars($asset['assetID']); ?>"
+                                        value="<?php echo htmlspecialchars(
+                                            $asset['assetID']
+                                        ); ?>"
                                         readonly
                                     >
                                 </div>
@@ -570,7 +620,9 @@ if ($conn instanceof mysqli) {
                                         id="assetName"
                                         name="assetName"
                                         maxlength="150"
-                                        value="<?php echo htmlspecialchars($asset['assetName']); ?>"
+                                        value="<?php echo htmlspecialchars(
+                                            $asset['assetName']
+                                        ); ?>"
                                         required
                                     >
                                 </div>
@@ -586,21 +638,25 @@ if ($conn instanceof mysqli) {
                                         name="categoryID"
                                         required
                                     >
-                                        <option value="">
-                                            Select category
-                                        </option>
 
                                         <?php foreach ($categories as $category): ?>
+
                                             <option
-                                                value="<?php echo htmlspecialchars($category['categoryID']); ?>"
+                                                value="<?php echo htmlspecialchars(
+                                                    $category['categoryID']
+                                                ); ?>"
                                                 <?php
-                                                echo $asset['categoryID'] === $category['categoryID']
+                                                echo $asset['categoryID']
+                                                    === $category['categoryID']
                                                     ? 'selected'
                                                     : '';
                                                 ?>
                                             >
-                                                <?php echo htmlspecialchars($category['categoryName']); ?>
+                                                <?php echo htmlspecialchars(
+                                                    $category['categoryName']
+                                                ); ?>
                                             </option>
+
                                         <?php endforeach; ?>
 
                                     </select>
@@ -617,24 +673,34 @@ if ($conn instanceof mysqli) {
                                         name="assetCondition"
                                         required
                                     >
+
                                         <?php foreach ($conditionOptions as $condition): ?>
+
                                             <option
-                                                value="<?php echo htmlspecialchars($condition); ?>"
+                                                value="<?php echo htmlspecialchars(
+                                                    $condition
+                                                ); ?>"
                                                 <?php
-                                                echo $asset['assetCondition'] === $condition
+                                                echo $asset['assetCondition']
+                                                    === $condition
                                                     ? 'selected'
                                                     : '';
                                                 ?>
                                             >
-                                                <?php echo htmlspecialchars($condition); ?>
+                                                <?php echo htmlspecialchars(
+                                                    $condition
+                                                ); ?>
                                             </option>
+
                                         <?php endforeach; ?>
 
                                     </select>
                                 </div>
 
                                 <!-- Description -->
-                                <div class="asset-form-row asset-form-textarea">
+                                <div
+                                    class="asset-form-row asset-form-textarea"
+                                >
                                     <label for="description">
                                         Description
                                     </label>
@@ -644,7 +710,9 @@ if ($conn instanceof mysqli) {
                                         name="description"
                                         maxlength="255"
                                         rows="4"
-                                    ><?php echo htmlspecialchars($asset['description'] ?? ''); ?></textarea>
+                                    ><?php echo htmlspecialchars(
+                                        $asset['description'] ?? ''
+                                    ); ?></textarea>
                                 </div>
 
                                 <!-- Availability -->
@@ -658,54 +726,33 @@ if ($conn instanceof mysqli) {
                                         name="availabilityStatus"
                                         required
                                     >
+
                                         <?php foreach ($availabilityOptions as $availability): ?>
+
                                             <option
-                                                value="<?php echo htmlspecialchars($availability); ?>"
+                                                value="<?php echo htmlspecialchars(
+                                                    $availability
+                                                ); ?>"
                                                 <?php
-                                                echo $asset['availabilityStatus'] === $availability
+                                                echo $asset['availabilityStatus']
+                                                    === $availability
                                                     ? 'selected'
                                                     : '';
                                                 ?>
                                             >
-                                                <?php echo htmlspecialchars($availability); ?>
+                                                <?php echo htmlspecialchars(
+                                                    $availability
+                                                ); ?>
                                             </option>
+
                                         <?php endforeach; ?>
 
                                     </select>
                                 </div>
 
-                                <!-- Listing Status -->
+                                <!-- Owner -->
                                 <div class="asset-form-row">
-                                    <label for="listingStatus">
-                                        Listing Status *
-                                    </label>
-
-                                    <select
-                                        id="listingStatus"
-                                        name="listingStatus"
-                                        required
-                                    >
-                                        <?php foreach ($listingStatusOptions as $status): ?>
-                                            <option
-                                                value="<?php echo htmlspecialchars($status); ?>"
-                                                <?php
-                                                echo $asset['listingStatus'] === $status
-                                                    ? 'selected'
-                                                    : '';
-                                                ?>
-                                            >
-                                                <?php echo htmlspecialchars($status); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-
-                                    </select>
-                                </div>
-
-                                <!-- Uploaded By -->
-                                <div class="asset-form-row">
-                                    <label>
-                                        Uploaded By
-                                    </label>
+                                    <label>Submitted By</label>
 
                                     <input
                                         type="text"
@@ -719,31 +766,44 @@ if ($conn instanceof mysqli) {
                                     >
                                 </div>
 
-                                <!-- Verification Status -->
+                                <!-- Listing Status -->
                                 <div class="asset-form-row">
-                                    <label>
-                                        Verification Status
-                                    </label>
+                                    <label>Listing Status</label>
 
                                     <input
                                         type="text"
-                                        value="<?php echo htmlspecialchars($asset['verificationStatus']); ?>"
+                                        value="<?php echo htmlspecialchars(
+                                            $asset['listingStatus']
+                                        ); ?>"
+                                        readonly
+                                    >
+                                </div>
+
+                                <!-- Verification Status -->
+                                <div class="asset-form-row">
+                                    <label>Verification Status</label>
+
+                                    <input
+                                        type="text"
+                                        value="<?php echo htmlspecialchars(
+                                            $asset['verificationStatus']
+                                        ); ?>"
                                         readonly
                                     >
                                 </div>
 
                                 <!-- Date Listed -->
                                 <div class="asset-form-row">
-                                    <label>
-                                        Date Listed
-                                    </label>
+                                    <label>Date Listed</label>
 
                                     <input
                                         type="text"
                                         value="<?php echo htmlspecialchars(
                                             date(
-                                                'd M Y',
-                                                strtotime($asset['createdDate'])
+                                                'd M Y, h:i A',
+                                                strtotime(
+                                                    $asset['createdDate']
+                                                )
                                             )
                                         ); ?>"
                                         readonly
@@ -752,7 +812,7 @@ if ($conn instanceof mysqli) {
 
                             </div>
 
-                            <!-- Image and Actions -->
+                            <!-- Side Panel -->
                             <aside class="asset-form-side">
 
                                 <!-- Current Image -->
@@ -760,20 +820,24 @@ if ($conn instanceof mysqli) {
 
                                     <h2>Current Image</h2>
 
-                                    <?php if (!empty($asset['imageURL'])): ?>
+                                    <?php if ($imagePath !== ''): ?>
 
                                         <div class="asset-form-image-preview">
                                             <img
-                                                src="../assets/managerfile/<?php echo htmlspecialchars(
-                                                    basename($asset['imageURL'])
+                                                src="<?php echo htmlspecialchars(
+                                                    $imagePath
                                                 ); ?>"
-                                                alt="<?php echo htmlspecialchars($asset['assetName']); ?>"
+                                                alt="<?php echo htmlspecialchars(
+                                                    $asset['assetName']
+                                                ); ?>"
                                             >
                                         </div>
 
                                         <p>
                                             <?php echo htmlspecialchars(
-                                                basename($asset['imageURL'])
+                                                basename(
+                                                    $asset['imageURL']
+                                                )
                                             ); ?>
                                         </p>
 
@@ -798,13 +862,27 @@ if ($conn instanceof mysqli) {
                                         type="file"
                                         id="assetImage"
                                         name="assetImage"
-                                        accept=".jpg,.jpeg,.png"
+                                        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                     >
 
                                     <small>
-                                        JPG or PNG, maximum 5MB.
-                                        Leave empty to keep the current image.
+                                        Optional. JPG or PNG only,
+                                        maximum 5MB.
                                     </small>
+
+                                </div>
+
+                                <!-- Note -->
+                                <div class="asset-form-note">
+
+                                    <strong>Important</strong>
+
+                                    <p>
+                                        Listing Status and Verification
+                                        Status cannot be changed from this
+                                        page. Use the correct review or
+                                        verification workflow instead.
+                                    </p>
 
                                 </div>
 
@@ -830,23 +908,20 @@ if ($conn instanceof mysqli) {
                                             src="../assets/icons/reset.png"
                                             alt=""
                                         >
-                                        Reset Changes
+                                        Reset
                                     </button>
 
                                     <a
-                                        href="manager_asset_view.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
+                                        href="manager_asset_view.php?assetID=<?php
+                                        echo urlencode(
+                                            $asset['assetID']
+                                        );
+                                        ?>"
                                         class="asset-form-back"
                                     >
                                         Back
                                     </a>
 
-                                </div>
-
-                                <div class="asset-form-note">
-                                    <strong>Note:</strong>
-                                    <p>
-                                        Fields marked with * are required.
-                                    </p>
                                 </div>
 
                             </aside>
