@@ -1775,3 +1775,36 @@ body.auth-page {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   Global Simulation Header Banner (Shared across all roles)
+   ========================================================================== */
+
+.simulation-banner {
+    width: 100%;
+    background-color: #e2e8f0;
+    border-bottom: 1px solid #cbd5e1;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #0f172a;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 1100; /* Keeps banner on top of standard app header */
+}
+
+.simulation-banner strong {
+    font-weight: 700;
+}
+
+.simulation-link {
+    color: #0f172a;
+    font-weight: 600;
+    text-decoration: underline;
+    transition: opacity 0.2s ease;
+}
+
+.simulation-link:hover {
+    opacity: 0.75;
+}
