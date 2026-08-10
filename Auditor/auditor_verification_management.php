@@ -22,7 +22,7 @@
     $statusFilter = $_GET['status'] ?? '';
 
     // Connect to Database
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
+    require_once '../db.php';
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {

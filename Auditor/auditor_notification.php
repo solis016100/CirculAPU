@@ -19,7 +19,7 @@
         $currentPage    = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 
         // Connect to database
-        $conn = new mysqli("localhost", "root", "", "circulapu_db");
+        require_once '../db.php';
         if ($conn->connect_error){
             $databaseError = "Unable to connect to the database.";
         }else {

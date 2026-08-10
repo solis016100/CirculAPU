@@ -106,13 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error_message = "Password does not meet all security requirements.";
             $step = 2;
         } else {
-            // Direct MySQLi connection without db.php
-            $conn = new mysqli("localhost", "root", "", "circulapu_db");
-
-            if ($conn->connect_error) {
-                die("Database Connection failed: " . $conn->connect_error);
-            }
-
+            require_once 'db.php';
             $check_stmt = $conn->prepare("SELECT userID FROM User WHERE email = ?");
             $check_stmt->bind_param("s", $email);
             $check_stmt->execute();

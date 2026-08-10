@@ -1,6 +1,4 @@
-/* ==========================================================================
-   1. GLOBAL SYSTEM VARIABLES & ROLE THEMES
-   ========================================================================== */
+/* 1. GLOBAL SYSTEM VARIABLES & ROLE THEMES */
 
 :root {
   --sidebar-width: 280px; /* Fits "Transaction Management" cleanly */
@@ -64,9 +62,7 @@ body {
     --border-color: #e2e8f0;
 }
 
-/* ==========================================================================
-   2. BASE REBOOT & LAYOUT GRID
-   ========================================================================== */
+/* 2. BASE REBOOT & LAYOUT GRID */
 
 * {
     box-sizing: border-box;
@@ -115,9 +111,7 @@ html, body {
     width: 100%;
 }
 
-/* ==========================================================================
-   3. APP HEADER COMPONENT
-   ========================================================================== */
+/* 3. APP HEADER COMPONENT */
 
 .app-header {
     width: 100%;
@@ -250,9 +244,7 @@ html, body {
     margin-top: 2px;
 }
 
-/* ==========================================================================
-   4. COLLAPSIBLE SIDEBAR COMPONENT
-   ========================================================================== */
+/* 4. COLLAPSIBLE SIDEBAR COMPONENT */
 
 .sidebar {
   width: var(--sidebar-width);
@@ -435,13 +427,9 @@ html, body {
     display: none;
 }
 
-/* ==========================================================================
-   5. SHARED DASHBOARD CARDS, STATS & TABLES
-   ========================================================================== */
+/* 5. SHARED DASHBOARD CARDS, STATS & TABLES */
 
-/* ================
-   STAT CARDS
-   ================ */
+/* STAT CARDS */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -521,9 +509,7 @@ html, body {
 }
 
 
-/* ================
-   CONTENT CARD
-   ================ */
+/* CONTENT CARD */
 .content-card {
     min-width: 0;
     margin-bottom: 30px;
@@ -534,9 +520,7 @@ html, body {
     box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
 }
 
-/* ================
-   CARD HEADER
-   ================ */
+/* CARD HEADER */
 .card-header {
     display: flex;
     align-items: center;
@@ -565,9 +549,7 @@ html, body {
 }
 
 
-/* ================
-   DATA TABLE
-   ================ */
+/* DATA TABLE */
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
@@ -602,9 +584,7 @@ html, body {
 }
 
 
-/* ================
-   ROLE BADGE
-   ================ */
+/* ROLE BADGE */
 .role-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -618,9 +598,7 @@ html, body {
     letter-spacing: 0.5px;
 }
 
-/* ================
-   ACTION BUTTON
-   ================ */
+/* ACTION BUTTON */
 .action-btn {
     display: inline-flex;
     align-items: center;
@@ -640,9 +618,7 @@ html, body {
     background-color: var(--primary-hover);
 }
 
-/* ==========================================================================
-   6. AUTHENTICATION PAGES (SIGN UP, LOGIN & RESET PASSWORD)
-   ========================================================================== */
+/* 6. AUTHENTICATION PAGES (SIGN UP, LOGIN & RESET PASSWORD) */
 
 /* Page Bodies */
 body.signup-page-body,
@@ -1033,9 +1009,7 @@ body.auth-page {
     text-decoration: underline;
 }
 
-/* ==========================================================================
-   7. SHARED DASHBOARD LAYOUT
-   ========================================================================== */
+/* 7. SHARED DASHBOARD LAYOUT */
 
 /* Welcome */
 .dashboard-welcome {
@@ -1080,14 +1054,12 @@ body.auth-page {
         minmax(0, 1.6fr)
         minmax(310px, 0.8fr);
     gap: 22px;
+    margin-bottom: 24px;
     align-items: stretch;
 }
 
 
-
-/* ==========================================================================
-   8. DASHBOARD NOTIFICATIONS
-   ========================================================================== */
+/* 8. DASHBOARD NOTIFICATIONS */
 .notification-list {
     display: flex;
     flex-direction: column;
@@ -1184,9 +1156,142 @@ body.auth-page {
     background-color: var(--primary-color);
 }
 
-/* ==========================================================================
-   9. Breadcrumbs
-   ========================================================================== */
+
+/* Shared Dashboard Page */
+.dashboard-page {
+    padding: 32px 36px;
+}
+
+/* Shared Dashboard Error Message */
+.dashboard-error-message {
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background-color: #fef2f2;
+    color: #b91c1c;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Shared Dashboard Panel */
+.dashboard-panel {
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+/* Shared Recent Activities */
+.activity-table {
+    min-width: 650px;
+}
+
+.activity-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.activity-name strong {
+    color: #334155;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.activity-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background-color: var(--badge-bg);
+}
+
+.activity-icon img {
+    width: 18px;
+    height: 18px;
+    display: block;
+    object-fit: contain;
+}
+
+.dashboard-empty-state {
+    padding: 45px 20px !important;
+    color: #64748b !important;
+    text-align: center !important;
+}
+
+/* Shared Notification Empty State */
+.notification-empty-state {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #64748b;
+    text-align: center;
+}
+
+.notification-empty-state img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    opacity: 0.55;
+}
+
+/* Shared Quick Actions */
+.quick-actions {
+    margin-bottom: 0;
+}
+
+.quick-action-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.quick-action {
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    background-color: var(--card-bg);
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.quick-action:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    background-color: var(--badge-bg);
+    color: var(--primary-color);
+}
+
+.quick-action:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 3px;
+}
+
+.quick-action img {
+    width: 25px;
+    height: 25px;
+    display: block;
+    object-fit: contain;
+}
+
+/* 9. Breadcrumbs */
 .breadcrumb {
     display: flex;
     align-items: center;
@@ -1213,14 +1318,9 @@ body.auth-page {
 }
 
 
-/* ==========================================================================
-   10. SHARED MANAGEMENT PAGE STYLES
-   Used by Admin, Manager and Auditor management pages
-   ========================================================================== */
+/* 10. SHARED MANAGEMENT PAGE STYLES - Used by Admin, Manager and Auditor management pages */
 
-/* ===================
-   PAGE HEADING
-   ===================*/
+/* PAGE HEADING */
 .management-heading {
     display: flex;
     flex-direction: column;
@@ -1259,10 +1359,7 @@ body.auth-page {
 }
 
 
-
-/* ===================
-   CREATE BUTTON
-   =================== */
+/* CREATE BUTTON */
 
 .management-create-btn {
     display: flex;
@@ -1297,9 +1394,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   FILTER PANEL
-   =================== */
+/* FILTER PANEL */
 .management-filter {
     display: flex;
     align-items: flex-end;
@@ -1319,9 +1414,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   FILTER GROUP
-   =================== */
+/* FILTER GROUP */
 .management-filter-group {
     display: flex;
     flex: 1;
@@ -1340,9 +1433,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   FILTER INPUT
-   =================== */
+/* FILTER INPUT */
 
 .management-filter-group input,
 .management-filter-group select {
@@ -1365,9 +1456,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   SEARCH INPUT WITH ICON
-   =================== */
+/* SEARCH INPUT WITH ICON */
 .management-search-input {
     width: 100%;
     height: 44px;
@@ -1409,9 +1498,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   FILTER AND RESET BUTTONS
-   =================== */
+/* FILTER AND RESET BUTTONS */
 .management-filter-buttons {
     display: flex;
     flex-direction: column;
@@ -1454,9 +1541,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   MANAGEMENT LIST CONTAINER
-   =================== */
+/* MANAGEMENT LIST CONTAINER */
 .management-list {
     width: 100%;
     background-color: #ffffff;
@@ -1466,9 +1551,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   MANAGEMENT LIST HEADER
-   ===================*/
+/* MANAGEMENT LIST HEADER */
 .management-list-header {
     padding: 18px 20px;
     display: flex;
@@ -1494,18 +1577,14 @@ body.auth-page {
 }
 
 
-/* ===================
-   TABLE WRAPPER
-   =================== */
+/* TABLE WRAPPER */
 .management-table-wrapper {
     width: 100%;
     overflow-x: auto;
 }
 
 
-/* ===================
-   MANAGEMENT TABLE
-   =================== */
+/* MANAGEMENT TABLE */
 .management-table {
     width: 100%;
     min-width: 850px;
@@ -1546,9 +1625,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   MANAGEMENT ACTION BUTTONS
-   =================== */
+/* MANAGEMENT ACTION BUTTONS */
 
 .management-actions {
     display: flex;
@@ -1589,9 +1666,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   EMPTY TABLE STATE
-   =================== */
+/* EMPTY TABLE STATE */
 
 .management-empty-state {
     padding: 35px !important;
@@ -1600,9 +1675,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   MANAGEMENT TABLE FOOTER
-   =================== */
+/* MANAGEMENT TABLE FOOTER */
 
 .management-table-footer {
     padding: 15px 20px;
@@ -1622,9 +1695,7 @@ body.auth-page {
 }
 
 
-/* ===================
-   PAGINATION
-   =================== */
+/* PAGINATION */
 .pagination {
     display: flex;
     align-items: center;
@@ -1661,4 +1732,438 @@ body.auth-page {
     border-color: var(--primary-color);
     color: var(--primary-color);
     font-weight: 600;
+}
+
+/* SHARED DASHBOARD RESPONSIVENESS */
+
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1050px) {
+    .dashboard-lower-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        min-height: 120px;
+    }
+}
+
+@media (max-width: 1050px) {
+    .quick-action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .dashboard-page {
+        padding: 22px 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .quick-action-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Global Simulation Header Banner (Shared across all roles)
+   ========================================================================== */
+
+.simulation-banner {
+    width: 100%;
+    background-color: #e2e8f0;
+    border-bottom: 1px solid #cbd5e1;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #0f172a;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 1100; /* Keeps banner on top of standard app header */
+}
+
+.simulation-banner strong {
+    font-weight: 700;
+}
+
+.simulation-link {
+    color: #0f172a;
+    font-weight: 600;
+    text-decoration: underline;
+    transition: opacity 0.2s ease;
+}
+
+.simulation-link:hover {
+    opacity: 0.75;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==========================================================================
+   RIGHT SIDEBAR (SETTINGS)
+   ========================================================================== */
+
+/* Right Sidebar Container - Refined Styling */
+.right-sidebar {
+    position: fixed;
+    top: 0;
+    right: -360px; /* Pushed past 320px to fully hide the 32px protruding button */
+    width: 320px;
+    height: 100vh;
+    background-color: #ffffff;
+    box-shadow: -4px 0 25px rgba(0,0,0,0.06);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #e2e8f0;
+}
+
+.right-sidebar.active {
+    right: 0;
+}
+
+/* Collapsible Tab (Chevron Button) */
+.right-sidebar-toggle {
+    position: absolute;
+    left: -32px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    width: 32px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: -4px 0 10px rgba(0,0,0,0.03);
+    transition: background 0.2s;
+}
+
+.right-sidebar-toggle:hover {
+    background: #f8fafc;
+}
+
+/* Header */
+.right-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 1.4rem;
+    font-family: serif;
+    font-weight: bold;
+    color: #0f172a;
+}
+
+.right-sidebar-header img {
+    width: 26px;
+    height: 26px;
+}
+
+/* Menu Links */
+.right-sidebar-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-top: 12px;
+}
+
+.right-sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 22px 28px;
+    text-decoration: none;
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-family: serif;
+    font-weight: 600;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.right-sidebar-link:hover {
+    background-color: #f8fafc;
+    padding-left: 32px; /* Smooth indent effect on hover */
+    color: #0f172a;
+}
+
+.right-sidebar-link img {
+    width: 24px;
+    height: 24px;
+    margin-right: 20px;
+    transition: opacity 0.2s ease;
+}
+
+.right-sidebar-link:hover img {
+    opacity: 0.8;
+}
+
+/* =========================================
+   PROFILE SETTINGS LAYOUT
+   ========================================= */
+.breadcrumb {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+    margin-bottom: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 1.8rem;
+    color: var(--text-primary, #0f172a);
+    margin-bottom: 0.25rem;
+}
+
+.subtitle {
+    color: var(--text-secondary, #64748b);
+    font-size: 0.95rem;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-header.space-between {
+    justify-content: space-between;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.card-header h2 {
+    font-size: 1.1rem;
+    color: var(--text-primary, #0f172a);
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-divider {
+    border: none;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+    margin: 0 1.5rem;
+}
+
+/* Avatar Section */
+.profile-details-wrapper {
+    display: flex;
+    padding: 1.5rem;
+    gap: 2.5rem;
+}
+
+.profile-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 140px;
+}
+
+.avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border: 1px solid var(--text-primary, #0f172a);
+    position: relative;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+.avatar-x-line-1, .avatar-x-line-2 {
+    position: absolute;
+    width: 150%;
+    height: 1px;
+    background-color: var(--text-primary, #0f172a);
+    top: 50%;
+    left: -25%;
+}
+
+.avatar-x-line-1 { transform: rotate(45deg); }
+.avatar-x-line-2 { transform: rotate(-45deg); }
+
+.file-limits {
+    font-size: 0.7rem;
+    color: var(--text-secondary, #64748b);
+    text-align: center;
+}
+
+/* Information Lists */
+.profile-info-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.profile-info-list.padded-list {
+    padding: 1.5rem;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.info-label {
+    width: 90px;
+    color: var(--text-primary, #0f172a);
+    font-weight: 600;
+}
+
+.info-label.wide-label {
+    width: 200px;
+}
+
+.info-separator {
+    width: 20px;
+    color: var(--text-primary, #0f172a);
+}
+
+.info-value {
+    color: var(--text-secondary, #334155);
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+/* Badges */
+.badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.neutral-badge.outline,
+.success-badge.outline {
+    background-color: transparent;
+    border: 1px solid var(--border-color, #94a3b8);
+    color: var(--text-secondary, #334155);
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--text-primary, #0f172a);
+    border-radius: 50%;
+}
+
+/* Activity List */
+.view-all-link {
+    color: var(--text-primary, #0f172a);
+    font-size: 0.9rem;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.activity-list {
+    padding: 0.5rem 1.5rem;
+}
+
+.activity-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    font-size: 0.95rem;
+}
+
+.activity-row:last-child {
+    border-bottom: none;
+}
+
+.activity-date {
+    width: 220px;
+    color: var(--text-primary, #0f172a);
+}
+
+.activity-desc {
+    flex: 1;
+    color: var(--text-secondary, #334155);
+}
+
+/* Security Footer */
+.security-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--input-bg, #f1f5f9);
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+}
+
+.security-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-primary, #0f172a);
+}
+
+.security-right {
+    color: var(--text-secondary, #64748b);
+}
+
+/* Utilities */
+.outline-btn {
+    background-color: transparent;
+    border: 1px solid var(--border-color, #94a3b8);
+    color: var(--text-primary, #0f172a);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.full-width-card {
+    width: 100%;
 }

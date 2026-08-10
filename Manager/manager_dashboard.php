@@ -2,9 +2,11 @@
 session_start();
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
+$is_preview = isset($_GET['preview']);
 
-// Access Control Guard for Resource Manager Role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
+// Access Control Guard for Resource Manager Role (Allows Admin Preview)
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Manager' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
     exit();
 }
@@ -205,8 +207,8 @@ if ($conn instanceof mysqli) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Manager Dashboard - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../darktheme.css">
     <link rel="stylesheet" href="manager.css">
+    <link rel="stylesheet" href="../darktheme.css">
 </head>
 <body class="role-manager">
 
@@ -218,9 +220,9 @@ if ($conn instanceof mysqli) {
 
             <?php include '../header.php'; ?>
 
-            <main class="page-body manager-dashboard-page">
+            <main class="page-body dashboard-page">
 
-                <section class="manager-welcome-section">
+                <section class="dashboard-welcome">
                     <div>
                         <h1>
                             Welcome back,
@@ -235,120 +237,120 @@ if ($conn instanceof mysqli) {
                 </section>
 
                 <?php if (!empty($databaseError)): ?>
-                    <div class="manager-error-message">
+                    <div class="dashboard-error-message">
                         <?php echo htmlspecialchars($databaseError); ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- Dashboard Overview Statistics -->
                 <section
-                    class="manager-stat-grid"
+                    class="stats-grid"
                     aria-label="Resource Manager statistics"
                 >
 
                     <!-- Total Assets -->
-                    <a href="manager_assets.php" class="manager-stat-card">
-                        <div class="manager-stat-icon">
+                    <a href="manager_assets.php" class="stat-card">
+                        <div class="stat-icon">
                             <img
                                 src="../assets/icons/totalassets.png"
                                 alt=""
                             >
                         </div>
 
-                        <div class="manager-stat-content">
-                            <span class="manager-stat-label">
-                                Total Assets
-                            </span>
+                        <div class="stat-content">
+                            <h3>Total Assets</h3>
 
-                            <strong>
+                            <strong class="stat-value">
                                 <?php echo $totalAssets; ?>
                             </strong>
 
-                            <small>All listed assets</small>
+                            <p class="stat-description">
+                                All listed assets
+                            </p>
                         </div>
                     </a>
 
                     <!-- Pending Listings -->
                     <a
                         href="manager_assets.php?verificationStatus=Pending"
-                        class="manager-stat-card"
+                        class="stat-card"
                     >
-                        <div class="manager-stat-icon">
+                        <div class="stat-icon">
                             <img
                                 src="../assets/icons/pendingVerification.png"
                                 alt=""
                             >
                         </div>
 
-                        <div class="manager-stat-content">
-                            <span class="manager-stat-label">
-                                Pending Listings
-                            </span>
+                        <div class="stat-content">
+                            <h3>Pending Listings</h3>
 
-                            <strong>
+                            <strong class="stat-value">
                                 <?php echo $pendingListings; ?>
                             </strong>
 
-                            <small>Awaiting verification</small>
+                            <p class="stat-description">
+                                Awaiting verification
+                            </p>
                         </div>
                     </a>
 
                     <!-- Active Transactions -->
                     <a
                         href="manager_transactions.php"
-                        class="manager-stat-card"
+                        class="stat-card"
                     >
-                        <div class="manager-stat-icon">
+                        <div class="stat-icon">
                             <img
                                 src="../assets/icons/active-transactions.png"
                                 alt=""
                             >
                         </div>
 
-                        <div class="manager-stat-content">
-                            <span class="manager-stat-label">
-                                Active Transactions
-                            </span>
+                        <div class="stat-content">
+                            <h3>Active Transactions</h3>
 
-                            <strong>
+                            <strong class="stat-value">
                                 <?php echo $activeTransactions; ?>
                             </strong>
 
-                            <small>Ongoing lending and borrowing</small>
+                            <p class="stat-description">
+                                Ongoing lending and borrowing
+                            </p>
                         </div>
                     </a>
 
                     <!-- Borrowings -->
                     <a
                         href="manager_assets.php?availabilityStatus=Borrowed"
-                        class="manager-stat-card"
+                        class="stat-card"
                     >
-                        <div class="manager-stat-icon">
+                        <div class="stat-icon">
                             <img
                                 src="../assets/icons/borrowed-assets.png"
                                 alt=""
                             >
                         </div>
 
-                        <div class="manager-stat-content">
-                            <span class="manager-stat-label">
-                                Borrowings
-                            </span>
+                        <div class="stat-content">
+                            <h3>Borrowings</h3>
 
-                            <strong>
+                            <strong class="stat-value">
                                 <?php echo $currentBorrowed; ?>
                             </strong>
 
-                            <small>Currently borrowed</small>
+                            <p class="stat-description">
+                                Currently borrowed
+                            </p>
                         </div>
                     </a>
                 </section>
 
                 <!-- Dashboard Activities and Notifications -->
-                <section class="manager-dashboard-lower-grid">
+                <section class="dashboard-lower-grid">
 
                     <!-- Recent Activities -->
-                    <article class="content-card manager-dashboard-panel">
+                    <article class="content-card dashboard-panel">
 
                         <div class="card-header">
                             <h2>Recent Activities</h2>
@@ -376,7 +378,7 @@ if ($conn instanceof mysqli) {
                                         <tr>
                                             <td
                                                 colspan="3"
-                                                class="manager-empty-state"
+                                                class="dashboard-empty-state"
                                             >
                                                 No recent activities available.
                                             </td>
@@ -388,9 +390,9 @@ if ($conn instanceof mysqli) {
 
                                             <tr>
                                                 <td>
-                                                    <div class="manager-activity-name">
+                                                    <div class="activity-name">
 
-                                                        <span class="manager-activity-icon">
+                                                        <span class="activity-icon">
                                                             <img
                                                                 src="../assets/icons/<?php
                                                                     echo htmlspecialchars(
@@ -447,7 +449,7 @@ if ($conn instanceof mysqli) {
 
 
                     <!-- Notifications -->
-                    <article class="content-card manager-dashboard-panel">
+                    <article class="content-card dashboard-panel">
 
                         <div class="card-header">
                             <h2>Notifications</h2>
@@ -461,7 +463,7 @@ if ($conn instanceof mysqli) {
 
                             <?php if (empty($notifications)): ?>
 
-                                <div class="manager-notification-empty">
+                                <div class="notification-empty-state">
                                     <img
                                         src="../assets/icons/notification.png"
                                         alt=""
@@ -542,17 +544,17 @@ if ($conn instanceof mysqli) {
                 </section>
 
                 <!-- Quick Actions -->
-                <section class="content-card manager-quick-actions">
+                <section class="content-card quick-actions">
 
                     <div class="card-header">
                         <h2>Quick Actions</h2>
                     </div>
 
-                    <div class="manager-quick-action-grid">
+                    <div class="quick-action-grid">
 
                         <a
                             href="manager_asset_create.php"
-                            class="manager-quick-action"
+                            class="quick-action"
                         >
                             <img
                                 src="../assets/icons/create.png"
@@ -564,7 +566,7 @@ if ($conn instanceof mysqli) {
 
                         <a
                             href="manager_transactions.php"
-                            class="manager-quick-action"
+                            class="quick-action"
                         >
                             <img
                                 src="../assets/icons/view.png"
@@ -576,7 +578,7 @@ if ($conn instanceof mysqli) {
 
                         <a
                             href="manager_reports.php"
-                            class="manager-quick-action"
+                            class="quick-action"
                         >
                             <img
                                 src="../assets/icons/report.png"
@@ -588,7 +590,7 @@ if ($conn instanceof mysqli) {
 
                         <a
                             href="manager_categories.php"
-                            class="manager-quick-action"
+                            class="quick-action"
                         >
                             <img
                                 src="../assets/icons/edit.png"

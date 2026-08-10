@@ -1,9 +1,12 @@
 <?php
     session_start();
-
-    // Access Control Guard for Sustainability Auditor Role
-    if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
-        header("Location: login.php");
+    
+    $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
+    $is_preview = isset($_GET['preview']);
+    
+    // Access Control Guard for Sustainability Auditor Role (Allows Admin Preview)
+    if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Auditor' && !($is_admin && $is_preview))) {
+        header("Location: ../login.php");
         exit();
     }
 
@@ -33,7 +36,7 @@
     }
 
     // Connect to Database
-    $conn = new mysqli("localhost", "root", "", "circulapu_db");
+    require_once '../db.php';
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
@@ -145,7 +148,6 @@
     <title>Auditor Dashboard - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="auditor_style.css">
-    <link rel="stylesheet" href="../darktheme.css">
 </head>
 <body class="role-auditor">
 
