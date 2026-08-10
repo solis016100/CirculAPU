@@ -1,8 +1,8 @@
 /* ==========================================================================
-   CirculAPU - Admin Module Stylesheet (admin_style.csss)
+   CirculAPU - Admin User Management Stylesheet (admin_style.csss)
    ========================================================================== */
 
-/* Page Header & Action Bar */
+/* Page Header Component */
 .admin-page-header {
     display: flex;
     justify-content: space-between;
@@ -28,6 +28,7 @@
     font-size: 0.9rem;
 }
 
+/* Action Header Button */
 .btn-new-account {
     background: #ffffff;
     border: 1px solid #cbd5e1;
@@ -40,26 +41,33 @@
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .btn-new-account:hover {
     background: #f8fafc;
+    border-color: #94a3b8;
 }
 
-/* Filter Card Layout */
-.filter-card {
+.btn-new-account img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+/* Filter Card & Controls */
+.admin-filter-card {
     margin-bottom: 20px;
 }
 
-.filter-form {
+.admin-filter-form {
     display: flex;
     gap: 15px;
     align-items: flex-end;
     flex-wrap: wrap;
 }
 
-.field-box label {
+.admin-filter-form .field-box label {
     display: block;
     font-size: 0.85rem;
     font-weight: 600;
@@ -67,35 +75,41 @@
     margin-bottom: 5px;
 }
 
-.input-wrapper {
+.admin-filter-form .input-wrapper {
     position: relative;
+    width: 100%;
 }
 
-.input-wrapper .search-icon {
+.admin-filter-form .input-wrapper .search-icon {
     position: absolute;
     left: 10px;
     top: 10px;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
 }
 
-.filter-input {
+.admin-filter-form .filter-input {
     padding-left: 36px;
     width: 100%;
     height: 38px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     box-sizing: border-box;
+    font-size: 0.9rem;
 }
 
-.filter-select {
+.admin-filter-form .filter-select {
     width: 100%;
     height: 38px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 0 10px;
     background: #ffffff;
+    font-size: 0.9rem;
 }
 
-.filter-actions {
+.admin-filter-actions {
     display: flex;
     gap: 8px;
 }
@@ -112,9 +126,11 @@
     align-items: center;
     gap: 6px;
     font-weight: 600;
+    font-size: 0.85rem;
     text-decoration: none;
     box-sizing: border-box;
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .btn-filter-submit:hover,
@@ -122,8 +138,15 @@
     background: #f1f5f9;
 }
 
-/* User Table Component */
-.table-card {
+.btn-filter-submit img,
+.btn-filter-reset img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+/* User Data Table Container */
+.admin-table-card {
     background: #ffffff;
     padding: 20px;
     border-radius: 8px;
@@ -150,47 +173,57 @@
     color: #0f172a;
 }
 
-.data-table {
+/* Table Specific Layouts */
+.admin-user-table {
     width: 100%;
     border-collapse: collapse;
     text-align: center;
 }
 
-.data-table thead tr {
+.admin-user-table thead tr {
     background-color: #f8fafc;
     border-bottom: 2px solid #cbd5e1;
 }
 
-.data-table th {
+.admin-user-table th {
     padding: 12px;
     color: #475569;
+    font-weight: 600;
 }
 
-.data-table tbody tr {
+.admin-user-table tbody tr {
     border-bottom: 1px solid #e2e8f0;
 }
 
-.data-table td {
+.admin-user-table td {
     padding: 12px;
+    font-size: 0.9rem;
 }
 
-.data-table .col-userid {
+.admin-user-table .col-userid {
     font-weight: bold;
     color: #0f172a;
 }
 
-.data-table .action-icon {
+.admin-user-table .action-icon {
     color: #64748b;
     display: inline-block;
-    transition: color 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.data-table .action-icon:hover {
-    color: #0f172a;
+.admin-user-table .action-icon:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
 }
 
-.data-table .action-icon.edit-icon {
+.admin-user-table .action-icon.edit-icon {
     margin-right: 10px;
+}
+
+.admin-user-table .action-icon img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
 }
 
 .table-empty-msg {
@@ -198,8 +231,8 @@
     color: #64748b;
 }
 
-/* Pagination Footer */
-.pagination-footer {
+/* Pagination Footer Bar */
+.admin-pagination-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -207,30 +240,31 @@
     font-size: 0.9rem;
 }
 
-.pagination-footer .pagination-info {
+.admin-pagination-footer .pagination-info {
     color: #64748b;
 }
 
-.pagination-controls {
+.admin-pagination-footer .pagination-controls {
     display: flex;
     gap: 4px;
 }
 
-.pagination-btn {
+.admin-pagination-footer .pagination-btn {
     padding: 6px 12px;
     border: 1px solid #cbd5e1;
     background: #ffffff;
     color: #0f172a;
     text-decoration: none;
     border-radius: 4px;
+    font-weight: normal;
 }
 
-.pagination-btn.active {
+.admin-pagination-footer .pagination-btn.active {
     background: #e2e8f0;
     font-weight: bold;
 }
 
-.pagination-ellipsis {
+.admin-pagination-footer .pagination-ellipsis {
     padding: 6px 8px;
     color: #64748b;
 }

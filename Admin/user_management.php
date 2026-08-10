@@ -111,19 +111,19 @@ $users_result = $stmt->get_result();
                         <p class="header-subtitle">Manage all existing users listed on the platform</p>
                     </div>
                     <a href="create_dummy_account.php" class="btn-new-account">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                        <img src="../assets/icons/create.png" alt="Add">
                         New Dummy Account
                     </a>
                 </div>
 
                 <!-- Search and Filter Bar -->
-                <div class="content-card filter-card">
-                    <form method="GET" action="admin_user_management.php" class="filter-form">
+                <div class="content-card admin-filter-card">
+                    <form method="GET" action="admin_user_management.php" class="admin-filter-form">
                         
                         <div class="field-box" style="flex: 2; min-width: 220px;">
                             <label>Search</label>
                             <div class="input-wrapper">
-                                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <img src="../assets/icons/search.png" alt="Search" class="search-icon">
                                 <input type="text" name="search" class="filter-input" placeholder="Search by name, email, userID..." value="<?php echo htmlspecialchars($search); ?>">
                             </div>
                         </div>
@@ -154,25 +154,25 @@ $users_result = $stmt->get_result();
                             <input type="date" name="date_joined" class="filter-input" style="padding-left: 10px;" value="<?php echo htmlspecialchars($date_filter); ?>">
                         </div>
 
-                        <div class="filter-actions">
+                        <div class="admin-filter-actions">
                             <button type="submit" class="btn-filter-submit">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter
+                                <img src="../assets/icons/filter.png" alt="Filter"> Filter
                             </button>
                             <a href="admin_user_management.php" class="btn-filter-reset">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset
+                                <img src="../assets/icons/reset.png" alt="Reset"> Reset
                             </a>
                         </div>
                     </form>
                 </div>
 
                 <!-- User Data Table -->
-                <div class="content-card table-card">
+                <div class="content-card admin-table-card">
                     <div class="table-header-bar">
                         <h2>User List</h2>
                         <span class="total-count">Total User: <?php echo $total_users; ?></span>
                     </div>
 
-                    <table class="data-table">
+                    <table class="admin-user-table">
                         <thead>
                             <tr>
                                 <th>User ID</th>
@@ -206,11 +206,11 @@ $users_result = $stmt->get_result();
                                         <td>
                                             <!-- Edit User Button -->
                                             <a href="admin_edit_user.php?id=<?php echo urlencode($user['userID']); ?>" title="Edit User" class="action-icon edit-icon">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                <img src="../assets/icons/edit.png" alt="Edit">
                                             </a>
                                             <!-- Toggle Status Button -->
                                             <a href="admin_toggle_status.php?id=<?php echo urlencode($user['userID']); ?>" title="Toggle Status" class="action-icon">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                                <img src="../assets/icons/ban.svg" alt="Toggle Status">
                                             </a>
                                         </td>
                                     </tr>
@@ -224,7 +224,7 @@ $users_result = $stmt->get_result();
                     </table>
 
                     <!-- Pagination Navigation -->
-                    <div class="pagination-footer">
+                    <div class="admin-pagination-footer">
                         <span class="pagination-info">
                             Showing <?php echo ($total_users > 0) ? $offset + 1 : 0; ?> to <?php echo min($offset + $limit, $total_users); ?> of <?php echo $total_users; ?> users
                         </span>
