@@ -172,3 +172,187 @@ if ($conn instanceof mysqli) {
     $conn->close();
 }
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Remove Asset - CirculAPU</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="manager.css">
+    <link rel="stylesheet" href="../darktheme.css">
+</head>
+
+<body class="role-manager">
+
+<div class="dashboard-container">
+
+    <?php include '../sidebar.php'; ?>
+
+    <div class="main-content">
+
+        <?php include '../header.php'; ?>
+
+        <main class="page-body">
+
+            <!-- 1. Page Heading -->
+            <section class="management-heading">
+
+                <div class="breadcrumb">
+                    <a href="manager_assets.php">Asset Management</a>
+                    <span>›</span>
+
+                    <?php if ($asset): ?>
+                        <a href="manager_asset_view.php?assetID=<?php echo urlencode($assetID); ?>">
+                            Asset Details
+                        </a>
+                        <span>›</span>
+                    <?php endif; ?>
+
+                    <span class="breadcrumb-current">
+                        Remove Asset
+                    </span>
+                </div>
+
+                <h1>Remove Asset</h1>
+
+                <p>
+                    Confirm the removal of this asset listing.
+                </p>
+
+            </section>
+
+            <!-- 2. Database Error -->
+            <?php if (!empty($databaseError)): ?>
+
+                <div class="dashboard-error-message">
+                    <?php echo htmlspecialchars($databaseError); ?>
+                </div>
+
+                <a href="manager_assets.php" class="management-create-btn">
+                    Back to Asset Management
+                </a>
+
+            <?php elseif ($asset): ?>
+
+                <!-- 3. Remove Error -->
+                <?php if (!empty($removeError)): ?>
+                    <div class="alert alert-error">
+                        <?php echo htmlspecialchars($removeError); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- 4. Confirmation -->
+                <section class="content-card asset-detail-card">
+
+                    <div class="asset-detail-information">
+
+                        <div class="asset-detail-row">
+                            <span class="asset-detail-label">
+                                Asset ID
+                            </span>
+
+                            <div class="asset-detail-value">
+                                <?php echo htmlspecialchars($asset['assetID']); ?>
+                            </div>
+                        </div>
+
+                        <div class="asset-detail-row">
+                            <span class="asset-detail-label">
+                                Asset Name
+                            </span>
+
+                            <div class="asset-detail-value">
+                                <?php echo htmlspecialchars($asset['assetName']); ?>
+                            </div>
+                        </div>
+
+                        <div class="asset-detail-row">
+                            <span class="asset-detail-label">
+                                Category
+                            </span>
+
+                            <div class="asset-detail-value">
+                                <?php echo htmlspecialchars($asset['categoryName']); ?>
+                            </div>
+                        </div>
+
+                        <div class="asset-detail-row">
+                            <span class="asset-detail-label">
+                                Availability
+                            </span>
+
+                            <div class="asset-detail-value">
+                                <?php echo htmlspecialchars($asset['availabilityStatus']); ?>
+                            </div>
+                        </div>
+
+                        <div class="asset-detail-row">
+                            <span class="asset-detail-label">
+                                Listing Status
+                            </span>
+
+                            <div class="asset-detail-value">
+                                <?php echo htmlspecialchars($asset['listingStatus']); ?>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="asset-form-note" style="margin-top: 24px;">
+                        <strong>Important:</strong>
+
+                        <p>
+                            This action will remove the asset from the normal
+                            Asset Management listing. The database record will
+                            be retained for transaction history and auditing.
+                        </p>
+                    </div>
+
+                    <form method="POST" action="manager_asset_delete.php">
+                        <input
+                            type="hidden"
+                            name="assetID"
+                            value="<?php echo htmlspecialchars($asset['assetID']); ?>"
+                        >
+
+                        <div
+                            class="asset-detail-actions"
+                            style="margin-top: 24px;"
+                        >
+
+                        <button
+                            type="submit"
+                            class="asset-detail-action-btn delete"
+                            onclick="return confirm('Are you sure you want to remove this asset listing? This action will hide the asset from the normal listing but keep its record for auditing.');"
+                        >
+                            <img src="../assets/icons/delete.png" alt="">
+                            <span>Confirm Remove</span>
+                        </button>
+
+                            <a
+                                href="manager_asset_view.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
+                                class="asset-detail-back-btn"
+                            >
+                                Cancel
+                            </a>
+
+                        </div>
+                    </form>
+
+                </section>
+
+            <?php endif; ?>
+
+        </main>
+
+    </div>
+
+</div>
+
+</body>
+</html>
