@@ -50,12 +50,11 @@ $verificationFilter = trim($_GET['verificationStatus'] ?? '');
 // Pagination
 $recordsPerPage = 8;
 $currentPage = max(1, (int) ($_GET['page'] ?? 1));
-
 $totalRecords = 0;
 $totalPages = 1;
 $offset = ($currentPage - 1) * $recordsPerPage;
 
-// Format Asset Date
+// Format Date
 function formatManagerAssetDate(?string $date): string
 {
     if (empty($date)) {
@@ -63,10 +62,7 @@ function formatManagerAssetDate(?string $date): string
     }
 
     $timestamp = strtotime($date);
-
-    return $timestamp
-        ? date('d M Y', $timestamp)
-        : '-';
+    return $timestamp ? date('d M Y', $timestamp) : '-';
 }
 
 // Keep Filters During Pagination
@@ -152,11 +148,13 @@ try {
     $countRow = $countStatement->get_result()->fetch_assoc();
 
     $totalRecords = (int) ($countRow['total'] ?? 0);
-    $totalPages = max(1, (int) ceil($totalRecords / $recordsPerPage));
+    $totalPages = max(
+        1,
+        (int) ceil($totalRecords / $recordsPerPage)
+    );
 
     $countStatement->close();
 
-    // Prevent Invalid Page Number
     if ($currentPage > $totalPages) {
         $currentPage = $totalPages;
     }
@@ -203,7 +201,6 @@ try {
     );
 
     $assetStatement->execute();
-
     $assetResult = $assetStatement->get_result();
 
     while ($asset = $assetResult->fetch_assoc()) {
@@ -225,7 +222,10 @@ if ($conn instanceof mysqli) {
 
 // Table Record Range
 $startRecord = $totalRecords > 0 ? $offset + 1 : 0;
-$endRecord = min($offset + $recordsPerPage, $totalRecords);
+$endRecord = min(
+    $offset + $recordsPerPage,
+    $totalRecords
+);
 ?>
 
 <!DOCTYPE html>
@@ -255,20 +255,16 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
         <main class="page-body">
 
             <!-- 1. Page Heading -->
-            <section class="management-heading management-heading-action">
+            <section class="management-heading">
 
                 <div class="management-heading-text">
                     <h1>Asset Management</h1>
+
                     <p>
-                        Manage asset listings available in the
-                        CirculAPU resource-sharing community.
+                        Review and manage asset listings submitted by
+                        CirculAPU community members.
                     </p>
                 </div>
-
-                <a href="manager_asset_create.php" class="management-create-btn">
-                    <img src="../assets/icons/create.png" alt="">
-                    <span>Add New Asset</span>
-                </a>
 
             </section>
 
@@ -289,7 +285,10 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                         <label for="search">Search Asset</label>
 
                         <div class="management-search-input">
-                            <img src="../assets/icons/search.png" alt="">
+                            <img
+                                src="../assets/icons/search.png"
+                                alt=""
+                            >
 
                             <input
                                 type="text"
@@ -316,7 +315,6 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                                     <?php echo htmlspecialchars($category['categoryName']); ?>
                                 </option>
                             <?php endforeach; ?>
-
                         </select>
                     </div>
 
@@ -335,16 +333,22 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                                     <?php echo htmlspecialchars($condition); ?>
                                 </option>
                             <?php endforeach; ?>
-
                         </select>
                     </div>
 
                     <!-- Availability -->
                     <div class="management-filter-group">
-                        <label for="availability">Availability</label>
+                        <label for="availability">
+                            Availability
+                        </label>
 
-                        <select id="availability" name="availability">
-                            <option value="">All Availability</option>
+                        <select
+                            id="availability"
+                            name="availability"
+                        >
+                            <option value="">
+                                All Availability
+                            </option>
 
                             <?php foreach ($availabilityOptions as $availability): ?>
                                 <option
@@ -354,16 +358,22 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                                     <?php echo htmlspecialchars($availability); ?>
                                 </option>
                             <?php endforeach; ?>
-
                         </select>
                     </div>
 
                     <!-- Listing Status -->
                     <div class="management-filter-group">
-                        <label for="listingStatus">Listing Status</label>
+                        <label for="listingStatus">
+                            Listing Status
+                        </label>
 
-                        <select id="listingStatus" name="listingStatus">
-                            <option value="">All Status</option>
+                        <select
+                            id="listingStatus"
+                            name="listingStatus"
+                        >
+                            <option value="">
+                                All Status
+                            </option>
 
                             <?php foreach ($listingStatusOptions as $status): ?>
                                 <option
@@ -373,11 +383,9 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                                     <?php echo htmlspecialchars($status); ?>
                                 </option>
                             <?php endforeach; ?>
-
                         </select>
                     </div>
 
-                    <!-- Dashboard Verification Filter -->
                     <?php if ($verificationFilter !== ''): ?>
                         <input
                             type="hidden"
@@ -389,13 +397,25 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                     <!-- Filter Actions -->
                     <div class="management-filter-buttons">
 
-                        <button type="submit" class="management-filter-btn">
-                            <img src="../assets/icons/filter.png" alt="">
+                        <button
+                            type="submit"
+                            class="management-filter-btn"
+                        >
+                            <img
+                                src="../assets/icons/filter.png"
+                                alt=""
+                            >
                             <span>Filter</span>
                         </button>
 
-                        <a href="manager_assets.php" class="management-reset-btn">
-                            <img src="../assets/icons/reset.png" alt="">
+                        <a
+                            href="manager_assets.php"
+                            class="management-reset-btn"
+                        >
+                            <img
+                                src="../assets/icons/reset.png"
+                                alt=""
+                            >
                             <span>Reset</span>
                         </a>
 
@@ -413,7 +433,8 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
 
                     <p>
                         <?php echo $totalRecords; ?>
-                        asset<?php echo $totalRecords === 1 ? '' : 's'; ?> found
+                        asset<?php echo $totalRecords === 1 ? '' : 's'; ?>
+                        found
                     </p>
                 </div>
 
@@ -440,7 +461,10 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                         <?php if (empty($assets)): ?>
 
                             <tr>
-                                <td colspan="9" class="management-empty-state">
+                                <td
+                                    colspan="9"
+                                    class="management-empty-state"
+                                >
                                     No asset records found.
                                 </td>
                             </tr>
@@ -448,10 +472,15 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                         <?php else: ?>
 
                             <?php foreach ($assets as $index => $asset): ?>
-                                <?php $rowNumber = $offset + $index + 1; ?>
+
+                                <?php
+                                $rowNumber = $offset + $index + 1;
+                                ?>
 
                                 <tr>
-                                    <td><?php echo $rowNumber; ?></td>
+                                    <td>
+                                        <?php echo $rowNumber; ?>
+                                    </td>
 
                                     <td>
                                         <strong>
@@ -480,36 +509,63 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                                     </td>
 
                                     <td>
-                                        <?php echo htmlspecialchars(
-                                            formatManagerAssetDate($asset['createdDate'])
-                                        ); ?>
+                                        <?php
+                                        echo htmlspecialchars(
+                                            formatManagerAssetDate(
+                                                $asset['createdDate']
+                                            )
+                                        );
+                                        ?>
                                     </td>
 
                                     <td>
                                         <div class="management-actions">
 
+                                            <!-- View -->
                                             <a
                                                 href="manager_asset_view.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
                                                 class="management-action-btn"
                                                 title="View Asset"
                                             >
-                                                <img src="../assets/icons/view.png" alt="View">
+                                                <img
+                                                    src="../assets/icons/view.png"
+                                                    alt="View"
+                                                >
                                             </a>
 
-                                            <a
-                                                href="manager_asset_edit.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
-                                                class="management-action-btn"
-                                                title="Edit Asset"
-                                            >
-                                                <img src="../assets/icons/edit.png" alt="Edit">
-                                            </a>
+                                            <!-- Temporary Edit -->
+<?php if ($asset['listingStatus'] === 'Pending Review'): ?>
 
+    <a
+        href="review_asset_submission.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
+        class="management-action-btn"
+        title="Review Asset Submission"
+    >
+        <img src="../assets/icons/edit.png" alt="Review">
+    </a>
+
+<?php else: ?>
+
+    <a
+        href="manager_asset_edit.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
+        class="management-action-btn"
+        title="Edit Asset Information"
+    >
+        <img src="../assets/icons/edit.png" alt="Edit">
+    </a>
+
+<?php endif; ?>
+
+                                            <!-- Temporary Remove -->
                                             <a
                                                 href="manager_asset_delete.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
                                                 class="management-action-btn delete"
                                                 title="Remove Asset"
                                             >
-                                                <img src="../assets/icons/delete.png" alt="Remove">
+                                                <img
+                                                    src="../assets/icons/delete.png"
+                                                    alt="Remove"
+                                                >
                                             </a>
 
                                         </div>
@@ -538,19 +594,28 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
 
                     <?php if ($totalPages > 1): ?>
 
-                        <nav class="pagination" aria-label="Asset pagination">
+                        <nav
+                            class="pagination"
+                            aria-label="Asset pagination"
+                        >
 
                             <?php if ($currentPage > 1): ?>
-                                <a href="<?php echo htmlspecialchars(
-                                    buildAssetPageURL($currentPage - 1)
-                                ); ?>">
+                                <a
+                                    href="<?php echo htmlspecialchars(
+                                        buildAssetPageURL(
+                                            $currentPage - 1
+                                        )
+                                    ); ?>"
+                                >
                                     Previous
                                 </a>
                             <?php endif; ?>
 
                             <?php for ($page = 1; $page <= $totalPages; $page++): ?>
                                 <a
-                                    href="<?php echo htmlspecialchars(buildAssetPageURL($page)); ?>"
+                                    href="<?php echo htmlspecialchars(
+                                        buildAssetPageURL($page)
+                                    ); ?>"
                                     class="<?php echo $page === $currentPage ? 'active' : ''; ?>"
                                 >
                                     <?php echo $page; ?>
@@ -558,9 +623,13 @@ $endRecord = min($offset + $recordsPerPage, $totalRecords);
                             <?php endfor; ?>
 
                             <?php if ($currentPage < $totalPages): ?>
-                                <a href="<?php echo htmlspecialchars(
-                                    buildAssetPageURL($currentPage + 1)
-                                ); ?>">
+                                <a
+                                    href="<?php echo htmlspecialchars(
+                                        buildAssetPageURL(
+                                            $currentPage + 1
+                                        )
+                                    ); ?>"
+                                >
                                     Next
                                 </a>
                             <?php endif; ?>
