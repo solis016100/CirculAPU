@@ -3,7 +3,7 @@ session_start();
 
 // Redirect to login if user is not authenticated
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
-    header("Location: ../login.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -29,7 +29,7 @@ switch ($role) {
 
     default:
         session_destroy();
-        header("Location: ../login.php");
+        header("Location: login.php");
         exit();
 }
 ?>

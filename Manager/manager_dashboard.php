@@ -205,7 +205,6 @@ if ($conn instanceof mysqli) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Manager Dashboard - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../darktheme.css">
     <link rel="stylesheet" href="manager.css">
 </head>
 <body class="role-manager">

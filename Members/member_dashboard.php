@@ -3,7 +3,7 @@ session_start();
 
 // Access Control Guard for Community Member Role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
-    header("Location: login.php");
+    header("Location: ../login.php");
     exit();
 }
 ?>
