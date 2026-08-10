@@ -1,786 +1,528 @@
 <?php
 session_start();
-
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Access Control
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
     header("Location: ../login.php");
     exit();
 }
 
-$managerID = $_SESSION['user_id'];
+function e($value): string {
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
 
+function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
+    $row = $conn->query("
+        SELECT MAX(CAST(SUBSTRING($column, 4) AS UNSIGNED)) AS maxID
+        FROM $table
+    ")->fetch_assoc();
+
+    return sprintf($prefix . "%03d", ((int)($row['maxID'] ?? 0)) + 1);
+}
+
+$managerID = $_SESSION['user_id'];
+$assetID = trim($_GET['assetID'] ?? '');
 $asset = null;
 $categories = [];
-$databaseError = '';
-$formError = '';
+$databaseError = $formError = '';
 
-$assetID = trim($_GET['assetID'] ?? '');
+$conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
+$availabilityOptions = ['Available', 'Reserved', 'Borrowed', 'Unavailable'];
 
-// Asset ID Required
-if ($assetID === '') {
+if (!$assetID) {
     header("Location: manager_assets.php");
     exit();
 }
 
-// Allowed Values
-$conditionOptions = [
-    'New',
-    'Like New',
-    'Good',
-    'Fair',
-    'Poor'
-];
-
-$availabilityOptions = [
-    'Available',
-    'Reserved',
-    'Borrowed',
-    'Unavailable'
-];
-
 $conn = null;
 
 try {
-    $conn = new mysqli(
-        "127.0.0.1",
-        "root",
-        "",
-        "circulapu_db",
-        3306
-    );
-
+    $conn = new mysqli("127.0.0.1", "root", "", "circulapu_db", 3306);
     $conn->set_charset("utf8mb4");
 
-    // Retrieve Active Categories
-    $categoryResult = $conn->query("
+    // Categories
+    $result = $conn->query("
         SELECT categoryID, categoryName
         FROM categories
-        WHERE status = 'Active'
-        ORDER BY categoryName ASC
+        WHERE status='Active'
+        ORDER BY categoryName
     ");
+    while ($row = $result->fetch_assoc()) $categories[] = $row;
 
-    while ($category = $categoryResult->fetch_assoc()) {
-        $categories[] = $category;
-    }
-
-    // Retrieve Submitted Asset
-    $statement = $conn->prepare("
-        SELECT
-            a.assetID,
-            a.ownerID,
-            a.categoryID,
-            a.assetName,
-            a.description,
-            a.assetCondition,
-            a.imageURL,
-            a.availabilityStatus,
-            a.listingStatus,
-            a.verificationStatus,
-            a.createdDate,
-            a.updatedDate,
-            c.categoryName,
-            u.name AS ownerName,
-            u.email AS ownerEmail
+    // Asset
+    $stmt = $conn->prepare("
+        SELECT a.*, u.name AS ownerName, u.email AS ownerEmail
         FROM assets a
-        INNER JOIN categories c
-            ON a.categoryID = c.categoryID
-        INNER JOIN user u
-            ON a.ownerID = u.userID
-        WHERE a.assetID = ?
+        JOIN user u ON a.ownerID=u.userID
+        WHERE a.assetID=?
         LIMIT 1
     ");
-
-    $statement->bind_param("s", $assetID);
-    $statement->execute();
-
-    $asset = $statement->get_result()->fetch_assoc();
-    $statement->close();
+    $stmt->bind_param("s", $assetID);
+    $stmt->execute();
+    $asset = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 
     if (!$asset) {
-        $databaseError =
-            "The selected asset submission could not be found.";
+        $databaseError = "The selected asset submission could not be found.";
     }
 
-    // Process Review Action
-    if (
-        $asset &&
-        $_SERVER['REQUEST_METHOD'] === 'POST'
-    ) {
-        if ($asset['listingStatus'] !== 'Pending Review') {
-            $formError =
-                "Only listings with Pending Review status can be reviewed.";
-        }
-
+    // Review Action
+    if ($asset && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $assetName = trim($_POST['assetName'] ?? '');
         $categoryID = trim($_POST['categoryID'] ?? '');
-        $assetCondition = trim($_POST['assetCondition'] ?? '');
+        $condition = trim($_POST['assetCondition'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $availabilityStatus = trim(
-            $_POST['availabilityStatus'] ?? ''
-        );
+        $availability = trim($_POST['availabilityStatus'] ?? '');
+        $reason = trim($_POST['correctionReason'] ?? '');
+        $action = trim($_POST['reviewAction'] ?? '');
 
-        $reviewAction = trim(
-            $_POST['reviewAction'] ?? ''
-        );
+        // Validation
+        if ($asset['listingStatus'] !== 'Pending Review')
+            $formError = "Only Pending Review listings can be reviewed.";
+        elseif (!$assetName)
+            $formError = "Asset Name is required.";
+        elseif (strlen($assetName) > 150)
+            $formError = "Asset Name must not exceed 150 characters.";
+        elseif (strlen($description) > 255)
+            $formError = "Description must not exceed 255 characters.";
+        elseif (!in_array($condition, $conditions, true))
+            $formError = "Please select a valid condition.";
+        elseif (!in_array($availability, $availabilityOptions, true))
+            $formError = "Please select a valid availability status.";
+        elseif (!in_array($action, ['save', 'return', 'verify'], true))
+            $formError = "Invalid review action.";
+        elseif ($action === 'return' && !$reason)
+            $formError = "Please enter a correction reason.";
+        elseif ($action === 'return' && strlen($reason) > 150)
+            $formError = "Correction Reason must not exceed 150 characters.";
 
-        // Validate Form
-        if ($formError === '') {
-            if ($assetName === '') {
-                $formError = "Asset Name is required.";
-            } elseif (strlen($assetName) > 150) {
-                $formError =
-                    "Asset Name must not exceed 150 characters.";
-            } elseif (!in_array(
-                $assetCondition,
-                $conditionOptions,
-                true
-            )) {
-                $formError =
-                    "Please select a valid asset condition.";
-            } elseif (strlen($description) > 255) {
-                $formError =
-                    "Description must not exceed 255 characters.";
-            } elseif (!in_array(
-                $availabilityStatus,
-                $availabilityOptions,
-                true
-            )) {
-                $formError =
-                    "Please select a valid availability status.";
-            } elseif (!in_array(
-                $reviewAction,
-                ['save', 'return', 'verify'],
-                true
-            )) {
-                $formError =
-                    "Invalid review action.";
-            }
-        }
-
-        // Validate Category
-        if ($formError === '') {
-            $categoryCheck = $conn->prepare("
+        // Category Validation
+        if (!$formError) {
+            $stmt = $conn->prepare("
                 SELECT categoryID
                 FROM categories
-                WHERE categoryID = ?
-                AND status = 'Active'
+                WHERE categoryID=? AND status='Active'
                 LIMIT 1
             ");
+            $stmt->bind_param("s", $categoryID);
+            $stmt->execute();
 
-            $categoryCheck->bind_param(
-                "s",
-                $categoryID
-            );
+            if (!$stmt->get_result()->fetch_assoc())
+                $formError = "Please select a valid active category.";
 
-            $categoryCheck->execute();
-
-            if (
-                !$categoryCheck
-                    ->get_result()
-                    ->fetch_assoc()
-            ) {
-                $formError =
-                    "Please select a valid active category.";
-            }
-
-            $categoryCheck->close();
+            $stmt->close();
         }
 
-        // Save Review
-        if ($formError === '') {
+        if (!$formError) {
             try {
                 $conn->begin_transaction();
 
-                // Determine Listing Status
-                $newListingStatus = 'Pending Review';
+                $newStatus = $action === 'return'
+                    ? 'Draft'
+                    : ($action === 'verify' ? 'Ready for Verification' : 'Pending Review');
 
-                if ($reviewAction === 'return') {
-                    $newListingStatus = 'Draft';
-                }
-
-                if ($reviewAction === 'verify') {
-                    $newListingStatus =
-                        'Ready for Verification';
-                }
-
-                // Update Asset Listing
-                $updateStatement = $conn->prepare("
-                    UPDATE assets
-                    SET
-                        categoryID = ?,
-                        assetName = ?,
-                        description = ?,
-                        assetCondition = ?,
-                        availabilityStatus = ?,
-                        listingStatus = ?,
-                        updatedDate = CURRENT_TIMESTAMP
-                    WHERE assetID = ?
+                // Update Asset
+                $stmt = $conn->prepare("
+                    UPDATE assets SET
+                        categoryID=?, assetName=?, description=?, assetCondition=?,
+                        availabilityStatus=?, listingStatus=?, updatedDate=CURRENT_TIMESTAMP
+                    WHERE assetID=?
                 ");
-
-                $updateStatement->bind_param(
+                $stmt->bind_param(
                     "sssssss",
-                    $categoryID,
-                    $assetName,
-                    $description,
-                    $assetCondition,
-                    $availabilityStatus,
-                    $newListingStatus,
-                    $assetID
+                    $categoryID, $assetName, $description, $condition,
+                    $availability, $newStatus, $assetID
                 );
+                $stmt->execute();
+                $stmt->close();
 
-                $updateStatement->execute();
-                $updateStatement->close();
+                // System Log
+                if ($action === 'return')
+                    $logText = "Returned $assetID for correction. Reason: $reason";
+                elseif ($action === 'verify')
+                    $logText = "Sent asset listing for verification: $assetName";
+                else
+                    $logText = "Updated asset submission during review: $assetName";
 
-                // Create System Log ID
-                $logResult = $conn->query("
-                    SELECT MAX(
-                        CAST(
-                            SUBSTRING(logID, 4)
-                            AS UNSIGNED
-                        )
-                    ) AS maxID
-                    FROM systemlog
-                ");
+                $logID = nextID($conn, 'systemlog', 'logID', 'LOG');
 
-                $logRow = $logResult->fetch_assoc();
-
-                $nextLogNumber =
-                    ((int) ($logRow['maxID'] ?? 0)) + 1;
-
-                $logID = sprintf(
-                    "LOG%03d",
-                    $nextLogNumber
-                );
-
-                // Log Description
-                if ($reviewAction === 'save') {
-                    $logDescription =
-                        "Updated asset submission during review: "
-                        . $assetName;
-                } elseif ($reviewAction === 'return') {
-                    $logDescription =
-                        "Returned asset listing for correction: "
-                        . $assetName;
-                } else {
-                    $logDescription =
-                        "Sent asset listing for verification: "
-                        . $assetName;
-                }
-
-                $logStatement = $conn->prepare("
+                $stmt = $conn->prepare("
                     INSERT INTO systemlog
-                    (
-                        logID,
-                        userID,
-                        actionType,
-                        refType,
-                        refID,
-                        description
-                    )
-                    VALUES (
-                        ?,
-                        ?,
-                        'Update',
-                        'Asset',
-                        ?,
-                        ?
-                    )
+                        (logID, userID, actionType, refType, refID, description)
+                    VALUES (?, ?, 'Update', 'Asset', ?, ?)
                 ");
+                $stmt->bind_param("ssss", $logID, $managerID, $assetID, $logText);
+                $stmt->execute();
+                $stmt->close();
 
-                $logStatement->bind_param(
-                    "ssss",
-                    $logID,
-                    $managerID,
-                    $assetID,
-                    $logDescription
-                );
-
-                $logStatement->execute();
-                $logStatement->close();
-
-                // Notify Member When Workflow Status Changes
-                if (
-                    $reviewAction === 'return' ||
-                    $reviewAction === 'verify'
-                ) {
-                    $notificationResult = $conn->query("
-                        SELECT MAX(
-                            CAST(
-                                SUBSTRING(notificationID, 4)
-                                AS UNSIGNED
-                            )
-                        ) AS maxID
-                        FROM notification
-                    ");
-
-                    $notificationRow =
-                        $notificationResult->fetch_assoc();
-
-                    $nextNotificationNumber =
-                        ((int) (
-                            $notificationRow['maxID'] ?? 0
-                        )) + 1;
-
-                    $notificationID = sprintf(
-                        "NOT%03d",
-                        $nextNotificationNumber
+                // Member Notification
+                if ($action !== 'save') {
+                    $notificationID = nextID(
+                        $conn,
+                        'notification',
+                        'notificationID',
+                        'NOT'
                     );
 
-                    if ($reviewAction === 'return') {
-                        $notificationTitle =
-                            "Asset Listing Returned";
-
-                        $notificationContent =
-                            "Your asset listing "
-                            . $assetID
-                            . " ("
-                            . $assetName
-                            . ") was returned for correction.";
+                    if ($action === 'return') {
+                        $title = "Asset Listing Returned";
+                        $content = "Your asset $assetID ($assetName) was returned for correction. Reason: $reason";
                     } else {
-                        $notificationTitle =
-                            "Asset Sent for Verification";
-
-                        $notificationContent =
-                            "Your asset listing "
-                            . $assetID
-                            . " ("
-                            . $assetName
-                            . ") has been sent for Sustainability Auditor verification.";
+                        $title = "Asset Sent for Verification";
+                        $content = "Your asset $assetID ($assetName) has been sent for Sustainability Auditor verification.";
                     }
 
-                    $notificationStatement =
-                        $conn->prepare("
-                            INSERT INTO notification
-                            (
-                                notificationID,
-                                userID,
-                                title,
-                                content,
-                                status
-                            )
-                            VALUES (
-                                ?,
-                                ?,
-                                ?,
-                                ?,
-                                'Unread'
-                            )
-                        ");
-
-                    $notificationStatement->bind_param(
+                    $stmt = $conn->prepare("
+                        INSERT INTO notification
+                            (notificationID, userID, title, content, status)
+                        VALUES (?, ?, ?, ?, 'Unread')
+                    ");
+                    $stmt->bind_param(
                         "ssss",
                         $notificationID,
                         $asset['ownerID'],
-                        $notificationTitle,
-                        $notificationContent
+                        $title,
+                        $content
                     );
-
-                    $notificationStatement->execute();
-                    $notificationStatement->close();
+                    $stmt->execute();
+                    $stmt->close();
                 }
 
                 $conn->commit();
 
-                // Redirect According to Action
-                if ($reviewAction === 'save') {
-                    header(
-                        "Location: review_asset_submission.php"
-                        . "?assetID="
-                        . urlencode($assetID)
-                        . "&saved=1"
-                    );
-                } else {
-                    header(
-                        "Location: manager_assets.php"
-                        . "?reviewed=1"
-                    );
-                }
+                $url = $action === 'save'
+                    ? "review_asset_submission.php?assetID=" . urlencode($assetID) . "&saved=1"
+                    : "manager_assets.php?reviewed=1";
 
+                header("Location: $url");
                 exit();
 
-            } catch (Throwable $error) {
+            } catch (Throwable $e) {
                 $conn->rollback();
-                throw $error;
+                throw $e;
             }
         }
 
-        // Keep Entered Values After Error
-        if ($formError !== '') {
+        // Preserve Form Values After Error
+        if ($formError) {
             $asset['assetName'] = $assetName;
             $asset['categoryID'] = $categoryID;
-            $asset['assetCondition'] =
-                $assetCondition;
+            $asset['assetCondition'] = $condition;
             $asset['description'] = $description;
-            $asset['availabilityStatus'] =
-                $availabilityStatus;
+            $asset['availabilityStatus'] = $availability;
         }
     }
 
-} catch (Throwable $error) {
-    error_log($error->getMessage());
-
-    $databaseError =
-        "Unable to process the asset review. Please try again.";
+} catch (Throwable $e) {
+    error_log($e->getMessage());
+    $databaseError = "Unable to process the asset review. Please try again.";
 }
 
-if ($conn instanceof mysqli) {
-    $conn->close();
-}
+if ($conn instanceof mysqli) $conn->close();
+
+$showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['reviewAction'] ?? '') === 'return';
 ?>
-?>
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Review Asset Submission - CirculAPU</title>
-
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager.css">
     <link rel="stylesheet" href="../darktheme.css">
 </head>
 
 <body class="role-manager">
-
 <div class="dashboard-container">
 
-    <?php include '../sidebar.php'; ?>
+<?php include '../sidebar.php'; ?>
 
-    <div class="main-content">
+<div class="main-content">
+<?php include '../header.php'; ?>
 
-        <?php include '../header.php'; ?>
+<main class="page-body">
 
-        <main class="page-body">
+    <!-- 1. Heading -->
+    <section class="management-heading">
+        <div class="breadcrumb">
+            <a href="manager_assets.php">Asset Management</a>
+            <span>›</span>
+            <span class="breadcrumb-current">Review Asset Submission</span>
+        </div>
 
-            <!-- 1. Page Heading -->
-            <section class="management-heading">
+        <h1>Review Asset Submission</h1>
+        <p>Review the Community Member's listing before sending it for Sustainability Auditor verification.</p>
+    </section>
 
-                <div class="breadcrumb">
-                    <a href="manager_assets.php">Asset Management</a>
-                    <span>›</span>
-                    <span class="breadcrumb-current">Review Asset Submission</span>
-                </div>
+    <?php if ($databaseError): ?>
 
-                <h1>Review Asset Submission</h1>
+        <div class="dashboard-error-message"><?php echo e($databaseError); ?></div>
 
-                <p>
-                    Review the listing information submitted by the Community Member
-                    before sending it for Sustainability Auditor verification.
-                </p>
+    <?php elseif ($asset): ?>
 
-            </section>
+        <?php if ($asset['listingStatus'] !== 'Pending Review'): ?>
+            <div class="alert alert-error">
+                This asset is not waiting for Resource Manager review.
+                Current status: <?php echo e($asset['listingStatus']); ?>.
+            </div>
+        <?php endif; ?>
 
-            <!-- 2. Database Error -->
-            <?php if (!empty($databaseError)): ?>
+        <?php if ($formError): ?>
+            <div class="alert alert-error"><?php echo e($formError); ?></div>
+        <?php endif; ?>
 
-                <div class="dashboard-error-message">
-                    <?php echo htmlspecialchars($databaseError); ?>
-                </div>
+        <?php if (($_GET['saved'] ?? '') === '1'): ?>
+            <div class="alert alert-success">
+                Asset listing changes saved successfully.
+            </div>
+        <?php endif; ?>
 
-                <a href="manager_assets.php" class="management-create-btn">
-                    Back to Asset Management
-                </a>
+        <!-- 2. Review Form -->
+        <section class="content-card asset-form-card">
 
-            <?php elseif ($asset): ?>
+            <form
+                method="POST"
+                action="review_asset_submission.php?assetID=<?php echo urlencode($assetID); ?>"
+            >
 
-                <?php if ($asset['listingStatus'] !== 'Pending Review'): ?>
-                    <div class="alert alert-error">
-                        This asset is not currently waiting for Resource Manager review.
-                        Current listing status:
-                        <?php echo htmlspecialchars($asset['listingStatus']); ?>.
+                <div class="asset-form-layout">
+
+                    <!-- Asset Information -->
+                    <div class="asset-form-fields">
+
+                        <div class="asset-form-row">
+                            <label>Asset ID</label>
+                            <input type="text" value="<?php echo e($assetID); ?>" readonly>
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label for="assetName">Asset Name *</label>
+                            <input
+                                type="text"
+                                id="assetName"
+                                name="assetName"
+                                maxlength="150"
+                                value="<?php echo e($asset['assetName']); ?>"
+                                required
+                            >
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label for="categoryID">Category *</label>
+
+                            <select id="categoryID" name="categoryID" required>
+                                <?php foreach ($categories as $category): ?>
+                                    <option
+                                        value="<?php echo e($category['categoryID']); ?>"
+                                        <?php echo $asset['categoryID'] === $category['categoryID'] ? 'selected' : ''; ?>
+                                    >
+                                        <?php echo e($category['categoryName']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label for="assetCondition">Condition *</label>
+
+                            <select id="assetCondition" name="assetCondition" required>
+                                <?php foreach ($conditions as $condition): ?>
+                                    <option
+                                        value="<?php echo e($condition); ?>"
+                                        <?php echo $asset['assetCondition'] === $condition ? 'selected' : ''; ?>
+                                    >
+                                        <?php echo e($condition); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="asset-form-row asset-form-textarea">
+                            <label for="description">Description</label>
+                            <textarea
+                                id="description"
+                                name="description"
+                                maxlength="255"
+                                rows="4"
+                            ><?php echo e($asset['description'] ?? ''); ?></textarea>
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label for="availabilityStatus">Availability *</label>
+
+                            <select id="availabilityStatus" name="availabilityStatus" required>
+                                <?php foreach ($availabilityOptions as $availability): ?>
+                                    <option
+                                        value="<?php echo e($availability); ?>"
+                                        <?php echo $asset['availabilityStatus'] === $availability ? 'selected' : ''; ?>
+                                    >
+                                        <?php echo e($availability); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label>Submitted By</label>
+                            <input
+                                type="text"
+                                value="<?php echo e($asset['ownerName'] . ' (' . $asset['ownerID'] . ')'); ?>"
+                                readonly
+                            >
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label>Member Email</label>
+                            <input type="text" value="<?php echo e($asset['ownerEmail']); ?>" readonly>
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label>Date Submitted</label>
+                            <input
+                                type="text"
+                                value="<?php echo e(date('d M Y, h:i A', strtotime($asset['createdDate']))); ?>"
+                                readonly
+                            >
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label>Listing Status</label>
+                            <input type="text" value="<?php echo e($asset['listingStatus']); ?>" readonly>
+                        </div>
+
+                        <div class="asset-form-row">
+                            <label>Verification Status</label>
+                            <input type="text" value="<?php echo e($asset['verificationStatus']); ?>" readonly>
+                        </div>
+
+                        <!-- Hidden Until Return Is Chosen -->
+                        <div
+                            class="asset-form-row asset-form-textarea"
+                            id="correctionBox"
+                            style="<?php echo $showCorrection ? '' : 'display:none;'; ?>"
+                        >
+                            <label for="correctionReason">Correction Reason *</label>
+
+                            <textarea
+                                id="correctionReason"
+                                name="correctionReason"
+                                maxlength="150"
+                                rows="3"
+                                placeholder="Explain clearly what the Community Member needs to correct"
+                            ><?php echo e($_POST['correctionReason'] ?? ''); ?></textarea>
+                        </div>
+
                     </div>
-                <?php endif; ?>
 
-                <?php if (!empty($formError)): ?>
-                    <div class="alert alert-error">
-                        <?php echo htmlspecialchars($formError); ?>
-                    </div>
-                <?php endif; ?>
+                    <!-- Side Panel -->
+                    <aside class="asset-form-side">
 
-                <?php if (isset($_GET['saved']) && $_GET['saved'] === '1'): ?>
-                    <div class="alert alert-success">
-                        Asset listing changes saved successfully.
-                    </div>
-                <?php endif; ?>
+                        <div class="asset-form-image-section">
+                            <h2>Submitted Image</h2>
 
-                <!-- 3. Review Form -->
-                <section class="content-card asset-form-card">
+                            <?php if (!empty($asset['imageURL'])): ?>
 
-                    <form
-                        action="review_asset_submission.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
-                        method="POST"
-                        class="asset-form"
-                    >
-
-                        <div class="asset-form-layout">
-
-                            <!-- Listing Information -->
-                            <div class="asset-form-fields">
-
-                                <div class="asset-form-row">
-                                    <label>Asset ID</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars($asset['assetID']); ?>"
-                                        readonly
+                                <div class="asset-form-image-preview">
+                                    <img
+                                        src="../assets/managerfile/<?php echo e(basename($asset['imageURL'])); ?>"
+                                        alt="<?php echo e($asset['assetName']); ?>"
                                     >
                                 </div>
 
-                                <div class="asset-form-row">
-                                    <label for="assetName">
-                                        Asset Name *
-                                    </label>
+                                <p><?php echo e(basename($asset['imageURL'])); ?></p>
 
-                                    <input
-                                        type="text"
-                                        id="assetName"
-                                        name="assetName"
-                                        maxlength="150"
-                                        value="<?php echo htmlspecialchars($asset['assetName']); ?>"
-                                        required
-                                    >
-                                </div>
+                            <?php else: ?>
 
-                                <div class="asset-form-row">
-                                    <label for="categoryID">
-                                        Category *
-                                    </label>
+                                <div class="asset-image-empty">No image submitted</div>
 
-                                    <select
-                                        id="categoryID"
-                                        name="categoryID"
-                                        required
-                                    >
-                                        <?php foreach ($categories as $category): ?>
-                                            <option
-                                                value="<?php echo htmlspecialchars($category['categoryID']); ?>"
-                                                <?php echo $asset['categoryID'] === $category['categoryID'] ? 'selected' : ''; ?>
-                                            >
-                                                <?php echo htmlspecialchars($category['categoryName']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                            <?php endif; ?>
+                        </div>
 
-                                <div class="asset-form-row">
-                                    <label for="assetCondition">
-                                        Condition *
-                                    </label>
+                        <div class="asset-form-note">
+                            <strong>Review Checklist:</strong>
+                            <p>Check completeness, category, duplicate information and appropriate listing details.</p>
+                        </div>
 
-                                    <select
-                                        id="assetCondition"
-                                        name="assetCondition"
-                                        required
-                                    >
-                                        <?php foreach ($conditionOptions as $condition): ?>
-                                            <option
-                                                value="<?php echo htmlspecialchars($condition); ?>"
-                                                <?php echo $asset['assetCondition'] === $condition ? 'selected' : ''; ?>
-                                            >
-                                                <?php echo htmlspecialchars($condition); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                        <div class="asset-form-actions">
 
-                                <div class="asset-form-row asset-form-textarea">
-                                    <label for="description">
-                                        Description
-                                    </label>
+                            <button
+                                type="submit"
+                                name="reviewAction"
+                                value="save"
+                                class="asset-form-submit"
+                            >
+                                <img src="../assets/icons/edit.png" alt="">
+                                Save Changes
+                            </button>
 
-                                    <textarea
-                                        id="description"
-                                        name="description"
-                                        maxlength="255"
-                                        rows="4"
-                                    ><?php echo htmlspecialchars($asset['description'] ?? ''); ?></textarea>
-                                </div>
+                            <button
+                                type="submit"
+                                name="reviewAction"
+                                value="return"
+                                class="asset-form-reset"
+                                onclick="return prepareReturn(event)"
+                            >
+                                <img src="../assets/icons/reset.png" alt="">
+                                <span id="returnButtonText">
+                                    <?php echo $showCorrection ? 'Confirm Return' : 'Return for Correction'; ?>
+                                </span>
+                            </button>
 
-                                <div class="asset-form-row">
-                                    <label for="availabilityStatus">
-                                        Availability *
-                                    </label>
+                            <button
+                                type="submit"
+                                name="reviewAction"
+                                value="verify"
+                                class="asset-form-submit"
+                                onclick="return confirm('Send this listing for Sustainability Auditor verification?');"
+                            >
+                                <img src="../assets/icons/pendingVerification.png" alt="">
+                                Send for Verification
+                            </button>
 
-                                    <select
-                                        id="availabilityStatus"
-                                        name="availabilityStatus"
-                                        required
-                                    >
-                                        <?php foreach ($availabilityOptions as $availability): ?>
-                                            <option
-                                                value="<?php echo htmlspecialchars($availability); ?>"
-                                                <?php echo $asset['availabilityStatus'] === $availability ? 'selected' : ''; ?>
-                                            >
-                                                <?php echo htmlspecialchars($availability); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-
-                                <div class="asset-form-row">
-                                    <label>Submitted By</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            $asset['ownerName'] . ' (' . $asset['ownerID'] . ')'
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <div class="asset-form-row">
-                                    <label>Member Email</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars($asset['ownerEmail']); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <div class="asset-form-row">
-                                    <label>Date Submitted</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            date('d M Y, h:i A', strtotime($asset['createdDate']))
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <div class="asset-form-row">
-                                    <label>Listing Status</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars($asset['listingStatus']); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <div class="asset-form-row">
-                                    <label>Verification Status</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars($asset['verificationStatus']); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                            </div>
-
-                            <!-- Image and Review Actions -->
-                            <aside class="asset-form-side">
-
-                                <div class="asset-form-image-section">
-
-                                    <h2>Submitted Image</h2>
-
-                                    <?php if (!empty($asset['imageURL'])): ?>
-
-                                        <div class="asset-form-image-preview">
-                                            <img
-                                                src="../assets/managerfile/<?php echo htmlspecialchars(
-                                                    basename($asset['imageURL'])
-                                                ); ?>"
-                                                alt="<?php echo htmlspecialchars($asset['assetName']); ?>"
-                                            >
-                                        </div>
-
-                                        <p>
-                                            <?php echo htmlspecialchars(
-                                                basename($asset['imageURL'])
-                                            ); ?>
-                                        </p>
-
-                                    <?php else: ?>
-
-                                        <div class="asset-image-empty">
-                                            No image submitted
-                                        </div>
-
-                                    <?php endif; ?>
-
-                                </div>
-
-                                <!-- Review Checklist -->
-                                <div class="asset-form-note">
-                                    <strong>Review Checklist:</strong>
-
-                                    <p>
-                                        Check listing completeness, category,
-                                        duplicate information and appropriate details.
-                                    </p>
-                                </div>
-
-                                <!-- Review Actions -->
-                                <div class="asset-form-actions">
-
-                                    <button
-                                        type="submit"
-                                        name="reviewAction"
-                                        value="save"
-                                        class="asset-form-submit"
-                                    >
-                                        <img src="../assets/icons/edit.png" alt="">
-                                        Save Changes
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        name="reviewAction"
-                                        value="return"
-                                        class="asset-form-reset"
-                                        onclick="return confirm('Return this listing to the Community Member for correction?');"
-                                    >
-                                        <img src="../assets/icons/reset.png" alt="">
-                                        Return for Correction
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        name="reviewAction"
-                                        value="verify"
-                                        class="asset-form-submit"
-                                        onclick="return confirm('Send this asset listing for Sustainability Auditor verification?');"
-                                    >
-                                        <img src="../assets/icons/pendingVerification.png" alt="">
-                                        Send for Verification
-                                    </button>
-
-                                    <a
-                                        href="manager_assets.php"
-                                        class="asset-form-back"
-                                    >
-                                        Back
-                                    </a>
-
-                                </div>
-
-                            </aside>
+                            <a href="manager_assets.php" class="asset-form-back">Back</a>
 
                         </div>
 
-                    </form>
+                    </aside>
 
-                </section>
+                </div>
 
-            <?php endif; ?>
+            </form>
+        </section>
 
-        </main>
+    <?php endif; ?>
 
-    </div>
-
+</main>
 </div>
+</div>
+
+<script>
+function prepareReturn(e) {
+    const box = document.getElementById('correctionBox');
+    const reason = document.getElementById('correctionReason');
+    const text = document.getElementById('returnButtonText');
+
+    if (box.style.display === 'none') {
+        e.preventDefault();
+        box.style.display = 'grid';
+        text.textContent = 'Confirm Return';
+        reason.focus();
+        return false;
+    }
+
+    if (!reason.value.trim()) {
+        e.preventDefault();
+        alert('Please enter a correction reason.');
+        reason.focus();
+        return false;
+    }
+
+    return confirm('Return this listing to the Community Member for correction?');
+}
+</script>
 
 </body>
 </html>

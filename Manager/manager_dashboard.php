@@ -1,207 +1,111 @@
 <?php
 session_start();
-
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
-$is_preview = isset($_GET['preview']);
 
-<<<<<<< Updated upstream
-// Access Control Guard for Resource Manager Role (Allows Admin Preview)
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Manager' && !($is_admin && $is_preview))) {
-=======
-// Access Control
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
->>>>>>> Stashed changes
     header("Location: ../login.php");
     exit();
 }
 
 $managerID = $_SESSION['user_id'];
 $managerName = $_SESSION['user_name'] ?? 'Resource Manager';
-
-$totalAssets = 0;
-$pendingListings = 0;
-$activeTransactions = 0;
-$currentBorrowed = 0;
-
-$recentActivities = [];
-$notifications = [];
+$totalAssets = $pendingListings = $activeTransactions = $currentBorrowed = 0;
+$recentActivities = $notifications = [];
 $databaseError = '';
 
-// Convert activity action into readable text
-function getManagerActivityLabel(string $actionType, string $referenceType): string
-{
-    $labels = [
-        'Create' => 'Created',
-        'Update' => 'Updated',
-        'Delete' => 'Removed',
-        'Approve' => 'Approved',
-        'Reject' => 'Rejected',
-        'Submit' => 'Submitted'
-    ];
-
-    return $referenceType . ' ' . ($labels[$actionType] ?? $actionType);
+function managerActivityLabel(string $action, string $ref): string {
+    $labels = ['Create'=>'Created', 'Update'=>'Updated', 'Delete'=>'Removed',
+               'Approve'=>'Approved', 'Reject'=>'Rejected', 'Submit'=>'Submitted'];
+    return $ref . ' ' . ($labels[$action] ?? $action);
 }
 
-// Get local activity icon
-function getManagerActivityIcon(string $actionType): string
-{
-    switch ($actionType) {
-        case 'Create':
-            return 'create.png';
-        case 'Update':
-            return 'edit.png';
-        case 'Delete':
-            return 'delete.png';
-        default:
-            return 'notification.png';
-    }
+function managerActivityIcon(string $action): string {
+    $icons = ['Create'=>'create.png', 'Update'=>'edit.png', 'Delete'=>'delete.png'];
+    return $icons[$action] ?? 'notification.png';
 }
 
-// Format date and time
-function formatManagerDashboardDate(?string $date): string
-{
-    if (empty($date)) {
-        return '-';
-    }
-
-    $timestamp = strtotime($date);
-    return $timestamp ? date('d M Y, h:i A', $timestamp) : '-';
+function managerDate(?string $date): string {
+    return $date && strtotime($date) ? date('d M Y, h:i A', strtotime($date)) : '-';
 }
 
 $conn = null;
 
 try {
-    $conn = new mysqli(
-        "127.0.0.1",
-        "root",
-        "",
-        "circulapu_db",
-        3306
-    );
-
+    $conn = new mysqli("127.0.0.1", "root", "", "circulapu_db", 3306);
     $conn->set_charset("utf8mb4");
 
-    // Dashboard statistics
-    $countQuery = "
+    // Dashboard counts
+    $result = $conn->query("
         SELECT
-            SUM(CASE
-                WHEN listingStatus <> 'Removed'
-                THEN 1 ELSE 0
-            END) AS totalAssets,
-
-            SUM(CASE
-                WHEN verificationStatus = 'Pending'
-                AND listingStatus <> 'Removed'
-                THEN 1 ELSE 0
-            END) AS pendingListings,
-
-            SUM(CASE
-                WHEN availabilityStatus = 'Borrowed'
-                AND listingStatus <> 'Removed'
-                THEN 1 ELSE 0
-            END) AS currentBorrowed
+            SUM(listingStatus <> 'Removed') AS totalAssets,
+            SUM(listingStatus = 'Pending Review') AS pendingListings,
+            SUM(availabilityStatus = 'Borrowed' AND listingStatus <> 'Removed') AS currentBorrowed
         FROM assets
-    ";
+    ");
+    $row = $result->fetch_assoc();
 
-    $countResult = $conn->query($countQuery);
-    $countRow = $countResult->fetch_assoc();
+    $totalAssets = (int)($row['totalAssets'] ?? 0);
+    $pendingListings = (int)($row['pendingListings'] ?? 0);
+    $currentBorrowed = (int)($row['currentBorrowed'] ?? 0);
 
-    $totalAssets = (int) ($countRow['totalAssets'] ?? 0);
-    $pendingListings = (int) ($countRow['pendingListings'] ?? 0);
-    $currentBorrowed = (int) ($countRow['currentBorrowed'] ?? 0);
-
-    // Active transaction count
-    $transactionResult = $conn->query("
+    $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM transactionrequests
         WHERE requestStatus IN ('Approved', 'In Progress', 'Overdue')
     ");
+    $activeTransactions = (int)($result->fetch_assoc()['total'] ?? 0);
 
-    $transactionRow = $transactionResult->fetch_assoc();
-    $activeTransactions = (int) ($transactionRow['total'] ?? 0);
-
-    // Recent Asset and Category activities
-    $activityQuery = "
-        SELECT
-            sl.actionType,
-            sl.refType,
-            sl.refID,
-            sl.description,
-            sl.timeLogged,
-            u.name AS performedBy
+    // Recent activities
+    $result = $conn->query("
+        SELECT sl.actionType, sl.refType, sl.refID, sl.description, sl.timeLogged, u.name AS performedBy
         FROM systemlog sl
         INNER JOIN user u ON sl.userID = u.userID
         WHERE sl.refType IN ('Asset', 'Category')
         ORDER BY sl.timeLogged DESC
         LIMIT 5
-    ";
-
-    $activityResult = $conn->query($activityQuery);
-
-    while ($activity = $activityResult->fetch_assoc()) {
-        $recentActivities[] = $activity;
-    }
+    ");
+    while ($row = $result->fetch_assoc()) $recentActivities[] = $row;
 
     // Manager notifications
-    $notificationStatement = $conn->prepare("
-        SELECT
-            notificationID,
-            title,
-            content,
-            status,
-            createdDate
+    $stmt = $conn->prepare("
+        SELECT notificationID, title, content, status, createdDate
         FROM notification
         WHERE userID = ?
         ORDER BY createdDate DESC
         LIMIT 5
     ");
+    $stmt->bind_param("s", $managerID);
+    $stmt->execute();
 
-    $notificationStatement->bind_param("s", $managerID);
-    $notificationStatement->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) $notifications[] = $row;
+    $stmt->close();
 
-    $notificationResult = $notificationStatement->get_result();
-
-    while ($notification = $notificationResult->fetch_assoc()) {
-        $notifications[] = $notification;
-    }
-
-    $notificationStatement->close();
-
-} catch (mysqli_sql_exception $error) {
-    error_log($error->getMessage());
-
-    $databaseError =
-        "Unable to load the dashboard data. Please make sure MySQL is running and the database is available.";
+} catch (mysqli_sql_exception $e) {
+    error_log($e->getMessage());
+    $databaseError = "Unable to load dashboard data. Please make sure MySQL is running and the database is available.";
 }
 
-if ($conn instanceof mysqli) {
-    $conn->close();
-}
+if ($conn instanceof mysqli) $conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Resource Manager Dashboard - CirculAPU</title>
-
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager.css">
     <link rel="stylesheet" href="../darktheme.css">
 </head>
 
 <body class="role-manager">
-
 <div class="dashboard-container">
 
     <?php include '../sidebar.php'; ?>
 
     <div class="main-content">
-
         <?php include '../header.php'; ?>
 
         <main class="page-body dashboard-page">
@@ -209,382 +113,177 @@ if ($conn instanceof mysqli) {
             <!-- 1. Welcome -->
             <section class="dashboard-welcome">
                 <div>
-                    <h1>
-                        Welcome back,
-                        <?php echo htmlspecialchars($managerName); ?>!
-                    </h1>
-
-                    <p>
-                        Here is an overview of resource-sharing activities
-                        in the CirculAPU community.
-                    </p>
+                    <h1>Welcome back, <?php echo htmlspecialchars($managerName); ?>!</h1>
+                    <p>Review community asset listings, manage transactions and oversee resource-sharing activities.</p>
                 </div>
             </section>
 
-            <!-- 2. Database Error -->
-            <?php if (!empty($databaseError)): ?>
-                <div class="dashboard-error-message">
-                    <?php echo htmlspecialchars($databaseError); ?>
-                </div>
+            <?php if ($databaseError): ?>
+                <div class="dashboard-error-message"><?php echo htmlspecialchars($databaseError); ?></div>
             <?php endif; ?>
 
-            <!-- 3. Dashboard Statistics -->
+            <!-- 2. Statistics -->
             <section class="stats-grid" aria-label="Resource Manager statistics">
 
-                <!-- Total Assets -->
                 <a href="manager_assets.php" class="stat-card">
-                    <div class="stat-icon">
-                        <img src="../assets/icons/totalassets.png" alt="">
-                    </div>
-
+                    <div class="stat-icon"><img src="../assets/icons/totalassets.png" alt=""></div>
                     <div class="stat-content">
                         <h3>Total Assets</h3>
-
-                        <strong class="stat-value">
-                            <?php echo $totalAssets; ?>
-                        </strong>
-
-                        <p class="stat-description">
-                            All listed assets
-                        </p>
+                        <strong class="stat-value"><?php echo $totalAssets; ?></strong>
+                        <p class="stat-description">Community asset listings</p>
                     </div>
                 </a>
 
-                <!-- Pending Listings -->
-                <a
-                    href="manager_assets.php?verificationStatus=Pending"
-                    class="stat-card"
-                >
-                    <div class="stat-icon">
-                        <img
-                            src="../assets/icons/pendingVerification.png"
-                            alt=""
-                        >
-                    </div>
-
+                <a href="manager_assets.php?listingStatus=Pending+Review" class="stat-card">
+                    <div class="stat-icon"><img src="../assets/icons/pendingVerification.png" alt=""></div>
                     <div class="stat-content">
                         <h3>Pending Listings</h3>
-
-                        <strong class="stat-value">
-                            <?php echo $pendingListings; ?>
-                        </strong>
-
-                        <p class="stat-description">
-                            Awaiting verification
-                        </p>
+                        <strong class="stat-value"><?php echo $pendingListings; ?></strong>
+                        <p class="stat-description">Awaiting manager review</p>
                     </div>
                 </a>
 
-                <!-- Active Transactions -->
                 <a href="manager_transactions.php" class="stat-card">
-                    <div class="stat-icon">
-                        <img
-                            src="../assets/icons/active-transactions.png"
-                            alt=""
-                        >
-                    </div>
-
+                    <div class="stat-icon"><img src="../assets/icons/active-transactions.png" alt=""></div>
                     <div class="stat-content">
                         <h3>Active Transactions</h3>
-
-                        <strong class="stat-value">
-                            <?php echo $activeTransactions; ?>
-                        </strong>
-
-                        <p class="stat-description">
-                            Ongoing lending and borrowing
-                        </p>
+                        <strong class="stat-value"><?php echo $activeTransactions; ?></strong>
+                        <p class="stat-description">Ongoing lending and borrowing</p>
                     </div>
                 </a>
 
-                <!-- Borrowings -->
-                <a
-                    href="manager_assets.php?availabilityStatus=Borrowed"
-                    class="stat-card"
-                >
-                    <div class="stat-icon">
-                        <img
-                            src="../assets/icons/borrowed-assets.png"
-                            alt=""
-                        >
-                    </div>
-
+                <a href="manager_assets.php?availabilityStatus=Borrowed" class="stat-card">
+                    <div class="stat-icon"><img src="../assets/icons/borrowed-assets.png" alt=""></div>
                     <div class="stat-content">
-                        <h3>Borrowings</h3>
-
-                        <strong class="stat-value">
-                            <?php echo $currentBorrowed; ?>
-                        </strong>
-
-                        <p class="stat-description">
-                            Currently borrowed
-                        </p>
+                        <h3>Current Borrowings</h3>
+                        <strong class="stat-value"><?php echo $currentBorrowed; ?></strong>
+                        <p class="stat-description">Currently borrowed assets</p>
                     </div>
                 </a>
 
             </section>
 
-            <!-- 4. Activities and Notifications -->
+            <!-- 3. Activities and Notifications -->
             <section class="dashboard-lower-grid">
 
-                <!-- Recent Activities -->
                 <article class="content-card dashboard-panel">
-
                     <div class="card-header">
                         <h2>Recent Activities</h2>
-
-                        <a href="manager_recent_activities.php">
-                            View All
-                        </a>
+                        <a href="manager_recent_activities.php">View All</a>
                     </div>
 
                     <div class="table-wrapper">
                         <table class="data-table manager-activity-table">
-
                             <thead>
-                                <tr>
-                                    <th>Activity</th>
-                                    <th>Details</th>
-                                    <th>Time</th>
-                                </tr>
+                                <tr><th>Activity</th><th>Details</th><th>Time</th></tr>
                             </thead>
-
                             <tbody>
 
-                            <?php if (empty($recentActivities)): ?>
-
-                                <tr>
-                                    <td
-                                        colspan="3"
-                                        class="dashboard-empty-state"
-                                    >
-                                        No recent activities available.
-                                    </td>
-                                </tr>
-
+                            <?php if (!$recentActivities): ?>
+                                <tr><td colspan="3" class="dashboard-empty-state">No recent activities available.</td></tr>
                             <?php else: ?>
-
                                 <?php foreach ($recentActivities as $activity): ?>
-
                                     <tr>
                                         <td>
                                             <div class="activity-name">
-
                                                 <span class="activity-icon">
-                                                    <img
-                                                        src="../assets/icons/<?php
-                                                        echo htmlspecialchars(
-                                                            getManagerActivityIcon(
-                                                                $activity['actionType']
-                                                            )
-                                                        );
-                                                        ?>"
-                                                        alt=""
-                                                    >
+                                                    <img src="../assets/icons/<?php echo htmlspecialchars(managerActivityIcon($activity['actionType'])); ?>" alt="">
                                                 </span>
-
                                                 <strong>
-                                                    <?php
-                                                    echo htmlspecialchars(
-                                                        getManagerActivityLabel(
-                                                            $activity['actionType'],
-                                                            $activity['refType']
-                                                        )
-                                                    );
-                                                    ?>
+                                                    <?php echo htmlspecialchars(managerActivityLabel(
+                                                        $activity['actionType'],
+                                                        $activity['refType']
+                                                    )); ?>
                                                 </strong>
                                             </div>
                                         </td>
-
-                                        <td>
-                                            <?php
-                                            echo htmlspecialchars(
-                                                $activity['description']
-                                            );
-                                            ?>
-                                        </td>
-
-                                        <td>
-                                            <?php
-                                            echo htmlspecialchars(
-                                                formatManagerDashboardDate(
-                                                    $activity['timeLogged']
-                                                )
-                                            );
-                                            ?>
-                                        </td>
+                                        <td><?php echo htmlspecialchars($activity['description']); ?></td>
+                                        <td><?php echo htmlspecialchars(managerDate($activity['timeLogged'])); ?></td>
                                     </tr>
-
                                 <?php endforeach; ?>
-
                             <?php endif; ?>
 
                             </tbody>
                         </table>
                     </div>
-
                 </article>
 
-                <!-- Notifications -->
                 <article class="content-card dashboard-panel">
-
                     <div class="card-header">
                         <h2>Notifications</h2>
-
-                        <a href="manager_notifications.php">
-                            View All
-                        </a>
+                        <a href="manager_notifications.php">View All</a>
                     </div>
 
                     <div class="notification-list">
 
-                    <?php if (empty($notifications)): ?>
-
+                    <?php if (!$notifications): ?>
                         <div class="notification-empty-state">
-                            <img
-                                src="../assets/icons/notification.png"
-                                alt=""
-                            >
-
+                            <img src="../assets/icons/notification.png" alt="">
                             <p>No notifications available.</p>
                         </div>
-
                     <?php else: ?>
 
                         <?php foreach ($notifications as $notification): ?>
-
-                            <a
-                                href="manager_notifications.php"
-                                class="notification-item <?php
-                                echo $notification['status'] === 'Unread'
-                                    ? 'notification-unread'
-                                    : '';
-                                ?>"
-                            >
+                            <a href="manager_notifications.php"
+                               class="notification-item <?php echo $notification['status'] === 'Unread' ? 'notification-unread' : ''; ?>">
 
                                 <div class="notification-icon">
-                                    <img
-                                        src="../assets/icons/notification.png"
-                                        alt=""
-                                    >
+                                    <img src="../assets/icons/notification.png" alt="">
                                 </div>
 
                                 <div class="notification-content">
-
                                     <div class="notification-title-row">
-                                        <strong>
-                                            <?php
-                                            echo htmlspecialchars(
-                                                $notification['title']
-                                            );
-                                            ?>
-                                        </strong>
+                                        <strong><?php echo htmlspecialchars($notification['title']); ?></strong>
 
-                                        <?php
-                                        if (
-                                            $notification['status'] === 'Unread'
-                                        ):
-                                        ?>
-                                            <span
-                                                class="unread-indicator"
-                                                title="Unread notification"
-                                            ></span>
+                                        <?php if ($notification['status'] === 'Unread'): ?>
+                                            <span class="unread-indicator" title="Unread notification"></span>
                                         <?php endif; ?>
                                     </div>
 
-                                    <p>
-                                        <?php
-                                        echo htmlspecialchars(
-                                            $notification['content']
-                                        );
-                                        ?>
-                                    </p>
-
-                                    <time>
-                                        <?php
-                                        echo htmlspecialchars(
-                                            formatManagerDashboardDate(
-                                                $notification['createdDate']
-                                            )
-                                        );
-                                        ?>
-                                    </time>
-
+                                    <p><?php echo htmlspecialchars($notification['content']); ?></p>
+                                    <time><?php echo htmlspecialchars(managerDate($notification['createdDate'])); ?></time>
                                 </div>
                             </a>
-
                         <?php endforeach; ?>
 
                     <?php endif; ?>
 
                     </div>
-
                 </article>
 
             </section>
 
-            <!-- 5. Quick Actions -->
+            <!-- 4. Quick Actions -->
             <section class="content-card quick-actions">
-
-                <div class="card-header">
-                    <h2>Quick Actions</h2>
-                </div>
+                <div class="card-header"><h2>Quick Actions</h2></div>
 
                 <div class="quick-action-grid">
 
-                    <a
-                        href="manager_asset_create.php"
-                        class="quick-action"
-                    >
-                        <img
-                            src="../assets/icons/create.png"
-                            alt=""
-                        >
-                        <span>Add New Asset</span>
+                    <a href="manager_assets.php?listingStatus=Pending+Review" class="quick-action">
+                        <img src="../assets/icons/view.png" alt="">
+                        <span>Review Asset Submissions</span>
                     </a>
 
-                    <a
-                        href="manager_transactions.php"
-                        class="quick-action"
-                    >
-                        <img
-                            src="../assets/icons/view.png"
-                            alt=""
-                        >
+                    <a href="manager_transactions.php" class="quick-action">
+                        <img src="../assets/icons/view.png" alt="">
                         <span>View Transaction Requests</span>
                     </a>
 
-                    <a
-                        href="manager_reports.php"
-                        class="quick-action"
-                    >
-                        <img
-                            src="../assets/icons/report.png"
-                            alt=""
-                        >
+                    <a href="manager_reports.php" class="quick-action">
+                        <img src="../assets/icons/report.png" alt="">
                         <span>Generate Report</span>
                     </a>
 
-                    <a
-                        href="manager_categories.php"
-                        class="quick-action"
-                    >
-                        <img
-                            src="../assets/icons/edit.png"
-                            alt=""
-                        >
+                    <a href="manager_categories.php" class="quick-action">
+                        <img src="../assets/icons/edit.png" alt="">
                         <span>Manage Categories</span>
                     </a>
 
                 </div>
-
             </section>
 
         </main>
-
     </div>
-
 </div>
-
 </body>
 </html>
