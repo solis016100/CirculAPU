@@ -200,7 +200,7 @@
                     </a>
 
                     <!-- Pending Mission Submissions -->
-                    <a href="auditor_mission_management.php?type=Mission&status=Pending" class="stat-card">
+                    <a href="auditor_verification_management.php?type=Mission&status=Pending" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
                         </div>
