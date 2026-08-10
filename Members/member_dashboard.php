@@ -1,8 +1,10 @@
 <?php
 session_start();
+$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
+$is_preview = isset($_GET['preview']);
 
-// Access Control Guard for Community Member Role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
+// Access Control Guard for Community Member Role (Allows Admin Preview)
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Member' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
     exit();
 }

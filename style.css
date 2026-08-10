@@ -1808,3 +1808,7 @@ body.auth-page {
 .simulation-link:hover {
     opacity: 0.75;
 }
+
+::-webkit-scrollbar {
+  display: none;
+}

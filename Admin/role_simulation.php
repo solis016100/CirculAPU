@@ -1,6 +1,6 @@
 <?php
 session_start();
-// Include db.php from parent directory
+// Include central db.php from parent directory
 require_once '../db.php';
 
 // Security: Restrict access strictly to System Administrators
@@ -42,7 +42,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
                     </div>
                 </div>
 
-                <!-- Simulation Grid Layout (Matches image_5ed8b9.png) -->
+                <!-- Simulation Grid Layout (Matches wireframe) -->
                 <div class="simulation-grid">
                     
                     <!-- Row 1: Resource Manager & Sustainability Auditor -->
@@ -55,7 +55,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
                                 <a href="launch_simulation.php?role=Manager" class="btn-launch-sim">Launch View</a>
                             </div>
                             <div class="iframe-container">
-                                <iframe src="../Manager/manager_dashboard.php" class="preview-iframe" title="Resource Manager Live View"></iframe>
+                                <iframe src="../Manager/manager_dashboard.php?preview=Manager" class="preview-iframe" title="Resource Manager Live View"></iframe>
                                 <div class="iframe-overlay" onclick="window.location.href='launch_simulation.php?role=Manager'"></div>
                             </div>
                         </div>
@@ -67,7 +67,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
                                 <a href="launch_simulation.php?role=Auditor" class="btn-launch-sim">Launch View</a>
                             </div>
                             <div class="iframe-container">
-                                <iframe src="../Auditor/auditor_dashboard.php" class="preview-iframe" title="Sustainability Auditor Live View"></iframe>
+                                <iframe src="../Auditor/auditor_dashboard.php?preview=Auditor" class="preview-iframe" title="Sustainability Auditor Live View"></iframe>
                                 <div class="iframe-overlay" onclick="window.location.href='launch_simulation.php?role=Auditor'"></div>
                             </div>
                         </div>
@@ -84,7 +84,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
                                 <a href="launch_simulation.php?role=Member" class="btn-launch-sim">Launch View</a>
                             </div>
                             <div class="iframe-container iframe-container-large">
-                                <iframe src="../Members/member_dashboard.php" class="preview-iframe" title="Community Member Live View"></iframe>
+                                <iframe src="../Members/member_dashboard.php?preview=Member" class="preview-iframe" title="Community Member Live View"></iframe>
                                 <div class="iframe-overlay" onclick="window.location.href='launch_simulation.php?role=Member'"></div>
                             </div>
                         </div>

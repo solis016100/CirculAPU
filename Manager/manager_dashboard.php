@@ -2,9 +2,11 @@
 session_start();
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
+$is_preview = isset($_GET['preview']);
 
-// Access Control Guard for Resource Manager Role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
+// Access Control Guard for Resource Manager Role (Allows Admin Preview)
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Manager' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
     exit();
 }
