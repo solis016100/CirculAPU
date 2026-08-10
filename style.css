@@ -1776,6 +1776,7 @@ body.auth-page {
     }
 }
 
+<<<<<<< Updated upstream
 /* ==========================================================================
    Global Simulation Header Banner (Shared across all roles)
    ========================================================================== */
@@ -2167,3 +2168,5 @@ body.auth-page {
 .full-width-card {
     width: 100%;
 }
+=======
+>>>>>>> Stashed changes

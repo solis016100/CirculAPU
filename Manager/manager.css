@@ -1,6 +1,399 @@
-/* Resource Manager Styles */
+/* 1. Asset Page Layout */
 
-/*
-   Keep only styles that are unique to Resource Manager pages here.
-   Reusable dashboard components are stored in ../style.css.
-*/
+.asset-detail-card,
+.asset-form-card {
+    padding: 28px;
+}
+
+.asset-detail-layout,
+.asset-form-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
+    gap: 40px;
+    align-items: start;
+}
+
+.asset-detail-information,
+.asset-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.asset-detail-row,
+.asset-form-row {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 18px;
+    align-items: center;
+}
+
+.asset-detail-label,
+.asset-form-row label,
+.asset-form-upload label {
+    color: #333333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 2. Asset Detail Fields */
+
+.asset-detail-value {
+    min-height: 42px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #d6d6d6;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    color: #333333;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.description-row,
+.asset-form-textarea {
+    align-items: start;
+}
+
+.description-row .asset-detail-label,
+.asset-form-textarea label {
+    padding-top: 11px;
+}
+
+.description-row .asset-detail-value {
+    min-height: 85px;
+    align-items: flex-start;
+}
+
+/* 3. Asset Form Fields */
+
+.asset-form-row input,
+.asset-form-row select,
+.asset-form-row textarea {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid #d6d6d6;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #333333;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.asset-form-row input:focus,
+.asset-form-row select:focus,
+.asset-form-row textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.asset-form-row input[readonly] {
+    background-color: #f1f5f9;
+    color: #475569;
+    cursor: not-allowed;
+}
+
+.asset-form-textarea textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* 4. Asset Side Panel */
+
+.asset-detail-side,
+.asset-form-side {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.asset-image-section h2,
+.asset-form-image-section h2 {
+    margin-bottom: 12px;
+    color: #222222;
+    font-size: 18px;
+}
+
+.asset-image-preview,
+.asset-form-image-preview {
+    width: 100%;
+    max-width: 360px;
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #d6d6d6;
+    border-radius: 8px;
+    background-color: #f8fafc;
+}
+
+.asset-image-preview img,
+.asset-form-image-preview img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.asset-image-name,
+.asset-form-image-section p {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 12px;
+    text-align: center;
+}
+
+.asset-image-empty {
+    width: 100%;
+    max-width: 360px;
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* 5. Image Upload */
+
+.asset-form-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.asset-form-upload input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px dashed #94a3b8;
+    border-radius: 7px;
+    background-color: #f8fafc;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.asset-form-upload small {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* 6. Asset Actions */
+
+.asset-detail-actions,
+.asset-form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.asset-detail-actions {
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+.asset-detail-action-btn,
+.asset-detail-back-btn,
+.asset-form-submit,
+.asset-form-reset,
+.asset-form-back {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #222222;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.asset-detail-action-btn img,
+.asset-form-submit img,
+.asset-form-reset img {
+    width: 18px;
+    height: 18px;
+    display: block;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.asset-detail-action-btn:hover,
+.asset-detail-back-btn:hover,
+.asset-form-reset:hover,
+.asset-form-back:hover {
+    border-color: var(--primary-color);
+    background-color: var(--badge-bg);
+    color: var(--primary-color);
+}
+
+.asset-form-submit {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.asset-form-submit:hover {
+    background-color: var(--primary-hover);
+}
+
+.asset-detail-action-btn.delete:hover {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+.asset-detail-back-btn {
+    margin-top: 4px;
+}
+
+/* 7. Asset Form Note */
+
+.asset-form-note {
+    padding: 12px 14px;
+    border: 1px solid #d6d6d6;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+}
+
+.asset-form-note strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #333333;
+}
+
+.asset-form-note p {
+    margin: 0;
+}
+
+/* 8. Asset Page Responsive */
+
+@media (max-width: 1000px) {
+    .asset-detail-layout,
+    .asset-form-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .asset-detail-side,
+    .asset-form-side {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 650px) {
+    .asset-detail-row,
+    .asset-form-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .description-row .asset-detail-label,
+    .asset-form-textarea label {
+        padding-top: 0;
+    }
+
+    .asset-detail-actions {
+        max-width: none;
+    }
+}
+
+/* 9. Asset Details Print */
+
+@media print {
+
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
+    .sidebar,
+    .app-header,
+    .asset-detail-actions {
+        display: none !important;
+    }
+
+    .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .page-body {
+        padding: 0 !important;
+    }
+
+    .management-heading {
+        margin-bottom: 12px !important;
+    }
+
+    .management-heading p {
+        display: none;
+    }
+
+    .asset-detail-card {
+        margin: 0 !important;
+        padding: 16px !important;
+        box-shadow: none !important;
+    }
+
+    .asset-detail-layout {
+        grid-template-columns: minmax(0, 1.7fr) minmax(230px, 0.7fr) !important;
+        gap: 20px !important;
+    }
+
+    .asset-detail-information {
+        gap: 6px !important;
+    }
+
+    .asset-detail-row {
+        grid-template-columns: 140px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .asset-detail-label {
+        font-size: 11px !important;
+    }
+
+    .asset-detail-value {
+        min-height: 30px !important;
+        padding: 5px 8px !important;
+        font-size: 11px !important;
+    }
+
+    .description-row .asset-detail-label {
+        padding-top: 6px !important;
+    }
+
+    .description-row .asset-detail-value {
+        min-height: 50px !important;
+    }
+
+    .asset-image-section h2 {
+        margin-bottom: 8px !important;
+        font-size: 14px !important;
+    }
+
+    .asset-image-preview {
+        height: 160px !important;
+    }
+
+    .asset-image-name {
+        margin-top: 5px !important;
+        font-size: 10px !important;
+    }
+}
