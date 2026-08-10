@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 31, 2026 at 07:10 AM
+-- Generation Time: Aug 10, 2026 at 11:12 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `circulapu_db`
 --
-CREATE DATABASE IF NOT EXISTS `circulapu_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `circulapu_db`;
 
 -- --------------------------------------------------------
 
@@ -56,15 +54,15 @@ CREATE TABLE `assets` (
   `assetID` varchar(10) NOT NULL,
   `ownerID` varchar(10) NOT NULL,
   `categoryID` varchar(10) NOT NULL,
-  `assetName` varchar(100) NOT NULL,
-  `description` varchar(255) NOT NULL,
-  `assetCondition` varchar(100) NOT NULL,
+  `assetName` varchar(150) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `assetCondition` enum('New','Like New','Good','Fair','Poor') NOT NULL,
   `imageURL` varchar(255) DEFAULT NULL,
-  `availabilityStatus` varchar(50) NOT NULL,
-  `listingStatus` varchar(50) NOT NULL,
+  `availabilityStatus` enum('Available','Reserved','Borrowed','Unavailable') NOT NULL,
+  `listingStatus` enum('Draft','Pending Review','Ready for Verification','Approved','Published','Rejected','Removed') NOT NULL,
   `createdDate` timestamp NOT NULL DEFAULT current_timestamp(),
   `updatedDate` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  `verificationStatus` varchar(50) NOT NULL
+  `verificationStatus` enum('Pending','Approved','Rejected') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -72,9 +70,9 @@ CREATE TABLE `assets` (
 --
 
 INSERT INTO `assets` (`assetID`, `ownerID`, `categoryID`, `assetName`, `description`, `assetCondition`, `imageURL`, `availabilityStatus`, `listingStatus`, `createdDate`, `updatedDate`, `verificationStatus`) VALUES
-('AST001', 'U004', 'CAT001', 'Dell Wireless Mouse', 'Lightly used wireless mouse with USB dongle', 'Good', 'uploads/assets/mouse.jpg', 'Available', 'Active', '2026-07-27 07:01:16', NULL, 'Approved'),
-('AST002', 'U005', 'CAT002', 'Java Programming Textbook', '8th Edition Java reference guide in good condition', 'Like New', 'uploads/assets/book.jpg', 'Borrowed', 'Active', '2026-07-27 07:01:16', NULL, 'Approved'),
-('AST003', 'U004', 'CAT001', 'USB-C Fast Charger', 'Original 65W power brick', 'Good', 'uploads/assets/charger.jpg', 'Pending Verification', 'Active', '2026-07-27 07:01:16', NULL, 'Pending');
+('AST001', 'U004', 'CAT001', 'Dell Wireless Mouse', 'Lightly used wireless mouse with USB dongle', 'Good', 'uploads/assets/mouse.jpg', 'Available', 'Published', '2026-07-27 07:01:16', NULL, 'Approved'),
+('AST002', 'U005', 'CAT002', 'Java Programming Textbook', '8th Edition Java reference guide in good condition', 'Like New', 'uploads/assets/book.jpg', 'Borrowed', 'Published', '2026-07-27 07:01:16', NULL, 'Approved'),
+('AST003', 'U004', 'CAT001', 'USB-C Fast Charger', 'Original 65W power brick', 'Good', 'uploads/assets/charger.jpg', 'Unavailable', 'Ready for Verification', '2026-07-27 07:01:16', NULL, 'Pending');
 
 -- --------------------------------------------------------
 
@@ -86,8 +84,8 @@ CREATE TABLE `assetstatushistory` (
   `historyID` varchar(10) NOT NULL,
   `assetID` varchar(10) NOT NULL,
   `updatedBy` varchar(10) NOT NULL,
-  `oldAvailabilityStatus` varchar(50) NOT NULL,
-  `newAvailabilityStatus` varchar(50) NOT NULL,
+  `oldAvailabilityStatus` enum('Available','Reserved','Borrowed','Unavailable') NOT NULL,
+  `newAvailabilityStatus` enum('Available','Reserved','Borrowed','Unavailable') NOT NULL,
   `statusChangeReason` varchar(255) DEFAULT NULL,
   `updatedDate` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -111,9 +109,9 @@ CREATE TABLE `borrowings` (
   `borrowerID` varchar(10) NOT NULL,
   `transactionID` varchar(10) NOT NULL,
   `borrowDate` timestamp NOT NULL DEFAULT current_timestamp(),
-  `expectedReturnDate` timestamp NULL DEFAULT NULL,
-  `actualReturnDate` timestamp NULL DEFAULT NULL,
-  `borrowingStatus` varchar(50) NOT NULL DEFAULT 'Active'
+  `expectedReturnDate` datetime NOT NULL,
+  `actualReturnDate` datetime DEFAULT NULL,
+  `borrowingStatus` enum('Pending','Approved','Borrowed','Returned','Completed','Cancelled','Overdue') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -121,7 +119,7 @@ CREATE TABLE `borrowings` (
 --
 
 INSERT INTO `borrowings` (`borrowID`, `assetID`, `borrowerID`, `transactionID`, `borrowDate`, `expectedReturnDate`, `actualReturnDate`, `borrowingStatus`) VALUES
-('BOR001', 'AST002', 'U004', 'TR001', '2026-07-27 07:01:17', '2026-08-10 04:00:00', NULL, 'Active');
+('BOR001', 'AST002', 'U004', 'TR001', '2026-07-27 07:01:17', '2026-08-10 04:00:00', NULL, 'Borrowed');
 
 -- --------------------------------------------------------
 
@@ -131,9 +129,9 @@ INSERT INTO `borrowings` (`borrowID`, `assetID`, `borrowerID`, `transactionID`, 
 
 CREATE TABLE `categories` (
   `categoryID` varchar(10) NOT NULL,
-  `categoryName` varchar(50) NOT NULL,
+  `categoryName` varchar(100) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
-  `status` varchar(50) NOT NULL DEFAULT 'Active',
+  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
   `createdDate` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -313,7 +311,7 @@ CREATE TABLE `systemlog` (
   `logID` varchar(10) NOT NULL,
   `userID` varchar(10) NOT NULL,
   `actionType` enum('Create','Submit','Approve','Reject','Redeem','Assign','Update','Delete','Login','Logout') NOT NULL,
-  `refType` enum('Mission','Asset','Reward','Badge','Tier','Verification','User','Category') NOT NULL,
+  `refType` enum('Mission','Asset','Reward','Badge','Tier','Verification','User','Category','Transaction','Borrowing') NOT NULL,
   `refID` varchar(10) DEFAULT NULL,
   `description` varchar(255) NOT NULL,
   `timeLogged` timestamp NOT NULL DEFAULT current_timestamp()
@@ -364,7 +362,7 @@ CREATE TABLE `transactionrequests` (
   `assetID` varchar(10) NOT NULL,
   `requesterID` varchar(10) NOT NULL,
   `requestDate` timestamp NOT NULL DEFAULT current_timestamp(),
-  `requestStatus` varchar(50) NOT NULL DEFAULT 'Pending',
+  `requestStatus` enum('Pending','Approved','In Progress','Completed','Cancelled','Rejected','Overdue') NOT NULL DEFAULT 'Pending',
   `managerRemark` varchar(255) DEFAULT NULL,
   `decisionDate` timestamp NULL DEFAULT NULL,
   `requestMessage` varchar(255) DEFAULT NULL
@@ -375,7 +373,7 @@ CREATE TABLE `transactionrequests` (
 --
 
 INSERT INTO `transactionrequests` (`transactionID`, `assetID`, `requesterID`, `requestDate`, `requestStatus`, `managerRemark`, `decisionDate`, `requestMessage`) VALUES
-('TR001', 'AST002', 'U004', '2026-07-27 07:01:17', 'Approved', 'Request granted for 14-day study period.', NULL, 'Hi, I need this textbook for my upcoming exam week.'),
+('TR001', 'AST002', 'U004', '2026-07-27 07:01:17', 'Approved', 'Request granted for 14-day study period.', '2026-07-27 07:01:17', 'Hi, I need this textbook for my upcoming exam week.'),
 ('TR002', 'AST001', 'U005', '2026-07-27 07:01:17', 'Pending', NULL, NULL, 'Can I borrow this mouse for a few days?');
 
 -- --------------------------------------------------------
@@ -517,7 +515,8 @@ ALTER TABLE `borrowings`
 -- Indexes for table `categories`
 --
 ALTER TABLE `categories`
-  ADD PRIMARY KEY (`categoryID`);
+  ADD PRIMARY KEY (`categoryID`),
+  ADD UNIQUE KEY `unique_category_name` (`categoryName`);
 
 --
 -- Indexes for table `ecopointstransaction`
