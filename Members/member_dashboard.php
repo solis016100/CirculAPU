@@ -229,7 +229,7 @@ $totalBadge = $badgeData['totalBadge'];
 
         <h2>My Recent Requests</h2>
 
-        <a href="my_request.php" class="view-all">
+        <a href="member_requests.php" class="view-all">
             View All
         </a>
 
