@@ -72,6 +72,9 @@ try {
 
     if (!$asset) {
         $error = 'The selected asset submission could not be found.';
+    } elseif ($asset['listingStatus'] !== 'Pending Review') {
+        header("Location: manager_asset_view.php?assetID=$assetID");
+        exit();
     }
 
     // 3. Review Action

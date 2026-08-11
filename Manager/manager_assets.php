@@ -361,9 +361,12 @@ $end = min($offset + $perPage, $total);
                                     </a>
                                 <?php endif; ?>
 
-                                <?php if ($asset['listingStatus'] !== 'Removed'): ?>
+                                <?php if (
+                                    $asset['listingStatus'] !== 'Removed' &&
+                                    !in_array($asset['availabilityStatus'], ['Reserved', 'Borrowed'], true)
+                                ): ?>
                                     <form method="POST"
-                                          onsubmit="return confirm('Remove this asset listing? The record will be retained for auditing.');">
+                                        onsubmit="return confirm('Remove this asset listing? The record will be retained for auditing.');">
                                         <input type="hidden" name="action" value="remove">
                                         <input type="hidden" name="assetID" value="<?= e($asset['assetID']) ?>">
 
