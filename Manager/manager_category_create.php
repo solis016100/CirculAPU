@@ -20,18 +20,18 @@ function nextID(mysqli $conn, string $table, string $column, string $prefix): st
 }
 
 $icons = [
-    'assets/icons/category-electronics.png' => 'Electronics',
-    'assets/icons/category-furniture.png'   => 'Furniture',
-    'assets/icons/category-books.png'       => 'Books',
-    'assets/icons/category-stationery.png'  => 'Stationery',
-    'assets/icons/category-tools.png'       => 'Tools & Equipment',
-    'assets/icons/category-sports.png'      => 'Sports',
-    'assets/icons/category-plants.png'      => 'Plants',
-    'assets/icons/category-transport.png'   => 'Transport',
-    'assets/icons/category-clothing.png'    => 'Clothing',
-    'assets/icons/category-gaming.png'      => 'Gaming',
-    'assets/icons/category-music.png'       => 'Music',
-    'assets/icons/category-others.png'      => 'Others'
+    'assets/icons/category-electronics.png'    => 'Electronics',
+    'assets/icons/category-furniture.png'      => 'Furniture & Household',
+    'assets/icons/category-books.png'          => 'Books',
+    'assets/icons/category-stationery.png'     => 'Stationery',
+    'assets/icons/category-tools.png'          => 'Tools & Equipment',
+    'assets/icons/category-sports.png'         => 'Sports Equipment',
+    'assets/icons/category-kitchenware.png'    => 'Kitchenware',
+    'assets/icons/category-studyequipment.png' => 'Study Equipment',
+    'assets/icons/category-clothing.png'       => 'Clothing',
+    'assets/icons/category-gaming.png'         => 'Gaming & Recreation',
+    'assets/icons/category-music.png'          => 'Music',
+    'assets/icons/category-others.png'         => 'Others'
 ];
 
 $managerID = $_SESSION['user_id'];
