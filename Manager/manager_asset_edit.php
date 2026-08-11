@@ -486,9 +486,11 @@ if ($conn instanceof mysqli) {
 $imagePath = '';
 
 if ($asset && !empty($asset['imageURL'])) {
-    $imagePath =
-        '../assets/managerfile/'
-        . basename($asset['imageURL']);
+    $url = str_replace('\\', '/', trim($asset['imageURL']));
+
+    $imagePath = preg_match('/^https?:\/\//i', $url)
+        ? $url
+        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $url), '/');
 }
 ?>
 

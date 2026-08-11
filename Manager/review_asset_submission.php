@@ -20,6 +20,16 @@ function nextID(mysqli $conn, string $table, string $column, string $prefix): st
     return sprintf($prefix . "%03d", ((int)($row['maxID'] ?? 0)) + 1);
 }
 
+function assetImagePath(?string $url): string {
+    if (!$url) return '';
+
+    $url = str_replace('\\', '/', trim($url));
+
+    return preg_match('/^https?:\/\//i', $url)
+        ? $url
+        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $url), '/');
+}
+
 $managerID = $_SESSION['user_id'];
 $assetID = trim($_GET['assetID'] ?? '');
 $asset = null;
@@ -29,7 +39,7 @@ $databaseError = $formError = '';
 $conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 $availabilityOptions = ['Available', 'Reserved', 'Borrowed', 'Unavailable'];
 
-if (!$assetID) {
+if ($assetID === '') {
     header("Location: manager_assets.php");
     exit();
 }
@@ -40,21 +50,22 @@ try {
     $conn = new mysqli("127.0.0.1", "root", "", "circulapu_db", 3306);
     $conn->set_charset("utf8mb4");
 
-    // Categories
+    // Active Categories
     $result = $conn->query("
         SELECT categoryID, categoryName
         FROM categories
-        WHERE status='Active'
+        WHERE status = 'Active'
         ORDER BY categoryName
     ");
+
     while ($row = $result->fetch_assoc()) $categories[] = $row;
 
-    // Asset
+    // Selected Asset
     $stmt = $conn->prepare("
         SELECT a.*, u.name AS ownerName, u.email AS ownerEmail
         FROM assets a
-        JOIN user u ON a.ownerID=u.userID
-        WHERE a.assetID=?
+        JOIN user u ON a.ownerID = u.userID
+        WHERE a.assetID = ?
         LIMIT 1
     ");
     $stmt->bind_param("s", $assetID);
@@ -77,72 +88,88 @@ try {
         $action = trim($_POST['reviewAction'] ?? '');
 
         // Validation
-        if ($asset['listingStatus'] !== 'Pending Review')
+        if ($asset['listingStatus'] !== 'Pending Review') {
             $formError = "Only Pending Review listings can be reviewed.";
-        elseif (!$assetName)
+        } elseif ($assetName === '') {
             $formError = "Asset Name is required.";
-        elseif (strlen($assetName) > 150)
+        } elseif (strlen($assetName) > 150) {
             $formError = "Asset Name must not exceed 150 characters.";
-        elseif (strlen($description) > 255)
+        } elseif (strlen($description) > 255) {
             $formError = "Description must not exceed 255 characters.";
-        elseif (!in_array($condition, $conditions, true))
+        } elseif (!in_array($condition, $conditions, true)) {
             $formError = "Please select a valid condition.";
-        elseif (!in_array($availability, $availabilityOptions, true))
+        } elseif (!in_array($availability, $availabilityOptions, true)) {
             $formError = "Please select a valid availability status.";
-        elseif (!in_array($action, ['save', 'return', 'verify'], true))
+        } elseif (!in_array($action, ['save', 'return', 'verify'], true)) {
             $formError = "Invalid review action.";
-        elseif ($action === 'return' && !$reason)
+        } elseif ($action === 'return' && $reason === '') {
             $formError = "Please enter a correction reason.";
-        elseif ($action === 'return' && strlen($reason) > 150)
+        } elseif ($action === 'return' && strlen($reason) > 150) {
             $formError = "Correction Reason must not exceed 150 characters.";
+        }
 
         // Category Validation
         if (!$formError) {
             $stmt = $conn->prepare("
                 SELECT categoryID
                 FROM categories
-                WHERE categoryID=? AND status='Active'
+                WHERE categoryID = ? AND status = 'Active'
                 LIMIT 1
             ");
             $stmt->bind_param("s", $categoryID);
             $stmt->execute();
 
-            if (!$stmt->get_result()->fetch_assoc())
+            if (!$stmt->get_result()->fetch_assoc()) {
                 $formError = "Please select a valid active category.";
+            }
 
             $stmt->close();
         }
 
+        // Save Review
         if (!$formError) {
             try {
                 $conn->begin_transaction();
 
                 $newStatus = $action === 'return'
                     ? 'Draft'
-                    : ($action === 'verify' ? 'Ready for Verification' : 'Pending Review');
+                    : ($action === 'verify'
+                        ? 'Ready for Verification'
+                        : 'Pending Review');
 
                 // Update Asset
                 $stmt = $conn->prepare("
                     UPDATE assets SET
-                        categoryID=?, assetName=?, description=?, assetCondition=?,
-                        availabilityStatus=?, listingStatus=?, updatedDate=CURRENT_TIMESTAMP
-                    WHERE assetID=?
+                        categoryID = ?,
+                        assetName = ?,
+                        description = ?,
+                        assetCondition = ?,
+                        availabilityStatus = ?,
+                        listingStatus = ?,
+                        updatedDate = CURRENT_TIMESTAMP
+                    WHERE assetID = ?
                 ");
                 $stmt->bind_param(
                     "sssssss",
-                    $categoryID, $assetName, $description, $condition,
-                    $availability, $newStatus, $assetID
+                    $categoryID,
+                    $assetName,
+                    $description,
+                    $condition,
+                    $availability,
+                    $newStatus,
+                    $assetID
                 );
                 $stmt->execute();
                 $stmt->close();
 
                 // System Log
-                if ($action === 'return')
+                if ($action === 'return') {
                     $logText = "Returned $assetID for correction. Reason: $reason";
-                elseif ($action === 'verify')
+                } elseif ($action === 'verify') {
                     $logText = "Sent asset listing for verification: $assetName";
-                else
+                } else {
                     $logText = "Updated asset submission during review: $assetName";
+                }
 
                 $logID = nextID($conn, 'systemlog', 'logID', 'LOG');
 
@@ -203,7 +230,7 @@ try {
             }
         }
 
-        // Preserve Form Values After Error
+        // Keep Form Values After Error
         if ($formError) {
             $asset['assetName'] = $assetName;
             $asset['categoryID'] = $categoryID;
@@ -220,32 +247,42 @@ try {
 
 if ($conn instanceof mysqli) $conn->close();
 
-$showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
+$imagePath = assetImagePath($asset['imageURL'] ?? null);
+
+$showCorrection =
+    $_SERVER['REQUEST_METHOD'] === 'POST'
     && ($_POST['reviewAction'] ?? '') === 'return';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Review Asset Submission - CirculAPU</title>
+
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="../darktheme.css">
 </head>
 
 <body class="role-manager">
+
 <div class="dashboard-container">
 
 <?php include '../sidebar.php'; ?>
 
 <div class="main-content">
+
 <?php include '../header.php'; ?>
 
 <main class="page-body">
 
     <!-- 1. Heading -->
     <section class="management-heading">
+
         <div class="breadcrumb">
             <a href="manager_assets.php">Asset Management</a>
             <span>›</span>
@@ -253,38 +290,54 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
         </div>
 
         <h1>Review Asset Submission</h1>
-        <p>Review the Community Member's listing before sending it for Sustainability Auditor verification.</p>
+
+        <p>
+            Review the Community Member's listing before sending it
+            for Sustainability Auditor verification.
+        </p>
+
     </section>
 
+    <!-- 2. Errors -->
     <?php if ($databaseError): ?>
 
-        <div class="dashboard-error-message"><?php echo e($databaseError); ?></div>
+        <div class="dashboard-error-message">
+            <?= e($databaseError) ?>
+        </div>
 
     <?php elseif ($asset): ?>
 
         <?php if ($asset['listingStatus'] !== 'Pending Review'): ?>
+
             <div class="alert alert-error">
                 This asset is not waiting for Resource Manager review.
-                Current status: <?php echo e($asset['listingStatus']); ?>.
+                Current status: <?= e($asset['listingStatus']) ?>.
             </div>
+
         <?php endif; ?>
 
         <?php if ($formError): ?>
-            <div class="alert alert-error"><?php echo e($formError); ?></div>
+
+            <div class="alert alert-error">
+                <?= e($formError) ?>
+            </div>
+
         <?php endif; ?>
 
         <?php if (($_GET['saved'] ?? '') === '1'): ?>
+
             <div class="alert alert-success">
                 Asset listing changes saved successfully.
             </div>
+
         <?php endif; ?>
 
-        <!-- 2. Review Form -->
+        <!-- 3. Review Form -->
         <section class="content-card asset-form-card">
 
             <form
                 method="POST"
-                action="review_asset_submission.php?assetID=<?php echo urlencode($assetID); ?>"
+                action="review_asset_submission.php?assetID=<?= e($assetID) ?>"
             >
 
                 <div class="asset-form-layout">
@@ -294,17 +347,18 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
 
                         <div class="asset-form-row">
                             <label>Asset ID</label>
-                            <input type="text" value="<?php echo e($assetID); ?>" readonly>
+                            <input type="text" value="<?= e($assetID) ?>" readonly>
                         </div>
 
                         <div class="asset-form-row">
                             <label for="assetName">Asset Name *</label>
+
                             <input
                                 type="text"
                                 id="assetName"
                                 name="assetName"
                                 maxlength="150"
-                                value="<?php echo e($asset['assetName']); ?>"
+                                value="<?= e($asset['assetName']) ?>"
                                 required
                             >
                         </div>
@@ -313,97 +367,156 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
                             <label for="categoryID">Category *</label>
 
                             <select id="categoryID" name="categoryID" required>
+
                                 <?php foreach ($categories as $category): ?>
+
                                     <option
-                                        value="<?php echo e($category['categoryID']); ?>"
-                                        <?php echo $asset['categoryID'] === $category['categoryID'] ? 'selected' : ''; ?>
+                                        value="<?= e($category['categoryID']) ?>"
+                                        <?= $asset['categoryID'] === $category['categoryID'] ? 'selected' : '' ?>
                                     >
-                                        <?php echo e($category['categoryName']); ?>
+                                        <?= e($category['categoryName']) ?>
                                     </option>
+
                                 <?php endforeach; ?>
+
                             </select>
                         </div>
 
                         <div class="asset-form-row">
                             <label for="assetCondition">Condition *</label>
 
-                            <select id="assetCondition" name="assetCondition" required>
+                            <select
+                                id="assetCondition"
+                                name="assetCondition"
+                                required
+                            >
+
                                 <?php foreach ($conditions as $condition): ?>
+
                                     <option
-                                        value="<?php echo e($condition); ?>"
-                                        <?php echo $asset['assetCondition'] === $condition ? 'selected' : ''; ?>
+                                        value="<?= e($condition) ?>"
+                                        <?= $asset['assetCondition'] === $condition ? 'selected' : '' ?>
                                     >
-                                        <?php echo e($condition); ?>
+                                        <?= e($condition) ?>
                                     </option>
+
                                 <?php endforeach; ?>
+
                             </select>
                         </div>
 
                         <div class="asset-form-row asset-form-textarea">
-                            <label for="description">Description</label>
+
+                            <label for="description">
+                                Description
+                            </label>
+
                             <textarea
                                 id="description"
                                 name="description"
                                 maxlength="255"
                                 rows="4"
-                            ><?php echo e($asset['description'] ?? ''); ?></textarea>
+                            ><?= e($asset['description'] ?? '') ?></textarea>
+
                         </div>
 
                         <div class="asset-form-row">
-                            <label for="availabilityStatus">Availability *</label>
 
-                            <select id="availabilityStatus" name="availabilityStatus" required>
+                            <label for="availabilityStatus">
+                                Availability *
+                            </label>
+
+                            <select
+                                id="availabilityStatus"
+                                name="availabilityStatus"
+                                required
+                            >
+
                                 <?php foreach ($availabilityOptions as $availability): ?>
+
                                     <option
-                                        value="<?php echo e($availability); ?>"
-                                        <?php echo $asset['availabilityStatus'] === $availability ? 'selected' : ''; ?>
+                                        value="<?= e($availability) ?>"
+                                        <?= $asset['availabilityStatus'] === $availability ? 'selected' : '' ?>
                                     >
-                                        <?php echo e($availability); ?>
+                                        <?= e($availability) ?>
                                     </option>
+
                                 <?php endforeach; ?>
+
                             </select>
+
                         </div>
 
                         <div class="asset-form-row">
                             <label>Submitted By</label>
+
                             <input
                                 type="text"
-                                value="<?php echo e($asset['ownerName'] . ' (' . $asset['ownerID'] . ')'); ?>"
+                                value="<?= e(
+                                    $asset['ownerName']
+                                    . ' ('
+                                    . $asset['ownerID']
+                                    . ')'
+                                ) ?>"
                                 readonly
                             >
                         </div>
 
                         <div class="asset-form-row">
                             <label>Member Email</label>
-                            <input type="text" value="<?php echo e($asset['ownerEmail']); ?>" readonly>
+
+                            <input
+                                type="text"
+                                value="<?= e($asset['ownerEmail']) ?>"
+                                readonly
+                            >
                         </div>
 
                         <div class="asset-form-row">
                             <label>Date Submitted</label>
+
                             <input
                                 type="text"
-                                value="<?php echo e(date('d M Y, h:i A', strtotime($asset['createdDate']))); ?>"
+                                value="<?= e(
+                                    date(
+                                        'd M Y, h:i A',
+                                        strtotime($asset['createdDate'])
+                                    )
+                                ) ?>"
                                 readonly
                             >
                         </div>
 
                         <div class="asset-form-row">
                             <label>Listing Status</label>
-                            <input type="text" value="<?php echo e($asset['listingStatus']); ?>" readonly>
+
+                            <input
+                                type="text"
+                                value="<?= e($asset['listingStatus']) ?>"
+                                readonly
+                            >
                         </div>
 
                         <div class="asset-form-row">
                             <label>Verification Status</label>
-                            <input type="text" value="<?php echo e($asset['verificationStatus']); ?>" readonly>
+
+                            <input
+                                type="text"
+                                value="<?= e($asset['verificationStatus']) ?>"
+                                readonly
+                            >
                         </div>
 
-                        <!-- Hidden Until Return Is Chosen -->
+                        <!-- Correction Reason -->
                         <div
                             class="asset-form-row asset-form-textarea"
                             id="correctionBox"
-                            style="<?php echo $showCorrection ? '' : 'display:none;'; ?>"
+                            style="<?= $showCorrection ? '' : 'display:none;' ?>"
                         >
-                            <label for="correctionReason">Correction Reason *</label>
+
+                            <label for="correctionReason">
+                                Correction Reason *
+                            </label>
 
                             <textarea
                                 id="correctionReason"
@@ -411,7 +524,8 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
                                 maxlength="150"
                                 rows="3"
                                 placeholder="Explain clearly what the Community Member needs to correct"
-                            ><?php echo e($_POST['correctionReason'] ?? ''); ?></textarea>
+                            ><?= e($_POST['correctionReason'] ?? '') ?></textarea>
+
                         </div>
 
                     </div>
@@ -420,31 +534,46 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
                     <aside class="asset-form-side">
 
                         <div class="asset-form-image-section">
+
                             <h2>Submitted Image</h2>
 
-                            <?php if (!empty($asset['imageURL'])): ?>
+                            <?php if ($imagePath): ?>
 
                                 <div class="asset-form-image-preview">
+
                                     <img
-                                        src="../assets/managerfile/<?php echo e(basename($asset['imageURL'])); ?>"
-                                        alt="<?php echo e($asset['assetName']); ?>"
+                                        src="<?= e($imagePath) ?>"
+                                        alt="<?= e($asset['assetName']) ?>"
                                     >
+
                                 </div>
 
-                                <p><?php echo e(basename($asset['imageURL'])); ?></p>
+                                <p>
+                                    <?= e(basename($asset['imageURL'])) ?>
+                                </p>
 
                             <?php else: ?>
 
-                                <div class="asset-image-empty">No image submitted</div>
+                                <div class="asset-image-empty">
+                                    No image submitted
+                                </div>
 
                             <?php endif; ?>
+
                         </div>
 
                         <div class="asset-form-note">
+
                             <strong>Review Checklist:</strong>
-                            <p>Check completeness, category, duplicate information and appropriate listing details.</p>
+
+                            <p>
+                                Check completeness, category, duplicate
+                                information and appropriate listing details.
+                            </p>
+
                         </div>
 
+                        <!-- Actions -->
                         <div class="asset-form-actions">
 
                             <button
@@ -465,8 +594,11 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
                                 onclick="return prepareReturn(event)"
                             >
                                 <img src="../assets/icons/reset.png" alt="">
+
                                 <span id="returnButtonText">
-                                    <?php echo $showCorrection ? 'Confirm Return' : 'Return for Correction'; ?>
+                                    <?= $showCorrection
+                                        ? 'Confirm Return'
+                                        : 'Return for Correction' ?>
                                 </span>
                             </button>
 
@@ -477,11 +609,19 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
                                 class="asset-form-submit"
                                 onclick="return confirm('Send this listing for Sustainability Auditor verification?');"
                             >
-                                <img src="../assets/icons/pendingVerification.png" alt="">
+                                <img
+                                    src="../assets/icons/pendingVerification.png"
+                                    alt=""
+                                >
                                 Send for Verification
                             </button>
 
-                            <a href="manager_assets.php" class="asset-form-back">Back</a>
+                            <a
+                                href="manager_assets.php"
+                                class="asset-form-back"
+                            >
+                                Back
+                            </a>
 
                         </div>
 
@@ -490,11 +630,13 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST'
                 </div>
 
             </form>
+
         </section>
 
     <?php endif; ?>
 
 </main>
+
 </div>
 </div>
 
@@ -519,7 +661,9 @@ function prepareReturn(e) {
         return false;
     }
 
-    return confirm('Return this listing to the Community Member for correction?');
+    return confirm(
+        'Return this listing to the Community Member for correction?'
+    );
 }
 </script>
 
