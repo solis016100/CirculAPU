@@ -364,39 +364,44 @@ if ($conn instanceof mysqli) $conn->close();
 
         <div class="quick-action-grid">
 
-            <a href="manager_assets.php?listingStatus=Pending+Review" class="quick-action">
+            <!-- Review Asset Submissions -->
+            <a href="manager_assets.php?listingStatus=Pending+Review"
+            class="quick-action">
                 <img src="../assets/icons/view.png" alt="">
                 <span>Review Asset Submissions</span>
             </a>
 
-            <a href="<?= $hasTransactions ? 'manager_transactions.php?requestStatus=Pending' : '#' ?>"
-               class="quick-action"
-               <?php if (!$hasTransactions): ?>
-                   onclick="alert('Transaction Management will be built next.'); return false;"
-               <?php endif; ?>
+            <!-- Manage Categories -->
+            <a href="manager_categories.php"
+            class="quick-action">
+                <img src="../assets/icons/edit.png" alt="">
+                <span>Manage Categories</span>
+            </a>
+
+            <!-- View Transaction Requests -->
+            <a href="<?= $hasTransactions
+                ? 'manager_transactions.php?requestStatus=Pending'
+                : '#' ?>"
+            class="quick-action"
+            <?php if (!$hasTransactions): ?>
+                onclick="alert('Transaction Management will be built next.'); return false;"
+            <?php endif; ?>
             >
                 <img src="../assets/icons/view.png" alt="">
                 <span>View Transaction Requests</span>
             </a>
 
-            <a href="<?= $hasReports ? 'manager_reports.php' : '#' ?>"
-               class="quick-action"
-               <?php if (!$hasReports): ?>
-                   onclick="alert('Reports will be built later.'); return false;"
-               <?php endif; ?>
+            <!-- Generate Report -->
+            <a href="<?= $hasReports
+                ? 'manager_reports.php'
+                : '#' ?>"
+            class="quick-action"
+            <?php if (!$hasReports): ?>
+                onclick="alert('Reports will be built later.'); return false;"
+            <?php endif; ?>
             >
                 <img src="../assets/icons/report.png" alt="">
                 <span>Generate Report</span>
-            </a>
-
-            <a href="<?= $hasCategories ? 'manager_categories.php' : '#' ?>"
-               class="quick-action"
-               <?php if (!$hasCategories): ?>
-                   onclick="alert('Category Management will be built later.'); return false;"
-               <?php endif; ?>
-            >
-                <img src="../assets/icons/edit.png" alt="">
-                <span>Manage Categories</span>
             </a>
 
         </div>
