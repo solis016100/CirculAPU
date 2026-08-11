@@ -3,7 +3,7 @@ session_start();
 $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
 $is_preview = isset($_GET['preview']);
 
-<<<<<<< HEAD
+// <<<<<<< HEAD
 // Database Connection
 $conn = new mysqli(
     "localhost",
@@ -20,11 +20,11 @@ if ($conn->connect_error) {
 // Access Control Guard for Community Member Role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: login.php");
-=======
+// =======
 // Access Control Guard for Community Member Role (Allows Admin Preview)
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Member' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
->>>>>>> 52a68bfa4e38e413cf43656322556d94ba2effee
+// >>>>>>> 52a68bfa4e38e413cf43656322556d94ba2effee
     exit();
 }
 
