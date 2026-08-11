@@ -184,7 +184,7 @@ if ($conn instanceof mysqli) $conn->close();
                                 <?php foreach ($recentActivities as $activity): ?>
                                     <tr>
                                         <td>
-                                            <div class="activity-name">
+                                            <div class="activity-name activity-flex">
                                                 <span class="activity-icon">
                                                     <img src="../assets/icons/<?php echo htmlspecialchars(managerActivityIcon($activity['actionType'])); ?>" alt="">
                                                 </span>
