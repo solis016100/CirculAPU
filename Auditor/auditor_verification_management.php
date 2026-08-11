@@ -310,29 +310,29 @@
 
                                             <td>
                                                 <div class="management-actions">
-                                                    <button
-                                                        type="button"
+                                                    <a
+                                                        href="auditor_verification_view.php?id=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn"
                                                         title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
-                                                    </button>
+                                                    </a>
 
-                                                    <button
-                                                        type="button"
+                                                    <a
+                                                        href="auditor_verification_edit.php?id=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn"
                                                         title="Edit">
                                                         <img src="../assets/icons/edit.png" alt="Edit">
-                                                    </button>
+                                                    </a>
 
-                                                    <button
-                                                        type="button"
+                                                    <a
+                                                        href="auditor_verification_print.php?id=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn"
                                                         title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </button>
 
-                                                    <button
-                                                        type="button"
+                                                    <a
+                                                        href="auditor_verification_delete.php?id=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn delete"
                                                         title="Delete">
                                                         <img src="../assets/icons/delete.png" alt="Delete">
