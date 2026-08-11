@@ -64,7 +64,6 @@ $categories = [];
 $error = $newFile = '';
 
 $conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
-$availabilities = ['Available', 'Reserved', 'Borrowed', 'Unavailable'];
 
 if ($assetID === '') {
     header('Location: manager_assets.php'); exit();
@@ -120,13 +119,11 @@ try {
         $categoryID = trim($_POST['categoryID'] ?? '');
         $condition = trim($_POST['assetCondition'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $availability = trim($_POST['availabilityStatus'] ?? '');
-
+      
         if ($name === '') $error = 'Asset Name is required.';
         elseif (strlen($name) > 150) $error = 'Asset Name must not exceed 150 characters.';
         elseif (strlen($description) > 255) $error = 'Description must not exceed 255 characters.';
         elseif (!in_array($condition, $conditions, true)) $error = 'Please select a valid asset condition.';
-        elseif (!in_array($availability, $availabilities, true)) $error = 'Please select a valid availability status.';
 
         if (!$error) {
             $stmt = $conn->prepare("
@@ -158,43 +155,22 @@ try {
         if (!$error) {
             try {
                 $conn->begin_transaction();
-                $oldAvailability = $asset['availabilityStatus'];
 
                 $stmt = $conn->prepare("
                     UPDATE assets SET
                         categoryID = ?, assetName = ?, description = ?,
-                        assetCondition = ?, imageURL = ?, availabilityStatus = ?,
+                        assetCondition = ?, imageURL = ?,
                         updatedDate = CURRENT_TIMESTAMP
                     WHERE assetID = ?
                 ");
+
                 $stmt->bind_param(
-                    'sssssss',
+                    'ssssss',
                     $categoryID, $name, $description,
-                    $condition, $imageURL, $availability, $assetID
+                    $condition, $imageURL, $assetID
                 );
                 $stmt->execute();
                 $stmt->close();
-
-                // Availability History
-                if ($oldAvailability !== $availability) {
-                    $historyID = nextID($conn, 'assetstatushistory', 'historyID', 'ASH');
-                    $reason = 'Availability updated by Resource Manager.';
-
-                    $stmt = $conn->prepare("
-                        INSERT INTO assetstatushistory
-                            (historyID, assetID, updatedBy,
-                             oldAvailabilityStatus, newAvailabilityStatus,
-                             statusChangeReason)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmt->bind_param(
-                        'ssssss',
-                        $historyID, $assetID, $managerID,
-                        $oldAvailability, $availability, $reason
-                    );
-                    $stmt->execute();
-                    $stmt->close();
-                }
 
                 // System Log
                 $logID = nextID($conn, 'systemlog', 'logID', 'LOG');
@@ -228,7 +204,6 @@ try {
             $asset['categoryID'] = $categoryID;
             $asset['assetCondition'] = $condition;
             $asset['description'] = $description;
-            $asset['availabilityStatus'] = $availability;
         }
     }
 
@@ -332,16 +307,8 @@ $imagePath = assetImagePath($asset['imageURL'] ?? null);
     </div>
 
     <div class="asset-form-row">
-        <label for="availabilityStatus">Availability *</label>
-
-        <select id="availabilityStatus" name="availabilityStatus" required>
-            <?php foreach ($availabilities as $v): ?>
-                <option value="<?= e($v) ?>"
-                    <?= $asset['availabilityStatus'] === $v ? 'selected' : '' ?>>
-                    <?= e($v) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
+        <label>Availability</label>
+        <input value="<?= e($asset['availabilityStatus']) ?>" readonly>
     </div>
 
     <div class="asset-form-row">
