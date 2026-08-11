@@ -164,7 +164,7 @@ try {
     // 4. Category List
     $stmt = $conn->prepare("
         SELECT categoryID, categoryName, description,
-               status, createdDate
+            categoryIcon, status, createdDate
         FROM categories
         $where
         ORDER BY createdDate DESC, categoryName ASC
@@ -479,7 +479,18 @@ $end = min($offset + $perPage, $total);
                         </td>
 
                         <td>
-                            <?= e($category['categoryName']) ?>
+                            <div class="category-name-cell">
+
+                                <?php if (!empty($category['categoryIcon'])): ?>
+                                    <img
+                                        src="../<?= e($category['categoryIcon']) ?>"
+                                        alt=""
+                                    >
+                                <?php endif; ?>
+
+                                <span><?= e($category['categoryName']) ?></span>
+
+                            </div>
                         </td>
 
                         <td>
