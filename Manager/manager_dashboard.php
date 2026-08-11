@@ -1,8 +1,9 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
+$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
+$is_preview = isset($_GET['preview']);
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Manager' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
     exit();
 }
@@ -96,8 +97,7 @@ if ($conn instanceof mysqli) $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Manager Dashboard - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager.css">
-    <link rel="stylesheet" href="../darktheme.css">
+    <link rel="stylesheet" href="manager_style.css">
 </head>
 
 <body class="role-manager">
@@ -185,7 +185,7 @@ if ($conn instanceof mysqli) $conn->close();
                                 <?php foreach ($recentActivities as $activity): ?>
                                     <tr>
                                         <td>
-                                            <div class="activity-name">
+                                            <div class="activity-name activity-flex">
                                                 <span class="activity-icon">
                                                     <img src="../assets/icons/<?php echo htmlspecialchars(managerActivityIcon($activity['actionType'])); ?>" alt="">
                                                 </span>

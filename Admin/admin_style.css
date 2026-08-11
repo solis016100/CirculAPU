@@ -1242,12 +1242,6 @@
     padding: 10px 8px;
 }
 
-.activity-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
 .cell-icon {
     width: 18px;
     height: 18px;

@@ -11,7 +11,7 @@
 body.role-admin {
     --primary-color: #6b21a8;
     --primary-hover: #581c87;
-    --bg-color: #f8fafc;
+    --bg-color: #f2e4ff;
     --card-bg: #ffffff;
     --badge-bg: #f3e8ff;
     --badge-text: #6b21a8;
@@ -584,20 +584,6 @@ html, body {
 }
 
 
-/* ROLE BADGE */
-.role-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background-color: var(--badge-bg);
-    color: var(--badge-text);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
 /* ACTION BUTTON */
 .action-btn {
     display: inline-flex;
@@ -1035,18 +1021,6 @@ body.auth-page {
 }
 
 
-/* Date */
-.dashboard-date {
-    flex-shrink: 0;
-    padding: 10px 14px;
-    background-color: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: #53645c;
-    font-size: 14px;
-    font-weight: 600;
-}
-
 /* Lower Dashboard */
 .dashboard-lower-grid {
     display: grid;
@@ -1180,12 +1154,7 @@ body.auth-page {
     overflow: hidden;
 }
 
-/* Shared Recent Activities */
-.activity-table {
-    min-width: 650px;
-}
-
-.activity-name {
+.activity-flex {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1776,7 +1745,6 @@ body.auth-page {
     }
 }
 
-<<<<<<< Updated upstream
 /* ==========================================================================
    Global Simulation Header Banner (Shared across all roles)
    ========================================================================== */
@@ -2168,5 +2136,3 @@ body.auth-page {
 .full-width-card {
     width: 100%;
 }
-=======
->>>>>>> Stashed changes
