@@ -10,7 +10,7 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo-container">
-      <img src="../assets/images/logo.png" alt="CirculAPU Logo" class="sidebar-logo">
+      <img src="/CirculAPU/assets/images/logo.png" alt="CirculAPU Logo" class="sidebar-logo">
       <span class="sidebar-logo-text">CirculAPU</span>
     </div>
     <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Navigation">
@@ -129,7 +129,7 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
   </nav>
 
   <div class="sidebar-footer">
-    <form action="../logout.php" method="POST">
+    <form action="/CirculAPU/logout.php" method="POST">
       <button type="submit" class="logout-btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
