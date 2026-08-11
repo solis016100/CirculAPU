@@ -174,7 +174,7 @@ $details = $asset ? [
 
                     <div class="asset-detail-actions">
 
-                        <?php printButton('Print', '../assets/icons/print.png'); ?>
+                        <?php printButton('Print', '../assets/icons/print.png', 'asset-detail-action-btn'); ?>
 
                         <!-- Pending Review follows review workflow -->
                         <?php if ($asset['listingStatus'] === 'Pending Review'): ?>

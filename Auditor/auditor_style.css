@@ -1,3 +1,30 @@
+@media print {
+
+    .sidebar,
+    header,
+    .breadcrumb,
+    .auditor-management-decision,
+    .auditor-management-divider,
+    .auditor-management-detail-action,
+    .auditor-management-detail-back,
+    .auditor-management-view-image {
+        display: none !important;
+    }
+
+    .main-content,
+    .auditor-management-detail-page {
+        margin: 0 !important;
+        padding: 20px !important;
+        width: 100% !important;
+    }
+
+    .auditor-management-detail-layout {
+        max-width: 100% !important;
+    }
+}
+
+
+
 /* ==========================================================================
    AUDITOR VERIFICATION MANAGEMENT
    ========================================================================== */
@@ -469,5 +496,66 @@
 }
 
 .auditor-management-detail-back a:hover {
+    background: #f5f5f5;
+}
+
+
+/* Edit Management */
+.auditor-management-edit-form {
+    max-width: 900px;
+    margin-top: 25px;
+}
+
+.auditor-management-edit-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.auditor-management-edit-row label {
+    font-weight: 600;
+}
+
+.auditor-management-edit-row input,
+.auditor-management-edit-row select,
+.auditor-management-edit-row textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.auditor-management-edit-row input[readonly] {
+    background: #f3f4f6;
+}
+
+.auditor-management-edit-row textarea {
+    resize: vertical;
+}
+
+.auditor-management-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.auditor-management-edit-actions button,
+.auditor-management-edit-actions a {
+    padding: 10px 20px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.auditor-management-edit-actions button:hover,
+.auditor-management-edit-actions a:hover {
     background: #f5f5f5;
 }

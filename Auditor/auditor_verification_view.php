@@ -7,6 +7,7 @@
     }
 
     require '../db.php';
+    require_once '../print.php';
 
     $id = $_GET['verificationID'] ?? '';
 
@@ -172,7 +173,7 @@
                         <?php endforeach; ?>
                     </div>
 
-                    <aside class="auditor-management-detail-side">
+                    <div class="auditor-management-detail-side">
                         <h2>Uploaded Image</h2>
 
                         <?php if ($image): ?>
@@ -208,10 +209,7 @@
                         <div class="auditor-management-divider"></div>
 
                         <!-- Print -->
-                        <a href="auditor_verification_print.php?type=verification&id=<?php echo htmlspecialchars($id); ?>" " class="auditor-management-detail-action">
-                            <img src="../assets/icons/print.png" alt="">
-                            Print
-                        </a>
+                        <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action'); ?>
 
                         <!-- Edit -->
                         <a href="auditor_verification_edit.php?verificationID=<?php echo htmlspecialchars($id); ?>" class="auditor-management-detail-action">
@@ -224,7 +222,7 @@
                             <img src="../assets/icons/delete.png" alt="">
                             Delete
                         </a>
-                    </aside>
+                    </div>
                 </section>
 
                 <!-- Back Button -->
