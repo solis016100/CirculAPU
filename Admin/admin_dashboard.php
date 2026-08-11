@@ -142,7 +142,7 @@ function formatDashboardTime($datetime_str) {
                                     <?php while ($log = $logs_result->fetch_assoc()): ?>
                                         <tr>
                                             <td class="col-activity">
-                                                <div class="activity-cell">
+                                                <div class="activity-cell activity-flex">
                                                     <img src="../assets/icons/activity.svg" alt="Log" class="cell-icon">
                                                     <span><?php echo htmlspecialchars($log['actionType'] . ' ' . $log['refType']); ?></span>
                                                 </div>
@@ -197,7 +197,7 @@ function formatDashboardTime($datetime_str) {
                                     <?php while ($report = $reports_result->fetch_assoc()): ?>
                                         <tr>
                                             <td class="col-reportid">
-                                                <div class="activity-cell">
+                                                <div class="activity-cell activity-flex">
                                                     <img src="../assets/icons/file-text.svg" alt="Report" class="cell-icon">
                                                     <span class="col-userid"><?php echo htmlspecialchars($report['reportID']); ?></span>
                                                 </div>

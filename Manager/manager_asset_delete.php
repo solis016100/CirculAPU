@@ -183,8 +183,7 @@ if ($conn instanceof mysqli) {
     <title>Remove Asset - CirculAPU</title>
 
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager.css">
-    <link rel="stylesheet" href="../darktheme.css">
+    <link rel="stylesheet" href="manager_style.css">
 </head>
 
 <body class="role-manager">

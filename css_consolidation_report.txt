@@ -1,0 +1,2237 @@
+CSS CONSOLIDATION REPORT
+===========================================================================
+
+CSS files analyzed : 5
+CSS classes found  : 352
+Used classes       : 344
+Possibly unused    : 8
+Duplicate groups   : 126
+
+===========================================================================
+POSSIBLY UNUSED CLASSES
+===========================================================================
+
+.availability-available
+    Auditor\auditor_style.css
+
+.availability-unavailable
+    Auditor\auditor_style.css
+
+.color-subtle-white
+    Admin\admin_style.css
+
+.disputed
+    Admin\admin_style.css
+
+.notification-unread
+    style.css
+
+.pending
+    Admin\admin_style.css
+
+.resolved
+    Admin\admin_style.css
+
+.under-investigation
+    Admin\admin_style.css
+
+
+===========================================================================
+EXACT DUPLICATE CSS
+===========================================================================
+
+GROUP 1
+  .dashboard-container → style.css
+  .main-content → style.css
+  .sidebar-collapsed → style.css
+
+  Declarations:
+    margin-left:var(--sidebar-collapsed-width);
+    width:calc(100vw - var(--sidebar-collapsed-width));
+
+  Usage:
+    .dashboard-container → Admin\admin_dashboard.php
+    .dashboard-container → Admin\admin_edit_user.php
+    .dashboard-container → Admin\admin_report_details.php
+    .dashboard-container → Admin\analytics.php
+    .dashboard-container → Admin\create_dummy_account.php
+    .dashboard-container → Admin\reports_queue.php
+    .dashboard-container → Admin\role_simulation.php
+    .dashboard-container → Admin\user_management.php
+    .dashboard-container → Auditor\auditor_achievement_badges_management.php
+    .dashboard-container → Auditor\auditor_dashboard.php
+    .dashboard-container → Auditor\auditor_missions_management.php
+    .dashboard-container → Auditor\auditor_notification.php
+    .dashboard-container → Auditor\auditor_recent_activities.php
+    .dashboard-container → Auditor\auditor_rewards_management.php
+    .dashboard-container → Auditor\auditor_user_tiers_management.php
+    .dashboard-container → Auditor\auditor_verification_management.php
+    .dashboard-container → Manager\manager_asset_delete.php
+    .dashboard-container → Manager\manager_asset_edit.php
+    .dashboard-container → Manager\manager_asset_view.php
+    .dashboard-container → Manager\manager_assets.php
+    .dashboard-container → Manager\manager_dashboard.php
+    .dashboard-container → Manager\review_asset_submission.php
+    .dashboard-container → Members\member_dashboard.php
+    .dashboard-container → Members\myrequest.php
+    .dashboard-container → profile_setting.php
+    .main-content → Admin\admin_dashboard.php
+    .main-content → Admin\admin_edit_user.php
+    .main-content → Admin\admin_report_details.php
+    .main-content → Admin\analytics.php
+    .main-content → Admin\create_dummy_account.php
+    .main-content → Admin\reports_queue.php
+    .main-content → Admin\role_simulation.php
+    .main-content → Admin\user_management.php
+    .main-content → Auditor\auditor_achievement_badges_management.php
+    .main-content → Auditor\auditor_dashboard.php
+    .main-content → Auditor\auditor_missions_management.php
+    .main-content → Auditor\auditor_notification.php
+    .main-content → Auditor\auditor_recent_activities.php
+    .main-content → Auditor\auditor_rewards_management.php
+    .main-content → Auditor\auditor_user_tiers_management.php
+    .main-content → Auditor\auditor_verification_management.php
+    .main-content → Manager\manager_asset_delete.php
+    .main-content → Manager\manager_asset_edit.php
+    .main-content → Manager\manager_asset_view.php
+    .main-content → Manager\manager_assets.php
+    .main-content → Manager\manager_dashboard.php
+    .main-content → Manager\review_asset_submission.php
+    .main-content → Members\member_dashboard.php
+    .main-content → Members\myrequest.php
+    .main-content → profile_setting.php
+    .sidebar-collapsed → sidebar.php
+
+GROUP 2
+  .app-header → Manager\manager_style.css
+  .sidebar → Manager\manager_style.css
+  .asset-detail-actions → Manager\manager_style.css
+
+  Declarations:
+    display:none !important;
+
+  Usage:
+    .app-header → header.php
+    .sidebar → sidebar.php
+    .asset-detail-actions → Manager\manager_asset_delete.php
+    .asset-detail-actions → Manager\manager_asset_view.php
+
+GROUP 3
+  .user-info-text → style.css
+  .notification-list → style.css
+
+  Declarations:
+    display:flex;
+    flex-direction:column;
+
+  Usage:
+    .user-info-text → header.php
+    .notification-list → Auditor\auditor_dashboard.php
+    .notification-list → Manager\manager_dashboard.php
+
+GROUP 4
+  .sidebar → style.css
+  .logout-btn → style.css
+
+  Declarations:
+    width:100%;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.6rem;
+    padding:0 0.75rem;
+    background-color:#fef2f2;
+    color:#ef4444;
+    border:1px solid #fecaca;
+    border-radius:8px;
+    font-weight:600;
+    font-size:0.9rem;
+    cursor:pointer;
+    transition:background 0.2s;
+
+  Usage:
+    .sidebar → sidebar.php
+    .logout-btn → sidebar.php
+
+GROUP 5
+  .sidebar → style.css
+  .logout-btn → style.css
+
+  Declarations:
+    background-color:#fee2e2;
+
+  Usage:
+    .sidebar → sidebar.php
+    .logout-btn → sidebar.php
+
+GROUP 6
+  .sidebar → style.css
+  .nav-item → style.css
+  .logout-btn → style.css
+
+  Declarations:
+    width:20px;
+    height:20px;
+    flex-shrink:0;
+
+  Usage:
+    .sidebar → sidebar.php
+    .nav-item → sidebar.php
+    .logout-btn → sidebar.php
+
+GROUP 7
+  .sidebar → style.css
+  .collapsed → style.css
+
+  Declarations:
+    width:var(--sidebar-collapsed-width);
+
+  Usage:
+    .sidebar → sidebar.php
+    .collapsed → sidebar.php
+
+GROUP 8
+  .sidebar → style.css
+  .sidebar → style.css
+  .sidebar → style.css
+  .sidebar-logo-text → style.css
+  .nav-text → style.css
+  .collapsed → style.css
+  .collapsed → style.css
+  .collapsed → style.css
+  .logout-text → style.css
+
+  Declarations:
+    opacity:0;
+    display:none;
+    pointer-events:none;
+
+  Usage:
+    .sidebar → sidebar.php
+    .sidebar → sidebar.php
+    .sidebar → sidebar.php
+    .sidebar-logo-text → sidebar.php
+    .nav-text → sidebar.php
+    .collapsed → sidebar.php
+    .collapsed → sidebar.php
+    .collapsed → sidebar.php
+    .logout-text → sidebar.php
+
+GROUP 9
+  .sidebar → style.css
+  .sidebar-toggle-btn → style.css
+  .collapsed → style.css
+
+  Declarations:
+    transform:rotate(180deg);
+
+  Usage:
+    .sidebar → sidebar.php
+    .sidebar-toggle-btn → sidebar.php
+    .collapsed → sidebar.php
+
+GROUP 10
+  .sidebar → style.css
+  .nav-item → style.css
+  .collapsed → style.css
+
+  Declarations:
+    justify-content:center;
+    padding:0.65rem 0;
+
+  Usage:
+    .sidebar → sidebar.php
+    .nav-item → sidebar.php
+    .collapsed → sidebar.php
+
+GROUP 11
+  .sidebar → style.css
+  .sidebar-header → style.css
+  .collapsed → style.css
+
+  Declarations:
+    justify-content:center;
+
+  Usage:
+    .sidebar → sidebar.php
+    .sidebar-header → sidebar.php
+    .collapsed → sidebar.php
+
+GROUP 12
+  .sidebar → style.css
+  .sidebar-logo-container → style.css
+  .collapsed → style.css
+  .management-heading → Manager\manager_style.css
+
+  Declarations:
+    display:none;
+
+  Usage:
+    .sidebar → sidebar.php
+    .sidebar-logo-container → sidebar.php
+    .collapsed → sidebar.php
+    .management-heading → Auditor\auditor_achievement_badges_management.php
+    .management-heading → Auditor\auditor_missions_management.php
+    .management-heading → Auditor\auditor_rewards_management.php
+    .management-heading → Auditor\auditor_user_tiers_management.php
+    .management-heading → Auditor\auditor_verification_management.php
+    .management-heading → Manager\manager_asset_delete.php
+    .management-heading → Manager\manager_asset_edit.php
+    .management-heading → Manager\manager_asset_view.php
+    .management-heading → Manager\manager_assets.php
+    .management-heading → Manager\review_asset_submission.php
+
+GROUP 13
+  .nav-item → style.css
+  .nav-item → style.css
+  .active → style.css
+
+  Declarations:
+    background-color:#f1f5f9;
+    color:var(--primary-color, #16a34a);
+
+  Usage:
+    .nav-item → sidebar.php
+    .nav-item → sidebar.php
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+
+GROUP 14
+  .active → style.css
+  .step-pill → style.css
+
+  Declarations:
+    background:#16a34a;
+    color:#ffffff;
+
+  Usage:
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+    .step-pill → reset_password.php
+    .step-pill → signup.php
+
+GROUP 15
+  .active → style.css
+  .pagination → style.css
+
+  Declarations:
+    background-color:var(--badge-bg);
+    border-color:var(--primary-color);
+    color:var(--primary-color);
+    font-weight:600;
+
+  Usage:
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+    .pagination → Auditor\auditor_achievement_badges_management.php
+    .pagination → Auditor\auditor_missions_management.php
+    .pagination → Auditor\auditor_user_tiers_management.php
+    .pagination → Manager\manager_assets.php
+
+GROUP 16
+  .active → style.css
+  .right-sidebar → style.css
+
+  Declarations:
+    right:0;
+
+  Usage:
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+    .right-sidebar → right_bar.php
+
+GROUP 17
+  .active → Admin\admin_style.css
+  .admin-pagination-footer → Admin\admin_style.css
+  .pagination-btn → Admin\admin_style.css
+
+  Declarations:
+    background:#e2e8f0;
+    font-weight:bold;
+
+  Usage:
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+    .admin-pagination-footer → Admin\admin_dashboard.php
+    .admin-pagination-footer → Admin\reports_queue.php
+    .admin-pagination-footer → Admin\user_management.php
+    .pagination-btn → Admin\admin_dashboard.php
+    .pagination-btn → Admin\reports_queue.php
+    .pagination-btn → Admin\user_management.php
+    .pagination-btn → Auditor\auditor_rewards_management.php
+
+GROUP 18
+  .active → Admin\admin_style.css
+  .btn-status-toggle → Admin\admin_style.css
+  .status-active → Admin\admin_style.css
+
+  Declarations:
+    background:#dcfce7;
+    border:1px solid #86efac;
+    color:#166534;
+
+  Usage:
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+    .btn-status-toggle → Admin\admin_edit_user.php
+    .btn-status-toggle → Admin\create_dummy_account.php
+    .status-active → Admin\admin_edit_user.php
+    .status-active → Admin\create_dummy_account.php
+
+GROUP 19
+  .active → Admin\admin_style.css
+  .btn-status-toggle → Admin\admin_style.css
+  .status-suspended → Admin\admin_style.css
+
+  Declarations:
+    background:#fee2e2;
+    border:1px solid #fca5a5;
+    color:#991b1b;
+
+  Usage:
+    .active → Admin\admin_edit_user.php
+    .active → Admin\create_dummy_account.php
+    .active → Auditor\auditor_achievement_badges_management.php
+    .active → header.php
+    .btn-status-toggle → Admin\admin_edit_user.php
+    .btn-status-toggle → Admin\create_dummy_account.php
+    .status-suspended → Admin\admin_edit_user.php
+    .status-suspended → Admin\create_dummy_account.php
+
+GROUP 20
+  .stats-grid → style.css
+  .quick-action-grid → style.css
+
+  Declarations:
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+
+  Usage:
+    .stats-grid → Auditor\auditor_dashboard.php
+    .stats-grid → Manager\manager_dashboard.php
+    .stats-grid → Members\member_dashboard.php
+    .quick-action-grid → Manager\manager_dashboard.php
+
+GROUP 21
+  .stats-grid → style.css
+  .dashboard-lower-grid → style.css
+  .quick-action-grid → style.css
+  .asset-detail-layout → Manager\manager_style.css
+  .asset-form-layout → Manager\manager_style.css
+
+  Declarations:
+    grid-template-columns:1fr;
+
+  Usage:
+    .stats-grid → Auditor\auditor_dashboard.php
+    .stats-grid → Manager\manager_dashboard.php
+    .stats-grid → Members\member_dashboard.php
+    .dashboard-lower-grid → Auditor\auditor_dashboard.php
+    .dashboard-lower-grid → Manager\manager_dashboard.php
+    .quick-action-grid → Manager\manager_dashboard.php
+    .asset-detail-layout → Manager\manager_asset_view.php
+    .asset-form-layout → Manager\manager_asset_edit.php
+    .asset-form-layout → Manager\review_asset_submission.php
+
+GROUP 22
+  .stat-card → style.css
+  .stat-value → style.css
+
+  Declarations:
+    color:var(--primary-color);
+    font-size:32px;
+    font-weight:700;
+    line-height:1;
+
+  Usage:
+    .stat-card → Auditor\auditor_dashboard.php
+    .stat-card → Manager\manager_dashboard.php
+    .stat-card → Members\member_dashboard.php
+    .stat-value → Auditor\auditor_dashboard.php
+    .stat-value → Manager\manager_dashboard.php
+
+GROUP 23
+  .stat-icon → style.css
+  .stat-icon-box → Admin\admin_style.css
+
+  Declarations:
+    width:32px;
+    height:32px;
+    object-fit:contain;
+
+  Usage:
+    .stat-icon → Auditor\auditor_dashboard.php
+    .stat-icon → Manager\manager_dashboard.php
+    .stat-icon → Members\member_dashboard.php
+    .stat-icon-box → Admin\admin_dashboard.php
+
+GROUP 24
+  .card-header → style.css
+  .space-between → style.css
+
+  Declarations:
+    justify-content:space-between;
+
+  Usage:
+    .card-header → Auditor\auditor_dashboard.php
+    .card-header → Manager\manager_dashboard.php
+    .card-header → profile_setting.php
+    .space-between → profile_setting.php
+
+GROUP 25
+  .table-wrapper → style.css
+  .management-table-wrapper → style.css
+
+  Declarations:
+    width:100%;
+    overflow-x:auto;
+
+  Usage:
+    .table-wrapper → Auditor\auditor_dashboard.php
+    .table-wrapper → Manager\manager_dashboard.php
+    .management-table-wrapper → Auditor\auditor_achievement_badges_management.php
+    .management-table-wrapper → Auditor\auditor_missions_management.php
+    .management-table-wrapper → Auditor\auditor_rewards_management.php
+    .management-table-wrapper → Auditor\auditor_user_tiers_management.php
+    .management-table-wrapper → Auditor\auditor_verification_management.php
+    .management-table-wrapper → Manager\manager_assets.php
+
+GROUP 26
+  .data-table → style.css
+  .management-table → style.css
+
+  Declarations:
+    background-color:#fafafa;
+
+  Usage:
+    .data-table → Auditor\auditor_dashboard.php
+    .data-table → Manager\manager_dashboard.php
+    .management-table → Auditor\auditor_achievement_badges_management.php
+    .management-table → Auditor\auditor_missions_management.php
+    .management-table → Auditor\auditor_rewards_management.php
+    .management-table → Auditor\auditor_user_tiers_management.php
+    .management-table → Auditor\auditor_verification_management.php
+    .management-table → Manager\manager_assets.php
+
+GROUP 27
+  .data-table → style.css
+  .management-table → style.css
+  .activity-row → style.css
+
+  Declarations:
+    border-bottom:none;
+
+  Usage:
+    .data-table → Auditor\auditor_dashboard.php
+    .data-table → Manager\manager_dashboard.php
+    .management-table → Auditor\auditor_achievement_badges_management.php
+    .management-table → Auditor\auditor_missions_management.php
+    .management-table → Auditor\auditor_rewards_management.php
+    .management-table → Auditor\auditor_user_tiers_management.php
+    .management-table → Auditor\auditor_verification_management.php
+    .management-table → Manager\manager_assets.php
+    .activity-row → profile_setting.php
+
+GROUP 28
+  .action-btn → style.css
+  .asset-form-submit → Manager\manager_style.css
+
+  Declarations:
+    background-color:var(--primary-hover);
+
+  Usage:
+    .action-btn → profile_setting.php
+    .asset-form-submit → Manager\manager_asset_edit.php
+    .asset-form-submit → Manager\review_asset_submission.php
+
+GROUP 29
+  .signup-page-body → style.css
+  .reset-page-body → style.css
+
+  Declarations:
+    background-color:#ffffff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:40px 20px;
+
+  Usage:
+    .signup-page-body → signup.php
+    .reset-page-body → reset_password.php
+
+GROUP 30
+  .signup-header → style.css
+  .reset-header → style.css
+  .submit-btn-wrapper → style.css
+
+  Declarations:
+    text-align:center;
+    margin-bottom:20px;
+
+  Usage:
+    .signup-header → signup.php
+    .reset-header → reset_password.php
+    .submit-btn-wrapper → reset_password.php
+    .submit-btn-wrapper → signup.php
+
+GROUP 31
+  .signup-header → style.css
+  .reset-header → style.css
+
+  Declarations:
+    max-width:120px;
+    height:auto;
+    margin-bottom:12px;
+
+  Usage:
+    .signup-header → signup.php
+    .reset-header → reset_password.php
+
+GROUP 32
+  .signup-header → style.css
+  .reset-header → style.css
+
+  Declarations:
+    font-size:2rem;
+    font-weight:normal;
+    margin-bottom:4px;
+    color:#000000;
+
+  Usage:
+    .signup-header → signup.php
+    .reset-header → reset_password.php
+
+GROUP 33
+  .signup-header → style.css
+  .reset-header → style.css
+
+  Declarations:
+    font-size:0.9rem;
+    color:#555555;
+
+  Usage:
+    .signup-header → signup.php
+    .reset-header → reset_password.php
+
+GROUP 34
+  .signup-container → style.css
+  .reset-container → style.css
+
+  Declarations:
+    width:100%;
+    max-width:420px;
+    margin:0 auto;
+
+  Usage:
+    .signup-container → signup.php
+    .reset-container → reset_password.php
+
+GROUP 35
+  .alert-error → style.css
+  .error-alert → style.css
+
+  Declarations:
+    background-color:#f8d7da;
+    color:#721c24;
+    border:1px solid #f5c6cb;
+
+  Usage:
+    .alert-error → Manager\manager_asset_delete.php
+    .alert-error → Manager\manager_asset_edit.php
+    .alert-error → Manager\review_asset_submission.php
+    .alert-error → reset_password.php
+    .alert-error → signup.php
+    .error-alert → login.php
+
+GROUP 36
+  .field-box → style.css
+  .email-field-row → style.css
+
+  Declarations:
+    flex:1;
+    margin-bottom:0;
+
+  Usage:
+    .field-box → Admin\reports_queue.php
+    .field-box → Admin\user_management.php
+    .field-box → reset_password.php
+    .field-box → signup.php
+    .email-field-row → reset_password.php
+    .email-field-row → signup.php
+
+GROUP 37
+  .field-box → Admin\admin_style.css
+  .admin-filter-form → Admin\admin_style.css
+
+  Declarations:
+    display:block;
+    font-size:0.85rem;
+    font-weight:600;
+    color:#475569;
+    margin-bottom:5px;
+
+  Usage:
+    .field-box → Admin\reports_queue.php
+    .field-box → Admin\user_management.php
+    .field-box → reset_password.php
+    .field-box → signup.php
+    .admin-filter-form → Admin\reports_queue.php
+    .admin-filter-form → Admin\user_management.php
+
+GROUP 38
+  .email-field-row → style.css
+  .activity-name → style.css
+  .activity-cell → Admin\admin_style.css
+
+  Declarations:
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+  Usage:
+    .email-field-row → reset_password.php
+    .email-field-row → signup.php
+    .activity-name → Manager\manager_dashboard.php
+    .activity-cell → Admin\admin_dashboard.php
+
+GROUP 39
+  .signup-submit-btn → style.css
+  .reset-submit-btn → style.css
+  .login-submit-btn → style.css
+
+  Declarations:
+    width:100%;
+    padding:12px;
+    background-color:#e0e0e0;
+    border:1px solid #999999;
+    border-radius:6px;
+    font-size:0.95rem;
+    font-weight:bold;
+    cursor:pointer;
+    transition:background-color 0.2s;
+
+  Usage:
+    .signup-submit-btn → signup.php
+    .reset-submit-btn → reset_password.php
+    .login-submit-btn → login.php
+
+GROUP 40
+  .signup-submit-btn → style.css
+  .reset-submit-btn → style.css
+  .login-submit-btn → style.css
+
+  Declarations:
+    background-color:#d0d0d0;
+
+  Usage:
+    .signup-submit-btn → signup.php
+    .reset-submit-btn → reset_password.php
+    .login-submit-btn → login.php
+
+GROUP 41
+  .login-prompt → style.css
+  .register-prompt → style.css
+
+  Declarations:
+    text-align:center;
+    margin-top:20px;
+    font-size:0.85rem;
+
+  Usage:
+    .login-prompt → reset_password.php
+    .login-prompt → signup.php
+    .register-prompt → login.php
+
+GROUP 42
+  .login-prompt → style.css
+  .register-prompt → style.css
+
+  Declarations:
+    color:#000000;
+    font-weight:bold;
+    text-decoration:none;
+
+  Usage:
+    .login-prompt → reset_password.php
+    .login-prompt → signup.php
+    .register-prompt → login.php
+
+GROUP 43
+  .input-group → style.css
+  .admin-filter-card → Admin\admin_style.css
+
+  Declarations:
+    margin-bottom:20px;
+
+  Usage:
+    .input-group → login.php
+    .admin-filter-card → Admin\reports_queue.php
+    .admin-filter-card → Admin\user_management.php
+
+GROUP 44
+  .input-wrapper → Admin\admin_style.css
+  .admin-filter-form → Admin\admin_style.css
+
+  Declarations:
+    position:relative;
+    width:100%;
+
+  Usage:
+    .input-wrapper → Admin\analytics.php
+    .input-wrapper → Admin\reports_queue.php
+    .input-wrapper → Admin\user_management.php
+    .input-wrapper → login.php
+    .admin-filter-form → Admin\reports_queue.php
+    .admin-filter-form → Admin\user_management.php
+
+GROUP 45
+  .input-wrapper → Admin\admin_style.css
+  .admin-filter-form → Admin\admin_style.css
+  .search-icon → Admin\admin_style.css
+
+  Declarations:
+    position:absolute;
+    left:10px;
+    top:10px;
+    width:18px;
+    height:18px;
+    object-fit:contain;
+
+  Usage:
+    .input-wrapper → Admin\analytics.php
+    .input-wrapper → Admin\reports_queue.php
+    .input-wrapper → Admin\user_management.php
+    .input-wrapper → login.php
+    .admin-filter-form → Admin\reports_queue.php
+    .admin-filter-form → Admin\user_management.php
+    .search-icon → Admin\reports_queue.php
+    .search-icon → Admin\user_management.php
+
+GROUP 46
+  .notification-item → style.css
+  .asset-detail-label → Manager\manager_style.css
+  .description-row → Manager\manager_style.css
+  .asset-form-textarea → Manager\manager_style.css
+
+  Declarations:
+    padding-top:0;
+
+  Usage:
+    .notification-item → Auditor\auditor_dashboard.php
+    .notification-item → Manager\manager_dashboard.php
+    .asset-detail-label → Manager\manager_asset_delete.php
+    .asset-detail-label → Manager\manager_asset_view.php
+    .description-row → Manager\manager_asset_view.php
+    .asset-form-textarea → Manager\manager_asset_edit.php
+    .asset-form-textarea → Manager\review_asset_submission.php
+
+GROUP 47
+  .notification-item → style.css
+  .notification-unread → style.css
+
+  Declarations:
+    background-color:#f8fafc;
+
+  Usage:
+    .notification-item → Auditor\auditor_dashboard.php
+    .notification-item → Manager\manager_dashboard.php
+
+GROUP 48
+  .breadcrumb → style.css
+  .breadcrumb-current → style.css
+
+  Declarations:
+    color:#334155;
+    font-weight:600;
+
+  Usage:
+    .breadcrumb → Auditor\auditor_notification.php
+    .breadcrumb → Auditor\auditor_recent_activities.php
+    .breadcrumb → Manager\manager_asset_delete.php
+    .breadcrumb → Manager\manager_asset_edit.php
+    .breadcrumb → Manager\manager_asset_view.php
+    .breadcrumb → Manager\review_asset_submission.php
+    .breadcrumb → profile_setting.php
+    .breadcrumb-current → Auditor\auditor_recent_activities.php
+    .breadcrumb-current → Manager\manager_asset_delete.php
+    .breadcrumb-current → Manager\manager_asset_edit.php
+    .breadcrumb-current → Manager\manager_asset_view.php
+    .breadcrumb-current → Manager\review_asset_submission.php
+
+GROUP 49
+  .management-heading-action → style.css
+  .management-create-btn → style.css
+  .management-filter-buttons → Auditor\auditor_style.css
+  .auditor-reward-page → Auditor\auditor_style.css
+
+  Declarations:
+    flex-shrink:0;
+
+  Usage:
+    .management-heading-action → Auditor\auditor_achievement_badges_management.php
+    .management-heading-action → Auditor\auditor_missions_management.php
+    .management-heading-action → Auditor\auditor_rewards_management.php
+    .management-heading-action → Auditor\auditor_user_tiers_management.php
+    .management-create-btn → Auditor\auditor_achievement_badges_management.php
+    .management-create-btn → Auditor\auditor_missions_management.php
+    .management-create-btn → Auditor\auditor_rewards_management.php
+    .management-create-btn → Manager\manager_asset_delete.php
+    .management-create-btn → Manager\manager_asset_edit.php
+    .management-create-btn → Manager\manager_asset_view.php
+    .management-filter-buttons → Auditor\auditor_achievement_badges_management.php
+    .management-filter-buttons → Auditor\auditor_missions_management.php
+    .management-filter-buttons → Auditor\auditor_rewards_management.php
+    .management-filter-buttons → Auditor\auditor_user_tiers_management.php
+    .management-filter-buttons → Auditor\auditor_verification_management.php
+    .management-filter-buttons → Manager\manager_assets.php
+    .auditor-reward-page → Auditor\auditor_rewards_management.php
+
+GROUP 50
+  .management-filter → Auditor\auditor_style.css
+  .auditor-reward-page → Auditor\auditor_style.css
+
+  Declarations:
+    gap:12px;
+
+  Usage:
+    .management-filter → Auditor\auditor_achievement_badges_management.php
+    .management-filter → Auditor\auditor_missions_management.php
+    .management-filter → Auditor\auditor_rewards_management.php
+    .management-filter → Auditor\auditor_user_tiers_management.php
+    .management-filter → Auditor\auditor_verification_management.php
+    .management-filter → Manager\manager_assets.php
+    .auditor-reward-page → Auditor\auditor_rewards_management.php
+
+GROUP 51
+  .management-filter-group → style.css
+  .search → style.css
+
+  Declarations:
+    flex:1.7;
+
+  Usage:
+    .management-filter-group → Auditor\auditor_achievement_badges_management.php
+    .management-filter-group → Auditor\auditor_missions_management.php
+    .management-filter-group → Auditor\auditor_rewards_management.php
+    .management-filter-group → Auditor\auditor_user_tiers_management.php
+    .management-filter-group → Auditor\auditor_verification_management.php
+    .management-filter-group → Manager\manager_assets.php
+    .search → Auditor\auditor_achievement_badges_management.php
+    .search → Auditor\auditor_missions_management.php
+    .search → Auditor\auditor_rewards_management.php
+    .search → Auditor\auditor_user_tiers_management.php
+    .search → Auditor\auditor_verification_management.php
+    .search → Manager\manager_assets.php
+
+GROUP 52
+  .management-filter-group → style.css
+  .management-filter-group → style.css
+  .management-search-input → style.css
+  .asset-form-row → Manager\manager_style.css
+  .asset-form-row → Manager\manager_style.css
+  .asset-form-row → Manager\manager_style.css
+
+  Declarations:
+    border-color:var(--primary-color);
+
+  Usage:
+    .management-filter-group → Auditor\auditor_achievement_badges_management.php
+    .management-filter-group → Auditor\auditor_missions_management.php
+    .management-filter-group → Auditor\auditor_rewards_management.php
+    .management-filter-group → Auditor\auditor_user_tiers_management.php
+    .management-filter-group → Auditor\auditor_verification_management.php
+    .management-filter-group → Manager\manager_assets.php
+    .management-filter-group → Auditor\auditor_achievement_badges_management.php
+    .management-filter-group → Auditor\auditor_missions_management.php
+    .management-filter-group → Auditor\auditor_rewards_management.php
+    .management-filter-group → Auditor\auditor_user_tiers_management.php
+    .management-filter-group → Auditor\auditor_verification_management.php
+    .management-filter-group → Manager\manager_assets.php
+    .management-search-input → Auditor\auditor_achievement_badges_management.php
+    .management-search-input → Auditor\auditor_missions_management.php
+    .management-search-input → Auditor\auditor_rewards_management.php
+    .management-search-input → Auditor\auditor_user_tiers_management.php
+    .management-search-input → Manager\manager_assets.php
+    .asset-form-row → Manager\manager_asset_edit.php
+    .asset-form-row → Manager\review_asset_submission.php
+    .asset-form-row → Manager\manager_asset_edit.php
+    .asset-form-row → Manager\review_asset_submission.php
+    .asset-form-row → Manager\manager_asset_edit.php
+    .asset-form-row → Manager\review_asset_submission.php
+
+GROUP 53
+  .management-filter-group → Auditor\auditor_style.css
+  .auditor-reward-page → Auditor\auditor_style.css
+
+  Declarations:
+    min-width:120px;
+
+  Usage:
+    .management-filter-group → Auditor\auditor_achievement_badges_management.php
+    .management-filter-group → Auditor\auditor_missions_management.php
+    .management-filter-group → Auditor\auditor_rewards_management.php
+    .management-filter-group → Auditor\auditor_user_tiers_management.php
+    .management-filter-group → Auditor\auditor_verification_management.php
+    .management-filter-group → Manager\manager_assets.php
+    .auditor-reward-page → Auditor\auditor_rewards_management.php
+
+GROUP 54
+  .management-filter-group → Auditor\auditor_style.css
+  .search → Auditor\auditor_style.css
+  .auditor-reward-page → Auditor\auditor_style.css
+
+  Declarations:
+    flex:1.8;
+    min-width:240px;
+
+  Usage:
+    .management-filter-group → Auditor\auditor_achievement_badges_management.php
+    .management-filter-group → Auditor\auditor_missions_management.php
+    .management-filter-group → Auditor\auditor_rewards_management.php
+    .management-filter-group → Auditor\auditor_user_tiers_management.php
+    .management-filter-group → Auditor\auditor_verification_management.php
+    .management-filter-group → Manager\manager_assets.php
+    .search → Auditor\auditor_achievement_badges_management.php
+    .search → Auditor\auditor_missions_management.php
+    .search → Auditor\auditor_rewards_management.php
+    .search → Auditor\auditor_user_tiers_management.php
+    .search → Auditor\auditor_verification_management.php
+    .search → Manager\manager_assets.php
+    .auditor-reward-page → Auditor\auditor_rewards_management.php
+
+GROUP 55
+  .management-filter-buttons → style.css
+  .asset-form-upload → Manager\manager_style.css
+
+  Declarations:
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+
+  Usage:
+    .management-filter-buttons → Auditor\auditor_achievement_badges_management.php
+    .management-filter-buttons → Auditor\auditor_missions_management.php
+    .management-filter-buttons → Auditor\auditor_rewards_management.php
+    .management-filter-buttons → Auditor\auditor_user_tiers_management.php
+    .management-filter-buttons → Auditor\auditor_verification_management.php
+    .management-filter-buttons → Manager\manager_assets.php
+    .asset-form-upload → Manager\manager_asset_edit.php
+
+GROUP 56
+  .management-filter-btn → style.css
+  .management-reset-btn → style.css
+
+  Declarations:
+    height:38px;
+    min-width:90px;
+    padding:0 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    border:1px solid #d0d5dd;
+    border-radius:6px;
+    background-color:#ffffff;
+    color:#222222;
+    font-family:inherit;
+    font-size:13px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background-color 0.2s ease, border-color 0.2s ease;
+
+  Usage:
+    .management-filter-btn → Auditor\auditor_achievement_badges_management.php
+    .management-filter-btn → Auditor\auditor_missions_management.php
+    .management-filter-btn → Auditor\auditor_rewards_management.php
+    .management-filter-btn → Auditor\auditor_user_tiers_management.php
+    .management-filter-btn → Auditor\auditor_verification_management.php
+    .management-filter-btn → Manager\manager_assets.php
+    .management-reset-btn → Auditor\auditor_achievement_badges_management.php
+    .management-reset-btn → Auditor\auditor_missions_management.php
+    .management-reset-btn → Auditor\auditor_rewards_management.php
+    .management-reset-btn → Auditor\auditor_user_tiers_management.php
+    .management-reset-btn → Auditor\auditor_verification_management.php
+    .management-reset-btn → Manager\manager_assets.php
+
+GROUP 57
+  .management-filter-btn → style.css
+  .management-reset-btn → style.css
+  .btn-clear-form → Admin\admin_style.css
+
+  Declarations:
+    width:16px;
+    height:16px;
+    object-fit:contain;
+
+  Usage:
+    .management-filter-btn → Auditor\auditor_achievement_badges_management.php
+    .management-filter-btn → Auditor\auditor_missions_management.php
+    .management-filter-btn → Auditor\auditor_rewards_management.php
+    .management-filter-btn → Auditor\auditor_user_tiers_management.php
+    .management-filter-btn → Auditor\auditor_verification_management.php
+    .management-filter-btn → Manager\manager_assets.php
+    .management-reset-btn → Auditor\auditor_achievement_badges_management.php
+    .management-reset-btn → Auditor\auditor_missions_management.php
+    .management-reset-btn → Auditor\auditor_rewards_management.php
+    .management-reset-btn → Auditor\auditor_user_tiers_management.php
+    .management-reset-btn → Auditor\auditor_verification_management.php
+    .management-reset-btn → Manager\manager_assets.php
+    .btn-clear-form → Admin\create_dummy_account.php
+
+GROUP 58
+  .management-filter-btn → style.css
+  .management-reset-btn → style.css
+
+  Declarations:
+    background-color:#f2f4f7;
+    border-color:var(--primary-color);
+
+  Usage:
+    .management-filter-btn → Auditor\auditor_achievement_badges_management.php
+    .management-filter-btn → Auditor\auditor_missions_management.php
+    .management-filter-btn → Auditor\auditor_rewards_management.php
+    .management-filter-btn → Auditor\auditor_user_tiers_management.php
+    .management-filter-btn → Auditor\auditor_verification_management.php
+    .management-filter-btn → Manager\manager_assets.php
+    .management-reset-btn → Auditor\auditor_achievement_badges_management.php
+    .management-reset-btn → Auditor\auditor_missions_management.php
+    .management-reset-btn → Auditor\auditor_rewards_management.php
+    .management-reset-btn → Auditor\auditor_user_tiers_management.php
+    .management-reset-btn → Auditor\auditor_verification_management.php
+    .management-reset-btn → Manager\manager_assets.php
+
+GROUP 59
+  .management-action-btn → style.css
+  .delete → style.css
+
+  Declarations:
+    background-color:#ffebee;
+
+  Usage:
+    .management-action-btn → Auditor\auditor_achievement_badges_management.php
+    .management-action-btn → Auditor\auditor_missions_management.php
+    .management-action-btn → Auditor\auditor_rewards_management.php
+    .management-action-btn → Auditor\auditor_verification_management.php
+    .management-action-btn → Manager\manager_assets.php
+    .delete → Auditor\auditor_achievement_badges_management.php
+    .delete → Auditor\auditor_missions_management.php
+    .delete → Auditor\auditor_rewards_management.php
+    .delete → Auditor\auditor_verification_management.php
+    .delete → Manager\manager_asset_delete.php
+    .delete → Manager\manager_asset_view.php
+    .delete → Manager\manager_assets.php
+
+GROUP 60
+  .delete → Manager\manager_style.css
+  .asset-detail-action-btn → Manager\manager_style.css
+
+  Declarations:
+    border-color:#dc2626;
+    background-color:#fef2f2;
+    color:#dc2626;
+
+  Usage:
+    .delete → Auditor\auditor_achievement_badges_management.php
+    .delete → Auditor\auditor_missions_management.php
+    .delete → Auditor\auditor_rewards_management.php
+    .delete → Auditor\auditor_verification_management.php
+    .delete → Manager\manager_asset_delete.php
+    .delete → Manager\manager_asset_view.php
+    .delete → Manager\manager_assets.php
+    .asset-detail-action-btn → Manager\manager_asset_delete.php
+    .asset-detail-action-btn → Manager\manager_asset_view.php
+
+GROUP 61
+  .simulation-banner → style.css
+  .metadata-column → Admin\admin_style.css
+
+  Declarations:
+    font-weight:700;
+
+  Usage:
+    .simulation-banner → simulation_header.php
+    .metadata-column → Admin\admin_report_details.php
+
+GROUP 62
+  .simulation-link → style.css
+  .view-all-link → Admin\admin_style.css
+
+  Declarations:
+    opacity:0.75;
+
+  Usage:
+    .simulation-link → simulation_header.php
+    .view-all-link → Admin\admin_dashboard.php
+    .view-all-link → profile_setting.php
+
+GROUP 63
+  .avatar-x-line-1 → style.css
+  .avatar-x-line-2 → style.css
+
+  Declarations:
+    position:absolute;
+    width:150%;
+    height:1px;
+    background-color:var(--text-primary, #0f172a);
+    top:50%;
+    left:-25%;
+
+  Usage:
+    .avatar-x-line-1 → profile_setting.php
+    .avatar-x-line-2 → profile_setting.php
+
+GROUP 64
+  .profile-info-list → style.css
+  .padded-list → style.css
+
+  Declarations:
+    padding:1.5rem;
+
+  Usage:
+    .profile-info-list → profile_setting.php
+    .padded-list → profile_setting.php
+
+GROUP 65
+  .info-label → style.css
+  .wide-label → style.css
+
+  Declarations:
+    width:200px;
+
+  Usage:
+    .info-label → profile_setting.php
+    .wide-label → profile_setting.php
+
+GROUP 66
+  .neutral-badge → style.css
+  .outline → style.css
+  .outline → style.css
+  .success-badge → style.css
+
+  Declarations:
+    background-color:transparent;
+    border:1px solid var(--border-color, #94a3b8);
+    color:var(--text-secondary, #334155);
+
+  Usage:
+    .neutral-badge → profile_setting.php
+    .outline → profile_setting.php
+    .outline → profile_setting.php
+    .success-badge → profile_setting.php
+
+GROUP 67
+  .full-width → style.css
+  .full-width-card → style.css
+
+  Declarations:
+    width:100%;
+
+  Usage:
+    .full-width → profile_setting.php
+    .full-width-card → profile_setting.php
+
+GROUP 68
+  .admin-page-header → Admin\admin_style.css
+  .header-breadcrumb → Admin\admin_style.css
+
+  Declarations:
+    margin:0;
+    color:#64748b;
+    font-size:0.85rem;
+
+  Usage:
+    .admin-page-header → Admin\admin_edit_user.php
+    .admin-page-header → Admin\admin_report_details.php
+    .admin-page-header → Admin\analytics.php
+    .admin-page-header → Admin\create_dummy_account.php
+    .admin-page-header → Admin\reports_queue.php
+    .admin-page-header → Admin\role_simulation.php
+    .admin-page-header → Admin\user_management.php
+    .header-breadcrumb → Admin\admin_edit_user.php
+    .header-breadcrumb → Admin\admin_report_details.php
+    .header-breadcrumb → Admin\analytics.php
+    .header-breadcrumb → Admin\create_dummy_account.php
+    .header-breadcrumb → Admin\reports_queue.php
+    .header-breadcrumb → Admin\role_simulation.php
+    .header-breadcrumb → Admin\user_management.php
+
+GROUP 69
+  .admin-page-header → Admin\admin_style.css
+  .header-title → Admin\admin_style.css
+
+  Declarations:
+    margin:4px 0 0 0;
+    font-size:1.75rem;
+    color:#0f172a;
+
+  Usage:
+    .admin-page-header → Admin\admin_edit_user.php
+    .admin-page-header → Admin\admin_report_details.php
+    .admin-page-header → Admin\analytics.php
+    .admin-page-header → Admin\create_dummy_account.php
+    .admin-page-header → Admin\reports_queue.php
+    .admin-page-header → Admin\role_simulation.php
+    .admin-page-header → Admin\user_management.php
+    .header-title → Admin\admin_edit_user.php
+    .header-title → Admin\admin_report_details.php
+    .header-title → Admin\analytics.php
+    .header-title → Admin\create_dummy_account.php
+    .header-title → Admin\reports_queue.php
+    .header-title → Admin\role_simulation.php
+    .header-title → Admin\user_management.php
+
+GROUP 70
+  .admin-page-header → Admin\admin_style.css
+  .header-subtitle → Admin\admin_style.css
+
+  Declarations:
+    margin:4px 0 0 0;
+    color:#475569;
+    font-size:0.9rem;
+
+  Usage:
+    .admin-page-header → Admin\admin_edit_user.php
+    .admin-page-header → Admin\admin_report_details.php
+    .admin-page-header → Admin\analytics.php
+    .admin-page-header → Admin\create_dummy_account.php
+    .admin-page-header → Admin\reports_queue.php
+    .admin-page-header → Admin\role_simulation.php
+    .admin-page-header → Admin\user_management.php
+    .header-subtitle → Admin\user_management.php
+
+GROUP 71
+  .btn-new-account → Admin\admin_style.css
+  .admin-user-table → Admin\admin_style.css
+  .action-icon → Admin\admin_style.css
+  .cell-icon → Admin\admin_style.css
+
+  Declarations:
+    width:18px;
+    height:18px;
+    object-fit:contain;
+
+  Usage:
+    .btn-new-account → Admin\user_management.php
+    .admin-user-table → Admin\admin_dashboard.php
+    .admin-user-table → Admin\reports_queue.php
+    .admin-user-table → Admin\user_management.php
+    .action-icon → Admin\reports_queue.php
+    .action-icon → Admin\user_management.php
+    .cell-icon → Admin\admin_dashboard.php
+
+GROUP 72
+  .admin-filter-form → Admin\admin_style.css
+  .filter-input → Admin\admin_style.css
+
+  Declarations:
+    padding-left:36px;
+    width:100%;
+    height:38px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    box-sizing:border-box;
+    font-size:0.9rem;
+
+  Usage:
+    .admin-filter-form → Admin\reports_queue.php
+    .admin-filter-form → Admin\user_management.php
+    .filter-input → Admin\reports_queue.php
+    .filter-input → Admin\user_management.php
+
+GROUP 73
+  .admin-filter-form → Admin\admin_style.css
+  .filter-select → Admin\admin_style.css
+
+  Declarations:
+    width:100%;
+    height:38px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    padding:0 10px;
+    background:#ffffff;
+    font-size:0.9rem;
+
+  Usage:
+    .admin-filter-form → Admin\reports_queue.php
+    .admin-filter-form → Admin\user_management.php
+    .filter-select → Admin\analytics.php
+    .filter-select → Admin\reports_queue.php
+    .filter-select → Admin\user_management.php
+
+GROUP 74
+  .btn-filter-submit → Admin\admin_style.css
+  .btn-filter-reset → Admin\admin_style.css
+
+  Declarations:
+    background:#ffffff;
+    border:1px solid #cbd5e1;
+    color:#0f172a;
+    height:38px;
+    padding:0 14px;
+    border-radius:6px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-weight:600;
+    font-size:0.85rem;
+    text-decoration:none;
+    box-sizing:border-box;
+    cursor:pointer;
+    transition:background-color 0.2s ease;
+
+  Usage:
+    .btn-filter-submit → Admin\reports_queue.php
+    .btn-filter-submit → Admin\user_management.php
+    .btn-filter-reset → Admin\reports_queue.php
+    .btn-filter-reset → Admin\user_management.php
+
+GROUP 75
+  .btn-filter-submit → Admin\admin_style.css
+  .btn-filter-reset → Admin\admin_style.css
+  .btn-role-promote → Admin\admin_style.css
+  .btn-save-changes → Admin\admin_style.css
+  .btn-back → Admin\admin_style.css
+  .btn-clear-form → Admin\admin_style.css
+  .btn-report-action → Admin\admin_style.css
+  .btn-launch-sim → Admin\admin_style.css
+
+  Declarations:
+    background:#f1f5f9;
+
+  Usage:
+    .btn-filter-submit → Admin\reports_queue.php
+    .btn-filter-submit → Admin\user_management.php
+    .btn-filter-reset → Admin\reports_queue.php
+    .btn-filter-reset → Admin\user_management.php
+    .btn-role-promote → Admin\admin_edit_user.php
+    .btn-save-changes → Admin\admin_edit_user.php
+    .btn-save-changes → Admin\create_dummy_account.php
+    .btn-back → Admin\admin_edit_user.php
+    .btn-back → Admin\admin_report_details.php
+    .btn-back → Admin\create_dummy_account.php
+    .btn-clear-form → Admin\create_dummy_account.php
+    .btn-report-action → Admin\admin_report_details.php
+    .btn-launch-sim → Admin\role_simulation.php
+
+GROUP 76
+  .btn-filter-submit → Admin\admin_style.css
+  .btn-filter-reset → Admin\admin_style.css
+
+  Declarations:
+    width:14px;
+    height:14px;
+    object-fit:contain;
+
+  Usage:
+    .btn-filter-submit → Admin\reports_queue.php
+    .btn-filter-submit → Admin\user_management.php
+    .btn-filter-reset → Admin\reports_queue.php
+    .btn-filter-reset → Admin\user_management.php
+
+GROUP 77
+  .table-header-bar → Admin\admin_style.css
+  .total-count → Admin\admin_style.css
+
+  Declarations:
+    font-weight:700;
+    color:#0f172a;
+
+  Usage:
+    .table-header-bar → Admin\reports_queue.php
+    .table-header-bar → Admin\user_management.php
+    .total-count → Admin\reports_queue.php
+    .total-count → Admin\user_management.php
+
+GROUP 78
+  .admin-user-table → Admin\admin_style.css
+  .col-userid → Admin\admin_style.css
+
+  Declarations:
+    font-weight:bold;
+    color:#0f172a;
+
+  Usage:
+    .admin-user-table → Admin\admin_dashboard.php
+    .admin-user-table → Admin\reports_queue.php
+    .admin-user-table → Admin\user_management.php
+    .col-userid → Admin\admin_dashboard.php
+    .col-userid → Admin\reports_queue.php
+    .col-userid → Admin\user_management.php
+
+GROUP 79
+  .admin-user-table → Admin\admin_style.css
+  .action-icon → Admin\admin_style.css
+
+  Declarations:
+    color:#64748b;
+    display:inline-block;
+    transition:transform 0.2s ease, opacity 0.2s ease;
+
+  Usage:
+    .admin-user-table → Admin\admin_dashboard.php
+    .admin-user-table → Admin\reports_queue.php
+    .admin-user-table → Admin\user_management.php
+    .action-icon → Admin\reports_queue.php
+    .action-icon → Admin\user_management.php
+
+GROUP 80
+  .admin-user-table → Admin\admin_style.css
+  .action-icon → Admin\admin_style.css
+
+  Declarations:
+    transform:scale(1.1);
+    opacity:0.8;
+
+  Usage:
+    .admin-user-table → Admin\admin_dashboard.php
+    .admin-user-table → Admin\reports_queue.php
+    .admin-user-table → Admin\user_management.php
+    .action-icon → Admin\reports_queue.php
+    .action-icon → Admin\user_management.php
+
+GROUP 81
+  .admin-user-table → Admin\admin_style.css
+  .action-icon → Admin\admin_style.css
+  .edit-icon → Admin\admin_style.css
+
+  Declarations:
+    margin-right:10px;
+
+  Usage:
+    .admin-user-table → Admin\admin_dashboard.php
+    .admin-user-table → Admin\reports_queue.php
+    .admin-user-table → Admin\user_management.php
+    .action-icon → Admin\reports_queue.php
+    .action-icon → Admin\user_management.php
+    .edit-icon → Admin\reports_queue.php
+    .edit-icon → Admin\user_management.php
+
+GROUP 82
+  .admin-pagination-footer → Admin\admin_style.css
+  .pagination-info → Admin\admin_style.css
+
+  Declarations:
+    color:#64748b;
+
+  Usage:
+    .admin-pagination-footer → Admin\admin_dashboard.php
+    .admin-pagination-footer → Admin\reports_queue.php
+    .admin-pagination-footer → Admin\user_management.php
+    .pagination-info → Admin\reports_queue.php
+    .pagination-info → Admin\user_management.php
+
+GROUP 83
+  .admin-pagination-footer → Admin\admin_style.css
+  .pagination-controls → Admin\admin_style.css
+
+  Declarations:
+    display:flex;
+    gap:4px;
+
+  Usage:
+    .admin-pagination-footer → Admin\admin_dashboard.php
+    .admin-pagination-footer → Admin\reports_queue.php
+    .admin-pagination-footer → Admin\user_management.php
+    .pagination-controls → Admin\admin_dashboard.php
+    .pagination-controls → Admin\reports_queue.php
+    .pagination-controls → Admin\user_management.php
+
+GROUP 84
+  .admin-pagination-footer → Admin\admin_style.css
+  .pagination-btn → Admin\admin_style.css
+
+  Declarations:
+    padding:6px 12px;
+    border:1px solid #cbd5e1;
+    background:#ffffff;
+    color:#0f172a;
+    text-decoration:none;
+    border-radius:4px;
+    font-weight:normal;
+
+  Usage:
+    .admin-pagination-footer → Admin\admin_dashboard.php
+    .admin-pagination-footer → Admin\reports_queue.php
+    .admin-pagination-footer → Admin\user_management.php
+    .pagination-btn → Admin\admin_dashboard.php
+    .pagination-btn → Admin\reports_queue.php
+    .pagination-btn → Admin\user_management.php
+    .pagination-btn → Auditor\auditor_rewards_management.php
+
+GROUP 85
+  .admin-pagination-footer → Admin\admin_style.css
+  .pagination-ellipsis → Admin\admin_style.css
+
+  Declarations:
+    padding:6px 8px;
+    color:#64748b;
+
+  Usage:
+    .admin-pagination-footer → Admin\admin_dashboard.php
+    .admin-pagination-footer → Admin\reports_queue.php
+    .admin-pagination-footer → Admin\user_management.php
+    .pagination-ellipsis → Admin\reports_queue.php
+    .pagination-ellipsis → Admin\user_management.php
+
+GROUP 86
+  .edit-user-card → Admin\admin_style.css
+  .edit-field-action-box → Admin\admin_style.css
+  .create-account-wrapper → Admin\admin_style.css
+
+  Declarations:
+    flex:1;
+
+  Usage:
+    .edit-user-card → Admin\admin_edit_user.php
+    .edit-user-card → Admin\create_dummy_account.php
+    .edit-field-action-box → Admin\admin_edit_user.php
+    .create-account-wrapper → Admin\create_dummy_account.php
+
+GROUP 87
+  .edit-field-input-box → Admin\admin_style.css
+  .uneditable → Admin\admin_style.css
+
+  Declarations:
+    background:#e2e8f0;
+
+  Usage:
+    .edit-field-input-box → Admin\admin_edit_user.php
+    .edit-field-input-box → Admin\create_dummy_account.php
+    .uneditable → Admin\admin_edit_user.php
+    .uneditable → Admin\create_dummy_account.php
+
+GROUP 88
+  .edit-field-input-box → Admin\admin_style.css
+  .editable → Admin\admin_style.css
+  .editable → Admin\admin_style.css
+  .ecopoint-input-container → Admin\admin_style.css
+
+  Declarations:
+    background:#ffffff;
+
+  Usage:
+    .edit-field-input-box → Admin\admin_edit_user.php
+    .edit-field-input-box → Admin\create_dummy_account.php
+    .editable → Admin\admin_edit_user.php
+    .editable → Admin\create_dummy_account.php
+    .editable → Admin\admin_edit_user.php
+    .editable → Admin\create_dummy_account.php
+    .ecopoint-input-container → Admin\admin_edit_user.php
+    .ecopoint-input-container → Admin\create_dummy_account.php
+
+GROUP 89
+  .edit-field-input-box → Admin\admin_style.css
+  .edit-select → Admin\admin_style.css
+
+  Declarations:
+    width:100%;
+    height:42px;
+    padding:0 14px;
+    border:none;
+    background:transparent;
+    font-size:0.95rem;
+    color:#0f172a;
+    outline:none;
+    box-sizing:border-box;
+    cursor:pointer;
+
+  Usage:
+    .edit-field-input-box → Admin\admin_edit_user.php
+    .edit-field-input-box → Admin\create_dummy_account.php
+    .edit-select → Admin\create_dummy_account.php
+
+GROUP 90
+  .btn-status-toggle → Admin\admin_style.css
+  .btn-status-toggle → Admin\admin_style.css
+  .status-active → Admin\admin_style.css
+  .status-suspended → Admin\admin_style.css
+
+  Declarations:
+    background:#ffffff;
+    border:1px solid #cbd5e1;
+    color:#64748b;
+
+  Usage:
+    .btn-status-toggle → Admin\admin_edit_user.php
+    .btn-status-toggle → Admin\create_dummy_account.php
+    .btn-status-toggle → Admin\admin_edit_user.php
+    .btn-status-toggle → Admin\create_dummy_account.php
+    .status-active → Admin\admin_edit_user.php
+    .status-active → Admin\create_dummy_account.php
+    .status-suspended → Admin\admin_edit_user.php
+    .status-suspended → Admin\create_dummy_account.php
+
+GROUP 91
+  .note-box → Admin\admin_style.css
+  .note-title → Admin\admin_style.css
+
+  Declarations:
+    display:block;
+    font-size:1.05rem;
+    font-weight:bold;
+    color:#0f172a;
+    margin-bottom:8px;
+
+  Usage:
+    .note-box → Admin\create_dummy_account.php
+    .note-title → Admin\create_dummy_account.php
+
+GROUP 92
+  .note-box → Admin\admin_style.css
+  .note-text → Admin\admin_style.css
+
+  Declarations:
+    margin:0;
+    font-size:0.95rem;
+    color:#0f172a;
+    line-height:1.4;
+
+  Usage:
+    .note-box → Admin\create_dummy_account.php
+    .note-text → Admin\create_dummy_account.php
+
+GROUP 93
+  .field-box-select → Admin\admin_style.css
+  .field-box-date → Admin\admin_style.css
+
+  Declarations:
+    flex:1;
+    min-width:140px;
+
+  Usage:
+    .field-box-select → Admin\reports_queue.php
+    .field-box-date → Admin\reports_queue.php
+
+GROUP 94
+  .status-badge → Admin\admin_style.css
+  .pending → Admin\admin_style.css
+
+  Declarations:
+    background-color:#fef3c7;
+    color:#92400e;
+    border:1px solid #fde68a;
+
+  Usage:
+    .status-badge → Admin\reports_queue.php
+    .status-badge → Admin\user_management.php
+
+GROUP 95
+  .status-badge → Admin\admin_style.css
+  .resolved → Admin\admin_style.css
+
+  Declarations:
+    background-color:#dcfce7;
+    color:#166534;
+    border:1px solid #86efac;
+
+  Usage:
+    .status-badge → Admin\reports_queue.php
+    .status-badge → Admin\user_management.php
+
+GROUP 96
+  .status-badge → Admin\admin_style.css
+  .disputed → Admin\admin_style.css
+
+  Declarations:
+    background-color:#fee2e2;
+    color:#991b1b;
+    border:1px solid #fca5a5;
+
+  Usage:
+    .status-badge → Admin\reports_queue.php
+    .status-badge → Admin\user_management.php
+
+GROUP 97
+  .status-badge → Admin\admin_style.css
+  .under-investigation → Admin\admin_style.css
+
+  Declarations:
+    background-color:#e0f2fe;
+    color:#0369a1;
+    border:1px solid #bae6fd;
+
+  Usage:
+    .status-badge → Admin\reports_queue.php
+    .status-badge → Admin\user_management.php
+
+GROUP 98
+  .evidence-statement-box → Admin\admin_style.css
+  .asset-form-note → Manager\manager_style.css
+
+  Declarations:
+    margin:0;
+
+  Usage:
+    .evidence-statement-box → Admin\admin_report_details.php
+    .asset-form-note → Manager\manager_asset_delete.php
+    .asset-form-note → Manager\manager_asset_edit.php
+    .asset-form-note → Manager\review_asset_submission.php
+
+GROUP 99
+  .kpi-section → Admin\admin_style.css
+  .admin-welcome-banner → Admin\admin_style.css
+
+  Declarations:
+    margin-bottom:24px;
+
+  Usage:
+    .kpi-section → Admin\analytics.php
+    .admin-welcome-banner → Admin\admin_dashboard.php
+
+GROUP 100
+  .person-name → Admin\admin_style.css
+  .badge-table → Auditor\auditor_style.css
+
+  Declarations:
+    font-weight:600;
+
+  Usage:
+    .person-name → Admin\analytics.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+
+GROUP 101
+  .asset-detail-card → Manager\manager_style.css
+  .asset-form-card → Manager\manager_style.css
+
+  Declarations:
+    padding:28px;
+
+  Usage:
+    .asset-detail-card → Manager\manager_asset_delete.php
+    .asset-detail-card → Manager\manager_asset_view.php
+    .asset-form-card → Manager\manager_asset_edit.php
+    .asset-form-card → Manager\review_asset_submission.php
+
+GROUP 102
+  .asset-detail-layout → Manager\manager_style.css
+  .asset-form-layout → Manager\manager_style.css
+
+  Declarations:
+    display:grid;
+    grid-template-columns:minmax(0, 1.7fr) minmax(280px, 0.8fr);
+    gap:40px;
+    align-items:start;
+
+  Usage:
+    .asset-detail-layout → Manager\manager_asset_view.php
+    .asset-form-layout → Manager\manager_asset_edit.php
+    .asset-form-layout → Manager\review_asset_submission.php
+
+GROUP 103
+  .asset-detail-information → Manager\manager_style.css
+  .asset-form-fields → Manager\manager_style.css
+
+  Declarations:
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+
+  Usage:
+    .asset-detail-information → Manager\manager_asset_delete.php
+    .asset-detail-information → Manager\manager_asset_view.php
+    .asset-form-fields → Manager\manager_asset_edit.php
+    .asset-form-fields → Manager\review_asset_submission.php
+
+GROUP 104
+  .asset-detail-row → Manager\manager_style.css
+  .asset-form-row → Manager\manager_style.css
+
+  Declarations:
+    display:grid;
+    grid-template-columns:180px minmax(0, 1fr);
+    gap:18px;
+    align-items:center;
+
+  Usage:
+    .asset-detail-row → Manager\manager_asset_delete.php
+    .asset-detail-row → Manager\manager_asset_view.php
+    .asset-form-row → Manager\manager_asset_edit.php
+    .asset-form-row → Manager\review_asset_submission.php
+
+GROUP 105
+  .asset-detail-row → Manager\manager_style.css
+  .asset-form-row → Manager\manager_style.css
+
+  Declarations:
+    grid-template-columns:1fr;
+    gap:6px;
+
+  Usage:
+    .asset-detail-row → Manager\manager_asset_delete.php
+    .asset-detail-row → Manager\manager_asset_view.php
+    .asset-form-row → Manager\manager_asset_edit.php
+    .asset-form-row → Manager\review_asset_submission.php
+
+GROUP 106
+  .asset-form-row → Manager\manager_style.css
+  .asset-detail-label → Manager\manager_style.css
+  .asset-form-upload → Manager\manager_style.css
+
+  Declarations:
+    color:#333333;
+    font-size:14px;
+    font-weight:600;
+
+  Usage:
+    .asset-form-row → Manager\manager_asset_edit.php
+    .asset-form-row → Manager\review_asset_submission.php
+    .asset-detail-label → Manager\manager_asset_delete.php
+    .asset-detail-label → Manager\manager_asset_view.php
+    .asset-form-upload → Manager\manager_asset_edit.php
+
+GROUP 107
+  .asset-detail-label → Manager\manager_style.css
+  .description-row → Manager\manager_style.css
+  .asset-form-textarea → Manager\manager_style.css
+
+  Declarations:
+    padding-top:11px;
+
+  Usage:
+    .asset-detail-label → Manager\manager_asset_delete.php
+    .asset-detail-label → Manager\manager_asset_view.php
+    .description-row → Manager\manager_asset_view.php
+    .asset-form-textarea → Manager\manager_asset_edit.php
+    .asset-form-textarea → Manager\review_asset_submission.php
+
+GROUP 108
+  .asset-detail-label → Manager\manager_style.css
+  .description-row → Manager\manager_style.css
+
+  Declarations:
+    padding-top:6px !important;
+
+  Usage:
+    .asset-detail-label → Manager\manager_asset_delete.php
+    .asset-detail-label → Manager\manager_asset_view.php
+    .description-row → Manager\manager_asset_view.php
+
+GROUP 109
+  .asset-detail-value → Manager\manager_style.css
+  .description-row → Manager\manager_style.css
+
+  Declarations:
+    min-height:85px;
+    align-items:flex-start;
+
+  Usage:
+    .asset-detail-value → Manager\manager_asset_delete.php
+    .asset-detail-value → Manager\manager_asset_view.php
+    .description-row → Manager\manager_asset_view.php
+
+GROUP 110
+  .asset-detail-value → Manager\manager_style.css
+  .description-row → Manager\manager_style.css
+
+  Declarations:
+    min-height:50px !important;
+
+  Usage:
+    .asset-detail-value → Manager\manager_asset_delete.php
+    .asset-detail-value → Manager\manager_asset_view.php
+    .description-row → Manager\manager_asset_view.php
+
+GROUP 111
+  .description-row → Manager\manager_style.css
+  .asset-form-textarea → Manager\manager_style.css
+
+  Declarations:
+    align-items:start;
+
+  Usage:
+    .description-row → Manager\manager_asset_view.php
+    .asset-form-textarea → Manager\manager_asset_edit.php
+    .asset-form-textarea → Manager\review_asset_submission.php
+
+GROUP 112
+  .asset-detail-side → Manager\manager_style.css
+  .asset-form-side → Manager\manager_style.css
+
+  Declarations:
+    display:flex;
+    flex-direction:column;
+    gap:24px;
+
+  Usage:
+    .asset-detail-side → Manager\manager_asset_view.php
+    .asset-form-side → Manager\manager_asset_edit.php
+    .asset-form-side → Manager\review_asset_submission.php
+
+GROUP 113
+  .asset-detail-side → Manager\manager_style.css
+  .asset-form-side → Manager\manager_style.css
+
+  Declarations:
+    max-width:500px;
+
+  Usage:
+    .asset-detail-side → Manager\manager_asset_view.php
+    .asset-form-side → Manager\manager_asset_edit.php
+    .asset-form-side → Manager\review_asset_submission.php
+
+GROUP 114
+  .asset-image-section → Manager\manager_style.css
+  .asset-form-image-section → Manager\manager_style.css
+
+  Declarations:
+    margin-bottom:12px;
+    color:#222222;
+    font-size:18px;
+
+  Usage:
+    .asset-image-section → Manager\manager_asset_view.php
+    .asset-form-image-section → Manager\manager_asset_edit.php
+    .asset-form-image-section → Manager\review_asset_submission.php
+
+GROUP 115
+  .asset-form-image-section → Manager\manager_style.css
+  .asset-image-name → Manager\manager_style.css
+
+  Declarations:
+    margin-top:8px;
+    color:#64748b;
+    font-size:12px;
+    text-align:center;
+
+  Usage:
+    .asset-form-image-section → Manager\manager_asset_edit.php
+    .asset-form-image-section → Manager\review_asset_submission.php
+    .asset-image-name → Manager\manager_asset_view.php
+
+GROUP 116
+  .asset-image-preview → Manager\manager_style.css
+  .asset-form-image-preview → Manager\manager_style.css
+
+  Declarations:
+    width:100%;
+    max-width:360px;
+    height:230px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    border:1px solid #d6d6d6;
+    border-radius:8px;
+    background-color:#f8fafc;
+
+  Usage:
+    .asset-image-preview → Manager\manager_asset_view.php
+    .asset-form-image-preview → Manager\manager_asset_edit.php
+    .asset-form-image-preview → Manager\review_asset_submission.php
+
+GROUP 117
+  .asset-image-preview → Manager\manager_style.css
+  .asset-form-image-preview → Manager\manager_style.css
+
+  Declarations:
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:contain;
+
+  Usage:
+    .asset-image-preview → Manager\manager_asset_view.php
+    .asset-form-image-preview → Manager\manager_asset_edit.php
+    .asset-form-image-preview → Manager\review_asset_submission.php
+
+GROUP 118
+  .asset-detail-actions → Manager\manager_style.css
+  .asset-form-actions → Manager\manager_style.css
+
+  Declarations:
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+
+  Usage:
+    .asset-detail-actions → Manager\manager_asset_delete.php
+    .asset-detail-actions → Manager\manager_asset_view.php
+    .asset-form-actions → Manager\manager_asset_edit.php
+    .asset-form-actions → Manager\review_asset_submission.php
+
+GROUP 119
+  .asset-detail-action-btn → Manager\manager_style.css
+  .asset-detail-back-btn → Manager\manager_style.css
+  .asset-form-submit → Manager\manager_style.css
+  .asset-form-reset → Manager\manager_style.css
+  .asset-form-back → Manager\manager_style.css
+
+  Declarations:
+    width:100%;
+    min-height:42px;
+    padding:9px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    background-color:#ffffff;
+    color:#222222;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:500;
+    text-decoration:none;
+    cursor:pointer;
+
+  Usage:
+    .asset-detail-action-btn → Manager\manager_asset_delete.php
+    .asset-detail-action-btn → Manager\manager_asset_view.php
+    .asset-detail-back-btn → Manager\manager_asset_delete.php
+    .asset-detail-back-btn → Manager\manager_asset_view.php
+    .asset-form-submit → Manager\manager_asset_edit.php
+    .asset-form-submit → Manager\review_asset_submission.php
+    .asset-form-reset → Manager\manager_asset_edit.php
+    .asset-form-reset → Manager\review_asset_submission.php
+    .asset-form-back → Manager\manager_asset_edit.php
+    .asset-form-back → Manager\review_asset_submission.php
+
+GROUP 120
+  .asset-detail-action-btn → Manager\manager_style.css
+  .asset-form-submit → Manager\manager_style.css
+  .asset-form-reset → Manager\manager_style.css
+
+  Declarations:
+    width:18px;
+    height:18px;
+    display:block;
+    object-fit:contain;
+    flex-shrink:0;
+
+  Usage:
+    .asset-detail-action-btn → Manager\manager_asset_delete.php
+    .asset-detail-action-btn → Manager\manager_asset_view.php
+    .asset-form-submit → Manager\manager_asset_edit.php
+    .asset-form-submit → Manager\review_asset_submission.php
+    .asset-form-reset → Manager\manager_asset_edit.php
+    .asset-form-reset → Manager\review_asset_submission.php
+
+GROUP 121
+  .asset-detail-action-btn → Manager\manager_style.css
+  .asset-detail-back-btn → Manager\manager_style.css
+  .asset-form-reset → Manager\manager_style.css
+  .asset-form-back → Manager\manager_style.css
+
+  Declarations:
+    border-color:var(--primary-color);
+    background-color:var(--badge-bg);
+    color:var(--primary-color);
+
+  Usage:
+    .asset-detail-action-btn → Manager\manager_asset_delete.php
+    .asset-detail-action-btn → Manager\manager_asset_view.php
+    .asset-detail-back-btn → Manager\manager_asset_delete.php
+    .asset-detail-back-btn → Manager\manager_asset_view.php
+    .asset-form-reset → Manager\manager_asset_edit.php
+    .asset-form-reset → Manager\review_asset_submission.php
+    .asset-form-back → Manager\manager_asset_edit.php
+    .asset-form-back → Manager\review_asset_submission.php
+
+GROUP 122
+  .mission-table → Auditor\auditor_style.css
+  .mission-table → Auditor\auditor_style.css
+  .reward-table → Auditor\auditor_style.css
+  .reward-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+
+  Declarations:
+    width:5%;
+
+  Usage:
+    .mission-table → Auditor\auditor_missions_management.php
+    .mission-table → Auditor\auditor_missions_management.php
+    .reward-table → Auditor\auditor_rewards_management.php
+    .reward-table → Auditor\auditor_rewards_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+
+GROUP 123
+  .mission-table → Auditor\auditor_style.css
+  .mission-table → Auditor\auditor_style.css
+  .usertier-table → Auditor\auditor_style.css
+  .usertier-table → Auditor\auditor_style.css
+
+  Declarations:
+    width:27%;
+
+  Usage:
+    .mission-table → Auditor\auditor_missions_management.php
+    .mission-table → Auditor\auditor_missions_management.php
+    .usertier-table → Auditor\auditor_user_tiers_management.php
+    .usertier-table → Auditor\auditor_user_tiers_management.php
+
+GROUP 124
+  .mission-table → Auditor\auditor_style.css
+  .mission-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .usertier-table → Auditor\auditor_style.css
+  .usertier-table → Auditor\auditor_style.css
+  .usertier-table → Auditor\auditor_style.css
+  .usertier-table → Auditor\auditor_style.css
+
+  Declarations:
+    width:20%;
+
+  Usage:
+    .mission-table → Auditor\auditor_missions_management.php
+    .mission-table → Auditor\auditor_missions_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .usertier-table → Auditor\auditor_user_tiers_management.php
+    .usertier-table → Auditor\auditor_user_tiers_management.php
+    .usertier-table → Auditor\auditor_user_tiers_management.php
+    .usertier-table → Auditor\auditor_user_tiers_management.php
+
+GROUP 125
+  .reward-table → Auditor\auditor_style.css
+  .reward-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+
+  Declarations:
+    width:12%;
+
+  Usage:
+    .reward-table → Auditor\auditor_rewards_management.php
+    .reward-table → Auditor\auditor_rewards_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+
+GROUP 126
+  .reward-table → Auditor\auditor_style.css
+  .reward-table → Auditor\auditor_style.css
+  .reward-table → Auditor\auditor_style.css
+  .reward-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+  .badge-table → Auditor\auditor_style.css
+
+  Declarations:
+    width:14%;
+
+  Usage:
+    .reward-table → Auditor\auditor_rewards_management.php
+    .reward-table → Auditor\auditor_rewards_management.php
+    .reward-table → Auditor\auditor_rewards_management.php
+    .reward-table → Auditor\auditor_rewards_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
+    .badge-table → Auditor\auditor_achievement_badges_management.php
