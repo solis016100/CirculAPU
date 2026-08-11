@@ -1,395 +1,245 @@
 <?php
 session_start();
-
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Access Control
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
     header("Location: ../login.php");
     exit();
 }
 
-$asset = null;
-$databaseError = '';
-$assetID = trim($_GET['assetID'] ?? '');
+require_once '../print.php';
 
-// Asset ID Required
+function e($v): string {
+    return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+}
+
+function assetDate(?string $date): string {
+    if (!$date) return 'Not updated yet';
+    $time = strtotime($date);
+    return $time ? date('d M Y, h:i A', $time) : '-';
+}
+
+$assetID = trim($_GET['assetID'] ?? '');
+$asset = null;
+$error = '';
+
 if ($assetID === '') {
     header("Location: manager_assets.php");
     exit();
 }
 
-// Format Date
-function formatAssetDetailDate(?string $date): string
-{
-    if (empty($date)) {
-        return 'Not updated yet';
-    }
-
-    $timestamp = strtotime($date);
-
-    return $timestamp
-        ? date('d M Y, h:i A', $timestamp)
-        : '-';
-}
-
 $conn = null;
 
 try {
-    $conn = new mysqli(
-        "127.0.0.1",
-        "root",
-        "",
-        "circulapu_db",
-        3306
-    );
-
+    $conn = new mysqli("127.0.0.1", "root", "", "circulapu_db", 3306);
     $conn->set_charset("utf8mb4");
 
-    // Retrieve Asset Details
-    $statement = $conn->prepare("
-        SELECT
-            a.assetID,
-            a.assetName,
-            a.description,
-            a.assetCondition,
-            a.imageURL,
-            a.availabilityStatus,
-            a.listingStatus,
-            a.verificationStatus,
-            a.createdDate,
-            a.updatedDate,
-            c.categoryName,
-            u.userID AS ownerID,
-            u.name AS ownerName
+    $stmt = $conn->prepare("
+        SELECT a.*, c.categoryName,
+               u.userID AS ownerID, u.name AS ownerName
         FROM assets a
-        INNER JOIN categories c
-            ON a.categoryID = c.categoryID
-        INNER JOIN user u
-            ON a.ownerID = u.userID
+        JOIN categories c ON a.categoryID = c.categoryID
+        JOIN user u ON a.ownerID = u.userID
         WHERE a.assetID = ?
         LIMIT 1
     ");
+    $stmt->bind_param("s", $assetID);
+    $stmt->execute();
+    $asset = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 
-    $statement->bind_param("s", $assetID);
-    $statement->execute();
+    if (!$asset) $error = "The selected asset record could not be found.";
 
-    $asset = $statement->get_result()->fetch_assoc();
-    $statement->close();
-
-    if (!$asset) {
-        $databaseError = "The selected asset record could not be found.";
-    }
-
-} catch (mysqli_sql_exception $error) {
-    error_log($error->getMessage());
-
-    $databaseError =
-        "Unable to load the asset details. Please make sure MySQL is running and the database is available.";
+} catch (Throwable $e) {
+    error_log($e->getMessage());
+    $error = "Unable to load the asset details. Please try again.";
 }
 
-if ($conn instanceof mysqli) {
-    $conn->close();
-}
+if ($conn instanceof mysqli) $conn->close();
 
-// Asset Image
-$imagePath = '';
-$imageName = '';
+/* Asset Image */
+$imagePath = $imageName = '';
 
 if ($asset && !empty($asset['imageURL'])) {
-    $imageURL = str_replace('\\', '/', trim($asset['imageURL']));
-    $imageName = basename($imageURL);
-
-    $imagePath = preg_match('/^https?:\/\//i', $imageURL)
-        ? $imageURL
-        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $imageURL), '/');
+    $url = str_replace('\\', '/', trim($asset['imageURL']));
+    $imageName = basename($url);
+    $imagePath = preg_match('/^https?:\/\//i', $url)
+        ? $url
+        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $url), '/');
 }
+
+/* Detail Rows */
+$details = $asset ? [
+    'Asset ID' => $asset['assetID'],
+    'Asset Name' => $asset['assetName'],
+    'Category' => $asset['categoryName'],
+    'Condition' => $asset['assetCondition'],
+    'Description' => $asset['description'] ?: 'No description provided.',
+    'Uploaded By' => $asset['ownerName'] . ' (' . $asset['ownerID'] . ')',
+    'Availability Status' => $asset['availabilityStatus'],
+    'Listing Status' => $asset['listingStatus'],
+    'Verification Status' => $asset['verificationStatus'],
+    'Date Listed' => assetDate($asset['createdDate']),
+    'Last Updated' => assetDate($asset['updatedDate'])
+] : [];
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Asset Details - CirculAPU</title>
-
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
 </head>
 
 <body class="role-manager">
-
 <div class="dashboard-container">
 
-    <?php include '../sidebar.php'; ?>
+<?php include '../sidebar.php'; ?>
 
-    <div class="main-content">
+<div class="main-content">
+<?php include '../header.php'; ?>
 
-        <?php include '../header.php'; ?>
+<main class="page-body">
 
-        <main class="page-body">
+    <!-- 1. Heading -->
+    <section class="management-heading">
+        <div class="breadcrumb">
+            <a href="manager_assets.php">Asset Management</a>
+            <span>›</span>
+            <span class="breadcrumb-current">Asset Details</span>
+        </div>
 
-            <!-- 1. Page Heading -->
-            <section class="management-heading">
+        <h1>Asset Details</h1>
+        <p>View complete information about the selected asset listing.</p>
+    </section>
 
-                <div class="breadcrumb">
-                    <a href="manager_assets.php">Asset Management</a>
-                    <span>›</span>
-                    <span class="breadcrumb-current">Asset Details</span>
-                </div>
+    <!-- 2. Messages -->
+    <?php if ($error): ?>
 
-                <h1>Asset Details</h1>
+        <div class="dashboard-error-message"><?= e($error) ?></div>
 
-                <p>
-                    View complete information about the selected asset listing.
-                </p>
+        <a href="manager_assets.php" class="management-create-btn">
+            Back to Asset Management
+        </a>
 
-            </section>
+    <?php elseif ($asset): ?>
 
-            <!-- 2. Database Error -->
-            <?php if (!empty($databaseError)): ?>
+        <?php if (($_GET['updated'] ?? '') === '1'): ?>
+            <div class="alert alert-success">
+                Asset information updated successfully.
+            </div>
+        <?php endif; ?>
 
-                <div class="dashboard-error-message">
-                    <?php echo htmlspecialchars($databaseError); ?>
-                </div>
+        <!-- 3. Asset Details -->
+        <section class="content-card asset-detail-card">
 
-                <a href="manager_assets.php" class="management-create-btn">
-                    Back to Asset Management
-                </a>
+            <div class="asset-detail-layout">
 
-            <?php elseif ($asset): ?>
+                <div class="asset-detail-information">
 
-                <!-- 3. Asset Details -->
-                <section class="content-card asset-detail-card">
+                    <?php foreach ($details as $label => $value): ?>
 
-                    <div class="asset-detail-layout">
-
-                        <!-- Asset Information -->
-                        <div class="asset-detail-information">
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">Asset ID</span>
-                                <div class="asset-detail-value">
-                                    <?php echo htmlspecialchars($asset['assetID']); ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">Asset Name</span>
-                                <div class="asset-detail-value">
-                                    <?php echo htmlspecialchars($asset['assetName']); ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">Category</span>
-                                <div class="asset-detail-value">
-                                    <?php echo htmlspecialchars($asset['categoryName']); ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">Condition</span>
-                                <div class="asset-detail-value">
-                                    <?php echo htmlspecialchars($asset['assetCondition']); ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row description-row">
-                                <span class="asset-detail-label">Description</span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $asset['description']
-                                        ?: 'No description provided.'
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">Uploaded By</span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $asset['ownerName']
-                                        . ' ('
-                                        . $asset['ownerID']
-                                        . ')'
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">
-                                    Availability Status
-                                </span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $asset['availabilityStatus']
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">
-                                    Listing Status
-                                </span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $asset['listingStatus']
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">
-                                    Verification Status
-                                </span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $asset['verificationStatus']
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">
-                                    Date Listed
-                                </span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        formatAssetDetailDate(
-                                            $asset['createdDate']
-                                        )
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
-                            <div class="asset-detail-row">
-                                <span class="asset-detail-label">
-                                    Last Updated
-                                </span>
-
-                                <div class="asset-detail-value">
-                                    <?php
-                                    echo htmlspecialchars(
-                                        formatAssetDetailDate(
-                                            $asset['updatedDate']
-                                        )
-                                    );
-                                    ?>
-                                </div>
-                            </div>
-
+                        <div class="asset-detail-row <?= $label === 'Description' ? 'description-row' : '' ?>">
+                            <span class="asset-detail-label"><?= e($label) ?></span>
+                            <div class="asset-detail-value"><?= e($value) ?></div>
                         </div>
 
-                        <!-- Asset Image and Actions -->
-                        <aside class="asset-detail-side">
+                    <?php endforeach; ?>
 
-                            <!-- Uploaded Image -->
-                            <div class="asset-image-section">
+                </div>
 
-                                <h2>Uploaded Image</h2>
+                <!-- 4. Image and Actions -->
+                <aside class="asset-detail-side">
 
-                                <?php if ($imagePath !== ''): ?>
+                    <div class="asset-image-section">
+                        <h2>Uploaded Image</h2>
 
-                                    <div class="asset-image-preview">
-                                        <img
-                                            src="<?php echo htmlspecialchars($imagePath); ?>"
-                                            alt="<?php echo htmlspecialchars($asset['assetName']); ?>"
-                                        >
-                                    </div>
+                        <?php if ($imagePath): ?>
 
-                                    <p class="asset-image-name">
-                                        <?php echo htmlspecialchars($imageName); ?>
-                                    </p>
-
-                                <?php else: ?>
-
-                                    <div class="asset-image-empty">
-                                        No image uploaded
-                                    </div>
-
-                                <?php endif; ?>
-
+                            <div class="asset-image-preview">
+                                <img src="<?= e($imagePath) ?>" alt="<?= e($asset['assetName']) ?>">
                             </div>
 
-                            <!-- Asset Actions -->
-                            <div class="asset-detail-actions">
+                            <p class="asset-image-name"><?= e($imageName) ?></p>
+
+                        <?php else: ?>
+
+                            <div class="asset-image-empty">No image uploaded</div>
+
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="asset-detail-actions">
+
+                        <?php printButton('Print', '../assets/icons/print.png'); ?>
+
+                        <!-- Pending Review follows review workflow -->
+                        <?php if ($asset['listingStatus'] === 'Pending Review'): ?>
+
+                            <a
+                                href="review_asset_submission.php?assetID=<?= e($asset['assetID']) ?>"
+                                class="asset-detail-action-btn"
+                            >
+                                <img src="../assets/icons/edit.png" alt="">
+                                <span>Review Submission</span>
+                            </a>
+
+                        <?php elseif ($asset['listingStatus'] !== 'Removed'): ?>
+
+                            <a
+                                href="manager_asset_edit.php?assetID=<?= e($asset['assetID']) ?>"
+                                class="asset-detail-action-btn"
+                            >
+                                <img src="../assets/icons/edit.png" alt="">
+                                <span>Edit Asset</span>
+                            </a>
+
+                        <?php endif; ?>
+
+                        <!-- Soft Remove -->
+                        <?php if (
+                            $asset['listingStatus'] !== 'Removed' &&
+                            !in_array($asset['availabilityStatus'], ['Reserved', 'Borrowed'], true)
+                        ): ?>
+
+                            <form
+                                method="POST"
+                                action="manager_assets.php"
+                                onsubmit="return confirm('Remove this asset listing? The record will be retained for auditing.');"
+                            >
+                                <input type="hidden" name="action" value="remove">
+                                <input type="hidden" name="assetID" value="<?= e($asset['assetID']) ?>">
 
                                 <button
-                                    type="button"
-                                    class="asset-detail-action-btn"
-                                    onclick="window.print()"
-                                >
-                                    <img
-                                        src="../assets/icons/print.png"
-                                        alt=""
-                                    >
-                                    <span>Print</span>
-                                </button>
-
-                                <a
-                                    href="manager_asset_edit.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
-                                    class="asset-detail-action-btn"
-                                >
-                                    <img
-                                        src="../assets/icons/edit.png"
-                                        alt=""
-                                    >
-                                    <span>Edit Asset</span>
-                                </a>
-
-                                <a
-                                    href="manager_asset_delete.php?assetID=<?php echo urlencode($asset['assetID']); ?>"
+                                    type="submit"
                                     class="asset-detail-action-btn delete"
                                 >
-                                    <img
-                                        src="../assets/icons/delete.png"
-                                        alt=""
-                                    >
+                                    <img src="../assets/icons/delete.png" alt="">
                                     <span>Remove Asset</span>
-                                </a>
+                                </button>
+                            </form>
 
-                                <a
-                                    href="manager_assets.php"
-                                    class="asset-detail-back-btn"
-                                >
-                                    Back
-                                </a>
+                        <?php endif; ?>
 
-                            </div>
-
-                        </aside>
+                        <a href="manager_assets.php" class="asset-detail-back-btn">
+                            Back
+                        </a>
 
                     </div>
 
-                </section>
+                </aside>
 
-            <?php endif; ?>
+            </div>
 
-        </main>
+        </section>
 
-    </div>
+    <?php endif; ?>
 
+</main>
+</div>
 </div>
 
 </body>
