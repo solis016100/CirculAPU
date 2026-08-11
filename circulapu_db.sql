@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 11, 2026 at 04:02 PM
+-- Generation Time: Aug 11, 2026 at 07:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `circulapu_db`
 --
+CREATE DATABASE IF NOT EXISTS `circulapu_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `circulapu_db`;
 
 -- --------------------------------------------------------
 
@@ -40,9 +42,9 @@ CREATE TABLE `achievementbadges` (
 --
 
 INSERT INTO `achievementbadges` (`achieveBadgeID`, `achieveBadgeName`, `achieveBadgeDescription`, `achieveBadgeRequirement`, `achieveBadgeIcon`) VALUES
-('BADGE01', 'First Recycling Mission', 'Awarded for completing your first green campus mission', 'Complete 1 mission', 'badge_first_mission.png'),
-('BADGE02', 'Master Trader', 'Awarded for successfully exchanging 5 items', 'Complete 5 exchanges', 'badge_master_trader.png'),
-('BADGE03', 'Eco Pioneer', 'Earned 500 total EcoPoints', 'Reach 500 EcoPoints', 'badge_pioneer.png');
+('AB001', 'First Recycling Mission', 'Awarded for completing your first green campus mission', 'Complete 1 mission', 'badge_first_mission.png'),
+('AB002', 'Master Trader', 'Awarded for successfully exchanging 5 items', 'Complete 5 exchanges', 'badge_master_trader.png'),
+('AB003', 'Eco Pioneer', 'Earned 500 total EcoPoints', 'Reach 500 EcoPoints', 'badge_pioneer.png');
 
 -- --------------------------------------------------------
 
@@ -70,14 +72,14 @@ CREATE TABLE `assets` (
 --
 
 INSERT INTO `assets` (`assetID`, `ownerID`, `categoryID`, `assetName`, `description`, `assetCondition`, `imageURL`, `availabilityStatus`, `listingStatus`, `createdDate`, `updatedDate`, `verificationStatus`) VALUES
-('AST001', 'U004', 'CAT001', 'Dell Wireless Mouse', 'Compact wireless mouse for daily use.', 'Good', 'uploads/assets/mouse.jpg', 'Available', 'Removed', '2026-07-27 07:01:16', '2026-08-11 12:07:18', 'Approved'),
-('AST002', 'U005', 'CAT002', 'Java Programming Textbook', '8th Edition Java reference guide in good condition', 'Like New', 'uploads/assets/book.jpg', 'Borrowed', 'Published', '2026-07-27 07:01:16', NULL, 'Approved'),
-('AST003', 'U004', 'CAT001', 'USB-C Fast Charger', 'Original 65W USB-C power brick.', 'Good', 'uploads/assets/charger.jpg', 'Unavailable', 'Removed', '2026-07-27 07:01:16', '2026-08-11 12:21:00', 'Pending'),
-('AST004', 'U002', 'CAT001', 'Portable HDMI adapter', 'Compact HDMI adapter for presentations and daily use.', 'Good', 'assets/managerfile/ast004_1786360473.jpg', 'Available', 'Removed', '2026-08-10 11:12:08', '2026-08-10 13:53:33', 'Pending'),
-('AST005', 'U004', 'CAT001', 'Wireless Keyboard', 'Compact wireless keyboard suitable for study and office use.', 'Good', 'assets/managerfile/mouse.jpg', 'Unavailable', 'Removed', '2026-08-10 15:26:22', '2026-08-10 15:45:15', 'Pending'),
-('AST006', 'U005', 'CAT002', 'Data Structures Textbook', 'Reference textbook covering data structures and algorithms.', 'Like New', 'assets/managerfile/book.jpg', 'Unavailable', 'Draft', '2026-08-10 15:26:22', '2026-08-11 12:27:07', 'Pending'),
-('AST007', 'U004', 'CAT001', 'USB-C Charging Cable', 'One metre USB-C charging cable in good working condition.', 'Good', 'assets/managerfile/charger.jpg', 'Unavailable', 'Ready for Verification', '2026-08-10 15:26:22', '2026-08-11 13:19:16', 'Pending'),
-('AST008', 'U005', 'CAT002', 'Scientific Calculator', 'Scientific calculator suitable for university mathematics subjects.', 'Good', 'assets/managerfile/mouse.jpg', 'Unavailable', 'Pending Review', '2026-08-10 15:26:22', NULL, 'Pending');
+('A001', 'U004', 'C001', 'Dell Wireless Mouse', 'Compact wireless mouse for daily use.', 'Good', 'uploads/assets/mouse.jpg', 'Available', 'Removed', '2026-07-27 07:01:16', '2026-08-11 15:23:23', 'Approved'),
+('A002', 'U005', 'C002', 'Java Programming Textbook', '8th Edition Java reference guide in good condition', 'Like New', 'uploads/assets/book.jpg', 'Borrowed', 'Published', '2026-07-27 07:01:16', '2026-08-11 15:23:23', 'Approved'),
+('A003', 'U004', 'C001', 'USB-C Fast Charger', 'Original 65W USB-C power brick.', 'Good', 'uploads/assets/charger.jpg', 'Unavailable', 'Removed', '2026-07-27 07:01:16', '2026-08-11 15:23:23', 'Pending'),
+('A004', 'U002', 'C001', 'Portable HDMI adapter', 'Compact HDMI adapter for presentations and daily use.', 'Good', 'assets/managerfile/ast004_1786360473.jpg', 'Available', 'Removed', '2026-08-10 11:12:08', '2026-08-11 15:23:23', 'Pending'),
+('A005', 'U004', 'C001', 'Wireless Keyboard', 'Compact wireless keyboard suitable for study and office use.', 'Good', 'assets/managerfile/mouse.jpg', 'Unavailable', 'Removed', '2026-08-10 15:26:22', '2026-08-11 15:23:23', 'Pending'),
+('A006', 'U005', 'C002', 'Data Structures Textbook', 'Reference textbook covering data structures and algorithms.', 'Like New', 'assets/managerfile/book.jpg', 'Unavailable', 'Draft', '2026-08-10 15:26:22', '2026-08-11 15:23:23', 'Pending'),
+('A007', 'U004', 'C001', 'USB-C Charging Cable', 'One metre USB-C charging cable in good working condition.', 'Good', 'assets/managerfile/charger.jpg', 'Unavailable', 'Ready for Verification', '2026-08-10 15:26:22', '2026-08-11 15:23:23', 'Pending'),
+('A008', 'U005', 'C002', 'Scientific Calculator', 'Scientific calculator suitable for university mathematics subjects.', 'Good', 'assets/managerfile/mouse.jpg', 'Unavailable', 'Pending Review', '2026-08-10 15:26:22', '2026-08-11 15:23:23', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -100,9 +102,9 @@ CREATE TABLE `assetstatushistory` (
 --
 
 INSERT INTO `assetstatushistory` (`historyID`, `assetID`, `updatedBy`, `oldAvailabilityStatus`, `newAvailabilityStatus`, `statusChangeReason`, `updatedDate`) VALUES
-('ASH001', 'AST002', 'U002', 'Available', 'Borrowed', 'Approved borrow request TR001', '2026-07-27 07:01:17'),
-('ASH002', 'AST007', 'U002', 'Unavailable', 'Available', 'Availability updated during asset review.', '2026-08-11 12:36:39'),
-('ASH003', 'AST007', 'U002', 'Available', 'Unavailable', 'Availability updated during asset review.', '2026-08-11 12:53:57');
+('H001', 'A002', 'U002', 'Available', 'Borrowed', 'Approved borrow request TR001', '2026-07-27 07:01:17'),
+('H002', 'A007', 'U002', 'Unavailable', 'Available', 'Availability updated during asset review.', '2026-08-11 12:36:39'),
+('H003', 'A007', 'U002', 'Available', 'Unavailable', 'Availability updated during asset review.', '2026-08-11 12:53:57');
 
 -- --------------------------------------------------------
 
@@ -126,7 +128,7 @@ CREATE TABLE `borrowings` (
 --
 
 INSERT INTO `borrowings` (`borrowID`, `assetID`, `borrowerID`, `transactionID`, `borrowDate`, `expectedReturnDate`, `actualReturnDate`, `borrowingStatus`) VALUES
-('BOR001', 'AST002', 'U004', 'TR001', '2026-07-27 07:01:17', '2026-08-10 04:00:00', NULL, 'Borrowed');
+('B001', 'A002', 'U004', 'TR001', '2026-07-27 07:01:17', '2026-08-10 04:00:00', NULL, 'Borrowed');
 
 -- --------------------------------------------------------
 
@@ -148,10 +150,10 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`categoryID`, `categoryName`, `description`, `categoryIcon`, `status`, `createdDate`) VALUES
-('CAT001', 'Electronics', 'Laptops, chargers, phones, and hardware accessories', NULL, 'Active', '2026-07-27 07:01:16'),
-('CAT002', 'Books & Stationery', 'Textbooks, revision guides, and note pads', NULL, 'Active', '2026-07-27 07:01:16'),
-('CAT003', 'Household & Living', 'Dorm essentials, mini kettles, and lamps', NULL, 'Active', '2026-07-27 07:01:16'),
-('CAT004', 'Sports Equipment', 'Rackets, balls, and athletic gear', NULL, 'Active', '2026-07-27 07:01:16');
+('C001', 'Electronics', 'Laptops, chargers, phones, and hardware accessories', NULL, 'Active', '2026-07-27 07:01:16'),
+('C002', 'Books & Stationery', 'Textbooks, revision guides, and note pads', NULL, 'Active', '2026-07-27 07:01:16'),
+('C003', 'Household & Living', 'Dorm essentials, mini kettles, and lamps', NULL, 'Active', '2026-07-27 07:01:16'),
+('C004', 'Sports Equipment', 'Rackets, balls, and athletic gear', NULL, 'Active', '2026-07-27 07:01:16');
 
 -- --------------------------------------------------------
 
@@ -174,9 +176,9 @@ CREATE TABLE `ecopointstransaction` (
 --
 
 INSERT INTO `ecopointstransaction` (`transactionID`, `userID`, `points`, `transactionType`, `sourceType`, `referenceID`, `transactionDate`) VALUES
-('EPT001', 'U004', 50, 'Earned', 'Mission', 'MS001', '2026-07-27 07:01:17'),
-('EPT002', 'U004', -100, 'Spent', 'RewardRedemption', 'RR001', '2026-07-27 07:01:17'),
-('EPT003', 'U003', 100, 'Earned', 'Exchange', 'AST001', '2026-07-27 07:01:17');
+('ET001', 'U004', 50, 'Earned', 'Mission', 'MS001', '2026-07-27 07:01:17'),
+('ET002', 'U004', -100, 'Spent', 'RewardRedemption', 'RR001', '2026-07-27 07:01:17'),
+('ET003', 'U003', 100, 'Earned', 'Exchange', 'AST001', '2026-07-27 07:01:17');
 
 -- --------------------------------------------------------
 
@@ -186,11 +188,11 @@ INSERT INTO `ecopointstransaction` (`transactionID`, `userID`, `points`, `transa
 
 CREATE TABLE `missions` (
   `missionID` varchar(10) NOT NULL,
-  `missionName` varchar(100) NOT NULL,
+  `missionName` varchar(50) NOT NULL,
   `missionDescription` varchar(255) NOT NULL,
   `missionRequirement` varchar(255) NOT NULL,
   `ecoPointsReward` int(11) NOT NULL DEFAULT 0,
-  `status` varchar(50) NOT NULL DEFAULT 'Active'
+  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -214,7 +216,7 @@ CREATE TABLE `missionsubmission` (
   `missionID` varchar(10) NOT NULL,
   `evidencePath` varchar(255) NOT NULL,
   `submissionDate` timestamp NOT NULL DEFAULT current_timestamp(),
-  `submissionStatus` varchar(50) NOT NULL DEFAULT 'Pending'
+  `submissionStatus` enum('Pending','Approved','Rejected') NOT NULL DEFAULT 'Pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -222,8 +224,8 @@ CREATE TABLE `missionsubmission` (
 --
 
 INSERT INTO `missionsubmission` (`submissionID`, `userID`, `missionID`, `evidencePath`, `submissionDate`, `submissionStatus`) VALUES
-('MS001', 'U004', 'M001', 'uploads/submissions/ms1_proof.jpg', '2026-07-27 07:01:16', 'Verified'),
-('MS002', 'U005', 'M002', 'uploads/submissions/ms2_proof.jpg', '2026-07-27 07:01:16', 'Pending');
+('S001', 'U004', 'M001', 'uploads/submissions/ms1_proof.jpg', '2026-07-27 07:01:16', ''),
+('S002', 'U005', 'M002', 'uploads/submissions/ms2_proof.jpg', '2026-07-27 07:01:16', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -236,7 +238,7 @@ CREATE TABLE `notification` (
   `userID` varchar(10) NOT NULL,
   `title` varchar(100) NOT NULL,
   `content` varchar(255) NOT NULL,
-  `status` varchar(50) NOT NULL DEFAULT 'Unread',
+  `status` enum('Read','Unread') NOT NULL DEFAULT 'Unread',
   `createdDate` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -245,11 +247,11 @@ CREATE TABLE `notification` (
 --
 
 INSERT INTO `notification` (`notificationID`, `userID`, `title`, `content`, `status`, `createdDate`) VALUES
-('NOT001', 'U004', 'Mission Approved!', 'Your submission for Bring Your Own Bottle was approved. +50 EcoPoints awarded.', 'Unread', '2026-07-27 07:01:17'),
-('NOT002', 'U005', 'Borrow Request Update', 'Your request to borrow Java Programming Textbook has been approved.', 'Read', '2026-07-27 07:01:17'),
-('NOT003', 'U004', 'Asset Listing Returned', 'Your asset listing AST003 (USB-C Fast Charger) was returned for correction.', 'Unread', '2026-08-10 14:49:36'),
-('NOT004', 'U004', 'Asset Sent for Verification', 'Your asset listing AST003 (USB-C Fast Charger) has been sent for Sustainability Auditor verification.', 'Unread', '2026-08-10 14:56:31'),
-('NOT005', 'U004', 'Asset Listing Returned', 'Your asset AST005 was returned for correction. Reason: please give a clearer image', 'Unread', '2026-08-10 15:28:23'),
+('N001', 'U004', 'Mission Approved!', 'Your submission for Bring Your Own Bottle was approved. +50 EcoPoints awarded.', 'Unread', '2026-07-27 07:01:17'),
+('N002', 'U005', 'Borrow Request Update', 'Your request to borrow Java Programming Textbook has been approved.', 'Read', '2026-07-27 07:01:17'),
+('N003', 'U004', 'Asset Listing Returned', 'Your asset listing AST003 (USB-C Fast Charger) was returned for correction.', 'Unread', '2026-08-10 14:49:36'),
+('N004', 'U004', 'Asset Sent for Verification', 'Your asset listing AST003 (USB-C Fast Charger) has been sent for Sustainability Auditor verification.', 'Unread', '2026-08-10 14:56:31'),
+('N005', 'U004', 'Asset Listing Returned', 'Your asset AST005 was returned for correction. Reason: please give a clearer image', 'Unread', '2026-08-10 15:28:23'),
 ('NOT006', 'U005', 'Asset Listing Returned', 'Your asset AST006 (Data Structures Textbook) was returned for correction. Reason: explain furtherr', 'Unread', '2026-08-10 15:39:17'),
 ('NOT007', 'U004', 'Asset Sent for Verification', 'Asset AST007 has been sent for Sustainability Auditor verification.', 'Unread', '2026-08-11 13:19:16');
 
@@ -264,8 +266,8 @@ CREATE TABLE `report` (
   `reporterID` varchar(10) NOT NULL,
   `verificationID` varchar(10) DEFAULT NULL,
   `reason` varchar(255) NOT NULL,
-  `evidencePath` varchar(255) DEFAULT NULL,
-  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `evidenceImage` varchar(255) DEFAULT NULL,
+  `status` enum('Pending','Under Investigation','Resolved') NOT NULL DEFAULT 'Pending',
   `timeCreated` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -287,8 +289,8 @@ CREATE TABLE `rewardredemption` (
 --
 
 INSERT INTO `rewardredemption` (`redemptionID`, `userID`, `rewardID`, `redemptionDate`) VALUES
-('RR001', 'U004', 'REW001', '2026-07-27 07:01:16'),
-('RR002', 'U003', 'REW002', '2026-07-27 07:01:16');
+('RR001', 'U004', 'R001', '2026-07-27 07:01:16'),
+('RR002', 'U003', 'R002', '2026-07-27 07:01:16');
 
 -- --------------------------------------------------------
 
@@ -298,11 +300,11 @@ INSERT INTO `rewardredemption` (`redemptionID`, `userID`, `rewardID`, `redemptio
 
 CREATE TABLE `rewards` (
   `rewardID` varchar(10) NOT NULL,
-  `rewardName` varchar(100) NOT NULL,
+  `rewardName` varchar(50) NOT NULL,
   `rewardDescription` varchar(255) NOT NULL,
   `ecoPointsCost` int(11) NOT NULL DEFAULT 0,
   `quantity` int(11) NOT NULL DEFAULT 0,
-  `availability` varchar(50) NOT NULL DEFAULT 'Available'
+  `availability` enum('Available','Unavailable') NOT NULL DEFAULT 'Available'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -310,9 +312,9 @@ CREATE TABLE `rewards` (
 --
 
 INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `ecoPointsCost`, `quantity`, `availability`) VALUES
-('REW001', 'Campus Cafe RM5 Voucher', 'Redeemable at APU main cafeteria food stalls', 100, 50, 'Available'),
-('REW002', 'CirculAPU Tote Bag', 'Eco-friendly canvas bag with official logo', 200, 15, 'Available'),
-('REW003', 'APU Parking Pass (1 Day)', 'Single-day parking pass waiver for campus garage', 300, 5, 'Available');
+('R001', 'Campus Cafe RM5 Voucher', 'Redeemable at APU main cafeteria food stalls', 100, 50, 'Available'),
+('R002', 'CirculAPU Tote Bag', 'Eco-friendly canvas bag with official logo', 200, 15, 'Available'),
+('R003', 'APU Parking Pass (1 Day)', 'Single-day parking pass waiver for campus garage', 300, 5, 'Available');
 
 -- --------------------------------------------------------
 
@@ -359,7 +361,8 @@ INSERT INTO `systemlog` (`logID`, `userID`, `actionType`, `refType`, `refID`, `d
 ('LOG022', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:36:39'),
 ('LOG023', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:53:57'),
 ('LOG024', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:54:01'),
-('LOG025', 'U002', 'Submit', 'Asset', 'AST007', 'Sent asset listing for verification: USB-C Charging Cable', '2026-08-11 13:19:16');
+('LOG025', 'U002', 'Submit', 'Asset', 'AST007', 'Sent asset listing for verification: USB-C Charging Cable', '2026-08-11 13:19:16'),
+('LOG026', 'U003', 'Delete', 'Verification', 'V003', 'Deleted verification record: V003', '2026-08-11 16:35:32');
 
 -- --------------------------------------------------------
 
@@ -408,8 +411,8 @@ CREATE TABLE `transactionrequests` (
 --
 
 INSERT INTO `transactionrequests` (`transactionID`, `assetID`, `requesterID`, `requestDate`, `requestStatus`, `managerRemark`, `decisionDate`, `requestMessage`) VALUES
-('TR001', 'AST002', 'U004', '2026-07-27 07:01:17', 'Approved', 'Request granted for 14-day study period.', '2026-07-27 07:01:17', 'Hi, I need this textbook for my upcoming exam week.'),
-('TR002', 'AST001', 'U005', '2026-07-27 07:01:17', 'Pending', NULL, NULL, 'Can I borrow this mouse for a few days?');
+('TR001', 'A002', 'U004', '2026-07-27 07:01:17', 'Approved', 'Request granted for 14-day study period.', '2026-07-27 07:01:17', 'Hi, I need this textbook for my upcoming exam week.'),
+('TR002', 'A001', 'U005', '2026-07-27 07:01:17', 'Pending', NULL, NULL, 'Can I borrow this mouse for a few days?');
 
 -- --------------------------------------------------------
 
@@ -422,8 +425,8 @@ CREATE TABLE `user` (
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` varchar(50) NOT NULL DEFAULT 'Member',
-  `status` varchar(50) NOT NULL DEFAULT 'Active',
+  `role` enum('Member','Auditor','Manager','Admin') NOT NULL DEFAULT 'Member',
+  `status` enum('Active','Suspended','Deleted') NOT NULL DEFAULT 'Active',
   `ecopoint` int(11) NOT NULL DEFAULT 0,
   `dateCreated` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -458,9 +461,9 @@ CREATE TABLE `user achievement badge` (
 --
 
 INSERT INTO `user achievement badge` (`userBadgeID`, `userID`, `achieveBadgeID`, `awardedDate`) VALUES
-('UAB001', 'U004', 'BADGE01', '2026-07-27 07:01:16'),
-('UAB002', 'U003', 'BADGE01', '2026-07-27 07:01:16'),
-('UAB003', 'U001', 'BADGE03', '2026-07-27 07:01:16');
+('UAB001', 'U004', 'AB001', '2026-07-27 07:01:16'),
+('UAB002', 'U003', 'AB001', '2026-07-27 07:01:16'),
+('UAB003', 'U001', 'AB003', '2026-07-27 07:01:16');
 
 -- --------------------------------------------------------
 
@@ -484,7 +487,7 @@ INSERT INTO `usertier` (`userTierID`, `userID`, `tierID`, `assignedDate`) VALUES
 ('UT002', 'U003', 'T003', '2026-07-27 07:01:16'),
 ('UT003', 'U004', 'T002', '2026-07-27 07:01:16'),
 ('UT004', 'U005', 'T001', '2026-07-27 07:01:16'),
-('UTU006', 'U006', 'T001', '2026-07-28 05:57:29');
+('UT006', 'U006', 'T001', '2026-07-28 05:57:29');
 
 -- --------------------------------------------------------
 
@@ -495,12 +498,12 @@ INSERT INTO `usertier` (`userTierID`, `userID`, `tierID`, `assignedDate`) VALUES
 CREATE TABLE `verificationrecords` (
   `verificationID` varchar(10) NOT NULL,
   `userID` varchar(10) NOT NULL,
-  `verifiedBy` varchar(10) NOT NULL,
+  `verifiedBy` varchar(10) DEFAULT NULL,
   `targetID` varchar(10) NOT NULL,
   `targetType` varchar(50) NOT NULL,
-  `status` varchar(50) NOT NULL,
+  `status` enum('Pending','Approved','Rejected') NOT NULL,
   `remarks` varchar(255) DEFAULT NULL,
-  `verifiedDate` timestamp NOT NULL DEFAULT current_timestamp()
+  `verifiedDate` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -508,8 +511,12 @@ CREATE TABLE `verificationrecords` (
 --
 
 INSERT INTO `verificationrecords` (`verificationID`, `userID`, `verifiedBy`, `targetID`, `targetType`, `status`, `remarks`, `verifiedDate`) VALUES
-('VR001', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Approved', 'Clear photo proof of refill station usage.', '2026-07-27 07:03:20'),
-('VR002', 'U004', 'U003', 'AST001', 'Asset', 'Approved', 'Asset condition verified in person.', '2026-07-27 07:03:20');
+('V001', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Approved', 'Clear photo proof of refill station usage.', '2026-07-27 07:03:20'),
+('V002', 'U004', 'U003', 'A001', 'Asset', 'Approved', 'Asset condition verified in person.', '2026-07-27 07:03:20'),
+('V004', 'U004', 'U003', 'A001', 'Asset', 'Pending', NULL, '2026-08-11 16:55:27'),
+('V005', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Pending', NULL, '2026-08-11 16:55:27'),
+('V006', 'U004', 'U003', 'A001', 'Asset', 'Pending', NULL, '2026-08-11 16:55:27'),
+('V007', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Pending', NULL, '2026-08-11 16:55:27');
 
 --
 -- Indexes for dumped tables

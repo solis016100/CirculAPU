@@ -23,6 +23,31 @@
 
     // Connect to Database
     require_once '../db.php';
+    require_once '../delete.php';
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteID'])) {
+        $id = $_POST['deleteID'];
+
+        $q = $conn->prepare("
+            DELETE FROM verificationrecords
+            WHERE verificationID = ?
+        ");
+
+        $q->bind_param("s", $id);
+        $q->execute();
+
+        createDeleteLog(
+            $conn,
+            $_SESSION['user_id'],
+            'Verification',
+            $id,
+            "Deleted verification record: $id"
+        );
+
+        header("Location: auditor_verification_management.php");
+        exit();
+    }
+
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
@@ -318,25 +343,22 @@
                                                     </a>
 
                                                     <a
-                                                        href="auditor_verification_edit.php?id=<?php echo $record['verificationID']; ?>"
+                                                        href="auditor_verification_edit.php?verificationID=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn"
                                                         title="Edit">
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </a>
 
-                                                    <a
-                                                        href="auditor_verification_print.php? verificationID=<?php echo urlencode($record['verificationID']); ?>"
-                                                        class="management-action-btn"
-                                                        title="Print">
+                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&print=1" class="management-action-btn" title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </a>
 
-                                                    <a
-                                                        href="auditor_verification_delete.php?id=<?php echo $record['verificationID']; ?>"
-                                                        class="management-action-btn delete"
-                                                        title="Delete">
-                                                        <img src="../assets/icons/delete.png" alt="Delete">
-                                                    </a>
+                                                    <form method="POST" onsubmit="return confirm('Delete this verification record?');"> 
+                                                        <input type="hidden" name="deleteID" value="<?= htmlspecialchars($record['verificationID']) ?>">
+                                                        <button type="submit" class="management-action-btn delete" title="Delete">
+                                                            <img src="../assets/icons/delete.png" alt="Delete">
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>

@@ -8,6 +8,27 @@
 
     require '../db.php';
 
+    function createUpdateLog($conn, $userID, $refType, $refID, $description) {
+        $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+        $stmt = $conn->prepare("
+            INSERT INTO systemlog
+            (logID, userID, actionType, refType, refID, description)
+            VALUES (?, ?, 'Update', ?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            "sssss",
+            $logID,
+            $userID,
+            $refType,
+            $refID,
+            $description
+        );
+
+        $stmt->execute();
+    }
+
     $id = $_GET['verificationID'] ?? '';
 
     if (!$id) {
@@ -46,6 +67,8 @@
 
         $q->bind_param("sss", $status, $remarks, $id);
         $q->execute();
+
+        createUpdateLog($conn, $_SESSION['user_id'], 'Verification', $id, "Updated verification record: $id");
 
         header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
         exit();

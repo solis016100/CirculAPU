@@ -9,11 +9,52 @@
     require '../db.php';
     require_once '../print.php';
 
+    function createUpdateLog($conn, $userID, $refType, $refID, $description) {
+        $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+        $stmt = $conn->prepare("
+            INSERT INTO systemlog
+            (logID, userID, actionType, refType, refID, description)
+            VALUES (?, ?, 'Update', ?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            "sssss",
+            $logID,
+            $userID,
+            $refType,
+            $refID,
+            $description
+        );
+
+        $stmt->execute();
+    }
+
     $id = $_GET['verificationID'] ?? '';
 
     if (!$id) {
         header("Location: auditor_verification_management.php");
         exit();
+    }
+
+    // Approve & Reject Actions
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = $_POST['action'] ?? '';
+        if (in_array($action, ['approve', 'reject'])) {
+            $status = $action === 'approve' ? 'Approved' : 'Rejected';
+            $q = $conn->prepare("
+                UPDATE verificationrecords
+                SET status = ?, verifiedBy = ?, verifiedDate = NOW()
+                WHERE verificationID = ? AND status = 'Pending'
+            ");
+            $q->bind_param("sss", $status, $_SESSION['user_id'], $id);
+            $q->execute();
+
+            createUpdateLog($conn, $_SESSION['user_id'], 'Verification', $id, "Verification $id was $status");
+
+            header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
+            exit();
+        }
     }
 
 
@@ -120,6 +161,7 @@
     $fields['Verified Date'] = $r['verifiedDate'] ? date('d M Y', strtotime($r['verifiedDate'])) : 'Not verified yet';
 
     $fields['Verified By'] = $r['verifiedBy'] ? $r['auditorName'] . ' (' . $r['verifiedBy'] . ')' : 'Not verified yet';
+
 ?>
 
 <!DOCTYPE html>
@@ -192,23 +234,34 @@
                         <?php endif; ?>
 
                         <!-- Approve / Reject Button -->
-                        <?php if ($r['status'] == 'Pending'): ?>
-                            <div class="auditor-management-decision">
-                                <button class="auditor-management-approve">
+                        <?php if ($r['status'] === 'Pending'): ?>
+                            <form method="POST">
+                                <button type="submit" name="action" value="approve" class="auditor-management-detail-action" onclick="return confirm('Approve this verification?');">
                                     <img src="../assets/icons/approve.png" alt="">
                                     Approve
                                 </button>
 
-                                <button class="auditor-management-reject">
+                                <button type="submit" name="action" value="reject" class="auditor-management-detail-action" onclick="return confirm('Reject this verification?');">
                                     <img src="../assets/icons/reject.png" alt="">
                                     Reject
                                 </button>
-                            </div>
+                            </form>
                         <?php endif; ?>
 
                         <div class="auditor-management-divider"></div>
 
                         <!-- Print -->
+                        <?php if (isset($_GET['print'])): ?>
+                            <script>
+                            window.addEventListener('afterprint', function () {
+                                window.location.href = 'auditor_verification_management.php';
+                            });
+
+                            window.onload = function () {
+                                window.print();
+                            };
+                            </script>
+                            <?php endif; ?>
                         <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action'); ?>
 
                         <!-- Edit -->
