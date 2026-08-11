@@ -311,7 +311,7 @@
                                             <td>
                                                 <div class="management-actions">
                                                     <a
-                                                        href="auditor_verification_view.php?id=<?php echo $record['verificationID']; ?>"
+                                                        href="auditor_verification_view.php?verificationID=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn"
                                                         title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
@@ -325,18 +325,18 @@
                                                     </a>
 
                                                     <a
-                                                        href="auditor_verification_print.php?id=<?php echo $record['verificationID']; ?>"
+                                                        href="auditor_verification_print.php? verificationID=<?php echo urlencode($record['verificationID']); ?>"
                                                         class="management-action-btn"
                                                         title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
-                                                    </button>
+                                                    </a>
 
                                                     <a
                                                         href="auditor_verification_delete.php?id=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn delete"
                                                         title="Delete">
                                                         <img src="../assets/icons/delete.png" alt="Delete">
-                                                    </button>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>

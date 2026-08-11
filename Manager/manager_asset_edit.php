@@ -1,943 +1,390 @@
 <?php
 session_start();
-
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Access Control
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
-    header("Location: ../login.php");
-    exit();
+    header('Location: ../login.php'); exit();
+}
+
+function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+
+function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
+    $row = $conn->query("
+        SELECT COALESCE(MAX(CAST(SUBSTRING($column,4) AS UNSIGNED)),0)+1 nextID
+        FROM $table
+    ")->fetch_assoc();
+
+    return sprintf($prefix . '%03d', (int)$row['nextID']);
+}
+
+function assetImagePath(?string $url): string {
+    if (!$url) return '';
+
+    $url = str_replace('\\', '/', trim($url));
+
+    return preg_match('/^https?:\/\//i', $url)
+        ? $url
+        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $url), '/');
+}
+
+function uploadAssetImage(array $file, string $assetID, string $currentURL): array {
+    $err = $file['error'] ?? UPLOAD_ERR_NO_FILE;
+
+    if ($err === UPLOAD_ERR_NO_FILE) return [$currentURL, '', ''];
+    if ($err !== UPLOAD_ERR_OK) return [$currentURL, '', 'Unable to upload the selected image.'];
+    if (($file['size'] ?? 0) > 5 * 1024 * 1024) return [$currentURL, '', 'Image size must not exceed 5MB.'];
+
+    $info = getimagesize($file['tmp_name']);
+    $types = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+
+    if (!$info || !isset($types[$info['mime']])) {
+        return [$currentURL, '', 'Only valid JPG and PNG images are allowed.'];
+    }
+
+    $dir = dirname(__DIR__) . '/assets/managerfile/';
+
+    if (!is_dir($dir) && !mkdir($dir, 0775, true)) {
+        return [$currentURL, '', 'Unable to create the image upload folder.'];
+    }
+
+    $name = strtolower($assetID) . '_' . time() . '.' . $types[$info['mime']];
+    $path = $dir . $name;
+
+    if (!move_uploaded_file($file['tmp_name'], $path)) {
+        return [$currentURL, '', 'Unable to save the uploaded image.'];
+    }
+
+    return ['assets/managerfile/' . $name, $path, ''];
 }
 
 $managerID = $_SESSION['user_id'];
-
+$assetID = trim($_GET['assetID'] ?? '');
 $asset = null;
 $categories = [];
-$databaseError = '';
-$formError = '';
+$error = $newFile = '';
 
-$assetID = trim($_GET['assetID'] ?? '');
+$conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
-// Asset ID Required
 if ($assetID === '') {
-    header("Location: manager_assets.php");
-    exit();
+    header('Location: manager_assets.php'); exit();
 }
 
-// Allowed Values
-$conditionOptions = [
-    'New',
-    'Like New',
-    'Good',
-    'Fair',
-    'Poor'
-];
-
-$availabilityOptions = [
-    'Available',
-    'Reserved',
-    'Borrowed',
-    'Unavailable'
-];
-
 $conn = null;
-$newUploadedFile = '';
 
 try {
-    $conn = new mysqli(
-        "127.0.0.1",
-        "root",
-        "",
-        "circulapu_db",
-        3306
-    );
+    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
+    $conn->set_charset('utf8mb4');
 
-    $conn->set_charset("utf8mb4");
-
-    // Retrieve Asset
-    $statement = $conn->prepare("
-        SELECT
-            a.assetID,
-            a.ownerID,
-            a.categoryID,
-            a.assetName,
-            a.description,
-            a.assetCondition,
-            a.imageURL,
-            a.availabilityStatus,
-            a.listingStatus,
-            a.verificationStatus,
-            a.createdDate,
-            a.updatedDate,
-            c.categoryName,
-            u.name AS ownerName
+    // 1. Load Asset
+    $stmt = $conn->prepare("
+        SELECT a.*, u.name ownerName
         FROM assets a
-        INNER JOIN categories c
-            ON a.categoryID = c.categoryID
-        INNER JOIN user u
-            ON a.ownerID = u.userID
+        JOIN user u ON a.ownerID = u.userID
         WHERE a.assetID = ?
         LIMIT 1
     ");
-
-    $statement->bind_param("s", $assetID);
-    $statement->execute();
-
-    $asset = $statement->get_result()->fetch_assoc();
-    $statement->close();
+    $stmt->bind_param('s', $assetID);
+    $stmt->execute();
+    $asset = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 
     if (!$asset) {
-        $databaseError =
-            "The selected asset record could not be found.";
+        $error = 'The selected asset record could not be found.';
+    } elseif ($asset['listingStatus'] === 'Pending Review') {
+        header("Location: review_asset_submission.php?assetID=$assetID"); exit();
+    } elseif ($asset['listingStatus'] === 'Removed') {
+        $error = 'Removed asset listings cannot be edited.';
     }
 
-    // Retrieve Active Categories
-    if ($asset) {
-        $categoryStatement = $conn->prepare("
+    // 2. Categories
+    if ($asset && !$error) {
+        $stmt = $conn->prepare("
             SELECT categoryID, categoryName
             FROM categories
-            WHERE status = 'Active'
-               OR categoryID = ?
-            ORDER BY categoryName ASC
+            WHERE status = 'Active' OR categoryID = ?
+            ORDER BY categoryName
         ");
+        $stmt->bind_param('s', $asset['categoryID']);
+        $stmt->execute();
 
-        $categoryStatement->bind_param(
-            "s",
-            $asset['categoryID']
-        );
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $categories[] = $row;
 
-        $categoryStatement->execute();
-
-        $categoryResult =
-            $categoryStatement->get_result();
-
-        while ($category = $categoryResult->fetch_assoc()) {
-            $categories[] = $category;
-        }
-
-        $categoryStatement->close();
+        $stmt->close();
     }
 
-    // Update Asset
-    if (
-        $asset &&
-        $_SERVER['REQUEST_METHOD'] === 'POST'
-    ) {
-        $assetName = trim($_POST['assetName'] ?? '');
+    // 3. Update Asset
+    if ($asset && !$error && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $name = trim($_POST['assetName'] ?? '');
         $categoryID = trim($_POST['categoryID'] ?? '');
-        $assetCondition = trim(
-            $_POST['assetCondition'] ?? ''
-        );
+        $condition = trim($_POST['assetCondition'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $availabilityStatus = trim(
-            $_POST['availabilityStatus'] ?? ''
-        );
+      
+        if ($name === '') $error = 'Asset Name is required.';
+        elseif (strlen($name) > 150) $error = 'Asset Name must not exceed 150 characters.';
+        elseif (strlen($description) > 255) $error = 'Description must not exceed 255 characters.';
+        elseif (!in_array($condition, $conditions, true)) $error = 'Please select a valid asset condition.';
 
-        // Validation
-        if ($assetName === '') {
-            $formError = "Asset Name is required.";
-        } elseif (strlen($assetName) > 150) {
-            $formError =
-                "Asset Name must not exceed 150 characters.";
-        } elseif (strlen($description) > 255) {
-            $formError =
-                "Description must not exceed 255 characters.";
-        } elseif (!in_array(
-            $assetCondition,
-            $conditionOptions,
-            true
-        )) {
-            $formError =
-                "Please select a valid asset condition.";
-        } elseif (!in_array(
-            $availabilityStatus,
-            $availabilityOptions,
-            true
-        )) {
-            $formError =
-                "Please select a valid availability status.";
-        }
-
-        // Validate Category
-        if ($formError === '') {
-            $categoryCheck = $conn->prepare("
+        if (!$error) {
+            $stmt = $conn->prepare("
                 SELECT categoryID
                 FROM categories
                 WHERE categoryID = ?
-                AND (
-                    status = 'Active'
-                    OR categoryID = ?
-                )
+                AND (status = 'Active' OR categoryID = ?)
                 LIMIT 1
             ");
+            $stmt->bind_param('ss', $categoryID, $asset['categoryID']);
+            $stmt->execute();
 
-            $categoryCheck->bind_param(
-                "ss",
-                $categoryID,
-                $asset['categoryID']
-            );
-
-            $categoryCheck->execute();
-
-            if (
-                !$categoryCheck
-                    ->get_result()
-                    ->fetch_assoc()
-            ) {
-                $formError =
-                    "Please select a valid category.";
+            if (!$stmt->get_result()->fetch_assoc()) {
+                $error = 'Please select a valid category.';
             }
 
-            $categoryCheck->close();
+            $stmt->close();
         }
 
-        // Current Image
         $imageURL = $asset['imageURL'];
 
-        // Optional Replacement Image
-        if (
-            $formError === '' &&
-            isset($_FILES['assetImage']) &&
-            $_FILES['assetImage']['error']
-                !== UPLOAD_ERR_NO_FILE
-        ) {
-            $uploadedImage = $_FILES['assetImage'];
+        if (!$error) {
+            [$imageURL, $newFile, $uploadError] =
+                uploadAssetImage($_FILES['assetImage'] ?? [], $assetID, $imageURL);
 
-            if ($uploadedImage['error'] !== UPLOAD_ERR_OK) {
-                $formError =
-                    "Unable to upload the selected image.";
-            } elseif ($uploadedImage['size'] > 5 * 1024 * 1024) {
-                $formError =
-                    "Image size must not exceed 5MB.";
-            } else {
-                $imageInfo = getimagesize(
-                    $uploadedImage['tmp_name']
-                );
-
-                if ($imageInfo === false) {
-                    $formError =
-                        "The selected file is not a valid image.";
-                } else {
-                    $mimeType = $imageInfo['mime'];
-
-                    $allowedImageTypes = [
-                        'image/jpeg' => 'jpg',
-                        'image/png' => 'png'
-                    ];
-
-                    if (!isset(
-                        $allowedImageTypes[$mimeType]
-                    )) {
-                        $formError =
-                            "Only JPG and PNG images are allowed.";
-                    } else {
-                        $extension =
-                            $allowedImageTypes[$mimeType];
-
-                        $fileName =
-                            strtolower($assetID)
-                            . '_'
-                            . time()
-                            . '.'
-                            . $extension;
-
-                        $uploadDirectory =
-                            dirname(__DIR__)
-                            . '/assets/managerfile/';
-
-                        if (!is_dir($uploadDirectory)) {
-                            if (
-                                !mkdir(
-                                    $uploadDirectory,
-                                    0775,
-                                    true
-                                )
-                            ) {
-                                $formError =
-                                    "Unable to create the image upload folder.";
-                            }
-                        }
-
-                        if ($formError === '') {
-                            $newUploadedFile =
-                                $uploadDirectory
-                                . $fileName;
-
-                            if (
-                                !move_uploaded_file(
-                                    $uploadedImage['tmp_name'],
-                                    $newUploadedFile
-                                )
-                            ) {
-                                $formError =
-                                    "Unable to save the uploaded image.";
-                            } else {
-                                $imageURL =
-                                    'assets/managerfile/'
-                                    . $fileName;
-                            }
-                        }
-                    }
-                }
-            }
+            if ($uploadError) $error = $uploadError;
         }
 
-        // Save Changes
-        if ($formError === '') {
+        if (!$error) {
             try {
                 $conn->begin_transaction();
 
-                $oldAvailabilityStatus =
-                    $asset['availabilityStatus'];
-
-                // Listing Status and Verification Status
-                // are intentionally NOT updated here.
-                $updateStatement = $conn->prepare("
-                    UPDATE assets
-                    SET
-                        categoryID = ?,
-                        assetName = ?,
-                        description = ?,
-                        assetCondition = ?,
-                        imageURL = ?,
-                        availabilityStatus = ?,
+                $stmt = $conn->prepare("
+                    UPDATE assets SET
+                        categoryID = ?, assetName = ?, description = ?,
+                        assetCondition = ?, imageURL = ?,
                         updatedDate = CURRENT_TIMESTAMP
                     WHERE assetID = ?
                 ");
 
-                $updateStatement->bind_param(
-                    "sssssss",
-                    $categoryID,
-                    $assetName,
-                    $description,
-                    $assetCondition,
-                    $imageURL,
-                    $availabilityStatus,
-                    $assetID
+                $stmt->bind_param(
+                    'ssssss',
+                    $categoryID, $name, $description,
+                    $condition, $imageURL, $assetID
                 );
+                $stmt->execute();
+                $stmt->close();
 
-                $updateStatement->execute();
-                $updateStatement->close();
+                // System Log
+                $logID = nextID($conn, 'systemlog', 'logID', 'LOG');
+                $logText = "Updated asset information: $name";
 
-                // Record Availability Status Change
-                if (
-                    $oldAvailabilityStatus
-                    !== $availabilityStatus
-                ) {
-                    $historyResult = $conn->query("
-                        SELECT MAX(
-                            CAST(
-                                SUBSTRING(historyID, 4)
-                                AS UNSIGNED
-                            )
-                        ) AS maxID
-                        FROM assetstatushistory
-                    ");
-
-                    $historyRow =
-                        $historyResult->fetch_assoc();
-
-                    $nextHistoryNumber =
-                        ((int) (
-                            $historyRow['maxID'] ?? 0
-                        )) + 1;
-
-                    $historyID = sprintf(
-                        "ASH%03d",
-                        $nextHistoryNumber
-                    );
-
-                    $statusChangeReason =
-                        "Availability updated by Resource Manager.";
-
-                    $historyStatement = $conn->prepare("
-                        INSERT INTO assetstatushistory
-                        (
-                            historyID,
-                            assetID,
-                            updatedBy,
-                            oldAvailabilityStatus,
-                            newAvailabilityStatus,
-                            statusChangeReason
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ");
-
-                    $historyStatement->bind_param(
-                        "ssssss",
-                        $historyID,
-                        $assetID,
-                        $managerID,
-                        $oldAvailabilityStatus,
-                        $availabilityStatus,
-                        $statusChangeReason
-                    );
-
-                    $historyStatement->execute();
-                    $historyStatement->close();
-                }
-
-                // Generate System Log ID
-                $logResult = $conn->query("
-                    SELECT MAX(
-                        CAST(
-                            SUBSTRING(logID, 4)
-                            AS UNSIGNED
-                        )
-                    ) AS maxID
-                    FROM systemlog
-                ");
-
-                $logRow = $logResult->fetch_assoc();
-
-                $nextLogNumber =
-                    ((int) ($logRow['maxID'] ?? 0)) + 1;
-
-                $logID = sprintf(
-                    "LOG%03d",
-                    $nextLogNumber
-                );
-
-                $logDescription =
-                    "Updated asset information: "
-                    . $assetName;
-
-                $logStatement = $conn->prepare("
+                $stmt = $conn->prepare("
                     INSERT INTO systemlog
-                    (
-                        logID,
-                        userID,
-                        actionType,
-                        refType,
-                        refID,
-                        description
-                    )
-                    VALUES (
-                        ?,
-                        ?,
-                        'Update',
-                        'Asset',
-                        ?,
-                        ?
-                    )
+                        (logID, userID, actionType, refType, refID, description)
+                    VALUES (?, ?, 'Update', 'Asset', ?, ?)
                 ");
-
-                $logStatement->bind_param(
-                    "ssss",
-                    $logID,
-                    $managerID,
-                    $assetID,
-                    $logDescription
-                );
-
-                $logStatement->execute();
-                $logStatement->close();
+                $stmt->bind_param('ssss', $logID, $managerID, $assetID, $logText);
+                $stmt->execute();
+                $stmt->close();
 
                 $conn->commit();
 
-                header(
-                    "Location: manager_asset_view.php"
-                    . "?assetID="
-                    . urlencode($assetID)
-                    . "&updated=1"
-                );
-
+                header("Location: manager_asset_view.php?assetID=$assetID&updated=1");
                 exit();
 
-            } catch (Throwable $error) {
+            } catch (Throwable $e) {
                 $conn->rollback();
 
-                // Remove newly uploaded image if DB update fails
-                if (
-                    $newUploadedFile !== '' &&
-                    file_exists($newUploadedFile)
-                ) {
-                    unlink($newUploadedFile);
-                }
+                if ($newFile && file_exists($newFile)) unlink($newFile);
 
-                throw $error;
+                throw $e;
             }
         }
 
-        // Keep Entered Values After Validation Error
-        if ($formError !== '') {
-            $asset['assetName'] = $assetName;
+        if ($error) {
+            $asset['assetName'] = $name;
             $asset['categoryID'] = $categoryID;
-            $asset['assetCondition'] =
-                $assetCondition;
+            $asset['assetCondition'] = $condition;
             $asset['description'] = $description;
-            $asset['availabilityStatus'] =
-                $availabilityStatus;
         }
     }
 
-} catch (Throwable $error) {
-    error_log($error->getMessage());
-
-    $databaseError =
-        "Unable to process the asset information. Please try again.";
+} catch (Throwable $e) {
+    error_log($e->getMessage());
+    $error = 'Unable to process the asset information. Please try again.';
 }
 
-if ($conn instanceof mysqli) {
-    $conn->close();
-}
+if ($conn instanceof mysqli) $conn->close();
 
-// Image Preview
-$imagePath = '';
-
-if ($asset && !empty($asset['imageURL'])) {
-    $imagePath =
-        '../assets/managerfile/'
-        . basename($asset['imageURL']);
-}
+$imagePath = assetImagePath($asset['imageURL'] ?? null);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Asset - CirculAPU</title>
-
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
 </head>
 
 <body class="role-manager">
-
 <div class="dashboard-container">
 
-    <?php include '../sidebar.php'; ?>
-
-    <div class="main-content">
-
-        <?php include '../header.php'; ?>
-
-        <main class="page-body">
-
-            <!-- 1. Page Heading -->
-            <section class="management-heading">
-
-                <div class="breadcrumb">
-                    <a href="manager_assets.php">
-                        Asset Management
-                    </a>
-
-                    <span>›</span>
-
-                    <a
-                        href="manager_asset_view.php?assetID=<?php
-                        echo urlencode($assetID);
-                        ?>"
-                    >
-                        Asset Details
-                    </a>
-
-                    <span>›</span>
-
-                    <span class="breadcrumb-current">
-                        Edit Asset
-                    </span>
-                </div>
-
-                <h1>Edit Asset Information</h1>
-
-                <p>
-                    Update the asset listing information while
-                    preserving its review and verification status.
-                </p>
-
-            </section>
-
-            <!-- 2. Database Error -->
-            <?php if (!empty($databaseError)): ?>
-
-                <div class="dashboard-error-message">
-                    <?php echo htmlspecialchars($databaseError); ?>
-                </div>
-
-                <a
-                    href="manager_assets.php"
-                    class="management-create-btn"
-                >
-                    Back to Asset Management
-                </a>
-
-            <?php elseif ($asset): ?>
-
-                <!-- 3. Form Error -->
-                <?php if (!empty($formError)): ?>
-
-                    <div class="alert alert-error">
-                        <?php echo htmlspecialchars($formError); ?>
-                    </div>
-
-                <?php endif; ?>
-
-                <!-- 4. Edit Form -->
-                <section class="content-card asset-form-card">
-
-                    <form
-                        action="manager_asset_edit.php?assetID=<?php
-                        echo urlencode($asset['assetID']);
-                        ?>"
-                        method="POST"
-                        enctype="multipart/form-data"
-                    >
-
-                        <div class="asset-form-layout">
-
-                            <!-- Asset Fields -->
-                            <div class="asset-form-fields">
-
-                                <!-- Asset ID -->
-                                <div class="asset-form-row">
-                                    <label>Asset ID</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            $asset['assetID']
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <!-- Asset Name -->
-                                <div class="asset-form-row">
-                                    <label for="assetName">
-                                        Asset Name *
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="assetName"
-                                        name="assetName"
-                                        maxlength="150"
-                                        value="<?php echo htmlspecialchars(
-                                            $asset['assetName']
-                                        ); ?>"
-                                        required
-                                    >
-                                </div>
-
-                                <!-- Category -->
-                                <div class="asset-form-row">
-                                    <label for="categoryID">
-                                        Category *
-                                    </label>
-
-                                    <select
-                                        id="categoryID"
-                                        name="categoryID"
-                                        required
-                                    >
-
-                                        <?php foreach ($categories as $category): ?>
-
-                                            <option
-                                                value="<?php echo htmlspecialchars(
-                                                    $category['categoryID']
-                                                ); ?>"
-                                                <?php
-                                                echo $asset['categoryID']
-                                                    === $category['categoryID']
-                                                    ? 'selected'
-                                                    : '';
-                                                ?>
-                                            >
-                                                <?php echo htmlspecialchars(
-                                                    $category['categoryName']
-                                                ); ?>
-                                            </option>
-
-                                        <?php endforeach; ?>
-
-                                    </select>
-                                </div>
-
-                                <!-- Condition -->
-                                <div class="asset-form-row">
-                                    <label for="assetCondition">
-                                        Condition *
-                                    </label>
-
-                                    <select
-                                        id="assetCondition"
-                                        name="assetCondition"
-                                        required
-                                    >
-
-                                        <?php foreach ($conditionOptions as $condition): ?>
-
-                                            <option
-                                                value="<?php echo htmlspecialchars(
-                                                    $condition
-                                                ); ?>"
-                                                <?php
-                                                echo $asset['assetCondition']
-                                                    === $condition
-                                                    ? 'selected'
-                                                    : '';
-                                                ?>
-                                            >
-                                                <?php echo htmlspecialchars(
-                                                    $condition
-                                                ); ?>
-                                            </option>
-
-                                        <?php endforeach; ?>
-
-                                    </select>
-                                </div>
-
-                                <!-- Description -->
-                                <div
-                                    class="asset-form-row asset-form-textarea"
-                                >
-                                    <label for="description">
-                                        Description
-                                    </label>
-
-                                    <textarea
-                                        id="description"
-                                        name="description"
-                                        maxlength="255"
-                                        rows="4"
-                                    ><?php echo htmlspecialchars(
-                                        $asset['description'] ?? ''
-                                    ); ?></textarea>
-                                </div>
-
-                                <!-- Availability -->
-                                <div class="asset-form-row">
-                                    <label for="availabilityStatus">
-                                        Availability *
-                                    </label>
-
-                                    <select
-                                        id="availabilityStatus"
-                                        name="availabilityStatus"
-                                        required
-                                    >
-
-                                        <?php foreach ($availabilityOptions as $availability): ?>
-
-                                            <option
-                                                value="<?php echo htmlspecialchars(
-                                                    $availability
-                                                ); ?>"
-                                                <?php
-                                                echo $asset['availabilityStatus']
-                                                    === $availability
-                                                    ? 'selected'
-                                                    : '';
-                                                ?>
-                                            >
-                                                <?php echo htmlspecialchars(
-                                                    $availability
-                                                ); ?>
-                                            </option>
-
-                                        <?php endforeach; ?>
-
-                                    </select>
-                                </div>
-
-                                <!-- Owner -->
-                                <div class="asset-form-row">
-                                    <label>Submitted By</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            $asset['ownerName']
-                                            . ' ('
-                                            . $asset['ownerID']
-                                            . ')'
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <!-- Listing Status -->
-                                <div class="asset-form-row">
-                                    <label>Listing Status</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            $asset['listingStatus']
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <!-- Verification Status -->
-                                <div class="asset-form-row">
-                                    <label>Verification Status</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            $asset['verificationStatus']
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                                <!-- Date Listed -->
-                                <div class="asset-form-row">
-                                    <label>Date Listed</label>
-
-                                    <input
-                                        type="text"
-                                        value="<?php echo htmlspecialchars(
-                                            date(
-                                                'd M Y, h:i A',
-                                                strtotime(
-                                                    $asset['createdDate']
-                                                )
-                                            )
-                                        ); ?>"
-                                        readonly
-                                    >
-                                </div>
-
-                            </div>
-
-                            <!-- Side Panel -->
-                            <aside class="asset-form-side">
-
-                                <!-- Current Image -->
-                                <div class="asset-form-image-section">
-
-                                    <h2>Current Image</h2>
-
-                                    <?php if ($imagePath !== ''): ?>
-
-                                        <div class="asset-form-image-preview">
-                                            <img
-                                                src="<?php echo htmlspecialchars(
-                                                    $imagePath
-                                                ); ?>"
-                                                alt="<?php echo htmlspecialchars(
-                                                    $asset['assetName']
-                                                ); ?>"
-                                            >
-                                        </div>
-
-                                        <p>
-                                            <?php echo htmlspecialchars(
-                                                basename(
-                                                    $asset['imageURL']
-                                                )
-                                            ); ?>
-                                        </p>
-
-                                    <?php else: ?>
-
-                                        <div class="asset-image-empty">
-                                            No image uploaded
-                                        </div>
-
-                                    <?php endif; ?>
-
-                                </div>
-
-                                <!-- Replace Image -->
-                                <div class="asset-form-upload">
-
-                                    <label for="assetImage">
-                                        Replace Image
-                                    </label>
-
-                                    <input
-                                        type="file"
-                                        id="assetImage"
-                                        name="assetImage"
-                                        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                    >
-
-                                    <small>
-                                        Optional. JPG or PNG only,
-                                        maximum 5MB.
-                                    </small>
-
-                                </div>
-
-                                <!-- Note -->
-                                <div class="asset-form-note">
-
-                                    <strong>Important</strong>
-
-                                    <p>
-                                        Listing Status and Verification
-                                        Status cannot be changed from this
-                                        page. Use the correct review or
-                                        verification workflow instead.
-                                    </p>
-
-                                </div>
-
-                                <!-- Actions -->
-                                <div class="asset-form-actions">
-
-                                    <button
-                                        type="submit"
-                                        class="asset-form-submit"
-                                    >
-                                        <img
-                                            src="../assets/icons/edit.png"
-                                            alt=""
-                                        >
-                                        Save Changes
-                                    </button>
-
-                                    <button
-                                        type="reset"
-                                        class="asset-form-reset"
-                                    >
-                                        <img
-                                            src="../assets/icons/reset.png"
-                                            alt=""
-                                        >
-                                        Reset
-                                    </button>
-
-                                    <a
-                                        href="manager_asset_view.php?assetID=<?php
-                                        echo urlencode(
-                                            $asset['assetID']
-                                        );
-                                        ?>"
-                                        class="asset-form-back"
-                                    >
-                                        Back
-                                    </a>
-
-                                </div>
-
-                            </aside>
-
-                        </div>
-
-                    </form>
-
-                </section>
-
-            <?php endif; ?>
-
-        </main>
-
+<?php include '../sidebar.php'; ?>
+
+<div class="main-content">
+
+<?php include '../header.php'; ?>
+
+<main class="page-body">
+
+<section class="management-heading">
+    <div class="breadcrumb">
+        <a href="manager_assets.php">Asset Management</a><span>›</span>
+        <a href="manager_asset_view.php?assetID=<?= e($assetID) ?>">Asset Details</a><span>›</span>
+        <span class="breadcrumb-current">Edit Asset</span>
+    </div>
+
+    <h1>Edit Asset Information</h1>
+    <p>Update asset information while preserving its review and verification workflow.</p>
+</section>
+
+<?php if ($error): ?>
+    <div class="alert alert-error"><?= e($error) ?></div>
+<?php endif; ?>
+
+<?php if ($asset && $asset['listingStatus'] !== 'Removed'): ?>
+
+<section class="content-card asset-form-card">
+
+<form method="POST" enctype="multipart/form-data">
+
+<div class="asset-form-layout">
+
+<div class="asset-form-fields">
+
+    <div class="asset-form-row">
+        <label>Asset ID</label>
+        <input value="<?= e($asset['assetID']) ?>" readonly>
+    </div>
+
+    <div class="asset-form-row">
+        <label for="assetName">Asset Name *</label>
+        <input id="assetName" name="assetName" maxlength="150"
+               value="<?= e($asset['assetName']) ?>" required>
+    </div>
+
+    <div class="asset-form-row">
+        <label for="categoryID">Category *</label>
+
+        <select id="categoryID" name="categoryID" required>
+            <?php foreach ($categories as $c): ?>
+                <option value="<?= e($c['categoryID']) ?>"
+                    <?= $asset['categoryID'] === $c['categoryID'] ? 'selected' : '' ?>>
+                    <?= e($c['categoryName']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="asset-form-row">
+        <label for="assetCondition">Condition *</label>
+
+        <select id="assetCondition" name="assetCondition" required>
+            <?php foreach ($conditions as $v): ?>
+                <option value="<?= e($v) ?>"
+                    <?= $asset['assetCondition'] === $v ? 'selected' : '' ?>>
+                    <?= e($v) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="asset-form-row asset-form-textarea">
+        <label for="description">Description</label>
+        <textarea id="description" name="description"
+                  maxlength="255" rows="4"><?= e($asset['description'] ?? '') ?></textarea>
+    </div>
+
+    <div class="asset-form-row">
+        <label>Availability</label>
+        <input value="<?= e($asset['availabilityStatus']) ?>" readonly>
+    </div>
+
+    <div class="asset-form-row">
+        <label>Submitted By</label>
+        <input value="<?= e($asset['ownerName'] . ' (' . $asset['ownerID'] . ')') ?>" readonly>
+    </div>
+
+    <div class="asset-form-row">
+        <label>Listing Status</label>
+        <input value="<?= e($asset['listingStatus']) ?>" readonly>
+    </div>
+
+    <div class="asset-form-row">
+        <label>Verification Status</label>
+        <input value="<?= e($asset['verificationStatus']) ?>" readonly>
+    </div>
+
+    <div class="asset-form-row">
+        <label>Date Listed</label>
+        <input value="<?= e(date('d M Y, h:i A', strtotime($asset['createdDate']))) ?>" readonly>
     </div>
 
 </div>
 
+<aside class="asset-form-side">
+
+    <div class="asset-form-image-section">
+        <h2>Current Image</h2>
+
+        <?php if ($imagePath): ?>
+            <div class="asset-form-image-preview">
+                <img src="<?= e($imagePath) ?>" alt="<?= e($asset['assetName']) ?>">
+            </div>
+            <p><?= e(basename($asset['imageURL'])) ?></p>
+        <?php else: ?>
+            <div class="asset-image-empty">No image uploaded</div>
+        <?php endif; ?>
+    </div>
+
+    <div class="asset-form-upload">
+        <label for="assetImage">Replace Image</label>
+        <input type="file" id="assetImage" name="assetImage"
+               accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+        <small>Optional. JPG or PNG only, maximum 5MB.</small>
+    </div>
+
+    <div class="asset-form-note">
+        <strong>Important</strong>
+        <p>Listing Status and Verification Status cannot be changed here. Use the correct workflow instead.</p>
+    </div>
+
+    <div class="asset-form-actions">
+        <button type="submit" class="asset-form-submit">
+            <img src="../assets/icons/edit.png" alt="">Save Changes
+        </button>
+
+        <button type="reset" class="asset-form-reset">
+            <img src="../assets/icons/reset.png" alt="">Reset
+        </button>
+
+        <a href="manager_asset_view.php?assetID=<?= e($asset['assetID']) ?>"
+           class="asset-form-back">Back</a>
+    </div>
+
+</aside>
+
+</div>
+
+</form>
+
+</section>
+
+<?php endif; ?>
+
+</main>
+</div>
+</div>
 </body>
 </html>

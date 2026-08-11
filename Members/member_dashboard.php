@@ -18,10 +18,13 @@ if ($conn->connect_error) {
     die("Database Connection Failed: " . $conn->connect_error);
 }
 
+<<<<<<< HEAD
 // Access Control Guard for Community Member Role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: login.php");}
 // =======
+=======
+>>>>>>> 137919501b8367d786b8500235a335ee77840cc6
 // Access Control Guard for Community Member Role (Allows Admin Preview)
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Member' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
@@ -315,8 +318,5 @@ $totalBadge = $badgeData['totalBadge'];
 
         </div>
     </div>
-
-
-
 </body>
 </html>
