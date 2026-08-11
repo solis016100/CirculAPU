@@ -1,0 +1,40 @@
+CSS UNUSED CLASS REPORT
+============================================================
+
+CSS classes found : 333
+Used classes      : 323
+Possibly unused   : 10
+
+============================================================
+POSSIBLY UNUSED CLASSES
+============================================================
+
+.activity-table
+    style.css
+
+.availability-available
+    Auditor\auditor_style.css
+
+.availability-unavailable
+    Auditor\auditor_style.css
+
+.color-subtle-white
+    Admin\admin_style.css
+
+.dashboard-date
+    style.css
+
+.notification-unread
+    style.css
+
+.role-badge
+    style.css
+
+.status-approved
+    Auditor\auditor_style.css
+
+.status-pending
+    Auditor\auditor_style.css
+
+.status-rejected
+    Auditor\auditor_style.css
