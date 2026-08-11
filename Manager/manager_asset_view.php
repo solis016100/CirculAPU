@@ -97,8 +97,12 @@ $imagePath = '';
 $imageName = '';
 
 if ($asset && !empty($asset['imageURL'])) {
-    $imageName = basename($asset['imageURL']);
-    $imagePath = '../assets/managerfile/' . $imageName;
+    $imageURL = str_replace('\\', '/', trim($asset['imageURL']));
+    $imageName = basename($imageURL);
+
+    $imagePath = preg_match('/^https?:\/\//i', $imageURL)
+        ? $imageURL
+        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $imageURL), '/');
 }
 ?>
 
