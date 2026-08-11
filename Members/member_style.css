@@ -1,0 +1,162 @@
+/* My Recent Requests - Dashboard */
+
+.recent-request-card {
+    width: 55%;
+    margin-top: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9e5dd;
+    border-radius: 12px;
+
+    padding: 18px;
+
+    box-sizing: border-box;
+}
+
+
+/* Header */
+
+.recent-request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 15px;
+}
+
+.recent-request-header h2 {
+    margin: 0;
+
+    font-size: 21px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+.view-all {
+    color: #333;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: underline;
+}
+
+.view-all:hover {
+    color: #159447;
+}
+
+
+/* ================================
+   Table
+================================ */
+
+.recent-request-table {
+    width: 100%;
+
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+
+/* 4 columns */
+
+.recent-request-row {
+    display: grid;
+
+    grid-template-columns:
+        1.7fr
+        1fr
+        1fr
+        1.2fr;
+
+    align-items: center;
+
+    min-height: 42px;
+
+    padding: 0 12px;
+
+    border-bottom: 1px solid #e2e2e2;
+
+    font-size: 13px;
+}
+
+.recent-request-row:last-child {
+    border-bottom: none;
+}
+
+
+/* Table Header */
+
+.recent-request-title {
+    font-weight: 600;
+    background: #fafafa;
+}
+
+
+/* Asset Name */
+
+.request-name {
+    font-weight: 500;
+}
+
+
+/* ================================
+   Status
+================================ */
+
+.request-status {
+    display: inline-block;
+
+    padding: 4px 9px;
+
+    border-radius: 5px;
+
+    font-size: 12px;
+}
+
+
+/* Pending */
+
+.request-status.pending {
+    background: #fff4d6;
+    color: #8a6813;
+}
+
+
+/* Approved */
+
+.request-status.approved {
+    background: #e2f5e8;
+    color: #247a40;
+}
+
+
+/* Rejected */
+
+.request-status.rejected {
+    background: #fde8e8;
+    color: #a52a2a;
+}
+
+
+/* Completed */
+
+.request-status.completed {
+    background: #e9eef8;
+    color: #38598a;
+}
+
+
+/* No Request */
+
+.no-request {
+    padding: 25px;
+
+    text-align: center;
+
+    color: #777;
+}

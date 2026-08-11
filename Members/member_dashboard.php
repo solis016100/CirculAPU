@@ -3,6 +3,7 @@ session_start();
 $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
 $is_preview = isset($_GET['preview']);
 
+
 // <<<<<<< HEAD
 // Database Connection
 $conn = new mysqli(
@@ -19,7 +20,7 @@ if ($conn->connect_error) {
 
 // Access Control Guard for Community Member Role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
-    header("Location: login.php");
+    header("Location: login.php");}
 // =======
 // Access Control Guard for Community Member Role (Allows Admin Preview)
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Member' && !($is_admin && $is_preview))) {
@@ -48,16 +49,78 @@ if ($nameResult && $nameResult->num_rows > 0) {
 }
 
 // Get Total My Request
+// Borrow Requests + Asset Update Requests
 
 $requestQuery = "
-SELECT COUNT(*) AS totalRequest
-FROM transactionrequests
-WHERE requesterID = '$userID'
+SELECT
+    (
+        SELECT COUNT(*)
+        FROM transactionrequests
+        WHERE requesterID = '$userID'
+    )
+    +
+    (
+        SELECT COUNT(*)
+        FROM verificationrecords
+        WHERE userID = '$userID'
+        AND targetType = 'Asset'
+    )
+    AS totalRequest
 ";
 
 $requestResult = $conn->query($requestQuery);
 $requestData = $requestResult->fetch_assoc();
 $totalRequest = $requestData['totalRequest'];
+
+
+// Read My Request Data
+// Borrow Request + Asset Approval
+
+$requestListQuery = "
+
+    SELECT
+        a.assetName AS requestName,
+        'Borrow' AS requestType,
+        tr.requestStatus AS requestStatus,
+        tr.requestDate AS requestDate
+
+    FROM transactionrequests tr
+
+    INNER JOIN assets a
+        ON tr.assetID = a.assetID
+
+    WHERE tr.requesterID = '$userID'
+
+
+    UNION ALL
+
+
+    SELECT
+        a.assetName AS requestName,
+        'Asset Update' AS requestType,
+        vr.status AS requestStatus,
+        vr.verifiedDate AS requestDate
+
+    FROM verificationrecords vr
+
+    INNER JOIN assets a
+        ON vr.targetID = a.assetID
+
+    WHERE vr.userID = '$userID'
+    AND vr.targetType = 'Asset'
+
+
+    ORDER BY requestDate DESC
+    LIMIT 4
+";
+
+
+$requestListResult = $conn->query($requestListQuery);
+
+
+if (!$requestListResult) {
+    die("Request Query Failed: " . $conn->error);
+}
 
 // Get Completed Missions
 
@@ -97,6 +160,8 @@ WHERE userID = '$userID'
 $badgeResult = $conn->query($badgeQuery);
 $badgeData = $badgeResult->fetch_assoc();
 $totalBadge = $badgeData['totalBadge'];
+
+
 ?>
 
 
@@ -107,6 +172,7 @@ $totalBadge = $badgeData['totalBadge'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Portal - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="member_style.css">
 </head>
 <body class="role-member">
 
@@ -154,6 +220,95 @@ $totalBadge = $badgeData['totalBadge'];
                 </div>
 
             </div>
+
+          <!-- My Recent Requests -->
+<div class="recent-request-card">
+
+    <!-- Header -->
+    <div class="recent-request-header">
+
+        <h2>My Recent Requests</h2>
+
+        <a href="my_request.php" class="view-all">
+            View All
+        </a>
+
+    </div>
+
+
+    <!-- Request Table -->
+    <div class="recent-request-table">
+
+        <!-- Table Header -->
+        <div class="recent-request-row recent-request-title">
+            <span>Request</span>
+            <span>Type</span>
+            <span>Status</span>
+            <span>Date</span>
+        </div>
+
+
+        <!-- Database Data -->
+        <?php if ($requestListResult && $requestListResult->num_rows > 0): ?>
+
+            <?php while ($request = $requestListResult->fetch_assoc()): ?>
+
+                <div class="recent-request-row">
+
+                    <!-- Request -->
+                    <span class="request-name">
+                        <?php echo htmlspecialchars($request['requestName']); ?>
+                    </span>
+
+
+                    <!-- Type -->
+                    <span>
+                        <?php echo htmlspecialchars($request['requestType']); ?>
+                    </span>
+
+
+                    <!-- Status -->
+                    <span>
+
+                        <span class="request-status <?php
+                            echo strtolower($request['requestStatus']);
+                        ?>">
+
+                            <?php
+                            echo htmlspecialchars($request['requestStatus']);
+                            ?>
+
+                        </span>
+
+                    </span>
+
+
+                    <!-- Date -->
+                    <span>
+                        <?php
+                        echo date(
+                            "d M Y",
+                            strtotime($request['requestDate'])
+                        );
+                        ?>
+                    </span>
+
+                </div>
+
+            <?php endwhile; ?>
+
+
+        <?php else: ?>
+
+            <div class="no-request">
+                No recent requests found.
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>
 
 
             </main>
