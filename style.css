@@ -11,7 +11,7 @@
 body.role-admin {
     --primary-color: #6b21a8;
     --primary-hover: #581c87;
-    --bg-color: #f8fafc;
+    --bg-color: #f2e4ff;
     --card-bg: #ffffff;
     --badge-bg: #f3e8ff;
     --badge-text: #6b21a8;
@@ -1745,7 +1745,6 @@ body.auth-page {
     }
 }
 
-<<<<<<< Updated upstream
 /* ==========================================================================
    Global Simulation Header Banner (Shared across all roles)
    ========================================================================== */
@@ -2137,5 +2136,3 @@ body.auth-page {
 .full-width-card {
     width: 100%;
 }
-=======
->>>>>>> Stashed changes

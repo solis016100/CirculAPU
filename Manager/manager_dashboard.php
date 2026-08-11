@@ -1,8 +1,9 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
+$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
+$is_preview = isset($_GET['preview']);
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Manager' && !($is_admin && $is_preview))) {
     header("Location: ../login.php");
     exit();
 }
