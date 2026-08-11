@@ -1,202 +1,240 @@
 <?php
     session_start();
-    if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'Auditor') exit('Access denied');
+
+    if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'Auditor') {
+        header("Location: ../login.php");
+        exit();
+    }
 
     require '../db.php';
 
     $id = $_GET['verificationID'] ?? '';
-    if (!$id) exit('Invalid ID');
 
-    function e($x) {
-        return htmlspecialchars($x ?? '');
+    if (!$id) {
+        header("Location: auditor_verification_management.php");
+        exit();
     }
 
+
+    /* GET VERIFICATION */
     $q = $conn->prepare("
-        SELECT v.*, u.name userName, a.name auditorName
+        SELECT v.*, 
+            u.name AS userName,
+            a.name AS auditorName
         FROM verificationrecords v
-        LEFT JOIN user u ON v.userID=u.userID
-        LEFT JOIN user a ON v.verifiedBy=a.userID
-        WHERE v.verificationID=?
+        LEFT JOIN user u ON v.userID = u.userID
+        LEFT JOIN user a ON v.verifiedBy = a.userID
+        WHERE v.verificationID = ?
     ");
-    $q->bind_param("s",$id);
+
+    $q->bind_param("s", $id);
     $q->execute();
+
     $r = $q->get_result()->fetch_assoc();
 
-    if (!$r) exit('Record not found');
+    if (!$r) {
+        exit("Record not found");
+    }
 
+
+    /* GET TARGET */
     $type = $r['targetType'];
-    $name = $image = $date = $category = $condition = '';
+    $name = '';
+    $image = '';
+    $date = '';
+    $category = '';
+    $condition = '';
 
     if ($type == 'Asset') {
         $q = $conn->prepare("
-            SELECT a.assetName,a.assetCondition,a.imageURL,a.createdDate,
+            SELECT a.assetName,
+                a.assetCondition,
+                a.imageURL,
+                a.createdDate,
                 c.categoryName
             FROM assets a
-            LEFT JOIN categories c ON a.categoryID=c.categoryID
-            WHERE a.assetID=?
+            LEFT JOIN categories c
+            ON a.categoryID = c.categoryID
+            WHERE a.assetID = ?
         ");
-    } else {
-        $q = $conn->prepare("
-            SELECT m.missionName,ms.evidencePath,ms.submissionDate
-            FROM missions m
-            JOIN missionsubmission ms ON m.missionID=ms.missionID
-            WHERE ms.submissionID=?
-        ");
-    }
 
-    $q->bind_param("s",$r['targetID']);
-    $q->execute();
-    $t = $q->get_result()->fetch_assoc();
+        $q->bind_param("s", $r['targetID']);
+        $q->execute();
 
-    if ($t) {
-        $name = $t[$type == 'Asset' ? 'assetName' : 'missionName'];
-        $image = $t[$type == 'Asset' ? 'imageURL' : 'evidencePath'];
-        $date = $t[$type == 'Asset' ? 'createdDate' : 'submissionDate'];
+        $t = $q->get_result()->fetch_assoc();
 
-        if ($type == 'Asset') {
+        if ($t) {
+            $name = $t['assetName'];
             $category = $t['categoryName'];
             $condition = $t['assetCondition'];
+            $image = $t['imageURL'];
+            $date = $t['createdDate'];
+        }
+
+    } else {
+
+        $q = $conn->prepare("
+            SELECT m.missionName,
+                ms.evidencePath,
+                ms.submissionDate
+            FROM missions m
+            JOIN missionsubmission ms
+            ON m.missionID = ms.missionID
+            WHERE ms.submissionID = ?
+        ");
+
+        $q->bind_param("s", $r['targetID']);
+        $q->execute();
+
+        $t = $q->get_result()->fetch_assoc();
+
+        if ($t) {
+            $name = $t['missionName'];
+            $image = $t['evidencePath'];
+            $date = $t['submissionDate'];
         }
     }
 
+
+    /* DISPLAY FIELDS */
     $fields = [
         'Verification ID' => $r['verificationID'],
-        'User' => $r['userName'].' ('.$r['userID'].')',
+        'User' => $r['userName'] . ' (' . $r['userID'] . ')',
         'Target Type' => $type,
         'Target ID' => $r['targetID'],
-        $type == 'Asset' ? 'Asset Name' : 'Mission Name' => $name
+        ($type == 'Asset' ? 'Asset Name' : 'Mission Name') => $name
     ];
 
     if ($type == 'Asset') {
-        $fields += [
-            'Category' => $category,
-            'Condition' => $condition
-        ];
+        $fields['Category'] = $category;
+        $fields['Condition'] = $condition;
     }
 
-    $fields += [
-        'Status' => $r['status'],
-        'Submission Date' => $date ? date('d M Y',strtotime($date)) : '-',
-        'Verified Date' => $r['verifiedDate']
-            ? date('d M Y',strtotime($r['verifiedDate']))
-            : 'Not verified yet',
-        'Verified By' => $r['verifiedBy']
-            ? $r['auditorName'].' ('.$r['verifiedBy'].')'
-            : 'Not verified yet'
-    ];
+    $fields['Status'] = $r['status'];
+
+    $fields['Remarks'] = $r['remarks'] ?? '';
+
+    $fields['Submission Date'] = $date ? date('d M Y', strtotime($date)) : '-';
+
+    $fields['Verified Date'] = $r['verifiedDate'] ? date('d M Y', strtotime($r['verifiedDate'])) : 'Not verified yet';
+
+    $fields['Verified By'] = $r['verifiedBy'] ? $r['auditorName'] . ' (' . $r['verifiedBy'] . ')' : 'Not verified yet';
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Verification Details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verification Record Details</title>
+
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="auditor_style.css">
 </head>
 
 <body class="role-auditor">
-<div class="dashboard-container">
+    <div class="dashboard-container">
 
-<?php include '../sidebar.php'; ?>
+        <?php include '../sidebar.php'; ?>
 
-<div class="main-content">
+        <div class="main-content">
 
-<?php include '../header.php'; ?>
+            <?php include '../header.php'; ?>
 
-<main class="page-body auditor-management-detail-page">
+            <main class="page-body auditor-management-detail-page">
+                <!-- Breadcrumb -->
+                <div class="breadcrumb">
+                    <a href="auditor_verification_management.php">
+                        Verification Management
+                    </a>
+                    &gt;
+                    Verification Details
+                </div>
 
-<div class="breadcrumb">
-    <a href="auditor_verification_management.php">Verification Management</a>
-    &gt; Verification Details
-</div>
+                <h1>
+                    Verification Record Details
+                </h1>
 
-<h1>Verification Record Details</h1>
+                <section class="auditor-management-detail-layout">
 
-<section class="auditor-management-detail-layout">
+                    <div class="auditor-management-detail-information">
+                        <?php foreach ($fields as $label => $value): ?>
+                            <div class="auditor-management-detail-row">
+                                <label>
+                                    <?php echo htmlspecialchars($label); ?>
+                                </label>
 
-<div class="auditor-management-detail-information">
+                                <div class="auditor-management-detail-value <?php echo $label == 'Remarks' ? 'remarks' : ''; ?>">
+                                    <?php echo htmlspecialchars($value); ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
 
-<?php foreach ($fields as $label=>$value): ?>
-<div class="auditor-management-detail-row">
-    <label><?= e($label) ?></label>
-    <div class="auditor-management-detail-value"><?= e($value) ?></div>
-</div>
-<?php endforeach; ?>
+                    <aside class="auditor-management-detail-side">
+                        <h2>Uploaded Image</h2>
 
-<div class="auditor-management-detail-row">
-    <label>Remarks</label>
-    <textarea class="auditor-management-detail-remarks" readonly><?= e($r['remarks']) ?></textarea>
-</div>
+                        <?php if ($image): ?>
+                            <div class="auditor-management-detail-image">
+                                <img src="../<?php echo htmlspecialchars($image); ?>" alt="Evidence">
+                            </div>
 
-</div>
+                            <a href="../<?php echo htmlspecialchars($image); ?>" target="_blank" class="auditor-management-view-image">
+                                View Image
+                            </a>
 
+                        <?php else: ?>
+                            <div class="auditor-management-no-image">
+                                No image uploaded
+                            </div>
+                        <?php endif; ?>
 
-<aside class="auditor-management-detail-side">
+                        <!-- Approve / Reject Button -->
+                        <?php if ($r['status'] == 'Pending'): ?>
+                            <div class="auditor-management-decision">
+                                <button class="auditor-management-approve">
+                                    <img src="../assets/icons/approve.png" alt="">
+                                    Approve
+                                </button>
 
-<h2>Uploaded Image</h2>
+                                <button class="auditor-management-reject">
+                                    <img src="../assets/icons/reject.png" alt="">
+                                    Reject
+                                </button>
+                            </div>
+                        <?php endif; ?>
 
-<?php if ($image): ?>
+                        <div class="auditor-management-divider"></div>
 
-<div class="auditor-management-detail-image">
-    <img src="../<?= e($image) ?>" alt="Evidence">
-</div>
+                        <!-- Print -->
+                        <a href="auditor_verification_print.php?type=verification&id=<?php echo htmlspecialchars($id); ?>" " class="auditor-management-detail-action">
+                            <img src="../assets/icons/print.png" alt="">
+                            Print
+                        </a>
 
-<a href="../<?= e($image) ?>" target="_blank">View Image</a>
+                        <!-- Edit -->
+                        <a href="auditor_verification_edit.php?verificationID=<?php echo htmlspecialchars($id); ?>" class="auditor-management-detail-action">
+                            <img src="../assets/icons/edit.png" alt="">
+                            Edit
+                        </a>
 
-<?php else: ?>
+                        <!-- Delete -->
+                        <a href="../delete.php?type=verification&id=<?php echo htmlspecialchars($id); ?>" class="auditor-management-detail-action delete" onclick="return confirm('Delete this record?');">
+                            <img src="../assets/icons/delete.png" alt="">
+                            Delete
+                        </a>
+                    </aside>
+                </section>
 
-<div class="auditor-management-no-image">No image uploaded</div>
-
-<?php endif; ?>
-
-
-<?php if ($r['status']=='Pending'): ?>
-
-<div class="auditor-management-decision">
-
-<button class="auditor-management-approve">
-    <img src="../assets/icons/approve.png">Approve
-</button>
-
-<button class="auditor-management-reject">
-    <img src="../assets/icons/reject.png">Reject
-</button>
-
-</div>
-
-<?php endif; ?>
-
-
-<div class="auditor-management-divider"></div>
-
-<a class="auditor-management-detail-action"
-   href="../print.php?type=verification&id=<?= e($id) ?>"
-   target="_blank">
-    <img src="../assets/icons/print.png">Print
-</a>
-
-<a class="auditor-management-detail-action"
-   href="auditor_verification_edit.php?verificationID=<?= e($id) ?>">
-    <img src="../assets/icons/edit.png">Edit
-</a>
-
-<a class="auditor-management-detail-action delete"
-   href="../delete.php?type=verification&id=<?= e($id) ?>"
-   onclick="return confirm('Delete this record?')">
-    <img src="../assets/icons/delete.png">Delete
-</a>
-
-</aside>
-</section>
-
-<div class="auditor-management-detail-back">
-    <a href="auditor_verification_management.php">Back</a>
-</div>
-
-</main>
-</div>
-</div>
+                <!-- Back Button -->
+                <div class="auditor-management-detail-back">
+                    <a href="auditor_verification_management.php">
+                        Back
+                    </a>
+                </div>
+            </main>
+        </div>
+    </div>
 </body>
 </html>

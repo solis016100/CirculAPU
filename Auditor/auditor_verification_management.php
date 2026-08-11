@@ -314,7 +314,6 @@
                                                         href="auditor_verification_view.php?verificationID=<?php echo $record['verificationID']; ?>"
                                                         class="management-action-btn"
                                                         title="View">
-
                                                         <img src="../assets/icons/view.png" alt="View">
                                                     </a>
 
