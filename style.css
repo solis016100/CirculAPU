@@ -2136,3 +2136,231 @@ body.auth-page {
 .full-width-card {
     width: 100%;
 }
+
+/* =========================================
+   CHANGE PASSWORD SETTINGS LAYOUT
+   ========================================= */
+
+.settings-card {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.settings-form-body {
+    padding: 1.5rem 2rem;
+}
+
+/* Split Row Form Layout */
+.form-row-split {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.form-row-split:first-child {
+    padding-top: 0;
+}
+
+.row-text-info {
+    flex: 1;
+    padding-right: 2rem;
+}
+
+.row-text-info h4 {
+    font-size: 1rem;
+    color: var(--text-primary, #0f172a);
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.row-text-info p {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+    margin: 0;
+}
+
+.row-input-box {
+    width: 380px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.row-input-box input {
+    width: 100%;
+    padding: 0.85rem 2.5rem 0.85rem 1rem;
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background-color: transparent;
+    color: var(--text-primary, #0f172a);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.row-input-box input:focus {
+    border-color: var(--primary-color);
+}
+
+.toggle-icon-img {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.toggle-icon-img:hover {
+    opacity: 1;
+}
+
+/* Password Requirements Panel */
+.requirements-panel {
+    background-color: var(--input-bg, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.req-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary, #0f172a);
+}
+
+.req-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.req-list-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.5rem;
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #475569);
+}
+
+/* Submit & Back Buttons */
+.settings-submit-wrapper {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 0.5rem;
+}
+
+.update-btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--text-primary, #0f172a);
+}
+
+.back-btn {
+    margin-top: 1.5rem;
+    padding: 0.65rem 1.25rem;
+    border: 1px solid var(--text-primary, #0f172a);
+}
+
+/* =========================================
+   ABOUT PAGE LAYOUT
+   ========================================= */
+
+.about-card {
+    max-width: 1000px;
+    padding: 3rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.about-top {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    margin-bottom: 2.5rem;
+}
+
+/* Logo Box Layout */
+.about-logo {
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--text-primary, #0f172a);
+    background-color: transparent;
+    position: relative;
+}
+
+.about-logo img {
+    max-width: 70%;
+    max-height: 70%;
+    object-fit: contain;
+    z-index: 1;
+    background-color: #ffffff; /* Ensures logo masks the crossed lines behind it */
+    padding: 10px;
+}
+
+/* Details List Layout */
+.about-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.about-details-row {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+}
+
+.about-details-label {
+    width: 160px;
+    font-weight: 600;
+    color: var(--text-primary, #0f172a);
+}
+
+.about-details-separator {
+    width: 20px;
+    font-weight: 600;
+    color: var(--text-primary, #0f172a);
+}
+
+.about-details-value {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-primary, #0f172a);
+}
+
+/* Description Text */
+.about-description {
+    padding-top: 2rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-primary, #0f172a);
+    font-weight: 500;
+    text-align: justify;
+}
+
+/* Footer Element */
+.about-footer {
+    max-width: 1000px;
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 1.05rem;
+    color: var(--text-primary, #0f172a);
+    margin-left: auto;
+    margin-right: auto;
+}
