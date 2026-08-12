@@ -342,10 +342,7 @@
                                                         <img src="../assets/icons/view.png" alt="View">
                                                     </a>
 
-                                                    <a
-                                                        href="auditor_verification_edit.php?verificationID=<?php echo $record['verificationID']; ?>"
-                                                        class="management-action-btn"
-                                                        title="Edit">
+                                                    <a href="auditor_verification_edit.php?verificationID=<?= urlencode($record['verificationID']) ?>&from=management" class="management-action-btn" title="Edit">
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </a>
 

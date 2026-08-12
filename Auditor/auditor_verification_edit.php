@@ -30,6 +30,7 @@
     }
 
     $id = $_GET['verificationID'] ?? '';
+    $from = $_GET['from'] ?? 'management';
 
     if (!$id) {
         header("Location: auditor_verification_management.php");
@@ -179,18 +180,13 @@
                         Save Changes
                     </button>
 
-                    <a href="auditor_verification_view.php?verificationID=<?php echo urlencode($id); ?>">
+                    <a href="<?= $from === 'view' ? 'auditor_verification_view.php? verificationID=' . urlencode($id) : 'auditor_verification_management.php' ?>">
                         Cancel
                     </a>
-
                 </div>
-
             </form>
-
         </main>
-
     </div>
-
 </div>
 
 </body>

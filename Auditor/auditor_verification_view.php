@@ -38,19 +38,40 @@
     }
 
     // Approve & Reject Actions
+    $remarks = trim($_POST['remarks'] ?? '');
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
         $action = $_POST['action'] ?? '';
-        if (in_array($action, ['approve', 'reject'])) {
+        $id = $_POST['verificationID'] ?? '';
+
+        if (in_array($action, ['approve', 'reject']) && $remarks !== '') {
+
             $status = $action === 'approve' ? 'Approved' : 'Rejected';
+
             $q = $conn->prepare("
                 UPDATE verificationrecords
-                SET status = ?, verifiedBy = ?, verifiedDate = NOW()
+                SET status = ?, remarks = ?, verifiedBy = ?, verifiedDate = NOW()
                 WHERE verificationID = ? AND status = 'Pending'
             ");
-            $q->bind_param("sss", $status, $_SESSION['user_id'], $id);
+
+            $q->bind_param(
+                "ssss",
+                $status,
+                $remarks,
+                $_SESSION['user_id'],
+                $id
+            );
+
             $q->execute();
 
-            createUpdateLog($conn, $_SESSION['user_id'], 'Verification', $id, "Verification $id was $status");
+            createUpdateLog(
+                $conn,
+                $_SESSION['user_id'],
+                'Verification',
+                $id,
+                "Verification $id was $status"
+            );
 
             header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
             exit();
@@ -235,17 +256,29 @@
 
                         <!-- Approve / Reject Button -->
                         <?php if ($r['status'] === 'Pending'): ?>
-                            <form method="POST">
-                                <button type="submit" name="action" value="approve" class="auditor-management-detail-action" onclick="return confirm('Approve this verification?');">
-                                    <img src="../assets/icons/approve.png" alt="">
-                                    Approve
-                                </button>
+                            <div class="auditor-management-decision">
+                                <form method="POST" onsubmit="return decision('approve')">
+                                    <input type="hidden" name="action" value="approve">
+                                    <input type="hidden" name="verificationID"
+                                        value="<?= htmlspecialchars($id) ?>">
 
-                                <button type="submit" name="action" value="reject" class="auditor-management-detail-action" onclick="return confirm('Reject this verification?');">
-                                    <img src="../assets/icons/reject.png" alt="">
-                                    Reject
-                                </button>
-                            </form>
+                                    <button type="submit" class="auditor-management-approve">
+                                        <img src="../assets/icons/approve.png" alt="">
+                                        Approve
+                                    </button>
+                                </form>
+
+                                <form method="POST" onsubmit="return decision('reject')">
+                                    <input type="hidden" name="action" value="reject">
+                                    <input type="hidden" name="verificationID"
+                                        value="<?= htmlspecialchars($id) ?>">
+
+                                    <button type="submit" class="auditor-management-reject">
+                                        <img src="../assets/icons/reject.png" alt="">
+                                        Reject
+                                    </button>
+                                </form>
+                            </div>
                         <?php endif; ?>
 
                         <div class="auditor-management-divider"></div>
@@ -265,8 +298,8 @@
                         <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action'); ?>
 
                         <!-- Edit -->
-                        <a href="auditor_verification_edit.php?verificationID=<?php echo htmlspecialchars($id); ?>" class="auditor-management-detail-action">
-                            <img src="../assets/icons/edit.png" alt="">
+                        <a href="auditor_verification_edit.php?verificationID=<?= urlencode($id) ?>&from=view" class="auditor-management-detail-action" title="Edit">
+                            <img src="../assets/icons/edit.png" alt="Edit">
                             Edit
                         </a>
 
@@ -287,5 +320,32 @@
             </main>
         </div>
     </div>
+    <script>
+        function decision(form, action) {
+            if (!confirm( 'Are you sure you want to ' + (action === 'approve' ? 'approve' :  'reject') + ' this verification?' )){
+                return false;
+            } 
+
+            let remarks = prompt('Enter remarks:');
+
+            if (remarks === null){
+                return false;
+            } 
+
+            if (!remarks.trim()) {
+                alert('Remarks are required.');
+                return false;
+            }
+
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'remarks';
+            input.value = remarks;
+
+            form.appendChild(input);
+
+            return true;
+        }
+    </script>
 </body>
 </html>

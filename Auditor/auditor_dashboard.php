@@ -45,16 +45,16 @@
 
 
         // Count pending asset verification
-        $pendingAssets = getCount($conn, "SELECT COUNT(*) AS total FROM assets WHERE verificationStatus = 'Pending'");
+        $pendingAssets = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'Asset'");
 
         // Count pending mission submission
-        $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM missionsubmission WHERE submissionStatus = 'Pending'");
+        $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'MissionSubmission'");
 
         // Count reward redemption
-        $rewardRedemptions = getCount($conn, "SELECT COUNT(*) AS total FROM rewardredemption");
+        $rewardRedemptions = getCount($conn, "SELECT COUNT(*) AS total FROM rewardredemption WHERE redemptionDate = CURRENT_DATE");
 
         // Count user tier upgrades
-        $userTierUpgrades = getCount($conn, "SELECT COUNT(*) AS total FROM usertier");
+        $userTierUpgrades = getCount($conn, "SELECT COUNT(*) AS total FROM usertier WHERE assignedDate = CURRENT_DATE");
 
         // Count unread notification
         $unreadStatement = $conn->prepare("SELECT COUNT(*) AS total FROM notification WHERE userID = ? AND status = 'Unread'");
