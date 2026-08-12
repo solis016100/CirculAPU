@@ -6,11 +6,14 @@ if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Manager'){header('Loc
 function e($v):string{return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function d($v,bool $time=false):string{return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-';}
 function nextID(mysqli $c,string $t,string $col,string $p):string{
-    $n=(int)$c->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
+    $start=strlen($p)+1;$like=$p.'%';
+    $s=$c->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING($col,$start) AS UNSIGNED)),0)+1 n FROM $t WHERE $col LIKE ?");
+    $s->bind_param('s',$like);$s->execute();
+    $n=(int)$s->get_result()->fetch_assoc()['n'];$s->close();
     return sprintf($p.'%03d',$n);
 }
 function notify(mysqli $c,string $uid,string $title,string $text):void{
-    $nid=nextID($c,'notification','notificationID','NOT');
+    $nid=nextID($c,'notification','notificationID','N');
     $s=$c->prepare("INSERT INTO notification(notificationID,userID,title,content,status) VALUES (?,?,?,?,'Unread')");
     $s->bind_param('ssss',$nid,$uid,$title,$text);$s->execute();$s->close();
 }
@@ -58,7 +61,7 @@ try{
         $lastReminder=$rem['lastReminder']??null;
         $remindedToday=(int)($rem['todayCount']??0)>0;
 
-        $overdue=$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+        $overdue=$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
 
         if($_SERVER['REQUEST_METHOD']==='POST'&&($_POST['action']??'')==='remind'){
             if(!$overdue)$error='Return reminders are only available for overdue borrowings.';

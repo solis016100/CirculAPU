@@ -31,9 +31,9 @@ try{
         $like="%$search%";array_push($params,$like,$like,$like,$like,$like);$types.='sssss';
     }
     if($status==='Overdue'){
-        $where[]="b.expectedReturnDate<NOW()";
+        $where[]="DATE(b.expectedReturnDate)<CURDATE()";
     }elseif($status==='Borrowed'){
-        $where[]="(b.expectedReturnDate>=NOW() OR b.expectedReturnDate IS NULL)";
+        $where[]="(DATE(b.expectedReturnDate)>=CURDATE() OR b.expectedReturnDate IS NULL)";
     }
     $whereSQL='WHERE '.implode(' AND ',$where);
 
@@ -51,7 +51,7 @@ try{
     $s=$c->prepare("SELECT b.borrowID,b.transactionID,b.borrowDate,b.expectedReturnDate,b.borrowingStatus,
             a.assetID,a.assetName,a.assetCondition,
             u.userID borrowerID,u.name borrowerName,
-            (b.expectedReturnDate<NOW()) isOverdue
+            (DATE(b.expectedReturnDate)<CURDATE()) isOverdue
         FROM borrowings b
         JOIN transactionrequests t ON t.transactionID=b.transactionID
         JOIN assets a ON a.assetID=b.assetID

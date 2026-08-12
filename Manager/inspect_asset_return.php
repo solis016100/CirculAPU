@@ -6,7 +6,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { head
 function e($v): string { return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
 function d($v,bool $time=true): string { return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-'; }
 function nextID(mysqli $c,string $t,string $col,string $p): string {
-    $n=(int)$c->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
+    $start=strlen($p)+1;$like=$p.'%';
+    $s=$c->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING($col,$start) AS UNSIGNED)),0)+1 n FROM $t WHERE $col LIKE ?");
+    $s->bind_param('s',$like);$s->execute();
+    $n=(int)$s->get_result()->fetch_assoc()['n'];$s->close();
     return sprintf($p.'%03d',$n);
 }
 function logTx(mysqli $c,string $uid,string $ref,string $text): void {
@@ -15,7 +18,7 @@ function logTx(mysqli $c,string $uid,string $ref,string $text): void {
     $s->bind_param('ssss',$id,$uid,$ref,$text);$s->execute();$s->close();
 }
 function notify(mysqli $c,string $uid,string $title,string $text): void {
-    $id=nextID($c,'notification','notificationID','NOT');
+    $id=nextID($c,'notification','notificationID','N');
     $s=$c->prepare("INSERT INTO notification(notificationID,userID,title,content,status) VALUES (?,?,?,?,'Unread')");
     $s->bind_param('ssss',$id,$uid,$title,$text);$s->execute();$s->close();
 }
@@ -80,7 +83,7 @@ try{
                     $s->bind_param('sss',$returned,$outcome,$t['assetID']);$s->execute();$s->close();
 
                     if($old!==$outcome){
-                        $hid=nextID($c,'assetstatushistory','historyID','ASH');$why="Return inspection completed for $id";
+                        $hid=nextID($c,'assetstatushistory','historyID','H');$why="Return inspection completed for $id";
                         $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
                         $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$outcome,$why);$s->execute();$s->close();
                     }
@@ -89,7 +92,7 @@ try{
                         $s=$c->prepare("UPDATE user SET ecopoint=ecopoint-? WHERE userID=?");
                         $s->bind_param('is',$deduct,$t['requesterID']);$s->execute();$s->close();
 
-                        $eid=nextID($c,'ecopointstransaction','transactionID','EPT');
+                        $eid=nextID($c,'ecopointstransaction','transactionID','ET');
                         $points=-$deduct;$type='Spent';$source='BorrowingPenalty';
                         $s=$c->prepare("INSERT INTO ecopointstransaction(transactionID,userID,points,transactionType,sourceType,referenceID) VALUES (?,?,?,?,?,?)");
                         $s->bind_param('ssisss',$eid,$t['requesterID'],$points,$type,$source,$id);$s->execute();$s->close();

@@ -6,7 +6,10 @@ if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Manager'){header('Loc
 function e($v):string{return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function d($v,bool $time=false):string{return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-';}
 function nid(mysqli $c,string $t,string $col,string $p):string{
-    $n=(int)$c->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
+    $start=strlen($p)+1;$like=$p.'%';
+    $s=$c->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING($col,$start) AS UNSIGNED)),0)+1 n FROM $t WHERE $col LIKE ?");
+    $s->bind_param('s',$like);$s->execute();
+    $n=(int)$s->get_result()->fetch_assoc()['n'];$s->close();
     return sprintf($p.'%03d',$n);
 }
 function logTx(mysqli $c,string $uid,string $action,string $ref,string $text):void{
@@ -15,7 +18,7 @@ function logTx(mysqli $c,string $uid,string $action,string $ref,string $text):vo
     $s->bind_param('sssss',$x,$uid,$action,$ref,$text);$s->execute();$s->close();
 }
 function notify(mysqli $c,string $uid,string $title,string $text):void{
-    $x=nid($c,'notification','notificationID','NOT');
+    $x=nid($c,'notification','notificationID','N');
     $s=$c->prepare("INSERT INTO notification(notificationID,userID,title,content,status) VALUES (?,?,?,?,'Unread')");
     $s->bind_param('ssss',$x,$uid,$title,$text);$s->execute();$s->close();
 }
@@ -23,7 +26,7 @@ function assetStatus(mysqli $c,string $asset,string $manager,string $old,string 
     if($old===$new)return;
     $s=$c->prepare("UPDATE assets SET availabilityStatus=?,updatedDate=NOW() WHERE assetID=?");
     $s->bind_param('ss',$new,$asset);$s->execute();$s->close();
-    $x=nid($c,'assetstatushistory','historyID','ASH');
+    $x=nid($c,'assetstatushistory','historyID','H');
     $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
     $s->bind_param('ssssss',$x,$asset,$manager,$old,$new,$why);$s->execute();$s->close();
 }
@@ -58,9 +61,9 @@ try{
             SELECT u.ecopoint,
               (SELECT COUNT(*) FROM transactionrequests x WHERE x.requesterID=u.userID) requests,
               (SELECT COUNT(*) FROM borrowings x WHERE x.borrowerID=u.userID AND x.actualReturnDate IS NULL AND x.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')) active,
-              (SELECT COUNT(*) FROM borrowings x WHERE x.borrowerID=u.userID AND x.actualReturnDate IS NULL AND x.expectedReturnDate<NOW() AND x.borrowingStatus IN ('Borrowed','Active','Overdue')) overdue,
+              (SELECT COUNT(*) FROM borrowings x WHERE x.borrowerID=u.userID AND x.actualReturnDate IS NULL AND DATE(x.expectedReturnDate)<CURDATE() AND x.borrowingStatus IN ('Borrowed','Active','Overdue')) overdue,
               (SELECT COUNT(*) FROM borrowings x WHERE x.borrowerID=u.userID AND x.actualReturnDate IS NOT NULL) completed,
-              (SELECT COUNT(*) FROM borrowings x WHERE x.borrowerID=u.userID AND x.actualReturnDate>x.expectedReturnDate) late
+              (SELECT COUNT(*) FROM borrowings x WHERE x.borrowerID=u.userID AND DATE(x.actualReturnDate)>DATE(x.expectedReturnDate)) late
             FROM user u WHERE u.userID=?");
         $s->bind_param('s',$t['requesterID']);$s->execute();$summary=$s->get_result()->fetch_assoc();$s->close();
 
@@ -71,7 +74,7 @@ try{
         $s->bind_param('s',$t['requesterID']);$s->execute();$eco=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
 
         $borrowed=$b&&!$b['actualReturnDate']&&in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true);
-        $overdue=$borrowed&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+        $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
         $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
         $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
 
@@ -161,7 +164,7 @@ try{
 
 if($t){
     $borrowed=$b&&!$b['actualReturnDate']&&in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true);
-    $overdue=$borrowed&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+    $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
     $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
     $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
     $personLabel=$status==='Pending'?'Requester':'Borrower';
