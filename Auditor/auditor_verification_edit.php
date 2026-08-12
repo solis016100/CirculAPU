@@ -56,20 +56,24 @@
 
     /* UPDATE */
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-        $status = $_POST['status'];
         $remarks = trim($_POST['remarks']);
 
         $q = $conn->prepare("
             UPDATE verificationrecords
-            SET status = ?, remarks = ?
+            SET remarks = ?
             WHERE verificationID = ?
         ");
 
-        $q->bind_param("sss", $status, $remarks, $id);
+        $q->bind_param("ss", $remarks, $id);
         $q->execute();
 
-        createUpdateLog($conn, $_SESSION['user_id'], 'Verification', $id, "Updated verification record: $id");
+        createUpdateLog(
+            $conn,
+            $_SESSION['user_id'],
+            'Verification',
+            $id,
+            "Updated verification remarks: $id"
+        );
 
         header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
         exit();
@@ -83,7 +87,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Edit Verification</title>
+    <title>Auditor Edit Verification Record - CirculAPU</title>
 
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="auditor_style.css">
@@ -146,24 +150,26 @@
                 </div>
 
                 <div class="auditor-management-edit-row">
+                    <label>Verified By</label>
+                    <input
+                        type="text"
+                        value="<?php echo htmlspecialchars($r['verifiedBy'] ?? '-'); ?>"
+                        readonly>
+                </div>
+
+                <div class="auditor-management-edit-row">
+                    <label>Verified Date</label>
+                    <input
+                        type="text"
+                        value="<?= $r['verifiedDate'] ? date('d M Y, h:i A', strtotime($r['verifiedDate'])) : '-' ?>"
+                        readonly>
+                </div>
+
+                <div class="auditor-management-edit-row">
                     <label>Status</label>
-
-                    <select name="status" required>
-                        <option value="Pending"
-                            <?php echo $r['status'] == 'Pending' ? 'selected' : ''; ?>>
-                            Pending
-                        </option>
-
-                        <option value="Approved"
-                            <?php echo $r['status'] == 'Approved' ? 'selected' : ''; ?>>
-                            Approved
-                        </option>
-
-                        <option value="Rejected"
-                            <?php echo $r['status'] == 'Rejected' ? 'selected' : ''; ?>>
-                            Rejected
-                        </option>
-                    </select>
+                    <span class="verification-status status-<?php echo strtolower($r['status']); ?>">
+                        <?php echo htmlspecialchars($r['status']); ?>
+                    </span>
                 </div>
 
                 <div class="auditor-management-edit-row">
@@ -175,12 +181,10 @@
                 </div>
 
                 <div class="auditor-management-edit-actions">
-
                     <button type="submit">
                         Save Changes
                     </button>
-
-                    <a href="<?= $from === 'view' ? 'auditor_verification_view.php? verificationID=' . urlencode($id) : 'auditor_verification_management.php' ?>">
+                    <a href="<?= $from === 'view' ? 'auditor_verification_view.php?verificationID=' . urlencode($id) : 'auditor_verification_management.php' ?>">
                         Cancel
                     </a>
                 </div>
