@@ -58,7 +58,7 @@ if (!$assetResult) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Request - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="member_style.css?v=20">
+    <link rel="stylesheet" href="member_style.css">
 </head>
 
 <body class="role-member">
