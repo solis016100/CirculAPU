@@ -104,7 +104,7 @@ try {
 
     $stmt = $conn->prepare("
         SELECT a.assetID,a.assetName,a.assetCondition,a.availabilityStatus,
-               a.listingStatus,a.createdDate,c.categoryName
+               a.listingStatus,a.createdDate,c.categoryName,c.categoryIcon
         FROM assets a
         JOIN categories c ON a.categoryID=c.categoryID
         $where
@@ -156,7 +156,6 @@ $end = min($offset + $perPage, $total);
 <?php if (($_GET['removed'] ?? '') === '1'): ?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif; ?>
 <?php if (($_GET['reviewed'] ?? '') === '1'): ?><div class="alert alert-success">Asset review completed successfully.</div><?php endif; ?>
 
-<!-- Filters -->
 <section class="management-filter">
 <form method="GET">
     <div class="management-filter-group search">
@@ -218,7 +217,6 @@ $end = min($offset + $perPage, $total);
 </form>
 </section>
 
-<!-- Asset List -->
 <section class="management-list">
     <div class="management-list-header">
         <h2>Asset Listings</h2>
@@ -242,7 +240,14 @@ $end = min($offset + $perPage, $total);
                 <td><?= $offset + $i + 1 ?></td>
                 <td><strong><?= e($a['assetID']) ?></strong></td>
                 <td><?= e($a['assetName']) ?></td>
-                <td><?= e($a['categoryName']) ?></td>
+                <td>
+                    <div class="category-name-cell">
+                        <?php if ($a['categoryIcon']): ?>
+                            <img src="../<?= e($a['categoryIcon']) ?>" alt="">
+                        <?php endif; ?>
+                        <span><?= e($a['categoryName']) ?></span>
+                    </div>
+                </td>
                 <td><?= e($a['assetCondition']) ?></td>
                 <td><?= e($a['availabilityStatus']) ?></td>
                 <td><?= e($a['listingStatus']) ?></td>

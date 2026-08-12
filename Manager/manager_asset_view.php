@@ -27,7 +27,7 @@ try {
     $conn->set_charset('utf8mb4');
 
     $stmt = $conn->prepare("
-        SELECT a.*,c.categoryName,u.name ownerName
+        SELECT a.*,c.categoryName,c.categoryIcon,u.name ownerName
         FROM assets a
         JOIN categories c ON a.categoryID=c.categoryID
         JOIN user u ON a.ownerID=u.userID
@@ -47,12 +47,12 @@ try {
 }
 
 $image = imagePath($asset['imageURL'] ?? '');
+$categoryIcon = imagePath($asset['categoryIcon'] ?? '');
 $imageName = $asset && !empty($asset['imageURL']) ? basename(str_replace('\\', '/', $asset['imageURL'])) : '';
 
 $details = $asset ? [
     'Asset ID' => $asset['assetID'],
     'Asset Name' => $asset['assetName'],
-    'Category' => $asset['categoryName'],
     'Condition' => $asset['assetCondition'],
     'Description' => $asset['description'] ?: 'No description provided.',
     'Uploaded By' => $asset['ownerName'] . ' (' . $asset['ownerID'] . ')',
@@ -106,6 +106,16 @@ $details = $asset ? [
     <div class="asset-detail-layout">
 
         <div class="asset-detail-information">
+            <div class="asset-detail-row">
+                <span class="asset-detail-label">Category</span>
+                <div class="asset-detail-value">
+                    <div class="category-name-cell">
+                        <?php if ($categoryIcon): ?><img src="<?= e($categoryIcon) ?>" alt=""><?php endif; ?>
+                        <span><?= e($asset['categoryName']) ?></span>
+                    </div>
+                </div>
+            </div>
+
             <?php foreach ($details as $label => $value): ?>
             <div class="asset-detail-row <?= $label === 'Description' ? 'description-row' : '' ?>">
                 <span class="asset-detail-label"><?= e($label) ?></span>
