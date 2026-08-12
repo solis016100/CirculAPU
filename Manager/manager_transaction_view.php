@@ -159,7 +159,7 @@ try{
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Cancelled' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
                         assetStatus($c,$t['assetID'],$manager,'Reserved','Available',"Cancelled reservation $id");
-                        logTx($c,$manager,'Reject',$id,"Cancelled reservation before pickup. Reason: $remark");
+                        logTx($c,$manager,'Update',$id,"Cancelled reservation before pickup. Reason: $remark");
                         notify($c,$t['requesterID'],'Reservation Cancelled',"The reservation for transaction $id was cancelled before pickup. Reason: $remark");
                         $c->commit();go($id);
                     }catch(Throwable $z){$c->rollback();throw $z;}
