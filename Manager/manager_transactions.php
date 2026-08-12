@@ -46,7 +46,7 @@ try {
         SELECT
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Pending') pending,
             (SELECT COUNT(*) FROM borrowings WHERE borrowingStatus IN ('Approved','Borrowed','Overdue') AND actualReturnDate IS NULL) active,
-            (SELECT COUNT(*) FROM borrowings WHERE expectedReturnDate<NOW() AND actualReturnDate IS NULL AND borrowingStatus IN ('Approved','Borrowed','Overdue')) overdue,
+            (SELECT COUNT(*) FROM borrowings WHERE expectedReturnDate<NOW() AND actualReturnDate IS NULL AND borrowingStatus IN ('Borrowed','Overdue')) overdue,
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Completed') completed
     ")->fetch_assoc();
     foreach ($stats as $k => $v) $stats[$k] = (int)($row[$k] ?? 0);
@@ -61,7 +61,7 @@ try {
     if ($dateFrom) { $where[] = 'DATE(t.requestDate)>=?'; $params[] = $dateFrom; $types .= 's'; }
     if ($dateTo) { $where[] = 'DATE(t.requestDate)<=?'; $params[] = $dateTo; $types .= 's'; }
     if ($activeOnly) $where[] = "EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID AND b.borrowingStatus IN ('Approved','Borrowed','Overdue') AND b.actualReturnDate IS NULL)";
-    if ($overdueOnly) $where[] = "EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID AND b.expectedReturnDate<NOW() AND b.actualReturnDate IS NULL AND b.borrowingStatus IN ('Approved','Borrowed','Overdue'))";
+    if ($overdueOnly) $where[] = "EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID AND b.expectedReturnDate<NOW() AND b.actualReturnDate IS NULL AND b.borrowingStatus IN ('Borrowed','Overdue'))";
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
     if (!$error) {
@@ -77,7 +77,7 @@ try {
                    u.userID requesterID,u.name requesterName,
                    (SELECT MAX(b.expectedReturnDate) FROM borrowings b WHERE b.transactionID=t.transactionID) dueDate,
                    EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID AND b.expectedReturnDate<NOW()
-                          AND b.actualReturnDate IS NULL AND b.borrowingStatus IN ('Approved','Borrowed','Overdue')) isOverdue
+                          AND b.actualReturnDate IS NULL AND b.borrowingStatus IN ('Borrowed','Overdue')) isOverdue
             FROM transactionrequests t
             JOIN assets a ON t.assetID=a.assetID
             JOIN user u ON t.requesterID=u.userID
@@ -139,7 +139,7 @@ $end = min($offset + $perPage, $total);
         <div class="stat-content"><h3>Active Borrowings</h3><strong class="stat-value"><?= $stats['active'] ?></strong><p class="stat-description">Currently ongoing</p></div>
     </a>
 
-    <a href="manager_transactions.php?overdue=1" class="stat-card alert-error">
+    <a href="manager_transactions.php?overdue=1" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/notification.png" alt=""></div>
         <div class="stat-content"><h3>Overdue Returns</h3><strong class="stat-value"><?= $stats['overdue'] ?></strong><p class="stat-description">Past due and not returned</p></div>
     </a>
