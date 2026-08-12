@@ -21,6 +21,8 @@
     $typeFilter = $_GET['type'] ?? '';
     $statusFilter = $_GET['status'] ?? '';
 
+    $filter = http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter]);
+
     // Connect to Database
     require_once '../db.php';
     require_once '../delete.php';
@@ -346,7 +348,7 @@
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </a>
 
-                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&print=1" class="management-action-btn" title="Print">
+                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($id)?>&from=management&<?= $filter ?>" class="management-action-btn">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </a>
 

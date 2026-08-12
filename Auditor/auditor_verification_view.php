@@ -179,7 +179,7 @@
 
     $fields['Submission Date'] = $date ? date('d M Y', strtotime($date)) : '-';
 
-    $fields['Verified Date'] = $r['verifiedDate'] ? date('d M Y', strtotime($r['verifiedDate'])) : 'Not verified yet';
+    $fields['Verified Date'] = $r['verifiedDate'] ? date('d M Y, h:i A', strtotime($r['verifiedDate'])) : 'Not verified yet';
 
     $fields['Verified By'] = $r['verifiedBy'] ? $r['auditorName'] . ' (' . $r['verifiedBy'] . ')' : 'Not verified yet';
 
@@ -191,7 +191,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Verification Record Details</title>
+    <title>Auditor Verification Record Details - CirculAPU</title>
 
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="auditor_style.css">
@@ -313,7 +313,7 @@
 
                 <!-- Back Button -->
                 <div class="auditor-management-detail-back">
-                    <a href="auditor_verification_management.php">
+                    <a href="auditor_verification_management.php?<?= http_build_query(['search' => $_GET['search'] ?? '', 'user' => $_GET['user'] ?? '', 'type' => $_GET['type'] ?? '', 'status' => $_GET['status'] ?? '']) ?>">
                         Back
                     </a>
                 </div>
