@@ -58,7 +58,7 @@ try{
             $before=array_search($t['assetCondition'],$conditions,true);
             $after=array_search($returned,$conditions,true);
             $worse=$before!==false&&$after!==false&&$after>$before;
-            $late=$b['expectedReturnDate']&&time()>strtotime($b['expectedReturnDate']);
+            $late=$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
             $damageProblem=$worse||$outcome==='Unavailable';
             $penaltyAllowed=$late||$damageProblem;
 
@@ -117,7 +117,7 @@ try{
     $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to process the asset return. Please try again.';}
 
-$overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+$overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="en">
