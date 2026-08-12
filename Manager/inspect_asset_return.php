@@ -21,7 +21,7 @@ function notify(mysqli $c,string $uid,string $title,string $text): void {
 }
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
-if(!$id){header('Location: manager_transactions.php');exit();}
+if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$t=$b=null;$error='';
 
@@ -45,7 +45,7 @@ try{
             in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true)||
             in_array($t['requestStatus'],['In Progress','Overdue'],true)
         );
-        if(!$active){header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id));exit();}
+        if(!$active){header('Location: manager_borrowed_assets.php');exit();}
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $returned=trim($_POST['returnedCondition']??'');
@@ -79,8 +79,7 @@ try{
                     $s->bind_param('sss',$returned,$outcome,$t['assetID']);$s->execute();$s->close();
 
                     if($old!==$outcome){
-                        $hid=nextID($c,'assetstatushistory','historyID','ASH');
-                        $why="Return inspection completed for $id";
+                        $hid=nextID($c,'assetstatushistory','historyID','ASH');$why="Return inspection completed for $id";
                         $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
                         $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$outcome,$why);$s->execute();$s->close();
                     }
@@ -105,7 +104,7 @@ try{
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
                     $c->commit();
-                    header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&returned=1');exit();
+                    header('Location: manager_borrowed_assets.php?returned=1');exit();
                 }catch(Throwable $z){$c->rollback();throw $z;}
             }
         }
@@ -128,7 +127,7 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_transaction_view.php?transactionID=<?=e($id)?>">Transaction Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_borrowed_assets.php">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
 <h1>Return Inspection</h1><p>Inspect the returned asset before completing the borrowing transaction.</p>
 </section>
 
@@ -186,7 +185,7 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 </div>
 <div class="asset-form-actions">
 <button type="submit" class="asset-form-submit" onclick="return confirm('Confirm this return inspection and complete the transaction?')">Confirm Return</button>
-<a href="manager_transaction_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
+<a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
 
