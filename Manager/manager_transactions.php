@@ -23,6 +23,7 @@ $status = trim($_GET['requestStatus'] ?? '');
 $dateFrom = trim($_GET['dateFrom'] ?? '');
 $dateTo = trim($_GET['dateTo'] ?? '');
 $activeOnly = ($_GET['active'] ?? '') === '1';
+$activeTransaction = ($_GET['activeTransaction'] ?? '') === '1';
 
 $statuses = ['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'];
 $transactions = [];
@@ -80,6 +81,10 @@ try {
             AND b.actualReturnDate IS NULL
             AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
         )";
+    }
+
+    if ($activeTransaction) {
+        $where[] = "t.requestStatus IN ('Approved','In Progress','Overdue')";
     }
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';

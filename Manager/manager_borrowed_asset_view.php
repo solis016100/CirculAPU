@@ -16,14 +16,14 @@ function notify(mysqli $c,string $uid,string $title,string $text):void{
 }
 function logReminder(mysqli $c,string $uid,string $ref,string $text):void{
     $lid=nextID($c,'systemlog','logID','LOG');
-    $s=$c->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Reminder','Transaction',?,?)");
+    $s=$c->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Update','Transaction',?,?)");
     $s->bind_param('ssss',$lid,$uid,$ref,$text);$s->execute();$s->close();
 }
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
-$t=null;$b=null;$error='';$remindedToday=false;
+$t=null;$b=null;$error='';$remindedToday=false;$reminderCount=0;$lastReminder=null;
 
 try{
     $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
@@ -44,9 +44,19 @@ try{
         $active=$b&&!$b['actualReturnDate']&&in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true);
         if(!$active){header('Location: manager_borrowed_assets.php');exit();}
 
-        $s=$c->prepare("SELECT COUNT(*) n FROM systemlog
-            WHERE refType='Transaction' AND refID=? AND actionType='Reminder' AND DATE(timeLogged)=CURDATE()");
-        $s->bind_param('s',$id);$s->execute();$remindedToday=(int)$s->get_result()->fetch_assoc()['n']>0;$s->close();
+        $dueLabel=d($b['expectedReturnDate']);
+        $txMarker="%Transaction $id:%";
+        $legacyMarker="%borrowed asset {$t['assetName']} was due on $dueLabel%";
+        $s=$c->prepare("SELECT COUNT(*) total,MAX(createdDate) lastReminder,
+            COALESCE(SUM(DATE(createdDate)=CURDATE()),0) todayCount
+            FROM notification
+            WHERE userID=? AND title LIKE '%Return Reminder%'
+            AND (content LIKE ? OR content LIKE ?)");
+        $s->bind_param('sss',$t['borrowerID'],$txMarker,$legacyMarker);$s->execute();
+        $rem=$s->get_result()->fetch_assoc();$s->close();
+        $reminderCount=(int)($rem['total']??0);
+        $lastReminder=$rem['lastReminder']??null;
+        $remindedToday=(int)($rem['todayCount']??0)>0;
 
         $overdue=$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
 
@@ -56,7 +66,7 @@ try{
             else{
                 $due=d($b['expectedReturnDate']);
                 notify($c,$t['borrowerID'],'Overdue Asset Return Reminder',
-                    "Your borrowed asset {$t['assetName']} was due on $due. Please return the asset as soon as possible.");
+                    "Transaction $id: Your borrowed asset {$t['assetName']} was due on $due. Please return the asset as soon as possible.");
                 logReminder($c,$manager,$id,"Return reminder sent to {$t['borrowerName']} for overdue asset {$t['assetName']}.");
                 header('Location: manager_borrowed_asset_view.php?transactionID='.rawurlencode($id).'&reminded=1');exit();
             }
@@ -119,7 +129,8 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 <h2>Borrowing Information</h2><div class="category-info-fields">
 <?php foreach([
 'Transaction ID'=>$id,'Pickup Date'=>d($b['borrowDate']),'Expected Return'=>d($b['expectedReturnDate']),
-'Status'=>$overdue?'Overdue':'Borrowed'
+'Status'=>$overdue?'Overdue':'Borrowed','Reminders Sent'=>$reminderCount,
+'Last Reminder'=>$lastReminder?d($lastReminder,true):'-'
 ] as $k=>$v):?><div class="category-info-row"><strong><?=e($k)?></strong><span><?=e($v)?></span></div><?php endforeach;?>
 </div>
 

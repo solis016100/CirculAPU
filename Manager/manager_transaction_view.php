@@ -217,6 +217,8 @@ if($t){
 <div class="alert alert-error"><strong>OVERDUE</strong> · Return was due <?=e(d($b['expectedReturnDate']))?></div>
 <?php elseif($status==='Pending'&&$blocked):?>
 <div class="alert alert-error"><strong>Approval Blocked</strong> · <?=($summary['overdue']??0)>0?'Borrower has an overdue item.':'Borrower has reached 5 active borrowings.'?></div>
+<?php elseif($status==='Completed'):?>
+<div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
 <?php else:?>
 <div class="asset-form-note"><strong>Status: <?=e($status)?></strong></div>
 <?php endif;?>
@@ -227,6 +229,8 @@ if($t){
 <?php foreach([
 'Transaction ID'=>$id,'Request Date'=>d($t['requestDate'],true),
 'Requested Pickup'=>d($b['borrowDate']??null),'Requested Return'=>d($b['expectedReturnDate']??null),
+'Actual Return'=>d($b['actualReturnDate']??null,true),
+'Borrowing Status'=>$b['borrowingStatus']??'-',
 'Purpose / Notes'=>$t['requestMessage']?:'-','Manager Remark'=>$t['managerRemark']?:'-'
 ] as $k=>$v):?><div class="category-info-row"><strong><?=e($k)?></strong><span><?=e($v)?></span></div><?php endforeach;?>
 </div></article>

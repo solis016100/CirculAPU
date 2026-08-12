@@ -55,15 +55,16 @@ try{
             $before=array_search($t['assetCondition'],$conditions,true);
             $after=array_search($returned,$conditions,true);
             $worse=$before!==false&&$after!==false&&$after>$before;
-            $problem=$worse||$outcome==='Unavailable';
+            $late=$b['expectedReturnDate']&&time()>strtotime($b['expectedReturnDate']);
+            $damageProblem=$worse||$outcome==='Unavailable';
+            $penaltyAllowed=$late||$damageProblem;
 
             if($after===false)$error='Please select a valid returned condition.';
             elseif(!in_array($outcome,['Available','Unavailable'],true))$error='Please select a valid return outcome.';
             elseif($before!==false&&$after<$before)$error='Returned condition cannot be better than the condition before borrowing.';
-            elseif($deduct>(int)$t['ecopoint'])$error='EcoPoint deduction cannot exceed the member current EcoPoints.';
-            elseif($problem&&$deduct<1)$error='Enter an EcoPoint deduction for a damaged/worse return.';
-            elseif($problem&&!$reason)$error='Please enter the reason for the deduction.';
-            elseif(!$problem&&$deduct>0)$error='EcoPoints should only be deducted when the returned asset is worse or unavailable.';
+            elseif($damageProblem&&$deduct<1)$error='Enter an EcoPoint deduction for a damaged, lost or unavailable return.';
+            elseif($deduct>0&&!$reason)$error='Please enter the reason for the EcoPoint deduction.';
+            elseif(!$penaltyAllowed&&$deduct>0)$error='EcoPoints can only be deducted for an overdue, damaged, lost or unavailable return.';
             elseif(strlen($reason)>255)$error='Reason must not exceed 255 characters.';
             else{
                 $c->begin_transaction();
@@ -88,19 +89,20 @@ try{
                         $s=$c->prepare("UPDATE user SET ecopoint=ecopoint-? WHERE userID=?");
                         $s->bind_param('is',$deduct,$t['requesterID']);$s->execute();$s->close();
 
-                        $eid=nextID($c,'ecopointstransaction','transactionID','EPT');$points=-$deduct;$type='Spent';$source='BorrowingPenalty';
+                        $eid=nextID($c,'ecopointstransaction','transactionID','EPT');
+                        $points=-$deduct;$type='Spent';$source='BorrowingPenalty';
                         $s=$c->prepare("INSERT INTO ecopointstransaction(transactionID,userID,points,transactionType,sourceType,referenceID) VALUES (?,?,?,?,?,?)");
                         $s->bind_param('ssisss',$eid,$t['requesterID'],$points,$type,$source,$id);$s->execute();$s->close();
                     }
 
-                    $late=$b['expectedReturnDate']&&time()>strtotime($b['expectedReturnDate']);
+                    $newBalance=(int)$t['ecopoint']-$deduct;
                     $text="Return completed for {$t['assetName']}: {$t['assetCondition']} → $returned; asset $outcome";
-                    if($deduct)$text.="; deducted $deduct EcoPoints. Reason: $reason";
+                    if($deduct)$text.="; deducted $deduct EcoPoints (new balance: $newBalance). Reason: $reason";
                     if($late)$text.='; returned overdue.';
                     logTx($c,$manager,$id,$text);
 
                     $msg="Return for {$t['assetName']} completed. Returned condition: $returned. Asset status: $outcome.";
-                    if($deduct)$msg.=" $deduct EcoPoints were deducted. Reason: $reason";
+                    if($deduct)$msg.=" $deduct EcoPoints were deducted. New balance: $newBalance. Reason: $reason";
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
                     $c->commit();
@@ -169,19 +171,19 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 
 <div class="asset-form-row">
 <label for="ecoDeduction">EcoPoint Deduction</label>
-<input type="number" min="0" max="<?=e($t['ecopoint'])?>" id="ecoDeduction" name="ecoDeduction" value="<?=e($_POST['ecoDeduction']??0)?>">
+<input type="number" min="0" step="1" id="ecoDeduction" name="ecoDeduction" value="<?=e($_POST['ecoDeduction']??0)?>">
 </div>
 
 <div class="asset-form-row asset-form-textarea">
-<label for="reason">Deduction / Damage Reason</label>
-<textarea id="reason" name="reason" maxlength="255" rows="4" placeholder="Required if the asset condition became worse or the asset is unavailable"><?=e($_POST['reason']??'')?></textarea>
+<label for="reason">Penalty / Return Reason</label>
+<textarea id="reason" name="reason" maxlength="255" rows="4" placeholder="Example: returned late, damaged, missing parts, or asset lost"><?=e($_POST['reason']??'')?></textarea>
 </div>
 </div>
 
 <aside class="asset-form-side">
 <div class="asset-form-note">
 <strong>Return Rule</strong>
-<p>Same condition: no penalty. Worse/damaged condition: EcoPoint deduction and reason are required. Seriously damaged assets should be marked Unavailable.</p>
+<p>Overdue returns may receive an EcoPoint penalty. Worse, damaged, lost or unavailable assets require a deduction and reason. The member balance may become negative.</p>
 </div>
 <div class="asset-form-actions">
 <button type="submit" class="asset-form-submit" onclick="return confirm('Confirm this return inspection and complete the transaction?')">Confirm Return</button>
