@@ -47,7 +47,7 @@ try {
             (SELECT COUNT(*) FROM borrowings
              WHERE actualReturnDate IS NULL AND borrowingStatus IN ('Borrowed','Active','Overdue')) active,
             (SELECT COUNT(*) FROM borrowings
-             WHERE expectedReturnDate<NOW() AND actualReturnDate IS NULL
+             WHERE DATE(expectedReturnDate)<CURDATE() AND actualReturnDate IS NULL
              AND borrowingStatus IN ('Borrowed','Active','Overdue')) overdue,
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Completed') completed
     ")->fetch_assoc();
@@ -63,7 +63,7 @@ try {
         $where[] = "EXISTS(
             SELECT 1 FROM borrowings b
             WHERE b.transactionID=t.transactionID
-            AND b.expectedReturnDate<NOW()
+            AND DATE(b.expectedReturnDate)<CURDATE()
             AND b.actualReturnDate IS NULL
             AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
         )";
@@ -108,7 +108,7 @@ try {
                    EXISTS(
                        SELECT 1 FROM borrowings b
                        WHERE b.transactionID=t.transactionID
-                       AND b.expectedReturnDate<NOW()
+                       AND DATE(b.expectedReturnDate)<CURDATE()
                        AND b.actualReturnDate IS NULL
                        AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
                    ) isOverdue
