@@ -30,6 +30,21 @@ function assetStatus(mysqli $c,string $asset,string $manager,string $old,string 
     $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
     $s->bind_param('ssssss',$x,$asset,$manager,$old,$new,$why);$s->execute();$s->close();
 }
+function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $status):string{
+    if($status!=='Pending')return 'Only Pending requests can be approved and reserved.';
+    if($blocked)return ($summary['overdue']??0)>0
+        ?'Approval blocked: borrower has an overdue unreturned asset.'
+        :'Approval blocked: borrower already has 5 active borrowings.';
+    if(!$b||empty($b['borrowDate'])||empty($b['expectedReturnDate']))
+        return 'Approval blocked: the member request is missing pickup or return date.';
+    $pickup=date('Y-m-d',strtotime($b['borrowDate']));
+    $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
+    if($pickup<date('Y-m-d'))return 'Approval blocked: the requested pickup date has already passed.';
+    if($return<=$pickup)return 'Requested return date must be after the pickup date.';
+    if($t['listingStatus']!=='Published'||$t['verificationStatus']!=='Approved'||$t['availabilityStatus']!=='Available')
+        return 'Approval blocked: this asset is not currently available for borrowing.';
+    return '';
+}
 function go(string $id):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&updated=1');exit();}
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
@@ -77,18 +92,14 @@ try{
         $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
         $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
         $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
+        $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $action=$_POST['action']??'';$remark=trim($_POST['managerRemark']??'');
 
             if($action==='approve'){
                 $pickup=$b['borrowDate']??'';$return=$b['expectedReturnDate']??'';
-                if($status!=='Pending')$error='Only Pending requests can be approved and reserved.';
-                elseif($blocked)$error=($summary['overdue']??0)>0?'Approval blocked: borrower has an overdue unreturned asset.':'Approval blocked: borrower already has 5 active borrowings.';
-                elseif(!$b||!$pickup||!$return)$error='Approval blocked: the member request is missing pickup or return date.';
-                elseif(date('Y-m-d',strtotime($pickup))<date('Y-m-d'))$error='Approval blocked: the requested pickup date has already passed.';
-                elseif(strtotime($return)<=strtotime($pickup))$error='Requested return date must be after the pickup date.';
-                elseif($t['listingStatus']!=='Published'||$t['verificationStatus']!=='Approved'||$t['availabilityStatus']!=='Available')$error='This asset is not currently available for borrowing.';
+                if($approvalIssue)$error=$approvalIssue;
                 else{
                     $c->begin_transaction();
                     try{
@@ -167,6 +178,7 @@ if($t){
     $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
     $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
     $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
+    $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
     $personLabel=$status==='Pending'?'Requester':'Borrower';
 }
 ?>
@@ -218,8 +230,8 @@ if($t){
 <?php if($t):?>
 <?php if($overdue):?>
 <div class="alert alert-error"><strong>OVERDUE</strong> · Return was due <?=e(d($b['expectedReturnDate']))?></div>
-<?php elseif($status==='Pending'&&$blocked):?>
-<div class="alert alert-error"><strong>Approval Blocked</strong> · <?=($summary['overdue']??0)>0?'Borrower has an overdue item.':'Borrower has reached 5 active borrowings.'?></div>
+<?php elseif($status==='Pending'&&$approvalIssue):?>
+<div class="alert alert-error"><strong>Approval Blocked</strong> · <?=e(preg_replace('/^Approval blocked:\s*/i','',$approvalIssue))?></div>
 <?php elseif($status==='Completed'):?>
 <div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
 <?php else:?>
@@ -241,7 +253,7 @@ if($t){
 <a href="manager_transactions.php" class="category-form-back">Back</a>
 <?php if($status==='Pending'):?>
 <button type="button" class="category-form-reset" onclick="rejectBox.showModal()">Reject Request</button>
-<form method="POST"><input type="hidden" name="action" value="approve"><button class="category-form-submit" <?=$blocked||!$b?'disabled':''?> onclick="return confirm('Approve this request and reserve the asset for this member?')">Approve &amp; Reserve</button></form>
+<form method="POST"><input type="hidden" name="action" value="approve"><button class="category-form-submit" <?=$approvalIssue?'disabled title="'.e($approvalIssue).'"':''?> onclick="return confirm('Approve this request and reserve the asset for this member?')">Approve &amp; Reserve</button></form>
 <?php elseif($status==='Approved'):?>
 <button type="button" class="category-form-reset" onclick="cancelBox.showModal()">Cancel Reservation</button>
 <form method="POST"><input type="hidden" name="action" value="start"><button class="category-form-submit" onclick="return confirm('Confirm that the member has picked up this asset? Borrowing will start immediately.')">Confirm Pickup</button></form>
