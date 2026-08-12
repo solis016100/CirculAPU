@@ -8,8 +8,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
-    $row = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING($column,4) AS UNSIGNED)),0)+1 nextID FROM $table")->fetch_assoc();
-    return sprintf($prefix . '%03d', (int)$row['nextID']);
+    $start = strlen($prefix) + 1;
+    $like = $prefix . '%';
+    $stmt = $conn->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING($column,$start) AS UNSIGNED)),0)+1 nextID FROM $table WHERE $column LIKE ?");
+    $stmt->bind_param('s', $like); $stmt->execute();
+    $next = (int)$stmt->get_result()->fetch_assoc()['nextID']; $stmt->close();
+    return sprintf($prefix . '%03d', $next);
 }
 
 $icons = [
@@ -58,7 +62,7 @@ try {
         if (!$error) {
             $conn->begin_transaction();
             try {
-                $categoryID = nextID($conn, 'categories', 'categoryID', 'CAT');
+                $categoryID = nextID($conn, 'categories', 'categoryID', 'C');
                 $stmt = $conn->prepare("INSERT INTO categories(categoryID,categoryName,description,categoryIcon,status) VALUES (?,?,?,?,?)");
                 $stmt->bind_param('sssss', $categoryID, $name, $description, $categoryIcon, $status);
                 $stmt->execute(); $stmt->close();

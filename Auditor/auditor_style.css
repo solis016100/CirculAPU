@@ -34,12 +34,24 @@
    =================== */
 .verification-status {
     display: inline-block;
-    min-width: 85px;
-    padding: 6px 10px;
-    border-radius: 20px;
-    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 6px;
     font-weight: 600;
-    text-align: center;
+}
+
+.verification-status.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.verification-status.status-approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.verification-status.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
 }
 
 
@@ -521,7 +533,8 @@
 
 .auditor-management-edit-row input,
 .auditor-management-edit-row select,
-.auditor-management-edit-row textarea {
+.auditor-management-edit-row textarea, 
+.auditor-management-edit-row span {
     width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
@@ -531,7 +544,9 @@
 }
 
 .auditor-management-edit-row input[readonly] {
-    background: #f3f4f6;
+    background: #eeedec;
+    color: #555;
+    cursor: not-allowed;
 }
 
 .auditor-management-edit-row textarea {

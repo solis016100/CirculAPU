@@ -8,8 +8,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
-    $row = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING($column,4) AS UNSIGNED)),0)+1 nextID FROM $table")->fetch_assoc();
-    return sprintf($prefix . '%03d', (int)$row['nextID']);
+    $start = strlen($prefix) + 1;
+    $like = $prefix . '%';
+    $stmt = $conn->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING($column,$start) AS UNSIGNED)),0)+1 nextID FROM $table WHERE $column LIKE ?");
+    $stmt->bind_param('s', $like); $stmt->execute();
+    $next = (int)$stmt->get_result()->fetch_assoc()['nextID']; $stmt->close();
+    return sprintf($prefix . '%03d', $next);
 }
 function imagePath($v): string {
     if (!$v) return '';
@@ -108,7 +112,7 @@ try {
                 $stmt->execute(); $stmt->close();
 
                 if ($oldAvailability !== $availability) {
-                    $historyID = nextID($conn, 'assetstatushistory', 'historyID', 'ASH');
+                    $historyID = nextID($conn, 'assetstatushistory', 'historyID', 'H');
                     $historyReason = 'Availability updated during asset review.';
                     $stmt = $conn->prepare("
                         INSERT INTO assetstatushistory
@@ -135,7 +139,7 @@ try {
                 $stmt->execute(); $stmt->close();
 
                 if ($action !== 'save') {
-                    $notificationID = nextID($conn, 'notification', 'notificationID', 'NOT');
+                    $notificationID = nextID($conn, 'notification', 'notificationID', 'N');
                     $title = $action === 'return' ? 'Asset Listing Returned' : 'Asset Sent for Verification';
                     $content = $action === 'return'
                         ? "Asset $assetID was returned for correction. Reason: $reason"
