@@ -179,7 +179,7 @@ if($t){
     $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
     $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
     $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
-    $personLabel=$status==='Pending'?'Requester':'Borrower';
+    $personLabel=in_array($status,['Pending','Rejected','Cancelled'],true)?'Requester':'Borrower';
 }
 ?>
 <!DOCTYPE html>
