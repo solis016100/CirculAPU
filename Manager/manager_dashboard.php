@@ -23,12 +23,16 @@ try{
 
     $x=$c->query("
         SELECT SUM(listingStatus<>'Removed') totalAssets,
-               SUM(listingStatus='Pending Review') pendingListings,
-               SUM(availabilityStatus='Borrowed' AND listingStatus<>'Removed') currentBorrowed
+               SUM(listingStatus='Pending Review') pendingListings
         FROM assets")->fetch_assoc();
     $totalAssets=(int)($x['totalAssets']??0);
     $pendingListings=(int)($x['pendingListings']??0);
-    $currentBorrowed=(int)($x['currentBorrowed']??0);
+
+    $currentBorrowed=(int)$c->query("
+        SELECT COUNT(*) total FROM borrowings
+        WHERE actualReturnDate IS NULL
+        AND borrowingStatus IN ('Borrowed','Active','Overdue')
+    ")->fetch_assoc()['total'];
 
     $activeTransactions=(int)$c->query("
         SELECT COUNT(*) total FROM transactionrequests
@@ -54,6 +58,11 @@ try{
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Resource Manager Dashboard - CirculAPU</title>
 <link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<style>
+.quick-action-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1100px){.quick-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.quick-action-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -79,12 +88,12 @@ try{
 <div class="stat-content"><h3>Pending Listings</h3><strong class="stat-value"><?=$pendingListings?></strong><p class="stat-description">Awaiting manager review</p></div>
 </a>
 
-<a href="manager_transactions.php?active=1" class="stat-card">
+<a href="manager_transactions.php?activeTransaction=1" class="stat-card">
 <div class="stat-icon"><img src="../assets/icons/active-transactions.png" alt=""></div>
 <div class="stat-content"><h3>Active Transactions</h3><strong class="stat-value"><?=$activeTransactions?></strong><p class="stat-description">Approved, in progress or overdue</p></div>
 </a>
 
-<a href="manager_transactions.php?active=1" class="stat-card">
+<a href="manager_borrowed_assets.php" class="stat-card">
 <div class="stat-icon"><img src="../assets/icons/borrowed-assets.png" alt=""></div>
 <div class="stat-content"><h3>Current Borrowings</h3><strong class="stat-value"><?=$currentBorrowed?></strong><p class="stat-description">Assets currently with borrowers</p></div>
 </a>
@@ -125,6 +134,7 @@ try{
 <div class="quick-action-grid">
 <a href="manager_assets.php?listingStatus=Pending+Review" class="quick-action"><img src="../assets/icons/view.png" alt=""><span>Review Asset Submissions</span></a>
 <a href="manager_transactions.php?requestStatus=Pending" class="quick-action"><img src="../assets/icons/view.png" alt=""><span>Review Pending Requests</span></a>
+<a href="manager_borrowed_assets.php" class="quick-action"><img src="../assets/icons/borrowed-assets.png" alt=""><span>Manage Returns</span></a>
 <a href="manager_categories.php" class="quick-action"><img src="../assets/icons/edit.png" alt=""><span>Manage Categories</span></a>
 <a href="manager_reports.php" class="quick-action"><img src="../assets/icons/report.png" alt=""><span>Generate Report</span></a>
 </div>

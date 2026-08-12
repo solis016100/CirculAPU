@@ -6,7 +6,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { head
 function e($v): string { return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
 function d($v,bool $time=true): string { return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-'; }
 function nextID(mysqli $c,string $t,string $col,string $p): string {
-    $n=(int)$c->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
+    $start=strlen($p)+1;$like=$p.'%';
+    $s=$c->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING($col,$start) AS UNSIGNED)),0)+1 n FROM $t WHERE $col LIKE ?");
+    $s->bind_param('s',$like);$s->execute();
+    $n=(int)$s->get_result()->fetch_assoc()['n'];$s->close();
     return sprintf($p.'%03d',$n);
 }
 function logTx(mysqli $c,string $uid,string $ref,string $text): void {
@@ -15,13 +18,13 @@ function logTx(mysqli $c,string $uid,string $ref,string $text): void {
     $s->bind_param('ssss',$id,$uid,$ref,$text);$s->execute();$s->close();
 }
 function notify(mysqli $c,string $uid,string $title,string $text): void {
-    $id=nextID($c,'notification','notificationID','NOT');
+    $id=nextID($c,'notification','notificationID','N');
     $s=$c->prepare("INSERT INTO notification(notificationID,userID,title,content,status) VALUES (?,?,?,?,'Unread')");
     $s->bind_param('ssss',$id,$uid,$title,$text);$s->execute();$s->close();
 }
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
-if(!$id){header('Location: manager_transactions.php');exit();}
+if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$t=$b=null;$error='';
 
@@ -45,7 +48,7 @@ try{
             in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true)||
             in_array($t['requestStatus'],['In Progress','Overdue'],true)
         );
-        if(!$active){header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id));exit();}
+        if(!$active){header('Location: manager_borrowed_assets.php');exit();}
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $returned=trim($_POST['returnedCondition']??'');
@@ -55,15 +58,16 @@ try{
             $before=array_search($t['assetCondition'],$conditions,true);
             $after=array_search($returned,$conditions,true);
             $worse=$before!==false&&$after!==false&&$after>$before;
-            $problem=$worse||$outcome==='Unavailable';
+            $late=$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
+            $damageProblem=$worse||$outcome==='Unavailable';
+            $penaltyAllowed=$late||$damageProblem;
 
             if($after===false)$error='Please select a valid returned condition.';
             elseif(!in_array($outcome,['Available','Unavailable'],true))$error='Please select a valid return outcome.';
             elseif($before!==false&&$after<$before)$error='Returned condition cannot be better than the condition before borrowing.';
-            elseif($deduct>(int)$t['ecopoint'])$error='EcoPoint deduction cannot exceed the member current EcoPoints.';
-            elseif($problem&&$deduct<1)$error='Enter an EcoPoint deduction for a damaged/worse return.';
-            elseif($problem&&!$reason)$error='Please enter the reason for the deduction.';
-            elseif(!$problem&&$deduct>0)$error='EcoPoints should only be deducted when the returned asset is worse or unavailable.';
+            elseif($damageProblem&&$deduct<1)$error='Enter an EcoPoint deduction for a damaged, lost or unavailable return.';
+            elseif($deduct>0&&!$reason)$error='Please enter the reason for the EcoPoint deduction.';
+            elseif(!$penaltyAllowed&&$deduct>0)$error='EcoPoints can only be deducted for an overdue, damaged, lost or unavailable return.';
             elseif(strlen($reason)>255)$error='Reason must not exceed 255 characters.';
             else{
                 $c->begin_transaction();
@@ -79,8 +83,7 @@ try{
                     $s->bind_param('sss',$returned,$outcome,$t['assetID']);$s->execute();$s->close();
 
                     if($old!==$outcome){
-                        $hid=nextID($c,'assetstatushistory','historyID','ASH');
-                        $why="Return inspection completed for $id";
+                        $hid=nextID($c,'assetstatushistory','historyID','H');$why="Return inspection completed for $id";
                         $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
                         $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$outcome,$why);$s->execute();$s->close();
                     }
@@ -89,23 +92,24 @@ try{
                         $s=$c->prepare("UPDATE user SET ecopoint=ecopoint-? WHERE userID=?");
                         $s->bind_param('is',$deduct,$t['requesterID']);$s->execute();$s->close();
 
-                        $eid=nextID($c,'ecopointstransaction','transactionID','EPT');$points=-$deduct;$type='Spent';$source='BorrowingPenalty';
+                        $eid=nextID($c,'ecopointstransaction','transactionID','ET');
+                        $points=-$deduct;$type='Spent';$source='BorrowingPenalty';
                         $s=$c->prepare("INSERT INTO ecopointstransaction(transactionID,userID,points,transactionType,sourceType,referenceID) VALUES (?,?,?,?,?,?)");
                         $s->bind_param('ssisss',$eid,$t['requesterID'],$points,$type,$source,$id);$s->execute();$s->close();
                     }
 
-                    $late=$b['expectedReturnDate']&&time()>strtotime($b['expectedReturnDate']);
+                    $newBalance=(int)$t['ecopoint']-$deduct;
                     $text="Return completed for {$t['assetName']}: {$t['assetCondition']} → $returned; asset $outcome";
-                    if($deduct)$text.="; deducted $deduct EcoPoints. Reason: $reason";
+                    if($deduct)$text.="; deducted $deduct EcoPoints (new balance: $newBalance). Reason: $reason";
                     if($late)$text.='; returned overdue.';
                     logTx($c,$manager,$id,$text);
 
                     $msg="Return for {$t['assetName']} completed. Returned condition: $returned. Asset status: $outcome.";
-                    if($deduct)$msg.=" $deduct EcoPoints were deducted. Reason: $reason";
+                    if($deduct)$msg.=" $deduct EcoPoints were deducted. New balance: $newBalance. Reason: $reason";
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
                     $c->commit();
-                    header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&returned=1');exit();
+                    header('Location: manager_borrowed_assets.php?returned=1');exit();
                 }catch(Throwable $z){$c->rollback();throw $z;}
             }
         }
@@ -113,7 +117,7 @@ try{
     $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to process the asset return. Please try again.';}
 
-$overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+$overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,7 +132,7 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_transaction_view.php?transactionID=<?=e($id)?>">Transaction Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_borrowed_assets.php">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
 <h1>Return Inspection</h1><p>Inspect the returned asset before completing the borrowing transaction.</p>
 </section>
 
@@ -170,23 +174,23 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 
 <div class="asset-form-row">
 <label for="ecoDeduction">EcoPoint Deduction</label>
-<input type="number" min="0" max="<?=e($t['ecopoint'])?>" id="ecoDeduction" name="ecoDeduction" value="<?=e($_POST['ecoDeduction']??0)?>">
+<input type="number" min="0" step="1" id="ecoDeduction" name="ecoDeduction" value="<?=e($_POST['ecoDeduction']??0)?>">
 </div>
 
 <div class="asset-form-row asset-form-textarea">
-<label for="reason">Deduction / Damage Reason</label>
-<textarea id="reason" name="reason" maxlength="255" rows="4" placeholder="Required if the asset condition became worse or the asset is unavailable"><?=e($_POST['reason']??'')?></textarea>
+<label for="reason">Penalty / Return Reason</label>
+<textarea id="reason" name="reason" maxlength="255" rows="4" placeholder="Example: returned late, damaged, missing parts, or asset lost"><?=e($_POST['reason']??'')?></textarea>
 </div>
 </div>
 
 <aside class="asset-form-side">
 <div class="asset-form-note">
 <strong>Return Rule</strong>
-<p>Same condition: no penalty. Worse/damaged condition: EcoPoint deduction and reason are required. Seriously damaged assets should be marked Unavailable.</p>
+<p>Overdue returns may receive an EcoPoint penalty. Worse, damaged, lost or unavailable assets require a deduction and reason. The member balance may become negative.</p>
 </div>
 <div class="asset-form-actions">
 <button type="submit" class="asset-form-submit" onclick="return confirm('Confirm this return inspection and complete the transaction?')">Confirm Return</button>
-<a href="manager_transaction_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
+<a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
 

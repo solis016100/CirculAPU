@@ -490,3 +490,33 @@
         display: none !important;
     }
 }
+
+/* Disabled Manager Actions */
+.category-form-reset:disabled,
+.category-form-submit:disabled,
+.category-page-actions button:disabled,
+.management-filter-btn:disabled,
+.management-action-btn:disabled,
+.table-action-btn:disabled,
+.asset-form-submit:disabled,
+.asset-form-reset:disabled {
+    background: #d9dee5;
+    border-color: #c7cdd4;
+    color: #6f7782;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.category-form-reset:disabled:hover,
+.category-form-submit:disabled:hover,
+.category-page-actions button:disabled:hover,
+.management-filter-btn:disabled:hover,
+.management-action-btn:disabled:hover,
+.table-action-btn:disabled:hover,
+.asset-form-submit:disabled:hover,
+.asset-form-reset:disabled:hover {
+    background: #d9dee5;
+    border-color: #c7cdd4;
+    color: #6f7782;
+}
+

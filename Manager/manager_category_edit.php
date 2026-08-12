@@ -113,6 +113,11 @@ $status = $category['status'] ?? 'Active';
     <title>Edit Category - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
+    <style>
+        .category-selected-preview [hidden]{display:none!important}
+        .category-selected-preview img{display:block}
+        .category-selected-preview span{padding:8px;line-height:1.25}
+    </style>
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -158,8 +163,8 @@ $status = $category['status'] ?? 'Active';
         <label>Category Icon *</label>
         <div class="category-selected-icon">
             <div class="category-selected-preview">
-                <?php if ($categoryIcon): ?><img id="selectedIcon" src="../<?= e($categoryIcon) ?>" alt="">
-                <?php else: ?><span id="iconPlaceholder">Choose an icon</span><img id="selectedIcon" src="" alt="" hidden><?php endif; ?>
+                <span id="iconPlaceholder" <?= $categoryIcon ? 'hidden' : '' ?>>Choose an icon</span>
+                <img id="selectedIcon" src="<?= $categoryIcon ? '../'.e($categoryIcon) : '' ?>" alt="" <?= $categoryIcon ? '' : 'hidden' ?>>
             </div>
             <small>Select an icon that best represents this category.</small>
         </div>
@@ -213,13 +218,14 @@ $status = $category['status'] ?? 'Active';
 </div>
 
 <script>
-const nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+const nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), iconPlaceholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
 
 document.querySelectorAll('input[name="categoryIcon"]').forEach(input=>input.addEventListener('change',()=>{
     document.querySelectorAll('.category-icon-option').forEach(option=>option.classList.remove('selected'));
     input.closest('.category-icon-option').classList.add('selected');
     selectedIcon.src=previewIcon.src='../'+input.value;
     selectedIcon.hidden=previewIcon.hidden=false;
+    if(iconPlaceholder) iconPlaceholder.hidden=true;
 }));
 nameInput?.addEventListener('input',()=>previewName.textContent=nameInput.value.trim()||'Category Name');
 descInput?.addEventListener('input',()=>previewDescription.textContent=descInput.value.trim()||'Category description will appear here.');

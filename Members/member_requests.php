@@ -18,41 +18,32 @@ if (!isset($_SESSION['user_id']) ||
 
 $userID = $_SESSION['user_id'];
 
-/* BORROW REQUEST */
+/* Borrow Request */
 $borrowQuery = "
-    SELECT
-        a.assetName AS requestName,
-        tr.requestStatus,
-        tr.requestDate,
-        tr.requestMessage
+    SELECT a.assetName AS requestName, a.imageURL,
+           tr.requestStatus, tr.requestDate, tr.requestMessage
     FROM transactionrequests tr
     INNER JOIN assets a ON tr.assetID = a.assetID
     WHERE tr.requesterID = '$userID'
     ORDER BY tr.requestDate DESC
 ";
-
 $borrowResult = $conn->query($borrowQuery);
 
 if (!$borrowResult) {
     die("Borrow Query Failed: " . $conn->error);
 }
 
-/* ASSET UPDATE */
+/* Asset Update */
 $assetQuery = "
-    SELECT
-        a.assetID,
-        a.assetName AS requestName,
-        a.description,
-        a.assetCondition,
-        a.updatedDate,
-        vr.status AS requestStatus
+    SELECT a.assetID, a.assetName AS requestName, a.description,
+           a.assetCondition, a.imageURL, a.updatedDate,
+           vr.status AS requestStatus
     FROM verificationrecords vr
     INNER JOIN assets a ON vr.targetID = a.assetID
     WHERE vr.userID = '$userID'
     AND vr.targetType = 'Asset'
     ORDER BY a.updatedDate DESC
 ";
-
 $assetResult = $conn->query($assetQuery);
 
 if (!$assetResult) {
@@ -66,178 +57,110 @@ if (!$assetResult) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Request - CirculAPU</title>
-
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="member_style.css">
 </head>
 
 <body class="role-member">
-
 <div class="dashboard-container">
-
     <?php include '../sidebar.php'; ?>
 
     <div class="main-content">
-
         <?php include '../header.php'; ?>
 
         <main class="page-body">
-
-            <!-- PAGE TITLE -->
             <div class="my-request-header">
                 <h1>My Request</h1>
                 <p>Here you can view and manage all your borrow and asset update requests.</p>
             </div>
 
             <div class="my-request-layout">
-
-                <!-- LEFT PANEL -->
                 <div class="request-main-panel">
 
-                    <!-- TABS -->
                     <div class="request-tabs">
-
-                        <button
-                            type="button"
-                            class="request-tab active"
-                            onclick="showRequest('borrow', this)"
-                        >
+                        <button type="button" class="request-tab active" onclick="showRequest('borrow', this)">
                             Borrow Request
-                            <span class="tab-count">
-                                <?php echo $borrowResult->num_rows; ?>
-                            </span>
+                            <span class="tab-count"><?php echo $borrowResult->num_rows; ?></span>
                         </button>
 
-                        <button
-                            type="button"
-                            class="request-tab"
-                            onclick="showRequest('asset', this)"
-                        >
+                        <button type="button" class="request-tab" onclick="showRequest('asset', this)">
                             Asset Update
-                            <span class="tab-count">
-                                <?php echo $assetResult->num_rows; ?>
-                            </span>
+                            <span class="tab-count"><?php echo $assetResult->num_rows; ?></span>
                         </button>
-
                     </div>
 
-                    <!-- SEARCH + FILTER -->
                     <div class="request-tools">
+                        <input type="text" id="requestSearch"
+                               placeholder="Search your request..."
+                               onkeyup="filterRequests()">
 
-                        <input
-                            type="text"
-                            id="requestSearch"
-                            placeholder="Search your request..."
-                            onkeyup="filterRequests()"
-                        >
-
-                        <select
-                            id="statusFilter"
-                            onchange="filterRequests()"
-                        >
+                        <select id="statusFilter" onchange="filterRequests()">
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>
                         </select>
-
                     </div>
 
-                    <!-- BORROW REQUEST CONTENT -->
+                    <!-- Borrow Request -->
                     <div id="borrow" class="request-content active">
-
                         <?php if ($borrowResult->num_rows > 0): ?>
-
                             <?php while ($request = $borrowResult->fetch_assoc()): ?>
-
                                 <?php
                                 $borrowStatus = $request['requestStatus'];
                                 $borrowStatusClass = strtolower($borrowStatus);
                                 ?>
 
-                                <div
-                                    class="request-item"
-                                    data-name="<?php echo strtolower(htmlspecialchars($request['requestName'])); ?>"
-                                    data-status="<?php echo htmlspecialchars($borrowStatusClass); ?>"
-                                >
+                                <div class="request-item"
+                                     data-name="<?php echo strtolower(htmlspecialchars($request['requestName'])); ?>"
+                                     data-status="<?php echo htmlspecialchars($borrowStatusClass); ?>">
 
-                                    <!-- ICON -->
                                     <div class="request-image">
-                                        <img
-                                            src="../assets/icons/myrequest.png"
-                                            alt="Borrow Request"
-                                        >
+                                        <?php if (!empty($request['imageURL'])): ?>
+                                            <img src="../<?php echo htmlspecialchars($request['imageURL']); ?>"
+                                                 alt="<?php echo htmlspecialchars($request['requestName']); ?>">
+                                        <?php else: ?>
+                                            <img src="../assets/icons/myrequest.png" alt="Borrow Request">
+                                        <?php endif; ?>
                                     </div>
 
-                                    <!-- INFORMATION -->
                                     <div class="request-item-info">
-
-                                        <h3>
-                                            <?php echo htmlspecialchars($request['requestName']); ?>
-                                        </h3>
-
+                                        <h3><?php echo htmlspecialchars($request['requestName']); ?></h3>
                                         <p>Borrow Request</p>
-
                                         <span class="request-status <?php echo $borrowStatusClass; ?>">
                                             <?php echo htmlspecialchars($borrowStatus); ?>
                                         </span>
-
                                     </div>
 
-                                    <!-- DATE -->
                                     <div class="request-item-date">
-
                                         <p>Requested on</p>
-
                                         <strong>
-                                            <?php
-                                            echo date(
-                                                "d M Y, h:i A",
-                                                strtotime($request['requestDate'])
-                                            );
-                                            ?>
+                                            <?php echo date("d M Y, h:i A", strtotime($request['requestDate'])); ?>
                                         </strong>
-
                                     </div>
 
-                                    <!-- VIEW DETAILS -->
                                     <div class="request-item-action">
-
-                                        <button
-                                            type="button"
-                                            class="view-details-btn"
-                                            onclick="openBorrowModal(this)"
-                                            data-name="<?php echo htmlspecialchars($request['requestName']); ?>"
-                                            data-status="<?php echo htmlspecialchars($borrowStatus); ?>"
-                                            data-date="<?php echo date("d M Y, h:i A", strtotime($request['requestDate'])); ?>"
-                                            data-message="<?php echo htmlspecialchars($request['requestMessage'] ?? ''); ?>"
-                                        >
+                                        <button type="button"
+                                                class="view-details-btn"
+                                                onclick="openBorrowModal(this)"
+                                                data-name="<?php echo htmlspecialchars($request['requestName']); ?>"
+                                                data-status="<?php echo htmlspecialchars($borrowStatus); ?>"
+                                                data-date="<?php echo date("d M Y, h:i A", strtotime($request['requestDate'])); ?>"
+                                                data-message="<?php echo htmlspecialchars($request['requestMessage'] ?? ''); ?>">
                                             View Details
                                         </button>
-
                                     </div>
-
                                 </div>
-
                             <?php endwhile; ?>
-
                         <?php else: ?>
-
-                            <div class="empty-request">
-                                No borrow requests found.
-                            </div>
-
+                            <div class="empty-request">No borrow requests found.</div>
                         <?php endif; ?>
-
                     </div>
 
-                    <!-- ASSET UPDATE CONTENT -->
+                    <!-- Asset Update -->
                     <div id="asset" class="request-content">
-
                         <?php if ($assetResult->num_rows > 0): ?>
-
                             <?php while ($request = $assetResult->fetch_assoc()): ?>
-
                                 <?php
                                 $assetStatus = $request['requestStatus'];
 
@@ -248,88 +171,55 @@ if (!$assetResult) {
                                 $assetStatusClass = strtolower($assetStatus);
                                 ?>
 
-                                <div
-                                    class="request-item"
-                                    data-name="<?php echo strtolower(htmlspecialchars($request['requestName'])); ?>"
-                                    data-status="<?php echo htmlspecialchars($assetStatusClass); ?>"
-                                >
+                                <div class="request-item"
+                                     data-name="<?php echo strtolower(htmlspecialchars($request['requestName'])); ?>"
+                                     data-status="<?php echo htmlspecialchars($assetStatusClass); ?>">
 
-                                    <!-- ICON -->
                                     <div class="request-image">
-                                        <img
-                                            src="../assets/icons/myrequest.png"
-                                            alt="Asset Update"
-                                        >
+                                        <?php if (!empty($request['imageURL'])): ?>
+                                            <img src="../<?php echo htmlspecialchars($request['imageURL']); ?>"
+                                                 alt="<?php echo htmlspecialchars($request['requestName']); ?>">
+                                        <?php else: ?>
+                                            <img src="../assets/icons/myrequest.png" alt="Asset Update">
+                                        <?php endif; ?>
                                     </div>
 
-                                    <!-- INFORMATION -->
                                     <div class="request-item-info">
-
-                                        <h3>
-                                            <?php echo htmlspecialchars($request['requestName']); ?>
-                                        </h3>
-
+                                        <h3><?php echo htmlspecialchars($request['requestName']); ?></h3>
                                         <p>Asset Update</p>
-
                                         <span class="request-status <?php echo $assetStatusClass; ?>">
                                             <?php echo htmlspecialchars($assetStatus); ?>
                                         </span>
-
                                     </div>
 
-                                    <!-- DATE -->
                                     <div class="request-item-date">
-
                                         <p>Updated on</p>
-
                                         <strong>
-                                            <?php
-                                            echo date(
-                                                "d M Y, h:i A",
-                                                strtotime($request['updatedDate'])
-                                            );
-                                            ?>
+                                            <?php echo date("d M Y, h:i A", strtotime($request['updatedDate'])); ?>
                                         </strong>
-
                                     </div>
 
-                                    <!-- VIEW DETAILS -->
                                     <div class="request-item-action">
-
-                                        <button
-                                            type="button"
-                                            class="view-details-btn"
-                                            onclick="openAssetModal(this)"
-                                            data-name="<?php echo htmlspecialchars($request['requestName']); ?>"
-                                            data-description="<?php echo htmlspecialchars($request['description'] ?? ''); ?>"
-                                            data-condition="<?php echo htmlspecialchars($request['assetCondition'] ?? ''); ?>"
-                                            data-status="<?php echo htmlspecialchars($assetStatus); ?>"
-                                            data-date="<?php echo date("d M Y, h:i A", strtotime($request['updatedDate'])); ?>"
-                                        >
+                                        <button type="button"
+                                                class="view-details-btn"
+                                                onclick="openAssetModal(this)"
+                                                data-name="<?php echo htmlspecialchars($request['requestName']); ?>"
+                                                data-description="<?php echo htmlspecialchars($request['description'] ?? ''); ?>"
+                                                data-condition="<?php echo htmlspecialchars($request['assetCondition'] ?? ''); ?>"
+                                                data-status="<?php echo htmlspecialchars($assetStatus); ?>"
+                                                data-date="<?php echo date("d M Y, h:i A", strtotime($request['updatedDate'])); ?>">
                                             View Details
                                         </button>
-
                                     </div>
-
                                 </div>
-
                             <?php endwhile; ?>
-
                         <?php else: ?>
-
-                            <div class="empty-request">
-                                No asset update requests found.
-                            </div>
-
+                            <div class="empty-request">No asset update requests found.</div>
                         <?php endif; ?>
-
                     </div>
-
                 </div>
 
-                <!-- RIGHT SIDE REQUEST GUIDE -->
                 <aside class="request-guide">
-
                     <h3>Request Guide</h3>
 
                     <div class="guide-item">
@@ -342,11 +232,7 @@ if (!$assetResult) {
                         <p>Your borrow request is waiting for approval.</p>
                     </div>
 
-                    <div
-                        class="guide-item"
-                        id="guidePublished"
-                        style="display: none;"
-                    >
+                    <div class="guide-item" id="guidePublished" style="display:none;">
                         <strong>Published</strong>
                         <p>Your asset has been published and is waiting for approval.</p>
                     </div>
@@ -360,41 +246,27 @@ if (!$assetResult) {
                         <strong>Rejected</strong>
                         <p>Your request was not approved.</p>
                     </div>
-
                 </aside>
-
             </div>
-
         </main>
-
     </div>
-
 </div>
 
-<!-- BORROW DETAILS POPUP -->
+<!-- Borrow Popup -->
 <div id="borrowModal" class="request-modal">
-
     <div class="request-modal-box">
-
         <div class="request-modal-header">
-
             <div>
                 <p class="modal-small-title">REQUEST INFORMATION</p>
                 <h2>Borrow Request Details</h2>
             </div>
 
-            <button
-                type="button"
-                class="request-modal-close"
-                onclick="closeBorrowModal()"
-            >
+            <button type="button" class="request-modal-close" onclick="closeBorrowModal()">
                 &times;
             </button>
-
         </div>
 
         <div class="request-modal-body">
-
             <div class="modal-detail-row">
                 <span>Asset Name</span>
                 <strong id="borrowAssetName"></strong>
@@ -414,37 +286,25 @@ if (!$assetResult) {
                 <span>Request Message</span>
                 <strong id="borrowMessage"></strong>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
-<!-- ASSET DETAILS POPUP -->
+<!-- Asset Popup -->
 <div id="assetModal" class="request-modal">
-
     <div class="request-modal-box">
-
         <div class="request-modal-header">
-
             <div>
                 <p class="modal-small-title">ASSET INFORMATION</p>
                 <h2>Asset Details</h2>
             </div>
 
-            <button
-                type="button"
-                class="request-modal-close"
-                onclick="closeAssetModal()"
-            >
+            <button type="button" class="request-modal-close" onclick="closeAssetModal()">
                 &times;
             </button>
-
         </div>
 
         <div class="request-modal-body">
-
             <div class="modal-detail-row">
                 <span>Asset Name</span>
                 <strong id="assetName"></strong>
@@ -469,35 +329,23 @@ if (!$assetResult) {
                 <span>Updated Date</span>
                 <strong id="assetDate"></strong>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
 <script>
-
-/* CHANGE TAB */
 function showRequest(type, button) {
-
     const contents = document.querySelectorAll('.request-content');
     const tabs = document.querySelectorAll('.request-tab');
     const statusFilter = document.getElementById('statusFilter');
 
-    contents.forEach(function(content) {
-        content.classList.remove('active');
-    });
-
-    tabs.forEach(function(tab) {
-        tab.classList.remove('active');
-    });
+    contents.forEach(content => content.classList.remove('active'));
+    tabs.forEach(tab => tab.classList.remove('active'));
 
     document.getElementById(type).classList.add('active');
     button.classList.add('active');
 
     if (type === 'borrow') {
-
         statusFilter.innerHTML = `
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -507,9 +355,7 @@ function showRequest(type, button) {
 
         document.getElementById('guidePending').style.display = 'block';
         document.getElementById('guidePublished').style.display = 'none';
-
     } else {
-
         statusFilter.innerHTML = `
             <option value="">All Status</option>
             <option value="published">Published</option>
@@ -524,55 +370,25 @@ function showRequest(type, button) {
     filterRequests();
 }
 
-/* SEARCH + FILTER */
 function filterRequests() {
+    const search = document.getElementById('requestSearch').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value.toLowerCase();
+    const activeContent = document.querySelector('.request-content.active');
 
-    const search =
-        document.getElementById('requestSearch').value.toLowerCase();
+    if (!activeContent) return;
 
-    const status =
-        document.getElementById('statusFilter').value.toLowerCase();
+    activeContent.querySelectorAll('.request-item').forEach(request => {
+        const nameMatch = request.dataset.name.includes(search);
+        const statusMatch = status === '' || request.dataset.status === status;
 
-    const activeContent =
-        document.querySelector('.request-content.active');
-
-    if (!activeContent) {
-        return;
-    }
-
-    const requests =
-        activeContent.querySelectorAll('.request-item');
-
-    requests.forEach(function(request) {
-
-        const nameMatch =
-            request.dataset.name.includes(search);
-
-        const statusMatch =
-            status === '' ||
-            request.dataset.status === status;
-
-        if (nameMatch && statusMatch) {
-            request.style.display = 'grid';
-        } else {
-            request.style.display = 'none';
-        }
-
+        request.style.display = nameMatch && statusMatch ? 'grid' : 'none';
     });
 }
 
-/* BORROW POPUP */
 function openBorrowModal(button) {
-
-    document.getElementById('borrowAssetName').textContent =
-        button.dataset.name;
-
-    document.getElementById('borrowStatus').textContent =
-        button.dataset.status;
-
-    document.getElementById('borrowDate').textContent =
-        button.dataset.date;
-
+    document.getElementById('borrowAssetName').textContent = button.dataset.name;
+    document.getElementById('borrowStatus').textContent = button.dataset.status;
+    document.getElementById('borrowDate').textContent = button.dataset.date;
     document.getElementById('borrowMessage').textContent =
         button.dataset.message || 'No request message';
 
@@ -583,23 +399,14 @@ function closeBorrowModal() {
     document.getElementById('borrowModal').classList.remove('show');
 }
 
-/* ASSET POPUP */
 function openAssetModal(button) {
-
-    document.getElementById('assetName').textContent =
-        button.dataset.name;
-
+    document.getElementById('assetName').textContent = button.dataset.name;
     document.getElementById('assetDescription').textContent =
         button.dataset.description || '-';
-
     document.getElementById('assetCondition').textContent =
         button.dataset.condition || '-';
-
-    document.getElementById('assetStatus').textContent =
-        button.dataset.status;
-
-    document.getElementById('assetDate').textContent =
-        button.dataset.date;
+    document.getElementById('assetStatus').textContent = button.dataset.status;
+    document.getElementById('assetDate').textContent = button.dataset.date;
 
     document.getElementById('assetModal').classList.add('show');
 }
@@ -608,35 +415,17 @@ function closeAssetModal() {
     document.getElementById('assetModal').classList.remove('show');
 }
 
-/* CLICK OUTSIDE TO CLOSE */
 window.addEventListener('click', function(event) {
-
-    const borrowModal =
-        document.getElementById('borrowModal');
-
-    const assetModal =
-        document.getElementById('assetModal');
-
-    if (event.target === borrowModal) {
-        closeBorrowModal();
-    }
-
-    if (event.target === assetModal) {
-        closeAssetModal();
-    }
-
+    if (event.target.id === 'borrowModal') closeBorrowModal();
+    if (event.target.id === 'assetModal') closeAssetModal();
 });
 
-/* ESC TO CLOSE */
 document.addEventListener('keydown', function(event) {
-
     if (event.key === 'Escape') {
         closeBorrowModal();
         closeAssetModal();
     }
-
 });
-
 </script>
 
 </body>
