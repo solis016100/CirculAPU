@@ -9,11 +9,73 @@
     require '../db.php';
     require_once '../print.php';
 
+    function createUpdateLog($conn, $userID, $refType, $refID, $description) {
+        $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+        $stmt = $conn->prepare("
+            INSERT INTO systemlog
+            (logID, userID, actionType, refType, refID, description)
+            VALUES (?, ?, 'Update', ?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            "sssss",
+            $logID,
+            $userID,
+            $refType,
+            $refID,
+            $description
+        );
+
+        $stmt->execute();
+    }
+
     $id = $_GET['verificationID'] ?? '';
 
     if (!$id) {
         header("Location: auditor_verification_management.php");
         exit();
+    }
+
+    // Approve & Reject Actions
+    $remarks = trim($_POST['remarks'] ?? '');
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+        $action = $_POST['action'] ?? '';
+        $id = $_POST['verificationID'] ?? '';
+
+        if (in_array($action, ['approve', 'reject']) && $remarks !== '') {
+
+            $status = $action === 'approve' ? 'Approved' : 'Rejected';
+
+            $q = $conn->prepare("
+                UPDATE verificationrecords
+                SET status = ?, remarks = ?, verifiedBy = ?, verifiedDate = NOW()
+                WHERE verificationID = ? AND status = 'Pending'
+            ");
+
+            $q->bind_param(
+                "ssss",
+                $status,
+                $remarks,
+                $_SESSION['user_id'],
+                $id
+            );
+
+            $q->execute();
+
+            createUpdateLog(
+                $conn,
+                $_SESSION['user_id'],
+                'Verification',
+                $id,
+                "Verification $id was $status"
+            );
+
+            header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
+            exit();
+        }
     }
 
 
@@ -120,6 +182,7 @@
     $fields['Verified Date'] = $r['verifiedDate'] ? date('d M Y', strtotime($r['verifiedDate'])) : 'Not verified yet';
 
     $fields['Verified By'] = $r['verifiedBy'] ? $r['auditorName'] . ' (' . $r['verifiedBy'] . ')' : 'Not verified yet';
+
 ?>
 
 <!DOCTYPE html>
@@ -192,28 +255,51 @@
                         <?php endif; ?>
 
                         <!-- Approve / Reject Button -->
-                        <?php if ($r['status'] == 'Pending'): ?>
+                        <?php if ($r['status'] === 'Pending'): ?>
                             <div class="auditor-management-decision">
-                                <button class="auditor-management-approve">
-                                    <img src="../assets/icons/approve.png" alt="">
-                                    Approve
-                                </button>
+                                <form method="POST" onsubmit="return decision('approve')">
+                                    <input type="hidden" name="action" value="approve">
+                                    <input type="hidden" name="verificationID"
+                                        value="<?= htmlspecialchars($id) ?>">
 
-                                <button class="auditor-management-reject">
-                                    <img src="../assets/icons/reject.png" alt="">
-                                    Reject
-                                </button>
+                                    <button type="submit" class="auditor-management-approve">
+                                        <img src="../assets/icons/approve.png" alt="">
+                                        Approve
+                                    </button>
+                                </form>
+
+                                <form method="POST" onsubmit="return decision('reject')">
+                                    <input type="hidden" name="action" value="reject">
+                                    <input type="hidden" name="verificationID"
+                                        value="<?= htmlspecialchars($id) ?>">
+
+                                    <button type="submit" class="auditor-management-reject">
+                                        <img src="../assets/icons/reject.png" alt="">
+                                        Reject
+                                    </button>
+                                </form>
                             </div>
                         <?php endif; ?>
 
                         <div class="auditor-management-divider"></div>
 
                         <!-- Print -->
+                        <?php if (isset($_GET['print'])): ?>
+                            <script>
+                            window.addEventListener('afterprint', function () {
+                                window.location.href = 'auditor_verification_management.php';
+                            });
+
+                            window.onload = function () {
+                                window.print();
+                            };
+                            </script>
+                            <?php endif; ?>
                         <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action'); ?>
 
                         <!-- Edit -->
-                        <a href="auditor_verification_edit.php?verificationID=<?php echo htmlspecialchars($id); ?>" class="auditor-management-detail-action">
-                            <img src="../assets/icons/edit.png" alt="">
+                        <a href="auditor_verification_edit.php?verificationID=<?= urlencode($id) ?>&from=view" class="auditor-management-detail-action" title="Edit">
+                            <img src="../assets/icons/edit.png" alt="Edit">
                             Edit
                         </a>
 
@@ -234,5 +320,32 @@
             </main>
         </div>
     </div>
+    <script>
+        function decision(form, action) {
+            if (!confirm( 'Are you sure you want to ' + (action === 'approve' ? 'approve' :  'reject') + ' this verification?' )){
+                return false;
+            } 
+
+            let remarks = prompt('Enter remarks:');
+
+            if (remarks === null){
+                return false;
+            } 
+
+            if (!remarks.trim()) {
+                alert('Remarks are required.');
+                return false;
+            }
+
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'remarks';
+            input.value = remarks;
+
+            form.appendChild(input);
+
+            return true;
+        }
+    </script>
 </body>
 </html>

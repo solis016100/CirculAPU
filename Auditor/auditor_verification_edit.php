@@ -8,7 +8,29 @@
 
     require '../db.php';
 
+    function createUpdateLog($conn, $userID, $refType, $refID, $description) {
+        $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+        $stmt = $conn->prepare("
+            INSERT INTO systemlog
+            (logID, userID, actionType, refType, refID, description)
+            VALUES (?, ?, 'Update', ?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            "sssss",
+            $logID,
+            $userID,
+            $refType,
+            $refID,
+            $description
+        );
+
+        $stmt->execute();
+    }
+
     $id = $_GET['verificationID'] ?? '';
+    $from = $_GET['from'] ?? 'management';
 
     if (!$id) {
         header("Location: auditor_verification_management.php");
@@ -46,6 +68,8 @@
 
         $q->bind_param("sss", $status, $remarks, $id);
         $q->execute();
+
+        createUpdateLog($conn, $_SESSION['user_id'], 'Verification', $id, "Updated verification record: $id");
 
         header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
         exit();
@@ -156,18 +180,13 @@
                         Save Changes
                     </button>
 
-                    <a href="auditor_verification_view.php?verificationID=<?php echo urlencode($id); ?>">
+                    <a href="<?= $from === 'view' ? 'auditor_verification_view.php? verificationID=' . urlencode($id) : 'auditor_verification_management.php' ?>">
                         Cancel
                     </a>
-
                 </div>
-
             </form>
-
         </main>
-
     </div>
-
 </div>
 
 </body>

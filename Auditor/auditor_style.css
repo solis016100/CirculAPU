@@ -388,6 +388,7 @@
 .auditor-management-view-image {
     align-self: flex-end;
     margin-top: 8px;
+    margin-bottom: 12px;
     color: #555;
     font-size: 13px;
 }
@@ -435,7 +436,7 @@
 /* Divider */
 .auditor-management-divider {
     height: 1px;
-    margin: 28px 0 18px;
+    margin: 13px 0 25px;
     background: #d1d5db;
 }
 
