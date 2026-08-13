@@ -154,9 +154,9 @@ try {
                 }
 
                 $conn->commit();
-                $url = $action === 'save'
-                    ? "review_asset_submission.php?assetID=$assetID&saved=1"
-                    : 'manager_assets.php?reviewed=1';
+                $url=$action==='save'
+                    ?"review_asset_submission.php?assetID=$assetID&saved=1"
+                    :"manager_assets.php?reviewDone=$action";
                 header("Location: $url"); exit();
 
             } catch (Throwable $e) {
@@ -215,7 +215,8 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
 
 <?php if ($asset): ?>
 <section class="content-card asset-form-card">
-<form method="POST">
+<form method="POST" id="reviewForm">
+<input type="hidden" name="reviewAction" id="reviewAction">
 <div class="asset-form-layout">
 
 <div class="asset-form-fields">
@@ -266,7 +267,7 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
     <div class="asset-form-row"><label><?= e($label) ?></label><input value="<?= e($value) ?>" readonly></div>
     <?php endforeach; ?>
 
-    <div class="asset-form-row asset-form-textarea" id="correctionBox" style="<?= $showCorrection ? '' : 'display:none;' ?>">
+    <div class="asset-form-row asset-form-textarea" id="correctionBox" <?=$showCorrection?'':'hidden'?>>
         <label for="correctionReason">Correction Reason *</label>
         <textarea id="correctionReason" name="correctionReason" maxlength="150" rows="3"
                   placeholder="Explain clearly what the Community Member needs to correct"><?= e($_POST['correctionReason'] ?? '') ?></textarea>
@@ -290,17 +291,16 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
     </div>
 
     <div class="asset-form-actions">
-        <button type="submit" name="reviewAction" value="save" class="asset-form-submit">
+        <button type="submit" class="asset-form-submit" onclick="reviewAction.value='save'">
             <img src="../assets/icons/edit.png" alt=""> Save Changes
         </button>
 
-        <button type="submit" name="reviewAction" value="return" class="asset-form-reset" onclick="return prepareReturn(event)">
+        <button type="button" class="asset-form-reset" onclick="prepareReturn()">
             <img src="../assets/icons/reset.png" alt="">
-            <span id="returnButtonText"><?= $showCorrection ? 'Confirm Return' : 'Return for Correction' ?></span>
+            <span id="returnButtonText"><?=$showCorrection?'Confirm Return':'Return for Correction'?></span>
         </button>
 
-        <button type="submit" name="reviewAction" value="verify" class="asset-form-submit"
-                onclick="return confirm('Send this listing for Sustainability Auditor verification?')">
+        <button type="button" class="asset-form-submit" onclick="openReviewConfirm('verify')">
             <img src="../assets/icons/pendingVerification.png" alt=""> Send for Verification
         </button>
 
@@ -317,20 +317,52 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
 </div>
 </div>
 
-<script>
-function prepareReturn(e){
-    const box=document.getElementById('correctionBox'),
-          reason=document.getElementById('correctionReason'),
-          text=document.getElementById('returnButtonText');
+<dialog id="reviewConfirm" class="flow-dialog">
+<h2 id="confirmTitle"></h2>
+<p id="confirmMessage"></p>
+<div class="flow-dialog-summary">
+    <div><strong>Asset ID</strong><span><?=e($assetID)?></span></div>
+    <div><strong>Asset Name</strong><span id="confirmName"></span></div>
+    <div><strong>Category</strong><span id="confirmCategory"></span></div>
+    <div><strong>Condition</strong><span id="confirmCondition"></span></div>
+    <div id="confirmReasonRow" hidden><strong>Correction Reason</strong><span id="confirmReason"></span></div>
+</div>
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="reviewConfirm.close()">No</button>
+    <button type="button" class="category-form-submit" id="confirmButton" onclick="submitReview()">Confirm</button>
+</div>
+</dialog>
 
-    if(box.style.display==='none'){
-        e.preventDefault(); box.style.display='grid'; text.textContent='Confirm Return'; reason.focus(); return false;
-    }
-    if(!reason.value.trim()){
-        e.preventDefault(); alert('Please enter a correction reason.'); reason.focus(); return false;
-    }
-    return confirm('Return this listing to the Community Member for correction?');
+<script>
+const form=document.getElementById('reviewForm'),
+      actionInput=document.getElementById('reviewAction'),
+      box=document.getElementById('correctionBox'),
+      reason=document.getElementById('correctionReason'),
+      returnText=document.getElementById('returnButtonText');
+
+function prepareReturn(){
+    if(box.hidden){box.hidden=false;returnText.textContent='Confirm Return';reason.focus();return}
+    if(!reason.value.trim()){reason.focus();return}
+    openReviewConfirm('return');
 }
+function openReviewConfirm(action){
+    if(!form.checkValidity()){form.reportValidity();return}
+    if(action==='return'&&!reason.value.trim()){reason.focus();return}
+
+    actionInput.value=action;
+    confirmTitle.textContent=action==='verify'?'Confirm Verification Submission':'Confirm Return for Correction';
+    confirmMessage.textContent=action==='verify'
+        ?'Send this reviewed listing to the Sustainability Auditor?'
+        :'Return this listing to the Community Member for correction?';
+    confirmButton.textContent=action==='verify'?'Yes, Send':'Yes, Return';
+    confirmName.textContent=form.assetName.value.trim();
+    confirmCategory.textContent=form.categoryID.options[form.categoryID.selectedIndex]?.text||'-';
+    confirmCondition.textContent=form.assetCondition.value;
+    confirmReasonRow.hidden=action!=='return';
+    confirmReason.textContent=reason.value.trim();
+    reviewConfirm.showModal();
+}
+function submitReview(){form.submit()}
 </script>
 
 </body>

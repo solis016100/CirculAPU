@@ -27,8 +27,7 @@ $conditions = ['New','Like New','Good','Fair','Poor'];
 $availabilities = ['Available','Reserved','Borrowed','Unavailable'];
 $statuses = ['Draft','Pending Review','Ready for Verification','Approved','Published','Rejected','Removed'];
 
-$assets = $categories = [];
-$error = '';
+$assets=$categories=[];$error='';$pendingCount=0;$nextPending='';
 $perPage = 8;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $total = 0; $totalPages = 1; $offset = 0;
@@ -36,6 +35,10 @@ $total = 0; $totalPages = 1; $offset = 0;
 try {
     $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
+
+    $pending=$conn->query("SELECT assetID FROM assets WHERE listingStatus='Pending Review' ORDER BY createdDate ASC");
+    $pendingCount=$pending->num_rows;
+    $nextPending=$pending->fetch_assoc()['assetID']??'';
 
     /* 1. Soft Remove */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remove') {
@@ -145,16 +148,21 @@ $end = min($offset + $perPage, $total);
 
 <main class="page-body">
 
-<section class="management-heading">
+<section class="management-heading management-heading-action">
     <div class="management-heading-text">
         <h1>Asset Management</h1>
         <p>Review and manage asset listings submitted by CirculAPU Community Members.</p>
     </div>
+    <?php if($nextPending):?>
+    <a href="review_asset_submission.php?assetID=<?=e($nextPending)?>" class="management-create-btn">
+        <img src="../assets/icons/pendingVerification.png" alt="">
+        Review Pending Listings (<?=$pendingCount?>)
+    </a>
+    <?php endif;?>
 </section>
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 <?php if (($_GET['removed'] ?? '') === '1'): ?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif; ?>
-<?php if (($_GET['reviewed'] ?? '') === '1'): ?><div class="alert alert-success">Asset review completed successfully.</div><?php endif; ?>
 
 <section class="management-filter">
 <form method="GET">
@@ -299,6 +307,30 @@ $end = min($offset + $perPage, $total);
         <?php endif; ?>
     </div>
 </section>
+
+<?php if(in_array($_GET['reviewDone']??'',['verify','return'],true)):?>
+<dialog id="nextReviewDialog" class="flow-dialog">
+    <h2>Asset Review Completed</h2>
+    <p><?=($_GET['reviewDone']==='verify')
+        ?'The listing was sent for Sustainability Auditor verification.'
+        :'The listing was returned to the member for correction.'?></p>
+
+    <?php if($nextPending):?>
+    <p style="margin-top:12px">There are <strong><?=$pendingCount?></strong> pending listing<?=$pendingCount===1?'':'s'?> remaining. Review another?</p>
+    <div class="flow-dialog-actions">
+        <button type="button" class="category-form-back" onclick="nextReviewDialog.close()">Done</button>
+        <button type="button" class="category-form-submit"
+                onclick="location.href='review_asset_submission.php?assetID=<?=e($nextPending)?>'">Review Another</button>
+    </div>
+    <?php else:?>
+    <p style="margin-top:12px">There are no more pending listings to review.</p>
+    <div class="flow-dialog-actions">
+        <button type="button" class="category-form-submit" onclick="nextReviewDialog.close()">Done</button>
+    </div>
+    <?php endif;?>
+</dialog>
+<script>nextReviewDialog.showModal()</script>
+<?php endif;?>
 
 </main>
 </div>
