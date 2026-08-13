@@ -1,3 +1,5 @@
+//test test
+
 <?php
 session_start();
 // Include db.php from parent directory
