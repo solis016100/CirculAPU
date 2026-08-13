@@ -106,7 +106,7 @@
                             <p>Manage all Achievement Badges on the platform</p>
                         </div>
 
-                        <a href="auditor_badge_create.php" class="management-create-btn">
+                        <a href="auditor_achievement_badges_create.php" class="management-create-btn">
                             <img src="../assets/icons/create.png" alt="Create">
                             Create New Achievement Badge
                         </a>

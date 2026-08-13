@@ -349,12 +349,9 @@
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </a>
 
-                                                    <form method="POST" onsubmit="return confirm('Delete this verification record?');"> 
-                                                        <input type="hidden" name="deleteID" value="<?= htmlspecialchars($record['verificationID']) ?>">
-                                                        <button type="submit" class="management-action-btn delete" title="Delete">
-                                                            <img src="../assets/icons/delete.png" alt="Delete">
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="management-action-btn" title="Delete" onclick="openDeletePopout('<?= htmlspecialchars($record['verificationID']) ?>')">
+                                                        <img src="../assets/icons/delete.png" alt="Delete">
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -387,6 +384,38 @@
                     </div>
                 </section>
             </main>
+        </div>
+    </div>
+
+    <script>
+        function openDeletePopout(id) {
+            document.getElementById('deleteID').value = id;
+            document.getElementById('deletePopout').style.display = 'flex';
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').style.display = 'none';
+        }
+    </script>
+
+
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Verification Confirmation</h2>
+            <p>Are you sure you want to delete this verification record?</p>
+            <div class="auditor-popout-actions">
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST" action="auditor_verification_management.php">
+                    <input type="hidden" name="deleteID" id="deleteID">
+
+                    <button type="submit" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </body>

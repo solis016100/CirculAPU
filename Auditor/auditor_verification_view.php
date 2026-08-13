@@ -8,6 +8,7 @@
 
     require '../db.php';
     require_once '../print.php';
+    require_once '../delete.php';
 
     function createUpdateLog($conn, $userID, $refType, $refID, $description) {
         $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
@@ -134,7 +135,7 @@
             $date = $t['createdDate'];
         }
 
-    } else {
+    }else {
 
         $q = $conn->prepare("
             SELECT m.missionName,
@@ -286,15 +287,15 @@
                         <!-- Print -->
                         <?php if (isset($_GET['print'])): ?>
                             <script>
-                            window.addEventListener('afterprint', function () {
-                                window.location.href = 'auditor_verification_management.php';
-                            });
+                                window.addEventListener('afterprint', function () {
+                                    window.location.href = 'auditor_verification_management.php';
+                                });
 
-                            window.onload = function () {
-                                window.print();
-                            };
-                            </script>
-                            <?php endif; ?>
+                                window.onload = function () {
+                                    window.print();
+                                };
+                                </script>
+                        <?php endif; ?>
                         <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action'); ?>
 
                         <!-- Edit -->
@@ -304,10 +305,10 @@
                         </a>
 
                         <!-- Delete -->
-                        <a href="../delete.php?type=verification&id=<?php echo htmlspecialchars($id); ?>" class="auditor-management-detail-action delete" onclick="return confirm('Delete this record?');">
+                        <button type="button" class="auditor-management-detail-action delete" onclick="openDeletePopout()">
                             <img src="../assets/icons/delete.png" alt="">
                             Delete
-                        </a>
+                        </button>
 
                         <!-- Back Button -->
                         <div class="auditor-management-detail-back">
@@ -320,6 +321,39 @@
             </main>
         </div>
     </div>
+
+
+    <?php if (isset($_GET['print'])): ?>
+        <script>
+            window.onload = () => window.print();
+        </script>
+    <?php endif; ?>
+
+    <div id="imagePopout" class="image-popout" onclick="closeImage()">
+        <span class="image-popout-close" onclick="event.stopPropagation(); closeImage()">&times;</span>
+        <img id="popoutImage" src="" alt="Evidence" onclick="event.stopPropagation();">
+    </div>
+
+
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Verification Confirmation</h2>
+            <p>Are you sure you want to delete this verification record?</p>
+            <div class="auditor-popout-actions">
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST" action="auditor_verification_management.php">
+                    <input type="hidden" name="deleteID" value="<?= htmlspecialchars($id) ?>">
+                    <button type="submit" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function decision(form, action) {
             if (!confirm( 'Are you sure you want to ' + (action === 'approve' ? 'approve' :  'reject') + ' this verification?' )){
@@ -356,17 +390,14 @@
         function closeImage() {
             document.getElementById('imagePopout').style.display = 'none';
         }
+
+        function openDeletePopout() {
+            document.getElementById('deletePopout').classList.add('show');
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').classList.remove('show');
+        }
     </script>
-
-    <?php if (isset($_GET['print'])): ?>
-        <script>
-            window.onload = () => window.print();
-        </script>
-    <?php endif; ?>
-
-    <div id="imagePopout" class="image-popout" onclick="closeImage()">
-        <span class="image-popout-close" onclick="event.stopPropagation(); closeImage()">&times;</span>
-        <img id="popoutImage" src="" alt="Evidence" onclick="event.stopPropagation();">
-    </div>
 </body>
 </html>

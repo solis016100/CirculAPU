@@ -146,13 +146,13 @@
 
 
     <!-- Confirmation Pop Out Message -->
-    <div id="confirmPopOut" class="mission-popout">
-        <div class="mission-popout-box">
+    <div id="confirmPopOut" class="auditor-popout">
+        <div class="auditor-popout-box">
 
             <h2>Mission Creation Confirmation</h2>
             <p>Are you sure you want to create this mission with these details?</p>
 
-            <div class="mission-summary">
+            <div class="auditor-summary">
                 <div><strong>Mission ID</strong><span id="confirmID"></span></div>
                 <div><strong>Mission Name</strong><span id="confirmName"></span></div>
                 <div><strong>EcoPoints</strong><span id="confirmPoints"></span></div>
@@ -161,9 +161,9 @@
                 <div><strong>Requirement</strong><span id="confirmRequirement"></span></div>
             </div>
 
-            <div class="mission-popout-actions">
+            <div class="auditor-popout-actions">
                 <button type="button" onclick="closeConfirm()">No</button>
-                <button type="button" class="mission-popout-confirm" onclick="confirmCreate()">
+                <button type="button" class="auditor-popout-confirm" onclick="confirmCreate()">
                     Yes, Create
                 </button>
             </div>
@@ -172,16 +172,16 @@
 
 
     <!-- Success Creation of Mission -->
-    <div id="successPopout" class="mission-popout">
-        <div class="mission-popout-box success-box">
+    <div id="successPopout" class="auditor-popout">
+        <div class="auditor-popout-box success-box">
             <h2>Mission Created Successfully!</h2>
             <p>Do you want to create another mission?</p>
-            <div class="mission-popout-actions">
+            <div class="auditor-popout-actions">
                 <button type="button" onclick="location.href='auditor_mission_create.php'">
                     Yes
                 </button>
 
-                <button type="button" class="mission-popout-confirm" onclick="location.href='auditor_missions_management.php'">
+                <button type="button" class="auditor-popout-confirm" onclick="location.href='auditor_missions_management.php'">
                     No
                 </button>
             </div>
@@ -226,6 +226,6 @@
         <?php if (($_GET['created'] ?? '') === '1'): ?>
             document.getElementById('successPopout').classList.add('show');
         <?php endif; ?>
-        </script>
+    </script>
 </body>
 </html>

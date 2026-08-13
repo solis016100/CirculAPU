@@ -7,8 +7,10 @@
     }
 
     require '../db.php';
+    require_once '../print.php';
+    require_once '../delete.php';
 
-    $id = $_GET['id'] ?? '';
+    $id = $_GET['missionID'] ?? '';
 
     $stmt = $conn->prepare("
         SELECT missionID, missionName, missionDescription,
@@ -25,6 +27,51 @@
     if (!$mission) {
         header("Location: auditor_mission_management.php");
         exit();
+    }
+
+    /* DELETE MISSION */
+    if (isset($_POST['delete_mission'])) {
+        $stmt = $conn->prepare("SELECT missionName FROM missions WHERE missionID = ?");
+        $stmt->bind_param("s", $id);
+        $stmt->execute();
+        $mission = $stmt->get_result()->fetch_assoc();
+
+        if ($mission) {
+            /* Delete mission */
+            $stmt = $conn->prepare("DELETE FROM missions WHERE missionID = ?");
+            $stmt->bind_param("s", $id);
+            $stmt->execute();
+
+            /* System Log */
+            $result = $conn->query("
+                SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 AS nextID
+                FROM systemlog
+            ");
+
+            $nextID = $result->fetch_assoc()['nextID'];
+            $logID = 'LOG' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
+
+            $description = "Deleted mission: " . $mission['missionName'];
+
+            $stmt = $conn->prepare("
+                INSERT INTO systemlog
+                (logID, userID, actionType, refType, refID, description)
+                VALUES (?, ?, 'Delete', 'Mission', ?, ?)
+            ");
+
+            $stmt->bind_param(
+                "ssss",
+                $logID,
+                $_SESSION['user_id'],
+                $id,
+                $description
+            );
+
+            $stmt->execute();
+
+            header("Location: auditor_missions_management.php?deleted=1");
+            exit();
+        }
     }
 ?>
 
@@ -117,18 +164,23 @@
                             Edit Mission
                         </a>
 
-                        <a class="auditor-management-detail-action"
-                        href="auditor_mission_view.php?id=<?= urlencode($id) ?>&print=1">
-                            <img src="../assets/icons/print.png" alt="">
-                            Print
-                        </a>
+                        <?php if (isset($_GET['print'])): ?>
+                            <script>
+                                window.addEventListener('afterprint', function () {
+                                    window.location.href = 'auditor_missions_management.php';
+                                });
 
-                        <a class="auditor-management-detail-action delete"
-                        href="auditor_mission_delete.php?id=<?= urlencode($id) ?>"
-                        onclick="return confirm('Are you sure you want to delete this mission?');">
+                                window.onload = function () {
+                                    window.print();
+                                };
+                            </script>
+                        <?php endif; ?>
+                        <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action'); ?>
+
+                        <button type="button" class="auditor-management-detail-action delete" onclick="openDeletePopout()">
                             <img src="../assets/icons/delete.png" alt="">
                             Delete
-                        </a>
+                        </button>
 
                         <div class="auditor-management-detail-back">
                             <a href="auditor_missions_management.php">
@@ -140,10 +192,48 @@
             </main>
         </div>
     </div>
-    <?php if (isset($_GET['print'])): ?>
+
+
+    <?php if (isset($_GET['print']) && $_GET['print'] == '1'): ?>
         <script>
-            window.onload = () => window.print();
+            window.onload = function() {
+                window.print();
+            };
+
+            window.onafterprint = function() {
+                window.location.href = 'auditor_missions_management.php';
+            };
         </script>
     <?php endif; ?>
+
+    <script>
+        function openDeletePopout() {
+            document.getElementById('deletePopout').classList.add('show');
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').classList.remove('show');
+        }
+    </script>
+
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Mission Confirmation</h2>
+            <p>Are you sure you want to delete this mission?</p>
+            <div class="auditor-popout-actions">
+
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST">
+                    <button type="submit" name="delete_mission" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

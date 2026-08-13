@@ -9,6 +9,7 @@
     require '../db.php';
 
     $id = $_GET['missionID'] ?? '';
+    $from = $_GET['from'] ?? 'management';
 
     if (!$id) {
         header("Location: auditor_missions_management.php");
@@ -83,7 +84,7 @@
 
         $log->execute();
 
-        header("Location: auditor_mission_view.php?id=" . urlencode($id));
+        header("Location: auditor_mission_view.php?missionID=" . urlencode($id));
         exit();
     }
 ?>
@@ -176,14 +177,14 @@
                                   required><?= htmlspecialchars($mission['missionRequirement']) ?></textarea>
                     </div>
 
-                    <div class="mission-edit-actions">
-                        <a href="auditor_mission_view.php?id=<?= urlencode($id) ?>">
-                            Back
-                        </a>
-
+                    <div class="auditor-management-edit-actions">
                         <button type="submit">
                             Save Changes
                         </button>
+
+                        <a href="<?= $from === 'view' ? 'auditor_mission_view.php?missionID=' . urlencode($id) : 'auditor_missions_management.php' ?>">
+                            Cancel
+                        </a>
                     </div>
                 </form>
             </section>
