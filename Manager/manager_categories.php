@@ -50,18 +50,25 @@ try {
         $category = $stmt->get_result()->fetch_assoc(); $stmt->close();
         if (!$category) go('error=notfound');
 
-        if ($action === 'deactivate') {
-            if ($category['status'] !== 'Active') go('error=inactive');
+        if (in_array($action, ['deactivate','reactivate'], true)) {
+            $reactivate = $action === 'reactivate';
+            $expected = $reactivate ? 'Inactive' : 'Active';
+            $newStatus = $reactivate ? 'Active' : 'Inactive';
+
+            if ($category['status'] !== $expected) go($reactivate ? 'error=active' : 'error=inactive');
+
             $conn->begin_transaction();
             try {
-                $stmt = $conn->prepare("UPDATE categories SET status='Inactive' WHERE categoryID=?");
-                $stmt->bind_param('s', $categoryID); $stmt->execute(); $stmt->close();
+                $stmt = $conn->prepare("UPDATE categories SET status=? WHERE categoryID=?");
+                $stmt->bind_param('ss', $newStatus, $categoryID); $stmt->execute(); $stmt->close();
 
                 $logID = generateLogID($conn);
-                $desc = 'Deactivated category: ' . $category['categoryName'];
+                $desc = ($reactivate ? 'Reactivated category: ' : 'Deactivated category: ') . $category['categoryName'];
                 $stmt = $conn->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Update','Category',?,?)");
                 $stmt->bind_param('ssss', $logID, $managerID, $categoryID, $desc); $stmt->execute(); $stmt->close();
-                $conn->commit(); go('deactivated=1');
+
+                $conn->commit();
+                go($reactivate ? 'reactivated=1' : 'deactivated=1');
             } catch (Throwable $ex) { $conn->rollback(); throw $ex; }
         }
 
@@ -146,9 +153,11 @@ $query = compact('search','status','dateFrom','dateTo');
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 <?php if (($_GET['updated'] ?? '') === '1'): ?><div class="alert alert-success">Category updated successfully.</div>
 <?php elseif (($_GET['deactivated'] ?? '') === '1'): ?><div class="alert alert-success">Category deactivated successfully. Existing assets were not affected.</div>
+<?php elseif (($_GET['reactivated'] ?? '') === '1'): ?><div class="alert alert-success">Category reactivated successfully. It can now be used for new asset listings.</div>
 <?php elseif (($_GET['deleted'] ?? '') === '1'): ?><div class="alert alert-success">Category permanently deleted successfully.</div>
 <?php elseif (($_GET['error'] ?? '') === 'linked'): ?><div class="alert alert-error">This category has linked assets and cannot be permanently deleted. Deactivate it instead.</div>
 <?php elseif (($_GET['error'] ?? '') === 'inactive'): ?><div class="alert alert-error">This category is already inactive.</div>
+<?php elseif (($_GET['error'] ?? '') === 'active'): ?><div class="alert alert-error">This category is already active.</div>
 <?php elseif (($_GET['error'] ?? '') === 'notfound'): ?><div class="alert alert-error">Category not found.</div><?php endif; ?>
 
 <section class="management-filter">
@@ -206,16 +215,21 @@ $query = compact('search','status','dateFrom','dateTo');
         <a href="manager_category_view.php?categoryID=<?= e($c['categoryID']) ?>" class="management-action-btn" title="View"><img src="../assets/icons/view.png" alt="View"></a>
         <a href="manager_category_edit.php?categoryID=<?= e($c['categoryID']) ?>" class="management-action-btn" title="Edit"><img src="../assets/icons/edit.png" alt="Edit"></a>
         <?php if ($c['status'] === 'Active'): ?>
-        <form method="POST" onsubmit="return confirm('Deactivate this category? Existing assets will not be affected.');">
-            <input type="hidden" name="action" value="deactivate"><input type="hidden" name="categoryID" value="<?= e($c['categoryID']) ?>">
-            <button type="submit" class="management-action-btn deactivate" title="Deactivate">Deactivate</button>
-        </form>
+        <button type="button" class="management-action-btn deactivate" title="Deactivate"
+                onclick="openCategoryAction('deactivate','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+            Deactivate
+        </button>
+        <?php else: ?>
+        <button type="button" class="management-action-btn" title="Reactivate"
+                onclick="openCategoryAction('reactivate','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+            Reactivate
+        </button>
         <?php endif; ?>
         <?php if ($canDelete): ?>
-        <form method="POST" onsubmit="return confirm('Permanently delete this unused category? This cannot be undone.');">
-            <input type="hidden" name="action" value="delete"><input type="hidden" name="categoryID" value="<?= e($c['categoryID']) ?>">
-            <button type="submit" class="management-action-btn delete" title="Delete Permanently"><img src="../assets/icons/delete.png" alt="Delete"></button>
-        </form>
+        <button type="button" class="management-action-btn delete" title="Delete Permanently"
+                onclick="openCategoryAction('delete','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+            <img src="../assets/icons/delete.png" alt="Delete">
+        </button>
         <?php endif; ?>
     </div></td>
 </tr>
@@ -232,6 +246,48 @@ $query = compact('search','status','dateFrom','dateTo');
 </div>
 <?php endif; ?>
 </section>
+
+<dialog id="categoryActionDialog" class="flow-dialog">
+<h2 id="categoryActionTitle"></h2>
+<p id="categoryActionMessage"></p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category ID</strong><span id="categoryActionID"></span></div>
+    <div><strong>Category Name</strong><span id="categoryActionName"></span></div>
+    <div><strong>Action</strong><span id="categoryActionLabel"></span></div>
+</div>
+
+<form method="POST" id="categoryActionForm" class="flow-dialog-actions">
+    <input type="hidden" name="action" id="categoryActionInput">
+    <input type="hidden" name="categoryID" id="categoryActionCategoryID">
+    <button type="button" class="category-form-back" onclick="categoryActionDialog.close()">No</button>
+    <button type="submit" class="category-form-submit" id="categoryActionConfirm">Confirm</button>
+</form>
+</dialog>
+
+<script>
+function openCategoryAction(action,id,name){
+    const deleting=action==='delete', reactivating=action==='reactivate';
+
+    categoryActionTitle.textContent=deleting
+        ?'Confirm Category Deletion'
+        :(reactivating?'Confirm Category Reactivation':'Confirm Category Deactivation');
+
+    categoryActionMessage.textContent=deleting
+        ?'Permanently delete this unused category? This action cannot be undone.'
+        :(reactivating
+            ?'Reactivate this category? It will become available for new asset listings again.'
+            :'Deactivate this category? Existing assets will remain unchanged.');
+
+    categoryActionID.textContent=id;
+    categoryActionName.textContent=name;
+    categoryActionLabel.textContent=deleting?'Delete Permanently':(reactivating?'Reactivate':'Deactivate');
+    categoryActionConfirm.textContent=deleting?'Yes, Delete':(reactivating?'Yes, Reactivate':'Yes, Deactivate');
+    categoryActionInput.value=action;
+    categoryActionCategoryID.value=id;
+    categoryActionDialog.showModal();
+}
+</script>
 
 <?php if(($_GET['created']??'')==='1'):?>
 <dialog id="categoryCreatedDialog" class="flow-dialog">

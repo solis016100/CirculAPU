@@ -195,7 +195,7 @@ if (isset($conn) && $conn instanceof mysqli) $conn->close();
 
 <div class="flow-dialog-actions">
     <button type="button" class="category-form-back" onclick="categoryConfirm.close()">No</button>
-    <button type="button" class="category-form-submit" onclick="form.submit()">Yes, Create</button>
+    <button type="button" class="category-form-submit" onclick="confirmCategoryCreate()">Yes, Create</button>
 </div>
 </dialog>
 
@@ -212,6 +212,10 @@ function openCategoryConfirm(){
     confirmCategoryStatus.textContent=statusInput.value;
     confirmCategoryDescription.textContent=descInput.value.trim()||'-';
     categoryConfirm.showModal();
+}
+
+function confirmCategoryCreate(){
+    document.getElementById('categoryForm').submit();
 }
 
 document.querySelectorAll('input[name="categoryIcon"]').forEach(input=>input.addEventListener('change',()=>{

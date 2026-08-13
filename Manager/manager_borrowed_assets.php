@@ -27,8 +27,8 @@ try{
     $params=[];$types='';
 
     if($search){
-        $where[]="(a.assetName LIKE ? OR a.assetID LIKE ? OR u.name LIKE ? OR u.userID LIKE ? OR t.transactionID LIKE ?)";
-        $like="%$search%";array_push($params,$like,$like,$like,$like,$like);$types.='sssss';
+        $where[]="(b.borrowID LIKE ? OR a.assetName LIKE ? OR a.assetID LIKE ? OR u.name LIKE ? OR u.userID LIKE ? OR t.transactionID LIKE ?)";
+        $like="%$search%";array_push($params,$like,$like,$like,$like,$like,$like);$types.='ssssss';
     }
     if($status==='Overdue'){
         $where[]="DATE(b.expectedReturnDate)<CURDATE()";
@@ -67,7 +67,6 @@ try{
 }
 
 $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
-$nextReturn=$rows[0]['transactionID']??'';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -94,7 +93,7 @@ $nextReturn=$rows[0]['transactionID']??'';
 <div class="management-filter-group search">
 <label for="search">Search Borrowing</label>
 <div class="management-search-input"><img src="../assets/icons/search.png" alt="">
-<input id="search" name="search" value="<?=e($search)?>" placeholder="Asset, borrower or transaction ID"></div>
+<input id="search" name="search" value="<?=e($search)?>" placeholder="Borrow ID, asset, borrower or transaction ID"></div>
 </div>
 <div class="management-filter-group">
 <label for="status">Return Status</label>
@@ -118,13 +117,14 @@ $nextReturn=$rows[0]['transactionID']??'';
 </div>
 <div class="management-table-wrapper">
 <table class="management-table">
-<thead><tr><th>#</th><th>Asset</th><th>Borrower</th><th>Pickup Date</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+<thead><tr><th>#</th><th>Borrow ID</th><th>Asset</th><th>Borrower</th><th>Pickup Date</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
 <tbody>
 <?php if(!$rows):?>
-<tr><td colspan="7" class="management-empty-state">No active borrowings found.</td></tr>
+<tr><td colspan="8" class="management-empty-state">No active borrowings found.</td></tr>
 <?php else:foreach($rows as $i=>$r):$display=$r['isOverdue']?'Overdue':'Borrowed';?>
 <tr>
 <td><?=$offset+$i+1?></td>
+<td><strong><?=e($r['borrowID'])?></strong></td>
 <td><strong><?=e($r['assetName'])?></strong><br><small><?=e($r['assetID'])?></small></td>
 <td><?=e($r['borrowerName'].' ('.$r['borrowerID'].')')?></td>
 <td><?=e(d($r['borrowDate']))?></td>
@@ -152,25 +152,17 @@ $nextReturn=$rows[0]['transactionID']??'';
 </section>
 
 <?php if(($_GET['returnDone']??'')==='1'):?>
-<dialog id="nextReturnDialog" class="flow-dialog">
-<h2>Return Completed Successfully</h2>
-<p>The borrowing transaction has been completed and the asset status has been updated.</p>
+<dialog id="returnDoneDialog" class="flow-dialog">
+<div class="alert alert-success" style="margin:0">
+    <strong>Return Completed Successfully</strong><br>
+    The borrowing transaction has been completed and the asset status has been updated.
+</div>
 
-<?php if($nextReturn):?>
-<p style="margin-top:12px">There are <strong><?=$total?></strong> active borrowing<?=$total===1?'':'s'?> remaining. Handle another return?</p>
 <div class="flow-dialog-actions">
-<button type="button" class="category-form-back" onclick="nextReturnDialog.close()">Done</button>
-<button type="button" class="category-form-submit"
-onclick="location.href='manager_borrowed_asset_view.php?transactionID=<?=e($nextReturn)?>'">Handle Another</button>
+<button type="button" class="category-form-submit" onclick="returnDoneDialog.close()">Done</button>
 </div>
-<?php else:?>
-<p style="margin-top:12px">There are no more active borrowings to process.</p>
-<div class="flow-dialog-actions">
-<button type="button" class="category-form-submit" onclick="nextReturnDialog.close()">Done</button>
-</div>
-<?php endif;?>
 </dialog>
-<script>nextReturnDialog.showModal()</script>
+<script>returnDoneDialog.showModal();</script>
 <?php endif;?>
 
 </main></div></div>

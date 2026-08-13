@@ -144,7 +144,9 @@ try{
                         assetStatus($c,$t['assetID'],$manager,'Reserved','Borrowed',"Asset picked up for $id");
                         logTx($c,$manager,'Assign',$id,"Pickup confirmed; borrowing started for {$t['assetName']}");
                         notify($c,$t['requesterID'],'Pickup Confirmed',"Pickup for {$t['assetName']} was confirmed. Your borrowing has started. Return by: ".d($b['expectedReturnDate']).'.');
-                        $c->commit();go($id);
+                        $c->commit();
+                        header('Location: manager_transactions.php?pickupDone='.rawurlencode($id));
+                        exit();
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -194,7 +196,7 @@ if($t){
 .tx-dialog-small{width:min(520px,calc(100% - 32px))}
 .tx-dialog::backdrop{background:rgba(0,0,0,.55)}
 .tx-dialog h2{margin-top:0}
-#borrowerHistory h2{margin-bottom:18px}
+#borrowerHistory h2{margin-bottom:8px}\n#borrowerHistory>p{margin:0;color:#475569;line-height:1.5}
 .tx-side-actions button:disabled{
     background:#d9dee5;
     border-color:#c7cdd4;
@@ -280,7 +282,7 @@ if($t){
 onclick="approveBox.showModal()">Approve &amp; Reserve</button>
 <?php elseif($status==='Approved'):?>
 <button type="button" class="category-form-reset" onclick="cancelBox.showModal()">Cancel Reservation</button>
-<form method="POST"><input type="hidden" name="action" value="start"><button class="category-form-submit" onclick="return confirm('Confirm that the member has picked up this asset? Borrowing will start immediately.')">Confirm Pickup</button></form>
+<button type="button" class="category-form-submit" onclick="pickupBox.showModal()">Confirm Pickup</button>
 <?php endif;?>
 </div>
 </div>
@@ -322,16 +324,24 @@ onclick="approveBox.showModal()">Approve &amp; Reserve</button>
 
 <dialog id="borrowerHistory" class="content-card tx-dialog">
 <h2><?=e($personLabel)?> History</h2>
+<p>Review this member's borrowing background and recent activity.</p>
 
-<div class="asset-form-fields">
-<div class="asset-form-row"><label>Member</label><input value="<?=e($t['requesterName'].' ('.$t['requesterID'].')')?>" readonly></div>
-<div class="asset-form-row"><label>Email</label><input value="<?=e($t['requesterEmail'])?>" readonly></div>
-<div class="asset-form-row"><label>EcoPoints</label><input value="<?=e($summary['ecopoint']??$t['ecopoint'])?>" readonly></div>
-<div class="asset-form-row"><label>Active Borrowings</label><input value="<?=e(($summary['active']??0).' / 5')?>" readonly></div>
-<div class="asset-form-row"><label>Current Overdue</label><input value="<?=e($summary['overdue']??0)?>" readonly></div>
-<div class="asset-form-row"><label>Completed Borrowings</label><input value="<?=e($summary['completed']??0)?>" readonly></div>
-<div class="asset-form-row"><label>Previous Late Returns</label><input value="<?=e($summary['late']??0)?>" readonly></div>
-<div class="asset-form-row"><label>Total Requests</label><input value="<?=e($summary['requests']??0)?>" readonly></div>
+<div class="table-wrapper">
+<table class="data-table">
+<thead>
+<tr><th>Requester Detail</th><th>Information</th></tr>
+</thead>
+<tbody>
+<tr><th>Member</th><td><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></td></tr>
+<tr><th>Email</th><td><?=e($t['requesterEmail'])?></td></tr>
+<tr><th>EcoPoints</th><td><?=e($summary['ecopoint']??$t['ecopoint'])?></td></tr>
+<tr><th>Active Borrowings</th><td><?=e(($summary['active']??0).' / 5')?></td></tr>
+<tr><th>Current Overdue</th><td><?=e($summary['overdue']??0)?></td></tr>
+<tr><th>Completed Borrowings</th><td><?=e($summary['completed']??0)?></td></tr>
+<tr><th>Previous Late Returns</th><td><?=e($summary['late']??0)?></td></tr>
+<tr><th>Total Requests</th><td><?=e($summary['requests']??0)?></td></tr>
+</tbody>
+</table>
 </div>
 
 <div class="card-header"><h3>Recent Borrowings</h3></div>
@@ -369,36 +379,64 @@ onclick="approveBox.showModal()">Approve &amp; Reserve</button>
 </form>
 </dialog>
 
-<dialog id="rejectBox" class="content-card tx-dialog tx-dialog-small">
+<dialog id="rejectBox" class="flow-dialog">
 <h2>Reject Request</h2>
+<p>Enter a clear reason explaining why this borrowing request cannot be approved.</p>
+
 <form method="POST">
 <input type="hidden" name="action" value="reject">
-<div class="asset-form-fields">
-<div class="asset-form-row asset-form-textarea">
+
+<div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
 <label for="rejectReason">Rejection Reason *</label>
-<textarea id="rejectReason" name="managerRemark" maxlength="255" rows="4" placeholder="Explain why this borrowing request is rejected" required></textarea>
+<textarea id="rejectReason" name="managerRemark" maxlength="255" rows="4"
+          placeholder="Example: The request cannot be approved because the borrowing requirements are not met."
+          required></textarea>
 </div>
-</div>
-<div class="category-form-actions">
+
+<div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="rejectBox.close()">Cancel</button>
-<button class="category-form-reset">Reject Request</button>
+<button class="category-form-submit">Yes, Reject</button>
 </div>
 </form>
 </dialog>
 <?php elseif($status==='Approved'):?>
-<dialog id="cancelBox" class="content-card tx-dialog tx-dialog-small">
+<dialog id="pickupBox" class="flow-dialog">
+<h2>Confirm Asset Pickup</h2>
+<p>Confirm that the member has collected this reserved asset. Borrowing will start immediately.</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
+<div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
+<div><strong>Borrower</strong><span><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></span></div>
+<div><strong>Pickup Date</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
+<div><strong>Return Date</strong><span><?=e(d($b['expectedReturnDate']??null))?></span></div>
+<div><strong>Current Asset Status</strong><span><?=e($t['availabilityStatus'])?></span></div>
+</div>
+
+<form method="POST" class="flow-dialog-actions">
+<input type="hidden" name="action" value="start">
+<button type="button" class="category-form-back" onclick="pickupBox.close()">No</button>
+<button class="category-form-submit">Yes, Confirm Pickup</button>
+</form>
+</dialog>
+
+<dialog id="cancelBox" class="flow-dialog">
 <h2>Cancel Reservation</h2>
+<p>Enter a clear reason explaining why this approved reservation needs to be cancelled before pickup.</p>
+
 <form method="POST">
 <input type="hidden" name="action" value="cancel">
-<div class="asset-form-fields">
-<div class="asset-form-row asset-form-textarea">
+
+<div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
 <label for="cancelReason">Cancellation Reason *</label>
-<textarea id="cancelReason" name="managerRemark" maxlength="255" rows="4" placeholder="Explain why this reservation is being cancelled before pickup" required></textarea>
+<textarea id="cancelReason" name="managerRemark" maxlength="255" rows="4"
+          placeholder="Example: The reservation needs to be cancelled because the asset is no longer available for pickup."
+          required></textarea>
 </div>
-</div>
-<div class="category-form-actions">
-<button type="button" class="category-form-back" onclick="cancelBox.close()">Back</button>
-<button class="category-form-reset">Cancel Reservation</button>
+
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="cancelBox.close()">Cancel</button>
+<button class="category-form-submit">Yes, Cancel Reservation</button>
 </div>
 </form>
 </dialog>

@@ -33,8 +33,8 @@ $activeTransaction = ($_GET['activeTransaction'] ?? '') === '1';
 $viewAll = ($_GET['viewAll'] ?? '') === '1';
 
 $statuses = ['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'];
-$transactions=[];$nextPending='';
-$stats=['pending'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
+$transactions=[];$nextPending=$nextPickup='';
+$stats=['pending'=>0,'pickup'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
 $error='';
 $perPage = $viewAll ? 100000 : 8;
 $page = max(1, (int)($_GET['page'] ?? 1));
@@ -51,16 +51,39 @@ try {
     $row = $conn->query("
         SELECT
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Pending') pending,
+            (SELECT COUNT(*) FROM transactionrequests t
+             WHERE t.requestStatus='Approved'
+             AND EXISTS(
+                 SELECT 1 FROM borrowings b
+                 WHERE b.transactionID=t.transactionID
+                 AND b.actualReturnDate IS NULL
+                 AND b.borrowingStatus='Approved'
+             )
+             AND EXISTS(
+                 SELECT 1 FROM assets a
+                 WHERE a.assetID=t.assetID AND a.availabilityStatus='Reserved'
+             )) pickup,
             (SELECT COUNT(*) FROM borrowings
              WHERE actualReturnDate IS NULL AND borrowingStatus IN ('Borrowed','Active','Overdue')) active,
             (SELECT COUNT(*) FROM borrowings
              WHERE DATE(expectedReturnDate)<CURDATE() AND actualReturnDate IS NULL
              AND borrowingStatus IN ('Borrowed','Active','Overdue')) overdue,
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Completed') completed,
-            (SELECT transactionID FROM transactionrequests WHERE requestStatus='Pending' ORDER BY requestDate ASC LIMIT 1) nextPending
+            (SELECT transactionID FROM transactionrequests WHERE requestStatus='Pending' ORDER BY requestDate ASC LIMIT 1) nextPending,
+            (SELECT t.transactionID
+             FROM transactionrequests t
+             JOIN borrowings b ON b.transactionID=t.transactionID
+             JOIN assets a ON a.assetID=t.assetID
+             WHERE t.requestStatus='Approved'
+             AND b.actualReturnDate IS NULL
+             AND b.borrowingStatus='Approved'
+             AND a.availabilityStatus='Reserved'
+             ORDER BY DATE(b.borrowDate) ASC,t.requestDate ASC
+             LIMIT 1) nextPickup
     ")->fetch_assoc();
     foreach ($stats as $k => $v) $stats[$k]=(int)($row[$k]??0);
     $nextPending=$row['nextPending']??'';
+    $nextPickup=$row['nextPickup']??'';
 
     $where = []; $params = []; $types = '';
     if ($search) {
@@ -151,6 +174,8 @@ $end = min($offset + $perPage, $total);
 .transaction-list-meta{display:flex;align-items:center;gap:10px}
 .transaction-list-meta a{color:var(--primary-color);font-size:13px;font-weight:600;text-decoration:none}
 .transaction-list-meta a:hover{text-decoration:underline}
+.transaction-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:650px){.transaction-heading-actions{justify-content:stretch}.transaction-heading-actions .management-create-btn{flex:1}}
 </style>
 </head>
 <body class="role-manager">
@@ -163,11 +188,21 @@ $end = min($offset + $perPage, $total);
 <h1>Transaction Management</h1>
 <p>Review borrowing requests, active borrowings, overdue returns and completed transactions.</p>
 </div>
+<?php if($nextPending||$nextPickup):?>
+<div class="transaction-heading-actions">
 <?php if($nextPending):?>
 <a href="manager_transaction_view.php?transactionID=<?=e($nextPending)?>" class="management-create-btn">
 <img src="../assets/icons/pendingVerification.png" alt="">
 Review Pending Requests (<?=$stats['pending']?>)
 </a>
+<?php endif;?>
+<?php if($nextPickup):?>
+<a href="manager_transaction_view.php?transactionID=<?=e($nextPickup)?>" class="management-create-btn">
+<img src="../assets/icons/borrowed-assets.png" alt="">
+Confirm Pickups (<?=$stats['pickup']?>)
+</a>
+<?php endif;?>
+</div>
 <?php endif;?>
 </section>
 
@@ -268,6 +303,35 @@ title="<?= $t['requestStatus'] === 'Pending' ? 'Review Transaction Request' : 'V
 </div>
 </section>
 
+<?php if(($pickupDone=trim($_GET['pickupDone']??''))!==''):?>
+<dialog id="pickupDoneDialog" class="flow-dialog">
+<h2>Pickup Confirmed Successfully</h2>
+<p>The reservation has been converted into an active borrowing.</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Transaction ID</strong><span><?=e($pickupDone)?></span></div>
+<div><strong>Transaction Status</strong><span>In Progress</span></div>
+<div><strong>Borrowing Status</strong><span>Borrowed</span></div>
+<div><strong>Asset Availability</strong><span>Borrowed</span></div>
+</div>
+
+<?php if($nextPickup):?>
+<p style="margin-top:12px">There <?=$stats['pickup']===1?'is':'are'?> still <strong><?=$stats['pickup']?></strong> approved reservation<?=$stats['pickup']===1?'':'s'?> waiting for pickup confirmation.</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="pickupDoneDialog.close()">Done</button>
+<button type="button" class="category-form-submit"
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>'">Confirm Another Pickup</button>
+</div>
+<?php else:?>
+<p style="margin-top:12px">There are no more approved reservations waiting for pickup confirmation.</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-submit" onclick="pickupDoneDialog.close()">Done</button>
+</div>
+<?php endif;?>
+</dialog>
+<script>pickupDoneDialog.showModal();</script>
+<?php endif;?>
+
 <?php if(in_array($_GET['reviewDone']??'',['approve','reject'],true)):?>
 <dialog id="nextRequestDialog" class="flow-dialog">
 <h2>Request Review Completed</h2>
@@ -279,14 +343,27 @@ title="<?= $t['requestStatus'] === 'Pending' ? 'Review Transaction Request' : 'V
 <p style="margin-top:12px">There are <strong><?=$stats['pending']?></strong> pending request<?=$stats['pending']===1?'':'s'?> remaining. Review another?</p>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
+<?php if($nextPickup):?>
+<button type="button" class="category-form-back"
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>'">Process Pickups (<?=$stats['pickup']?>)</button>
+<?php endif;?>
 <button type="button" class="category-form-submit"
 onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPending)?>'">Review Another</button>
 </div>
 <?php else:?>
 <p style="margin-top:12px">There are no more pending requests to review.</p>
+<?php if($nextPickup):?>
+<p style="margin-top:12px"><strong><?=$stats['pickup']?></strong> approved reservation<?=$stats['pickup']===1?' is':'s are'?> waiting for pickup confirmation.</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
+<button type="button" class="category-form-submit"
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>'">Confirm Pickups</button>
+</div>
+<?php else:?>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-submit" onclick="nextRequestDialog.close()">Done</button>
 </div>
+<?php endif;?>
 <?php endif;?>
 </dialog>
 <script>nextRequestDialog.showModal()</script>

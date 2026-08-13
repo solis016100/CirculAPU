@@ -90,6 +90,63 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 .return-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:22px}
 .return-actions form{margin:0}
 </style>
+
+<style>
+.flow-dialog{
+    width:min(520px, calc(100vw - 32px));
+    border:none;
+    border-radius:16px;
+    padding:0;
+    box-shadow:0 18px 50px rgba(0,0,0,.22);
+}
+.flow-dialog::backdrop{background:rgba(15,23,42,.45);}
+.flow-dialog-inner{padding:24px 24px 20px;}
+.flow-dialog h2{
+    margin:0 0 10px;
+    font-size:18px;
+    font-weight:700;
+    color:#0f172a;
+}
+.flow-dialog p{
+    margin:0 0 16px;
+    color:#475569;
+    line-height:1.55;
+}
+.flow-dialog-summary{
+    display:grid;
+    grid-template-columns:140px 1fr;
+    gap:10px 14px;
+    margin-bottom:20px;
+    font-size:15px;
+}
+.flow-dialog-summary strong{color:#0f172a;}
+.flow-dialog-summary span{color:#334155;}
+.flow-dialog-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+}
+.dialog-btn{
+    min-width:110px;
+    border-radius:10px;
+    padding:10px 18px;
+    font-size:15px;
+    cursor:pointer;
+    border:1px solid #cbd5e1;
+    background:#fff;
+    color:#0f172a;
+}
+.dialog-btn-primary{
+    background:#0ea5e9;
+    border-color:#0ea5e9;
+    color:#fff;
+}
+.dialog-btn:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+</style>
+
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -140,9 +197,9 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 <div class="return-actions">
 <a href="manager_borrowed_assets.php" class="category-form-back">Back</a>
 <?php if($overdue):?>
-<form method="POST">
+<form method="POST" id="remindForm">
 <input type="hidden" name="action" value="remind">
-<button class="category-form-reset" <?=$remindedToday?'disabled':''?> onclick="return confirm('Send a return reminder to this borrower?')">
+<button type="button" class="category-form-reset" <?=$remindedToday?'disabled':''?> <?=$remindedToday?'':'onclick="openReminderDialog()"'?>>
 <?=$remindedToday?'Reminder Sent Today':'Send Return Reminder'?>
 </button>
 </form>
@@ -150,6 +207,42 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 <a href="inspect_asset_return.php?transactionID=<?=e($id)?>" class="category-form-submit">Process Return</a>
 </div>
 </section>
+<?php endif;?>
+
+
+<?php if($overdue && !$remindedToday):?>
+<dialog id="reminderDialog" class="flow-dialog">
+    <div class="flow-dialog-inner">
+        <h2>Confirm Return Reminder</h2>
+        <p>Are you sure you want to send a return reminder to this borrower?</p>
+
+        <div class="flow-dialog-summary">
+            <strong>Transaction ID</strong><span><?=e($id)?></span>
+            <strong>Borrower</strong><span><?=e($t['borrowerName'])?> (<?=e($t['borrowerID'])?>)</span>
+            <strong>Asset</strong><span><?=e($t['assetName'])?> (<?=e($t['assetID'])?>)</span>
+            <strong>Expected Return</strong><span><?=e(d($b['expectedReturnDate']))?></span>
+        </div>
+
+        <div class="flow-dialog-actions">
+            <button type="button" class="dialog-btn" onclick="closeReminderDialog()">Cancel</button>
+            <button type="button" class="dialog-btn dialog-btn-primary" onclick="submitReminderForm()">Yes, Send</button>
+        </div>
+    </div>
+</dialog>
+
+<script>
+function openReminderDialog(){
+    const dlg = document.getElementById('reminderDialog');
+    if(dlg) dlg.showModal();
+}
+function closeReminderDialog(){
+    const dlg = document.getElementById('reminderDialog');
+    if(dlg) dlg.close();
+}
+function submitReminderForm(){
+    document.getElementById('remindForm').submit();
+}
+</script>
 <?php endif;?>
 
 </main></div></div>
