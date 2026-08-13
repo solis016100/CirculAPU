@@ -109,7 +109,7 @@ try{
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
                     $c->commit();
-                    header('Location: manager_borrowed_assets.php?returned=1');exit();
+                    header('Location: manager_borrowed_assets.php?returnDone=1');exit();
                 }catch(Throwable $z){$c->rollback();throw $z;}
             }
         }
@@ -146,7 +146,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <?php endif;?>
 
 <section class="content-card asset-form-card">
-<form method="POST">
+<form method="POST" id="returnForm">
 <div class="asset-form-layout">
 
 <div class="asset-form-fields">
@@ -189,7 +189,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <p>Overdue returns may receive an EcoPoint penalty. Worse, damaged, lost or unavailable assets require a deduction and reason. The member balance may become negative.</p>
 </div>
 <div class="asset-form-actions">
-<button type="submit" class="asset-form-submit" onclick="return confirm('Confirm this return inspection and complete the transaction?')">Confirm Return</button>
+<button type="button" class="asset-form-submit" onclick="openReturnConfirm()">Confirm Return</button>
 <a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
@@ -200,4 +200,45 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <?php endif;?>
 
 </main></div></div>
+
+<?php if($t&&$b):?>
+<dialog id="returnConfirm" class="flow-dialog">
+<h2>Confirm Asset Return</h2>
+<p>Complete this return inspection and close the borrowing transaction?</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Transaction</strong><span><?=e($id)?></span></div>
+<div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
+<div><strong>Borrower</strong><span><?=e($t['borrowerName'])?></span></div>
+<div><strong>Returned Condition</strong><span id="confirmReturnedCondition"></span></div>
+<div><strong>Asset After Return</strong><span id="confirmReturnOutcome"></span></div>
+<div><strong>EcoPoint Deduction</strong><span id="confirmDeduction"></span></div>
+<div id="confirmReasonRow" hidden><strong>Reason</strong><span id="confirmReturnReason"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="returnConfirm.close()">No</button>
+<button type="button" class="category-form-submit" onclick="returnForm.submit()">Yes, Complete Return</button>
+</div>
+</dialog>
+
+<script>
+const returnForm=document.getElementById('returnForm');
+function openReturnConfirm(){
+    if(!returnForm.checkValidity()){returnForm.reportValidity();return}
+
+    const deduction=Number(returnForm.ecoDeduction.value||0),
+          reason=returnForm.reason.value.trim();
+
+    if(deduction>0&&!reason){returnForm.reason.focus();return}
+
+    confirmReturnedCondition.textContent=returnForm.returnedCondition.value;
+    confirmReturnOutcome.textContent=returnForm.returnOutcome.options[returnForm.returnOutcome.selectedIndex].text;
+    confirmDeduction.textContent=deduction+' EcoPoints';
+    confirmReasonRow.hidden=!reason;
+    confirmReturnReason.textContent=reason;
+    returnConfirm.showModal();
+}
+</script>
+<?php endif;?>
 </body></html>

@@ -67,6 +67,7 @@ try{
 }
 
 $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
+$nextReturn=$rows[0]['transactionID']??'';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,7 +88,6 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 </section>
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
-<?php if(($_GET['returned']??'')==='1'):?><div class="alert alert-success">Asset return completed successfully.</div><?php endif;?>
 
 <section class="management-filter">
 <form method="GET">
@@ -150,6 +150,28 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 </nav><?php endif;?>
 </div>
 </section>
+
+<?php if(($_GET['returnDone']??'')==='1'):?>
+<dialog id="nextReturnDialog" class="flow-dialog">
+<h2>Return Completed Successfully</h2>
+<p>The borrowing transaction has been completed and the asset status has been updated.</p>
+
+<?php if($nextReturn):?>
+<p style="margin-top:12px">There are <strong><?=$total?></strong> active borrowing<?=$total===1?'':'s'?> remaining. Handle another return?</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="nextReturnDialog.close()">Done</button>
+<button type="button" class="category-form-submit"
+onclick="location.href='manager_borrowed_asset_view.php?transactionID=<?=e($nextReturn)?>'">Handle Another</button>
+</div>
+<?php else:?>
+<p style="margin-top:12px">There are no more active borrowings to process.</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-submit" onclick="nextReturnDialog.close()">Done</button>
+</div>
+<?php endif;?>
+</dialog>
+<script>nextReturnDialog.showModal()</script>
+<?php endif;?>
 
 </main></div></div>
 </body></html>
