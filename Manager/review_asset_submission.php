@@ -179,7 +179,6 @@ try {
 }
 
 $image = imagePath($asset['imageURL'] ?? '');
-$showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction'] ?? '') === 'return';
 ?>
 
 <!DOCTYPE html>
@@ -266,12 +265,6 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
     ?>
     <div class="asset-form-row"><label><?= e($label) ?></label><input value="<?= e($value) ?>" readonly></div>
     <?php endforeach; ?>
-
-    <div class="asset-form-row asset-form-textarea" id="correctionBox" <?=$showCorrection?'':'hidden'?>>
-        <label for="correctionReason">Correction Reason *</label>
-        <textarea id="correctionReason" name="correctionReason" maxlength="150" rows="3"
-                  placeholder="Explain clearly what the Community Member needs to correct"><?= e($_POST['correctionReason'] ?? '') ?></textarea>
-    </div>
 </div>
 
 <aside class="asset-form-side">
@@ -291,13 +284,12 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
     </div>
 
     <div class="asset-form-actions">
-        <button type="submit" class="asset-form-submit" onclick="reviewAction.value='save'">
+        <button type="button" class="asset-form-submit" onclick="openReviewConfirm('save')">
             <img src="../assets/icons/edit.png" alt=""> Save Changes
         </button>
 
-        <button type="button" class="asset-form-reset" onclick="prepareReturn()">
-            <img src="../assets/icons/reset.png" alt="">
-            <span id="returnButtonText"><?=$showCorrection?'Confirm Return':'Return for Correction'?></span>
+        <button type="button" class="asset-form-reset" onclick="openCorrectionDialog()">
+            <img src="../assets/icons/reset.png" alt=""> Return for Correction
         </button>
 
         <button type="button" class="asset-form-submit" onclick="openReviewConfirm('verify')">
@@ -320,48 +312,81 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
 <dialog id="reviewConfirm" class="flow-dialog">
 <h2 id="confirmTitle"></h2>
 <p id="confirmMessage"></p>
+
 <div class="flow-dialog-summary">
     <div><strong>Asset ID</strong><span><?=e($assetID)?></span></div>
     <div><strong>Asset Name</strong><span id="confirmName"></span></div>
     <div><strong>Category</strong><span id="confirmCategory"></span></div>
     <div><strong>Condition</strong><span id="confirmCondition"></span></div>
-    <div id="confirmReasonRow" hidden><strong>Correction Reason</strong><span id="confirmReason"></span></div>
+    <div><strong>Availability</strong><span>Unavailable</span></div>
+    <div><strong>Description</strong><span id="confirmDescription"></span></div>
 </div>
+
 <div class="flow-dialog-actions">
     <button type="button" class="category-form-back" onclick="reviewConfirm.close()">No</button>
     <button type="button" class="category-form-submit" id="confirmButton" onclick="submitReview()">Confirm</button>
 </div>
 </dialog>
 
+<dialog id="correctionDialog" class="flow-dialog">
+<h2>Return Listing for Correction</h2>
+<p>Enter a clear reason explaining what the Community Member needs to correct.</p>
+
+<div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
+    <label for="correctionReason">Correction Reason *</label>
+    <textarea id="correctionReason" name="correctionReason" form="reviewForm"
+              maxlength="150" rows="4"
+              placeholder="Example: Please provide a clearer description or correct the selected category."></textarea>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="correctionDialog.close()">Cancel</button>
+    <button type="button" class="category-form-submit" onclick="submitCorrection()">Yes, Return</button>
+</div>
+</dialog>
+
 <script>
 const form=document.getElementById('reviewForm'),
       actionInput=document.getElementById('reviewAction'),
-      box=document.getElementById('correctionBox'),
-      reason=document.getElementById('correctionReason'),
-      returnText=document.getElementById('returnButtonText');
+      correctionReason=document.getElementById('correctionReason');
 
-function prepareReturn(){
-    if(box.hidden){box.hidden=false;returnText.textContent='Confirm Return';reason.focus();return}
-    if(!reason.value.trim()){reason.focus();return}
-    openReviewConfirm('return');
-}
-function openReviewConfirm(action){
-    if(!form.checkValidity()){form.reportValidity();return}
-    if(action==='return'&&!reason.value.trim()){reason.focus();return}
-
-    actionInput.value=action;
-    confirmTitle.textContent=action==='verify'?'Confirm Verification Submission':'Confirm Return for Correction';
-    confirmMessage.textContent=action==='verify'
-        ?'Send this reviewed listing to the Sustainability Auditor?'
-        :'Return this listing to the Community Member for correction?';
-    confirmButton.textContent=action==='verify'?'Yes, Send':'Yes, Return';
+function fillSummary(){
     confirmName.textContent=form.assetName.value.trim();
     confirmCategory.textContent=form.categoryID.options[form.categoryID.selectedIndex]?.text||'-';
     confirmCondition.textContent=form.assetCondition.value;
-    confirmReasonRow.hidden=action!=='return';
-    confirmReason.textContent=reason.value.trim();
+    confirmDescription.textContent=form.description.value.trim()||'-';
+}
+
+function openReviewConfirm(action){
+    if(!form.checkValidity()){form.reportValidity();return}
+
+    actionInput.value=action;
+    fillSummary();
+
+    const saving=action==='save';
+    confirmTitle.textContent=saving?'Confirm Save Changes':'Confirm Verification Submission';
+    confirmMessage.textContent=saving
+        ?'Save these changes to the asset listing?'
+        :'Send this reviewed listing to the Sustainability Auditor?';
+    confirmButton.textContent=saving?'Yes, Save Changes':'Yes, Send';
     reviewConfirm.showModal();
 }
+
+function openCorrectionDialog(){
+    if(!form.checkValidity()){form.reportValidity();return}
+    correctionDialog.showModal();
+    correctionReason.focus();
+}
+
+function submitCorrection(){
+    if(!correctionReason.value.trim()){
+        correctionReason.focus();
+        return;
+    }
+    actionInput.value='return';
+    form.submit();
+}
+
 function submitReview(){form.submit()}
 </script>
 

@@ -121,21 +121,21 @@ try {
 
 <!-- Summary -->
 <section class="stats-grid">
-    <div class="stat-card">
+    <a href="manager_notifications.php" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/notification.png" alt=""></div>
         <div class="stat-content">
             <h3>Total Notifications</h3><strong class="stat-value"><?= $total ?></strong>
             <p class="stat-description">All manager notifications</p>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card">
+    <a href="manager_notifications.php?status=Unread" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/envelope.png" alt=""></div>
         <div class="stat-content">
             <h3>Unread</h3><strong class="stat-value"><?= $unread ?></strong>
             <p class="stat-description">Require your attention</p>
         </div>
-    </div>
+    </a>
 </section>
 
 <!-- Filters -->
@@ -197,7 +197,7 @@ try {
                     <form method="POST">
                         <input type="hidden" name="action" value="mark_read">
                         <input type="hidden" name="notificationID" value="<?= e($n['notificationID']) ?>">
-                        <button type="submit" class="table-action-btn" title="Mark as Read">
+                        <button type="submit" class="management-action-btn" title="Mark as Read">
                             <img src="../assets/icons/mark_as_read.png" alt="Mark as Read">
                         </button>
                     </form>
