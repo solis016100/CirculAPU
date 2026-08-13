@@ -208,9 +208,29 @@ if($t){
 .tx-support .content-card{margin:0}
 .tx-profile .category-form-actions{justify-content:flex-start;margin-top:8px}
 .tx-profile .management-filter-btn{padding:7px 12px;font-size:13px}
+.tx-activity{padding:24px}
+.tx-activity .card-header{margin:0 0 12px}
+.tx-activity .table-wrapper{margin-top:0}
 .tx-side-actions{display:flex;flex-direction:column;gap:12px}
 .tx-side-actions form{margin:0}
 .tx-side-actions a,.tx-side-actions button{width:100%;justify-content:center}
+@media print{
+@page{size:A4 landscape;margin:10mm}
+.sidebar,.app-header,.breadcrumb,.management-heading p,.tx-side-actions,.tx-dialog,.tx-profile .category-form-actions{display:none!important}
+.main-content{width:100%!important;margin-left:0!important}
+.page-body{padding:0!important}
+.management-heading{margin:0 0 10px!important}
+.management-heading h1{font-size:20px!important;margin:0!important}
+.alert,.asset-form-note{box-shadow:none!important}
+.tx-top{display:block!important;margin-bottom:10px!important}
+.tx-support{grid-template-columns:1fr 1fr!important;gap:10px!important;margin-bottom:10px!important}
+.tx-top .content-card,.tx-support .content-card,.tx-activity{padding:12px!important;box-shadow:none!important;border:1px solid #cbd5e1!important;break-inside:avoid}
+.category-info-card h2,.tx-activity h2{font-size:14px!important;margin:0 0 8px!important}
+.category-info-fields{gap:5px!important}
+.category-info-row{grid-template-columns:125px 1fr!important;gap:8px!important;font-size:10px!important}
+.tx-activity .data-table th,.tx-activity .data-table td{padding:5px 7px!important;font-size:9px!important}
+.tx-activity .table-wrapper{overflow:visible!important}
+}
 @media(max-width:850px){.tx-top,.tx-support{grid-template-columns:1fr}.tx-side-actions{flex-direction:row;flex-wrap:wrap}.tx-side-actions a,.tx-side-actions button{width:auto}}
 </style>
 </head>
@@ -250,6 +270,7 @@ if($t){
 ] as $k=>$v):?><div class="category-info-row"><strong><?=e($k)?></strong><span><?=e($v)?></span></div><?php endforeach;?>
 </div></article>
 <div class="tx-side-actions">
+<button type="button" class="category-form-back" onclick="window.print()">Print Details</button>
 <a href="manager_transactions.php" class="category-form-back">Back</a>
 <?php if($status==='Pending'):?>
 <button type="button" class="category-form-reset" onclick="rejectBox.showModal()">Reject Request</button>
@@ -287,7 +308,7 @@ if($t){
 </div>
 
 
-<section class="content-card">
+<section class="content-card tx-activity">
 <div class="card-header"><h2>Transaction Activity<?= $logs?' ('.count($logs).')':''?></h2></div>
 <div class="table-wrapper"><table class="data-table">
 <thead><tr><th>Date & Time</th><th>Action</th><th>Done By</th><th>Activity</th></tr></thead><tbody>

@@ -17,6 +17,12 @@ function pageURL($p): string {
     $q = $_GET; $q['page'] = $p;
     return 'manager_transactions.php?' . http_build_query($q);
 }
+function viewAllURL(bool $viewAll): string {
+    $q=$_GET; unset($q['page']);
+    if($viewAll) unset($q['viewAll']); else $q['viewAll']='1';
+    $query=http_build_query($q);
+    return 'manager_transactions.php'.($query?'?'.$query:'');
+}
 
 $search = trim($_GET['search'] ?? '');
 $status = trim($_GET['requestStatus'] ?? '');
@@ -24,12 +30,13 @@ $dateFrom = trim($_GET['dateFrom'] ?? '');
 $dateTo = trim($_GET['dateTo'] ?? '');
 $activeOnly = ($_GET['active'] ?? '') === '1';
 $activeTransaction = ($_GET['activeTransaction'] ?? '') === '1';
+$viewAll = ($_GET['viewAll'] ?? '') === '1';
 
 $statuses = ['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'];
 $transactions = [];
 $stats = ['pending'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
 $error = '';
-$perPage = 8;
+$perPage = $viewAll ? 100000 : 8;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $total = $offset = 0; $totalPages = 1;
 
@@ -138,6 +145,11 @@ $end = min($offset + $perPage, $total);
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Management - CirculAPU</title>
 <link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<style>
+.transaction-list-meta{display:flex;align-items:center;gap:10px}
+.transaction-list-meta a{color:var(--primary-color);font-size:13px;font-weight:600;text-decoration:none}
+.transaction-list-meta a:hover{text-decoration:underline}
+</style>
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -205,7 +217,13 @@ $end = min($offset + $perPage, $total);
 </section>
 
 <section class="management-list">
-<div class="management-list-header"><h2>Transaction Requests</h2><p><?= $total ?> transaction<?= $total === 1 ? '' : 's' ?> found</p></div>
+<div class="management-list-header">
+<h2>Transaction Requests</h2>
+<div class="transaction-list-meta">
+<span><?= $total ?> transaction<?= $total===1?'':'s' ?></span>
+<a href="<?=e(viewAllURL($viewAll))?>"><?=$viewAll?'Paginated View':'View All'?></a>
+</div>
+</div>
 <div class="management-table-wrapper">
 <table class="management-table">
 <thead><tr><th>#</th><th>Transaction ID</th><th>Asset Name</th><th>Requester</th><th>Status</th><th>Request Date</th><th>Expected Return</th><th>Action</th></tr></thead>
@@ -232,7 +250,7 @@ title="<?= $t['requestStatus'] === 'Pending' ? 'Review Transaction Request' : 'V
 
 <div class="management-table-footer">
 <p>Showing <?= $start ?> - <?= $end ?> of <?= $total ?> transactions</p>
-<?php if ($totalPages > 1): ?>
+<?php if (!$viewAll && $totalPages > 1): ?>
 <nav class="pagination">
 <?php if ($page > 1): ?><a href="<?= e(pageURL($page - 1)) ?>">Previous</a><?php endif; ?>
 <?php for ($p=1; $p<=$totalPages; $p++): ?><a href="<?= e(pageURL($p)) ?>" class="<?= $p === $page ? 'active' : '' ?>"><?= $p ?></a><?php endfor; ?>
