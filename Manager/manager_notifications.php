@@ -197,7 +197,7 @@ try {
                     <form method="POST">
                         <input type="hidden" name="action" value="mark_read">
                         <input type="hidden" name="notificationID" value="<?= e($n['notificationID']) ?>">
-                        <button type="submit" class="table-action-btn" title="Mark as Read">
+                        <button type="submit" class="management-action-btn" title="Mark as Read">
                             <img src="../assets/icons/mark_as_read.png" alt="Mark as Read">
                         </button>
                     </form>
