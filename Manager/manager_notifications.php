@@ -121,21 +121,21 @@ try {
 
 <!-- Summary -->
 <section class="stats-grid">
-    <div class="stat-card">
+    <a href="manager_notifications.php" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/notification.png" alt=""></div>
         <div class="stat-content">
             <h3>Total Notifications</h3><strong class="stat-value"><?= $total ?></strong>
             <p class="stat-description">All manager notifications</p>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card">
+    <a href="manager_notifications.php?status=Unread" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/envelope.png" alt=""></div>
         <div class="stat-content">
             <h3>Unread</h3><strong class="stat-value"><?= $unread ?></strong>
             <p class="stat-description">Require your attention</p>
         </div>
-    </div>
+    </a>
 </section>
 
 <!-- Filters -->
