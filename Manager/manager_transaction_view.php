@@ -205,7 +205,7 @@ if($t){
 .tx-dialog .category-form-actions{margin-top:18px}
 .tx-top{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:24px;align-items:start;margin-bottom:24px}
 .tx-support{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
-.tx-support .content-card{margin:0}
+.tx-top .content-card,.tx-support .content-card,.tx-activity{margin:0}
 .tx-profile .category-form-actions{justify-content:flex-start;margin-top:8px}
 .tx-profile .management-filter-btn{padding:7px 12px;font-size:13px}
 .tx-activity{padding:24px}
