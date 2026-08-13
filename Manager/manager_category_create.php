@@ -171,7 +171,9 @@ if (isset($conn) && $conn instanceof mysqli) $conn->close();
 <div class="category-form-actions">
     <a href="manager_categories.php" class="category-form-back">Back</a>
     <button type="button" class="category-form-reset" id="clearForm"><img src="../assets/icons/reset.png" alt=""> Clear Form</button>
-    <button type="submit" class="category-form-submit"><img src="../assets/icons/create.png" alt=""> Create Category</button>
+    <button type="button" class="category-form-submit" onclick="openCategoryConfirm()">
+        <img src="../assets/icons/create.png" alt=""> Create Category
+    </button>
 </div>
 </form>
 </section>
@@ -180,8 +182,37 @@ if (isset($conn) && $conn instanceof mysqli) $conn->close();
 </div>
 </div>
 
+<dialog id="categoryConfirm" class="flow-dialog">
+<h2>Confirm Category Creation</h2>
+<p>Are you sure you want to create this category with these details?</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category Name</strong><span id="confirmCategoryName"></span></div>
+    <div><strong>Icon</strong><span id="confirmCategoryIcon"></span></div>
+    <div><strong>Status</strong><span id="confirmCategoryStatus"></span></div>
+    <div><strong>Description</strong><span id="confirmCategoryDescription"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="categoryConfirm.close()">No</button>
+    <button type="button" class="category-form-submit" onclick="form.submit()">Yes, Create</button>
+</div>
+</dialog>
+
 <script>
 const form=document.getElementById('categoryForm'), nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), statusInput=document.getElementById('status'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), placeholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+
+
+function openCategoryConfirm(){
+    if(!form.checkValidity()){form.reportValidity();return}
+
+    const icon=form.querySelector('input[name="categoryIcon"]:checked');
+    confirmCategoryName.textContent=nameInput.value.trim();
+    confirmCategoryIcon.textContent=icon?.closest('label')?.title||'-';
+    confirmCategoryStatus.textContent=statusInput.value;
+    confirmCategoryDescription.textContent=descInput.value.trim()||'-';
+    categoryConfirm.showModal();
+}
 
 document.querySelectorAll('input[name="categoryIcon"]').forEach(input=>input.addEventListener('change',()=>{
     document.querySelectorAll('.category-icon-option').forEach(x=>x.classList.remove('selected'));

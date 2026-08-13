@@ -144,8 +144,7 @@ $query = compact('search','status','dateFrom','dateTo');
 </section>
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
-<?php if (($_GET['created'] ?? '') === '1'): ?><div class="alert alert-success">Category created successfully.</div>
-<?php elseif (($_GET['updated'] ?? '') === '1'): ?><div class="alert alert-success">Category updated successfully.</div>
+<?php if (($_GET['updated'] ?? '') === '1'): ?><div class="alert alert-success">Category updated successfully.</div>
 <?php elseif (($_GET['deactivated'] ?? '') === '1'): ?><div class="alert alert-success">Category deactivated successfully. Existing assets were not affected.</div>
 <?php elseif (($_GET['deleted'] ?? '') === '1'): ?><div class="alert alert-success">Category permanently deleted successfully.</div>
 <?php elseif (($_GET['error'] ?? '') === 'linked'): ?><div class="alert alert-error">This category has linked assets and cannot be permanently deleted. Deactivate it instead.</div>
@@ -233,6 +232,20 @@ $query = compact('search','status','dateFrom','dateTo');
 </div>
 <?php endif; ?>
 </section>
+
+<?php if(($_GET['created']??'')==='1'):?>
+<dialog id="categoryCreatedDialog" class="flow-dialog">
+    <h2>Category Created Successfully</h2>
+    <p>Do you want to create another category?</p>
+    <div class="flow-dialog-actions">
+        <button type="button" class="category-form-back"
+                onclick="categoryCreatedDialog.close()">No, Done</button>
+        <button type="button" class="category-form-submit"
+                onclick="location.href='manager_category_create.php'">Yes, Create Another</button>
+    </div>
+</dialog>
+<script>categoryCreatedDialog.showModal()</script>
+<?php endif;?>
 
 </main>
 </div>
