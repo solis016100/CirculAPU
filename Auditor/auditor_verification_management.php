@@ -337,10 +337,7 @@
 
                                             <td>
                                                 <div class="management-actions">
-                                                    <a
-                                                        href="auditor_verification_view.php?verificationID=<?php echo $record['verificationID']; ?>"
-                                                        class="management-action-btn"
-                                                        title="View">
+                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&from=management&<?= $filter ?>" class="management-action-btn" title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
                                                     </a>
 
@@ -348,7 +345,7 @@
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </a>
 
-                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($id)?>&from=management&<?= $filter ?>" class="management-action-btn">
+                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&from=management&print=1&<?= $filter ?>" class="management-action-btn" title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </a>
 

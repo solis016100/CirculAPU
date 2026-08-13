@@ -220,7 +220,7 @@
                     Verification Record Details
                 </h1>
 
-                <section class="auditor-management-detail-layout">
+                <section class="management-form-card">
 
                     <div class="auditor-management-detail-information">
                         <?php foreach ($fields as $label => $value): ?>
@@ -244,7 +244,7 @@
                                 <img src="../<?php echo htmlspecialchars($image); ?>" alt="Evidence">
                             </div>
 
-                            <a href="../<?php echo htmlspecialchars($image); ?>" target="_blank" class="auditor-management-view-image">
+                            <a href="#" class="auditor-management-view-image" onclick="openImage(event)">
                                 View Image
                             </a>
 
@@ -308,15 +308,15 @@
                             <img src="../assets/icons/delete.png" alt="">
                             Delete
                         </a>
+
+                        <!-- Back Button -->
+                        <div class="auditor-management-detail-back">
+                            <a href="auditor_verification_management.php?<?= http_build_query(['search' => $_GET['search'] ?? '', 'user' => $_GET['user'] ?? '', 'type' => $_GET['type'] ?? '', 'status' => $_GET['status'] ?? '']) ?>">
+                                Back
+                            </a>
+                        </div>
                     </div>
                 </section>
-
-                <!-- Back Button -->
-                <div class="auditor-management-detail-back">
-                    <a href="auditor_verification_management.php?<?= http_build_query(['search' => $_GET['search'] ?? '', 'user' => $_GET['user'] ?? '', 'type' => $_GET['type'] ?? '', 'status' => $_GET['status'] ?? '']) ?>">
-                        Back
-                    </a>
-                </div>
             </main>
         </div>
     </div>
@@ -346,6 +346,27 @@
 
             return true;
         }
+
+        function openImage(e) {
+            e.preventDefault();
+            document.getElementById('popoutImage').src = "../<?= htmlspecialchars($image) ?>";
+            document.getElementById('imagePopout').style.display = 'flex';
+        }
+
+        function closeImage() {
+            document.getElementById('imagePopout').style.display = 'none';
+        }
     </script>
+
+    <?php if (isset($_GET['print'])): ?>
+        <script>
+            window.onload = () => window.print();
+        </script>
+    <?php endif; ?>
+
+    <div id="imagePopout" class="image-popout" onclick="closeImage()">
+        <span class="image-popout-close" onclick="event.stopPropagation(); closeImage()">&times;</span>
+        <img id="popoutImage" src="" alt="Evidence" onclick="event.stopPropagation();">
+    </div>
 </body>
 </html>

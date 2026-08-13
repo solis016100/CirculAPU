@@ -1,11 +1,23 @@
 /* --------------------------------------------------------------------------
    Shared by Auditor management detail pages
    -------------------------------------------------------------------------- */
+.management-form-card {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 40px;
+    background: #fff;
+    border: 1px solid #f0c94d;
+    border-radius: 16px;
+    padding: 40px;
+}
 
 .auditor-management-detail-page {
     padding: 20px 36px 30px;
 }
 
+.auditor-management-detail-page h1 {
+    margin: -10px 0 8px;
+}
 
 /* Layout */
 .auditor-management-detail-layout {
@@ -14,7 +26,6 @@
     gap: 40px;
     max-width: 1100px;
 }
-
 
 /* Information */
 .auditor-management-detail-information {
@@ -54,13 +65,11 @@
     color: #333;
 }
 
-
 /* Remarks */
 .auditor-management-detail-value.remarks {
     min-height: 70px;
     text-align: left;
 }
-
 
 /* Right Side Details */
 .auditor-management-detail-side {
@@ -72,7 +81,6 @@
     margin: 0 0 14px;
     font-size: 20px;
 }
-
 
 /* Images */
 .auditor-management-detail-image,
@@ -149,7 +157,7 @@
 /* Divider */
 .auditor-management-divider {
     height: 1px;
-    margin: 13px 0 25px;
+    margin: 25px 0 25px;
     background: #d1d5db;
 }
 
@@ -192,9 +200,10 @@
 
 /* Back Button */
 .auditor-management-detail-back {
-    max-width: 1100px;
+    display: flex;
+    justify-content: center;
     margin-top: 25px;
-    text-align: right;
+    padding-top: 150px;
 }
 
 .auditor-management-detail-back a {
@@ -203,12 +212,9 @@
     justify-content: center;
     min-width: 90px;
     height: 42px;
-    padding: 0 20px;
     box-sizing: border-box;
     border: 1px solid #333;
     border-radius: 7px;
-    background: #fff;
-    color: #222;
     text-decoration: none;
 }
 
@@ -298,8 +304,6 @@
 /* --------------------------------------------------------------------------
    Auditor Verification Management
    -------------------------------------------------------------------------- */
-
-
 /* Verification Status */
 .verification-status {
     display: inline-block;
@@ -323,12 +327,37 @@
     color: #721c24;
 }
 
+/* View Image Pop Out */
+.image-popout {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,.75);
+    align-items: center;
+    justify-content: center;
+}
+
+.image-popout img {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.image-popout-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    cursor: pointer;
+}
+
 
 /* --------------------------------------------------------------------------
    Auditor Mission Management
    -------------------------------------------------------------------------- */
-
-
 /* Mission Table Column Widths */
 .mission-table th:nth-child(1),
 .mission-table td:nth-child(1) {
@@ -579,8 +608,6 @@
 /* --------------------------------------------------------------------------
    AUDITOR REWARD MANAGEMENT
    -------------------------------------------------------------------------- */
-
-
 /* Reward Table Column Widths */
 .reward-table th:nth-child(1),
 .reward-table td:nth-child(1) {
@@ -662,8 +689,6 @@
 /* --------------------------------------------------------------------------
    AUDITOR ACHIEVEMENT BADGE MANAGEMENT
    -------------------------------------------------------------------------- */
-
-
 /* Badge Table Column Widths */
 .badge-table th:nth-child(1),
 .badge-table td:nth-child(1) {
