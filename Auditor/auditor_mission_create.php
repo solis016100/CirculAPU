@@ -1,112 +1,231 @@
 <?php
     session_start();
-
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
         header("Location: login.php");
-        exit();
+        exit;
     }
 
     require_once '../db.php';
     $conn->set_charset("utf8mb4");
 
-    $result = $conn->query("
-        SELECT missionID FROM missions
-        ORDER BY CAST(SUBSTRING(missionID, 2) AS UNSIGNED) DESC
-        LIMIT 1
-    ");
-
-    if ($row = $result->fetch_assoc()) {
-        $next = (int)substr($row['missionID'], 1) + 1;
-    }else {
-        $next = 1;
-    }
-
-    $missionID = 'M' . str_pad($next, 3, '0', STR_PAD_LEFT);
-    $created = false;
+    /* Mission ID */
+    $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(missionID,2) AS UNSIGNED)),0)+1 n FROM missions");
+    $missionID = 'M' . str_pad($r->fetch_assoc()['n'], 3, '0', STR_PAD_LEFT);
     $error = '';
 
+    /* Create */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $name = trim($_POST['missionName']);
-        $description = trim($_POST['missionDescription']);
-        $requirement = trim($_POST['missionRequirement']);
-        $points = (int)$_POST['ecoPointsReward'];
-        $status = $_POST['status'];
+        $name = trim($_POST['missionName'] ?? '');
+        $desc = trim($_POST['missionDescription'] ?? '');
+        $req = trim($_POST['missionRequirement'] ?? '');
+        $points = (int)($_POST['ecoPointsReward'] ?? 0);
+        $status = $_POST['status'] ?? '';
 
-        if ($name === '' || $description === '' || $requirement === '' || $points <= 0 || !in_array($status, ['Active', 'Inactive'])) {
+        if (!$name || !$desc || !$req || $points < 1 || !in_array($status, ['Active','Inactive'])) {
             $error = 'Please complete all fields correctly.';
         }else {
+            try {
+                $conn->begin_transaction();
 
-            $stmt = $conn->prepare("
-                INSERT INTO missions
-                (missionID, missionName, missionDescription, missionRequirement, ecoPointsReward, status)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
+                $s = $conn->prepare("INSERT INTO missions
+                    (missionID,missionName,missionDescription,missionRequirement,ecoPointsReward,status)
+                    VALUES (?,?,?,?,?,?)");
+                $s->bind_param("ssssis",$missionID,$name,$desc,$req,$points,$status);
+                $s->execute();
 
-            $stmt->bind_param(
-                "ssssis",
-                $missionID,
-                $name,
-                $description,
-                $requirement,
-                $points,
-                $status
-            );
+                /* Log ID */
+                $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 n FROM systemlog");
+                $logID = 'LOG' . str_pad($r->fetch_assoc()['n'],3,'0',STR_PAD_LEFT);
+                $log = "Created new mission: $name";
 
-            $stmt->execute();
-            $stmt->close();
+                $s = $conn->prepare("INSERT INTO systemlog
+                    (logID,userID,actionType,refType,refID,description)
+                    VALUES (?,?,'Create','Mission',?,?)");
+                $s->bind_param("ssss",$logID,$_SESSION['user_id'],$missionID,$log);
+                $s->execute();
 
-            header("Location: auditor_mission_create.php?created=1");
-            exit();
+                $conn->commit();
+                header("Location: auditor_mission_create.php?created=1");
+                exit;
+            }catch (Throwable $e) {
+                $conn->rollback();
+                $error = 'Unable to create mission. Please try again.';
+            }
         }
     }
-    $created = isset($_GET['created']);
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditor Mission Create Dashboard - CirculAPU</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Create Mission - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="auditor_style.css">
 </head>
+
 <body class="role-auditor">
     <div class="dashboard-container">
-
         <?php include '../sidebar.php'; ?>
-
         <div class="main-content">
-            
             <?php include '../header.php'; ?>
 
-            <main class="page-body auditor-mission-create-page">
-                <p class="breadcrumb">
-                    <a href="auditor_missions_management.php">Mission Management</a>
-                    >
-                    Create New Mission
-                </p>
+            <main class="page-body">
 
-                <h1>Create New Mission</h1>
+                <section class="management-heading">
+                    <div class="breadcrumb">
+                        <a href="auditor_missions_management.php">Mission Management</a> &gt;
+                        <span class="breadcrumb-current">Create New Mission</span>
+                    </div>
+
+                    <h1>Create New Mission</h1>
+                    <p>Add a new sustainability mission to CirculAPU.</p>
+                </section>
 
                 <?php if ($error): ?>
-                    <p><?php echo htmlspecialchars($error); ?></p>
+                    <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
+
+                <form method="POST" id="missionForm" class="content-card mission-create-card">
+                    <div class="mission-create-body">
+                        <div class="auditor-management-edit-row">
+                            <label>Mission ID</label>
+                            <input value="<?= htmlspecialchars($missionID) ?>" readonly>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label>Mission Name<span class="required">*</span></label>
+                            <input name="missionName" placeholder="Enter Mission Name..." required>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label>EcoPoints<span class="required">*</span></label>
+                            <input type="number" name="ecoPointsReward" min="1" max="1000" placeholder="Enter EcoPoints..." required>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label>Status<span class="required">*</span></label>
+                            <select name="status" required>
+                                <option value="">Select Status</option>
+                                <option>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label>Description<span class="required">*</span></label>
+                            <textarea name="missionDescription" placeholder="Enter Mission Description..." required></textarea>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label>Requirement<span class="required">*</span></label>
+                            <textarea name="missionRequirement" placeholder="Enter Mission Requirement..." required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-create-actions">
+                        <a href="auditor_missions_management.php" class="mission-back-btn">
+                            Back
+                        </a>
+
+                        <button type="reset" class="auditor-management-detail-action">
+                            <img src="../assets/icons/reset.png" alt="">
+                            Clear Form
+                        </button>
+
+                        <button type="submit" class="auditor-management-detail-action mission-create-btn">
+                            <img src="../assets/icons/create.png" alt="">
+                            Create
+                        </button>
+                    </div>
+                </form>
             </main>
         </div>
     </div>
 
-    <dialog id="successDialog">
-        <h2>Mission Created Successfully!</h2>
-        <p>Do you want to create another mission?</p>
-        <button onclick="location.href='auditor_mission_create.php'">Yes</button>
-        <button onclick="location.href='auditor_missions_management.php'">No</button>
-    </dialog>
 
-    <?php if ($created): ?>
+    <!-- Confirmation Pop Out Message -->
+    <div id="confirmPopOut" class="mission-popout">
+        <div class="mission-popout-box">
+
+            <h2>Mission Creation Confirmation</h2>
+            <p>Are you sure you want to create this mission with these details?</p>
+
+            <div class="mission-summary">
+                <div><strong>Mission ID</strong><span id="confirmID"></span></div>
+                <div><strong>Mission Name</strong><span id="confirmName"></span></div>
+                <div><strong>EcoPoints</strong><span id="confirmPoints"></span></div>
+                <div><strong>Status</strong><span id="confirmStatus"></span></div>
+                <div><strong>Description</strong><span id="confirmDescription"></span></div>
+                <div><strong>Requirement</strong><span id="confirmRequirement"></span></div>
+            </div>
+
+            <div class="mission-popout-actions">
+                <button type="button" onclick="closeConfirm()">No</button>
+                <button type="button" class="mission-popout-confirm" onclick="confirmCreate()">
+                    Yes, Create
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Success Creation of Mission -->
+    <div id="successPopout" class="mission-popout">
+        <div class="mission-popout-box success-box">
+            <h2>Mission Created Successfully!</h2>
+            <p>Do you want to create another mission?</p>
+            <div class="mission-popout-actions">
+                <button type="button" onclick="location.href='auditor_mission_create.php'">
+                    Yes
+                </button>
+
+                <button type="button" class="mission-popout-confirm" onclick="location.href='auditor_missions_management.php'">
+                    No
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        document.getElementById('successDialog').showModal();
-    </script>
-    <?php endif; ?>
+        const form = document.getElementById('missionForm');
+        const confirmPopout = document.getElementById('confirmPopOut');
+
+        form.onsubmit = e => {
+            e.preventDefault();
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const data = {
+                confirmID: '<?= $missionID ?>',
+                confirmName: form.missionName.value,
+                confirmPoints: form.ecoPointsReward.value + ' EcoPoints',
+                confirmStatus: form.status.value,
+                confirmDescription: form.missionDescription.value,
+                confirmRequirement: form.missionRequirement.value
+            };
+
+            for (let id in data)
+                document.getElementById(id).textContent = data[id];
+
+            confirmPopout.classList.add('show');
+        };
+
+        function closeConfirm() {
+            confirmPopout.classList.remove('show');
+        }
+
+        function confirmCreate() {
+            form.submit();
+        }
+
+        <?php if (($_GET['created'] ?? '') === '1'): ?>
+            document.getElementById('successPopout').classList.add('show');
+        <?php endif; ?>
+        </script>
 </body>
 </html>

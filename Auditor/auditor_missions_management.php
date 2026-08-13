@@ -260,44 +260,39 @@
 
                                 <tbody>
 
-                                    <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)) {?>
-                                        <tr>
-                                            <td><?php echo $number; ?></td>
-                                            <td><?php echo htmlspecialchars($mission['missionID']); ?></td>
-                                            <td><?php echo htmlspecialchars($mission['missionName']); ?></td>
-                                            <td><?php echo htmlspecialchars($mission['ecoPointsReward']); ?></td>
-                                            <td><?php echo htmlspecialchars($mission['status']); ?></td>
-                                            <td>
-                                                <div class="management-actions">
-                                                    <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn"
-                                                    title="View">
-                                                        <img src="../assets/icons/view.png" alt="View">
-                                                    </a>
+                                    <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)): ?>
+                                    <tr>
+                                        <td><?= $number ?></td>
+                                        <td><?= htmlspecialchars($mission['missionID']) ?></td>
+                                        <td><?= htmlspecialchars($mission['missionName']) ?></td>
+                                        <td><?= htmlspecialchars($mission['ecoPointsReward']) ?></td>
+                                        <td>
+                                            <span class="mission-status <?= strtolower($mission['status']) ?>">
+                                                <?= htmlspecialchars($mission['status']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="management-actions">
+                                                <a href="auditor_mission_view.php?id=<?= urlencode($mission['missionID']) ?>"class="management-action-btn">
+                                                    <img src="../assets/icons/view.png" alt="View">
+                                                </a>
 
-                                                    <a href="auditor_mission_edit.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn"
-                                                    title="Edit">
-                                                        <img src="../assets/icons/edit.png" alt="Edit">
-                                                    </a>
+                                                <a href="auditor_mission_edit.php?id=<?= urlencode($mission['missionID']) ?>"class="management-action-btn">
+                                                    <img src="../assets/icons/edit.png" alt="Edit">
+                                                </a>
 
-                                                    <a href="auditor_mission_print.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn"
-                                                    title="Print">
-                                                        <img src="../assets/icons/print.png" alt="Print">
-                                                    </a>
+                                                <a href="auditor_mission_print.php?id=<?= urlencode($mission['missionID']) ?>"class="management-action-btn">
+                                                    <img src="../assets/icons/print.png" alt="Print">
+                                                </a>
 
-                                                    <a href="auditor_mission_delete.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn delete"
-                                                    title="Delete">
-                                                        <img src="../assets/icons/delete.png" alt="Delete">
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-
-                                    <?php $number++; }?>
-
+                                                <a href="auditor_mission_delete.php?id=<?= urlencode($mission['missionID']) ?>"
+                                                class="management-action-btn">
+                                                    <img src="../assets/icons/delete.png" alt="Delete">
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php $number++; endwhile; ?>
                                 </tbody>
                             </table>
 
