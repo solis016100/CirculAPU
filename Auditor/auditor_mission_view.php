@@ -52,7 +52,7 @@
             <main class="page-body auditor-management-detail-page">
                 <!-- Breadcrumb -->
                 <div class="breadcrumb">
-                    <a href="auditor_mission_management.php">
+                    <a href="auditor_missions_management.php">
                         Mission Management
                     </a>
                     &gt;
@@ -63,8 +63,8 @@
                     Mission Details
                 </h1>
 
-                <div class="auditor-management-detail-layout">
-                    <div class="auditor-management-detail-information">
+                <div class="mission-view-card">
+                    <div class="mission-view-body">
                         <div class="auditor-management-detail-row">
                             <label>Mission ID</label>
                             <div class="auditor-management-detail-value">
@@ -112,12 +112,11 @@
                     </div>
 
                     <div class="auditor-management-detail-side">
-                        <a class="auditor-management-detail-action"
-                        href="auditor_mission_edit.php?id=<?= urlencode($id) ?>">
-                            <img src="../assets/icons/edit.png" alt="">
+                        <a href="auditor_mission_edit.php?missionID=<?= urlencode($id) ?>&from=view" class="auditor-management-detail-action" title="Edit">
+                            <img src="../assets/icons/edit.png" alt="Edit">
                             Edit Mission
                         </a>
-                        
+
                         <a class="auditor-management-detail-action"
                         href="auditor_mission_view.php?id=<?= urlencode($id) ?>&print=1">
                             <img src="../assets/icons/print.png" alt="">
@@ -130,13 +129,13 @@
                             <img src="../assets/icons/delete.png" alt="">
                             Delete
                         </a>
-                    </div>
-                </div>
 
-                <div class="auditor-management-detail-back">
-                    <a href="auditor_mission_management.php">
-                        Back
-                    </a>
+                        <div class="auditor-management-detail-back">
+                            <a href="auditor_missions_management.php">
+                                Back
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

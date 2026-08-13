@@ -221,7 +221,7 @@
 
 /* Edit Button */
 .auditor-management-edit-form {
-    max-width: 900px;
+    max-width: 100%;
     margin-top: 25px;
 }
 
@@ -251,6 +251,7 @@
 }
 
 .auditor-management-edit-actions {
+    width: 100%;
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -354,6 +355,17 @@
     cursor: pointer;
 }
 
+/* Outer Card - Edit Page */
+.auditor-management-edit-card {
+    width: 100%;
+    max-width: 1200px;
+    margin: 25px auto 30px;
+    padding: 28px;
+    background: #fff;
+    border: 1px solid #f0c94d;
+    border-radius: 16px;
+}
+
 
 /* --------------------------------------------------------------------------
    Auditor Mission Management
@@ -407,6 +419,43 @@
 .mission-status.inactive {
     background: #f8d7da;
     color: #721c24;
+}
+
+/* Mission View Outer Card */
+.mission-view-card {
+    width: 100%;
+    max-width: 1200px;
+    margin: 25px auto 30px;
+    padding: 30px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 40px;
+    background: #fff;
+    border: 1px solid #f0c94d;
+    border-radius: 16px;
+}
+
+.mission-view-body {
+    min-width: 0;
+}
+
+.mission-view-body .auditor-management-detail-row {
+    margin-bottom: 22px;
+}
+
+/* Right-side buttons */
+.mission-view-card .auditor-management-detail-side {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-top: 0;
+}
+
+.mission-view-card .auditor-management-detail-action {
+    width: 180px;
+    min-height: 50px;
+    margin: 0;
 }
 
 
@@ -497,7 +546,8 @@
 
 
 /* Sidebar Closed */
-.dashboard-container.sidebar-collapsed .mission-create-card {
+.dashboard-container.sidebar-collapsed .mission-create-card, 
+.dashboard-container.sidebar-collapsed .mission-view-card {
     max-width: none;
 }
 

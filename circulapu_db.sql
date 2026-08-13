@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 13, 2026 at 07:58 AM
+-- Generation Time: Aug 11, 2026 at 07:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -302,7 +302,6 @@ CREATE TABLE `rewards` (
   `rewardID` varchar(10) NOT NULL,
   `rewardName` varchar(50) NOT NULL,
   `rewardDescription` varchar(255) NOT NULL,
-  `rewardImage` varchar(255) DEFAULT NULL,
   `ecoPointsCost` int(11) NOT NULL DEFAULT 0,
   `quantity` int(11) NOT NULL DEFAULT 0,
   `availability` enum('Available','Unavailable') NOT NULL DEFAULT 'Available'
@@ -312,10 +311,10 @@ CREATE TABLE `rewards` (
 -- Dumping data for table `rewards`
 --
 
-INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `rewardImage`, `ecoPointsCost`, `quantity`, `availability`) VALUES
-('R001', 'Campus Cafe RM5 Voucher', 'Redeemable at APU main cafeteria food stalls', 'campus_cafe_rm5.png', 100, 50, 'Available'),
-('R002', 'CirculAPU Tote Bag', 'Eco-friendly canvas bag with official logo', 'circulapu_tote_bag.png', 200, 15, 'Available'),
-('R003', 'APU Parking Pass (1 Day)', 'Single-day parking pass waiver for campus garage', 'apu_parking_pass.png', 300, 5, 'Available');
+INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `ecoPointsCost`, `quantity`, `availability`) VALUES
+('R001', 'Campus Cafe RM5 Voucher', 'Redeemable at APU main cafeteria food stalls', 100, 50, 'Available'),
+('R002', 'CirculAPU Tote Bag', 'Eco-friendly canvas bag with official logo', 200, 15, 'Available'),
+('R003', 'APU Parking Pass (1 Day)', 'Single-day parking pass waiver for campus garage', 300, 5, 'Available');
 
 -- --------------------------------------------------------
 
@@ -363,18 +362,7 @@ INSERT INTO `systemlog` (`logID`, `userID`, `actionType`, `refType`, `refID`, `d
 ('LOG023', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:53:57'),
 ('LOG024', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:54:01'),
 ('LOG025', 'U002', 'Submit', 'Asset', 'AST007', 'Sent asset listing for verification: USB-C Charging Cable', '2026-08-11 13:19:16'),
-('LOG026', 'U003', 'Delete', 'Verification', 'V003', 'Deleted verification record: V003', '2026-08-11 16:35:32'),
-('LOG028', 'U003', 'Update', 'Verification', 'V006', 'Verification V006 was Approved', '2026-08-12 03:28:48'),
-('LOG365', 'U003', 'Update', 'Verification', 'V006', 'Updated verification record: V006', '2026-08-12 09:59:28'),
-('LOG381', 'U003', 'Update', 'Verification', 'V004', 'Updated verification record: V004', '2026-08-11 17:22:34'),
-('LOG462', 'U003', 'Update', 'Verification', 'V004', 'Verification V004 was Approved', '2026-08-11 17:21:54'),
-('LOG463', 'U003', 'Delete', 'Verification', 'V007', 'Deleted verification record: V007', '2026-08-12 03:31:42'),
-('LOG882', 'U003', 'Update', 'Verification', 'V004', 'Updated verification remarks: V004', '2026-08-12 10:09:42'),
-('LOG883', 'U002', 'Create', 'Category', 'C005', 'Created category: Game', '2026-08-13 03:05:47'),
-('LOG884', 'U002', 'Delete', 'Category', 'C005', 'Permanently deleted category: Game', '2026-08-13 03:06:00'),
-('LOG885', 'U003', 'Create', 'Mission', 'M010', 'Created new mission: wefw', '2026-08-13 04:17:00'),
-('LOG886', 'U003', 'Create', 'Mission', 'M011', 'Created new mission: wqf', '2026-08-13 04:26:18'),
-('LOG887', 'U003', 'Create', 'Mission', 'M012', 'Created new mission: 2q3werty', '2026-08-13 04:43:10');
+('LOG026', 'U003', 'Delete', 'Verification', 'V003', 'Deleted verification record: V003', '2026-08-11 16:35:32');
 
 -- --------------------------------------------------------
 
@@ -525,9 +513,10 @@ CREATE TABLE `verificationrecords` (
 INSERT INTO `verificationrecords` (`verificationID`, `userID`, `verifiedBy`, `targetID`, `targetType`, `status`, `remarks`, `verifiedDate`) VALUES
 ('V001', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Approved', 'Clear photo proof of refill station usage.', '2026-07-27 07:03:20'),
 ('V002', 'U004', 'U003', 'A001', 'Asset', 'Approved', 'Asset condition verified in person.', '2026-07-27 07:03:20'),
-('V004', 'U005', 'U003', 'A002', 'Asset', 'Approved', 'In a very good conditions.', '2026-08-11 17:19:49'),
-('V005', 'U006', NULL, 'A003', 'Asset', 'Pending', NULL, NULL),
-('V006', 'U005', 'U003', 'A004', 'Asset', 'Rejected', 'Execllent', '2026-08-12 03:28:48');
+('V004', 'U004', 'U003', 'A001', 'Asset', 'Pending', NULL, '2026-08-11 16:55:27'),
+('V005', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Pending', NULL, '2026-08-11 16:55:27'),
+('V006', 'U004', 'U003', 'A001', 'Asset', 'Pending', NULL, '2026-08-11 16:55:27'),
+('V007', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Pending', NULL, '2026-08-11 16:55:27');
 
 --
 -- Indexes for dumped tables
