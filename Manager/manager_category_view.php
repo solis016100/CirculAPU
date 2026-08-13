@@ -126,23 +126,14 @@ $icon = iconPath($category['categoryIcon'] ?? '');
         </a>
 
         <?php if ($category['status'] === 'Active'): ?>
-        <form method="POST" action="manager_categories.php"
-              onsubmit="return confirm('Deactivate this category? Existing assets will not be affected.');">
-            <input type="hidden" name="action" value="deactivate">
-            <input type="hidden" name="categoryID" value="<?= e($categoryID) ?>">
-            <button type="submit" class="deactivate">Deactivate</button>
-        </form>
+        <button type="button" class="deactivate"
+                onclick="openDetailCategoryAction('deactivate')">Deactivate</button>
         <?php endif; ?>
 
         <?php if ($linkedAssets === 0): ?>
-        <form method="POST" action="manager_categories.php"
-              onsubmit="return confirm('Permanently delete this unused category? This cannot be undone.');">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="categoryID" value="<?= e($categoryID) ?>">
-            <button type="submit" class="delete">
-                <img src="../assets/icons/delete.png" alt=""> Delete
-            </button>
-        </form>
+        <button type="button" class="delete" onclick="openDetailCategoryAction('delete')">
+            <img src="../assets/icons/delete.png" alt=""> Delete
+        </button>
         <?php else: ?>
         <button type="button" disabled title="Cannot delete because assets are linked to this category.">
             <img src="../assets/icons/delete.png" alt=""> Delete
@@ -246,6 +237,39 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 </section>
 
 <?php endif; ?>
+
+<?php if($category):?>
+<dialog id="detailCategoryActionDialog" class="flow-dialog">
+<h2 id="detailActionTitle"></h2>
+<p id="detailActionMessage"></p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category ID</strong><span><?=e($categoryID)?></span></div>
+    <div><strong>Category Name</strong><span><?=e($category['categoryName'])?></span></div>
+    <div><strong>Current Status</strong><span><?=e($category['status'])?></span></div>
+</div>
+
+<form method="POST" action="manager_categories.php" class="flow-dialog-actions">
+    <input type="hidden" name="action" id="detailActionInput">
+    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>">
+    <button type="button" class="category-form-back" onclick="detailCategoryActionDialog.close()">No</button>
+    <button type="submit" class="category-form-submit" id="detailActionConfirm">Confirm</button>
+</form>
+</dialog>
+
+<script>
+function openDetailCategoryAction(action){
+    const deleting=action==='delete';
+    detailActionTitle.textContent=deleting?'Confirm Category Deletion':'Confirm Category Deactivation';
+    detailActionMessage.textContent=deleting
+        ?'Permanently delete this unused category? This action cannot be undone.'
+        :'Deactivate this category? Existing assets will remain unchanged.';
+    detailActionInput.value=action;
+    detailActionConfirm.textContent=deleting?'Yes, Delete':'Yes, Deactivate';
+    detailCategoryActionDialog.showModal();
+}
+</script>
+<?php endif;?>
 
 </main>
 </div>

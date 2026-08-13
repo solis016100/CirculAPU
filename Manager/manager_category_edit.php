@@ -140,7 +140,7 @@ $status = $category['status'] ?? 'Active';
 
 <?php if ($category): ?>
 <section class="content-card category-form-card">
-<form method="POST">
+<form method="POST" id="categoryEditForm">
 <div class="category-create-layout">
 
 <div class="category-form-fields">
@@ -207,7 +207,9 @@ $status = $category['status'] ?? 'Active';
 <div class="category-form-actions">
     <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?>" class="category-form-back">Back</a>
     <button type="reset" class="category-form-reset"><img src="../assets/icons/reset.png" alt=""> Reset</button>
-    <button type="submit" class="category-form-submit"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
+    <button type="button" class="category-form-submit" onclick="openEditConfirm()">
+        <img src="../assets/icons/edit.png" alt=""> Save Changes
+    </button>
 </div>
 </form>
 </section>
@@ -217,8 +219,42 @@ $status = $category['status'] ?? 'Active';
 </div>
 </div>
 
+<dialog id="editCategoryConfirm" class="flow-dialog">
+<h2>Confirm Category Changes</h2>
+<p>Save these changes to this category?</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category ID</strong><span><?=e($categoryID)?></span></div>
+    <div><strong>Category Name</strong><span id="editConfirmName"></span></div>
+    <div><strong>Icon</strong><span id="editConfirmIcon"></span></div>
+    <div><strong>Status</strong><span id="editConfirmStatus"></span></div>
+    <div><strong>Description</strong><span id="editConfirmDescription"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="editCategoryConfirm.close()">No</button>
+    <button type="button" class="category-form-submit" onclick="confirmCategoryEdit()">Yes, Save Changes</button>
+</div>
+</dialog>
+
 <script>
-const nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), iconPlaceholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+const editForm=document.getElementById('categoryEditForm'),
+      nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), iconPlaceholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+
+
+function openEditConfirm(){
+    if(!editForm.checkValidity()){editForm.reportValidity();return}
+
+    const icon=editForm.querySelector('input[name="categoryIcon"]:checked');
+    editConfirmName.textContent=nameInput.value.trim();
+    editConfirmIcon.textContent=icon?.closest('label')?.title||'-';
+    editConfirmStatus.textContent=document.getElementById('status').value;
+    editConfirmDescription.textContent=descInput.value.trim()||'-';
+    editCategoryConfirm.showModal();
+}
+function confirmCategoryEdit(){
+    document.getElementById('categoryEditForm').submit();
+}
 
 document.querySelectorAll('input[name="categoryIcon"]').forEach(input=>input.addEventListener('change',()=>{
     document.querySelectorAll('.category-icon-option').forEach(option=>option.classList.remove('selected'));
