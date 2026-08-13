@@ -30,11 +30,11 @@ try{
         $s=$c->prepare("SELECT categoryID,categoryName FROM categories WHERE status='Active' OR categoryID=? ORDER BY categoryName");
         $s->bind_param('s',$asset['categoryID']);$s->execute();$categories=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
 
-        $locked=in_array($asset['availabilityStatus'],['Reserved','Borrowed'],true);
+        $locked=true;
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $name=trim($_POST['assetName']??'');$category=trim($_POST['categoryID']??'');
-            $condition=$locked?$asset['assetCondition']:trim($_POST['assetCondition']??'');
+            $condition=$asset['assetCondition'];
             $description=trim($_POST['description']??'');
 
             if(!$name)$error='Asset Name is required.';
@@ -93,7 +93,7 @@ try{
     $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$dbError='Unable to process the asset information. Please try again.';}
 
-$locked=$asset&&in_array($asset['availabilityStatus'],['Reserved','Borrowed'],true);
+$locked=(bool)$asset;
 $imagePath='';
 if($asset&&!empty($asset['imageURL'])){
     $url=str_replace('\\','/',trim($asset['imageURL']));
@@ -122,7 +122,7 @@ if($asset&&!empty($asset['imageURL'])){
 <a href="manager_assets.php" class="management-create-btn">Back to Asset Management</a>
 <?php elseif($asset):?>
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
-<?php if($locked):?><div class="asset-form-note"><strong>Borrowing Protection</strong><p>Condition is locked while this asset is <?=e($asset['availabilityStatus'])?>. It will be updated through Return Inspection.</p></div><?php endif;?>
+<div class="asset-form-note"><strong>Condition Protection</strong><p>Asset condition is controlled through the review/verification workflow and Return Inspection. It cannot be changed from general Edit Asset.</p></div>
 
 <section class="content-card asset-form-card">
 <form method="POST" enctype="multipart/form-data">
@@ -137,14 +137,8 @@ if($asset&&!empty($asset['imageURL'])){
 <?php foreach($categories as $x):?><option value="<?=e($x['categoryID'])?>" <?=$asset['categoryID']===$x['categoryID']?'selected':''?>><?=e($x['categoryName'])?></option><?php endforeach;?>
 </select></div>
 
-<div class="asset-form-row"><label for="assetCondition">Condition *</label>
-<?php if($locked):?>
+<div class="asset-form-row"><label for="assetCondition">Condition</label>
 <input id="assetCondition" value="<?=e($asset['assetCondition'])?>" readonly>
-<?php else:?>
-<select id="assetCondition" name="assetCondition" required>
-<?php foreach($conditions as $x):?><option value="<?=e($x)?>" <?=$asset['assetCondition']===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?>
-</select>
-<?php endif;?>
 </div>
 
 <div class="asset-form-row asset-form-textarea"><label for="description">Description</label><textarea id="description" name="description" maxlength="255" rows="4"><?=e($asset['description']??'')?></textarea></div>
