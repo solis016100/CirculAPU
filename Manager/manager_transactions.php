@@ -33,9 +33,9 @@ $activeTransaction = ($_GET['activeTransaction'] ?? '') === '1';
 $viewAll = ($_GET['viewAll'] ?? '') === '1';
 
 $statuses = ['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'];
-$transactions = [];
-$stats = ['pending'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
-$error = '';
+$transactions=[];$nextPending='';
+$stats=['pending'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
+$error='';
 $perPage = $viewAll ? 100000 : 8;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $total = $offset = 0; $totalPages = 1;
@@ -56,9 +56,11 @@ try {
             (SELECT COUNT(*) FROM borrowings
              WHERE DATE(expectedReturnDate)<CURDATE() AND actualReturnDate IS NULL
              AND borrowingStatus IN ('Borrowed','Active','Overdue')) overdue,
-            (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Completed') completed
+            (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Completed') completed,
+            (SELECT transactionID FROM transactionrequests WHERE requestStatus='Pending' ORDER BY requestDate ASC LIMIT 1) nextPending
     ")->fetch_assoc();
-    foreach ($stats as $k => $v) $stats[$k] = (int)($row[$k] ?? 0);
+    foreach ($stats as $k => $v) $stats[$k]=(int)($row[$k]??0);
+    $nextPending=$row['nextPending']??'';
 
     $where = []; $params = []; $types = '';
     if ($search) {
@@ -156,11 +158,17 @@ $end = min($offset + $perPage, $total);
 <?php include '../sidebar.php'; ?><div class="main-content"><?php include '../header.php'; ?>
 <main class="page-body">
 
-<section class="management-heading">
+<section class="management-heading management-heading-action">
 <div class="management-heading-text">
 <h1>Transaction Management</h1>
 <p>Review borrowing requests, active borrowings, overdue returns and completed transactions.</p>
 </div>
+<?php if($nextPending):?>
+<a href="manager_transaction_view.php?transactionID=<?=e($nextPending)?>" class="management-create-btn">
+<img src="../assets/icons/pendingVerification.png" alt="">
+Review Pending Requests (<?=$stats['pending']?>)
+</a>
+<?php endif;?>
 </section>
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
@@ -259,6 +267,30 @@ title="<?= $t['requestStatus'] === 'Pending' ? 'Review Transaction Request' : 'V
 <?php endif; ?>
 </div>
 </section>
+
+<?php if(in_array($_GET['reviewDone']??'',['approve','reject'],true)):?>
+<dialog id="nextRequestDialog" class="flow-dialog">
+<h2>Request Review Completed</h2>
+<p><?=($_GET['reviewDone']==='approve')
+    ?'The request was approved and the asset has been reserved.'
+    :'The borrowing request was rejected successfully.'?></p>
+
+<?php if($nextPending):?>
+<p style="margin-top:12px">There are <strong><?=$stats['pending']?></strong> pending request<?=$stats['pending']===1?'':'s'?> remaining. Review another?</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
+<button type="button" class="category-form-submit"
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPending)?>'">Review Another</button>
+</div>
+<?php else:?>
+<p style="margin-top:12px">There are no more pending requests to review.</p>
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-submit" onclick="nextRequestDialog.close()">Done</button>
+</div>
+<?php endif;?>
+</dialog>
+<script>nextRequestDialog.showModal()</script>
+<?php endif;?>
 
 </main></div></div>
 </body></html>

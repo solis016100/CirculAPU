@@ -46,6 +46,7 @@ function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $s
     return '';
 }
 function go(string $id):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&updated=1');exit();}
+function reviewDone(string $action):never{header("Location: manager_transactions.php?reviewDone=$action");exit();}
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
 if(!$id){header('Location: manager_transactions.php');exit();}
@@ -110,7 +111,7 @@ try{
                         assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"Approved and reserved for request $id");
                         logTx($c,$manager,'Approve',$id,"Approved borrowing request and reserved {$t['assetName']}");
                         notify($c,$t['requesterID'],'Request Approved & Asset Reserved',"Your request $id for {$t['assetName']} was approved and the asset is reserved for you. Pickup: ".d($pickup).". Return by: ".d($return).'.');
-                        $c->commit();go($id);
+                        $c->commit();reviewDone('approve');
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -126,7 +127,7 @@ try{
                         if($b){$s=$c->prepare("UPDATE borrowings SET borrowingStatus='Cancelled' WHERE borrowID=?");$s->bind_param('s',$b['borrowID']);$s->execute();$s->close();}
                         logTx($c,$manager,'Reject',$id,"Rejected borrowing request for {$t['assetName']}. Reason: $remark");
                         notify($c,$t['requesterID'],'Borrowing Request Rejected',"Your request $id for {$t['assetName']} was rejected. Reason: $remark");
-                        $c->commit();go($id);
+                        $c->commit();reviewDone('reject');
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -216,7 +217,7 @@ if($t){
 .tx-side-actions a,.tx-side-actions button{width:100%;justify-content:center}
 @media print{
 @page{size:A4 landscape;margin:10mm}
-.sidebar,.app-header,.breadcrumb,.management-heading p,.tx-side-actions,.tx-dialog,.tx-profile .category-form-actions{display:none!important}
+.sidebar,.app-header,.breadcrumb,.management-heading p,.tx-side-actions,.tx-dialog,.flow-dialog,.tx-profile .category-form-actions{display:none!important}
 .main-content{width:100%!important;margin-left:0!important}
 .page-body{padding:0!important}
 .management-heading{margin:0 0 10px!important}
@@ -274,7 +275,9 @@ if($t){
 <a href="manager_transactions.php" class="category-form-back">Back</a>
 <?php if($status==='Pending'):?>
 <button type="button" class="category-form-reset" onclick="rejectBox.showModal()">Reject Request</button>
-<form method="POST"><input type="hidden" name="action" value="approve"><button class="category-form-submit" <?=$approvalIssue?'disabled title="'.e($approvalIssue).'"':''?> onclick="return confirm('Approve this request and reserve the asset for this member?')">Approve &amp; Reserve</button></form>
+<button type="button" class="category-form-submit"
+<?=$approvalIssue?'disabled title="'.e($approvalIssue).'"':''?>
+onclick="approveBox.showModal()">Approve &amp; Reserve</button>
 <?php elseif($status==='Approved'):?>
 <button type="button" class="category-form-reset" onclick="cancelBox.showModal()">Cancel Reservation</button>
 <form method="POST"><input type="hidden" name="action" value="start"><button class="category-form-submit" onclick="return confirm('Confirm that the member has picked up this asset? Borrowing will start immediately.')">Confirm Pickup</button></form>
@@ -349,6 +352,23 @@ if($t){
 </dialog>
 
 <?php if($status==='Pending'):?>
+<dialog id="approveBox" class="flow-dialog">
+<h2>Confirm Request Approval</h2>
+<p>Approve this request and reserve the asset for this member?</p>
+<div class="flow-dialog-summary">
+<div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
+<div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
+<div><strong>Requester</strong><span><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></span></div>
+<div><strong>Pickup Date</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
+<div><strong>Return Date</strong><span><?=e(d($b['expectedReturnDate']??null))?></span></div>
+</div>
+<form method="POST" class="flow-dialog-actions">
+<input type="hidden" name="action" value="approve">
+<button type="button" class="category-form-back" onclick="approveBox.close()">No</button>
+<button class="category-form-submit">Yes, Approve &amp; Reserve</button>
+</form>
+</dialog>
+
 <dialog id="rejectBox" class="content-card tx-dialog tx-dialog-small">
 <h2>Reject Request</h2>
 <form method="POST">
