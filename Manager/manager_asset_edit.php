@@ -3,9 +3,11 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { header('Location: ../login.php'); exit(); }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
 function nextID(mysqli $c,string $t,string $col,string $p): string {
-    $n=(int)$c->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
+    $n=(int)$conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
     return sprintf($p.'%03d',$n);
 }
 
@@ -15,9 +17,9 @@ if(!$id){header('Location: manager_assets.php');exit();}
 $conditions=['New','Like New','Good','Fair','Poor'];$asset=null;$categories=[];$error='';$dbError='';$newFile='';
 
 try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+    $conn->set_charset('utf8mb4');
 
-    $s=$c->prepare("
+    $s=$conn->prepare("
         SELECT a.*,c.categoryName,u.name ownerName
         FROM assets a JOIN categories c ON a.categoryID=c.categoryID JOIN user u ON a.ownerID=u.userID
         WHERE a.assetID=? LIMIT 1");
@@ -27,7 +29,7 @@ try{
     elseif($asset['listingStatus']==='Pending Review'){header('Location: review_asset_submission.php?assetID='.rawurlencode($id));exit();}
     elseif($asset['listingStatus']==='Removed')$dbError='Removed assets cannot be edited.';
     else{
-        $s=$c->prepare("SELECT categoryID,categoryName FROM categories WHERE status='Active' OR categoryID=? ORDER BY categoryName");
+        $s=$conn->prepare("SELECT categoryID,categoryName FROM categories WHERE status='Active' OR categoryID=? ORDER BY categoryName");
         $s->bind_param('s',$asset['categoryID']);$s->execute();$categories=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
 
         $locked=true;
@@ -43,7 +45,7 @@ try{
             elseif(!in_array($condition,$conditions,true))$error='Please select a valid asset condition.';
 
             if(!$error){
-                $s=$c->prepare("SELECT 1 FROM categories WHERE categoryID=? AND (status='Active' OR categoryID=?) LIMIT 1");
+                $s=$conn->prepare("SELECT 1 FROM categories WHERE categoryID=? AND (status='Active' OR categoryID=?) LIMIT 1");
                 $s->bind_param('ss',$category,$asset['categoryID']);$s->execute();
                 if(!$s->get_result()->fetch_row())$error='Please select a valid category.';
                 $s->close();
@@ -70,19 +72,19 @@ try{
             }
 
             if(!$error){
-                $c->begin_transaction();
+                $conn->begin_transaction();
                 try{
-                    $s=$c->prepare("UPDATE assets SET categoryID=?,assetName=?,description=?,assetCondition=?,imageURL=?,updatedDate=CURRENT_TIMESTAMP WHERE assetID=?");
+                    $s=$conn->prepare("UPDATE assets SET categoryID=?,assetName=?,description=?,assetCondition=?,imageURL=?,updatedDate=CURRENT_TIMESTAMP WHERE assetID=?");
                     $s->bind_param('ssssss',$category,$name,$description,$condition,$image,$id);$s->execute();$s->close();
 
                     $log=nextID($c,'systemlog','logID','LOG');$text="Updated asset information: $name";
-                    $s=$c->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Update','Asset',?,?)");
+                    $s=$conn->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Update','Asset',?,?)");
                     $s->bind_param('ssss',$log,$manager,$id,$text);$s->execute();$s->close();
 
-                    $c->commit();
+                    $conn->commit();
                     header('Location: manager_asset_view.php?assetID='.rawurlencode($id).'&updated=1');exit();
                 }catch(Throwable $z){
-                    $c->rollback();if($newFile&&file_exists($newFile))unlink($newFile);throw $z;
+                    $conn->rollback();if($newFile&&file_exists($newFile))unlink($newFile);throw $z;
                 }
             }
 
@@ -90,7 +92,6 @@ try{
             if(!$locked)$asset['assetCondition']=$condition;
         }
     }
-    $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$dbError='Unable to process the asset information. Please try again.';}
 
 $locked=(bool)$asset;
