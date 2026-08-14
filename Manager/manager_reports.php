@@ -3,6 +3,8 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { header('Location: ../login.php'); exit(); }
 
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
 require_once '../print.php';
 
 function e($v):string{return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
@@ -36,7 +38,7 @@ $conditions=['New','Like New','Good','Fair','Poor'];
 $availabilities=['Available','Reserved','Borrowed','Unavailable'];
 $listings=['Draft','Pending Review','Ready for Verification','Published','Rejected','Removed'];
 $txStatuses=['Pending','Approved','In Progress','Completed','Cancelled','Rejected','Overdue'];
-$error='';$categories=[];$stats=[];$chart1=$chart2=$chart3=$rows=$allRows=[];
+$error='';$categories=[];$selectedCategoryName='All';$stats=[];$chart1=$chart2=$chart3=$rows=$allRows=[];
 
 if(!vd($from)||!vd($to))$error='Please enter a valid date.';
 elseif($from&&$to&&$from>$to)$error='Date From cannot be later than Date To.';
@@ -44,6 +46,14 @@ elseif($from&&$to&&$from>$to)$error='Date From cannot be later than Date To.';
 try{
     $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
     $categories=q($c,"SELECT categoryID,categoryName FROM categories ORDER BY categoryName");
+    if($category){
+        foreach($categories as $cat){
+            if($cat['categoryID']===$category){
+                $selectedCategoryName=$cat['categoryName'];
+                break;
+            }
+        }
+    }
 
     if(!$error&&$report==='asset'){
         $w=["a.listingStatus<>'Removed'"];$p=[];$t='';wdate($w,$p,$t,'a.createdDate',$from,$to);
@@ -70,9 +80,11 @@ try{
     }
 
     if(!$error&&$report==='transaction'){
+        $od="EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=tr.transactionID AND b.actualReturnDate IS NULL AND DATE(b.expectedReturnDate)<CURDATE() AND b.borrowingStatus IN ('Borrowed','Active','Overdue'))";
         $w=['1=1'];$p=[];$t='';wdate($w,$p,$t,'tr.requestDate',$from,$to);
         if($category){$w[]='a.categoryID=?';$p[]=$category;$t.='s';}
-        if($status==='Overdue')$w[]="EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=tr.transactionID AND b.actualReturnDate IS NULL AND DATE(b.expectedReturnDate)<CURDATE() AND b.borrowingStatus IN ('Borrowed','Active','Overdue'))";
+        if($status==='Overdue')$w[]=$od;
+        elseif($status==='In Progress')$w[]="tr.requestStatus='In Progress' AND NOT $od";
         elseif($status&&in_array($status,$txStatuses,true)){$w[]='tr.requestStatus=?';$p[]=$status;$t.='s';}
         $ws='WHERE '.implode(' AND ',$w);
 
@@ -82,35 +94,41 @@ try{
             COUNT(DISTINCT tr.requesterID) users
             FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID $ws",$t,$p);
 
-        $stats['active']=one($c,"SELECT COUNT(*) total FROM borrowings b
-            JOIN transactionrequests tr ON tr.transactionID=b.transactionID
+        /* These cards must respect the SAME transaction filters as the table/charts. */
+        $stats['active']=one($c,"SELECT COUNT(*) total
+            FROM transactionrequests tr
             JOIN assets a ON a.assetID=tr.assetID
-            WHERE b.actualReturnDate IS NULL
-            AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
-            ".($from?" AND DATE(tr.requestDate)>=?":"").($to?" AND DATE(tr.requestDate)<=?":"").($category?" AND a.categoryID=?":""),
-            ($from?'s':'').($to?'s':'').($category?'s':''),
-            array_values(array_filter([$from?:null,$to?:null,$category?:null],fn($v)=>$v!==null)))['total']??0;
+            $ws
+            AND EXISTS(
+                SELECT 1 FROM borrowings b
+                WHERE b.transactionID=tr.transactionID
+                AND b.actualReturnDate IS NULL
+                AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
+            )",$t,$p)['total']??0;
 
-        $stats['overdue']=one($c,"SELECT COUNT(*) total FROM borrowings b
-            JOIN transactionrequests tr ON tr.transactionID=b.transactionID
+        $stats['overdue']=one($c,"SELECT COUNT(*) total
+            FROM transactionrequests tr
             JOIN assets a ON a.assetID=tr.assetID
-            WHERE b.actualReturnDate IS NULL
-            AND DATE(b.expectedReturnDate)<CURDATE()
-            AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
-            ".($from?" AND DATE(tr.requestDate)>=?":"").($to?" AND DATE(tr.requestDate)<=?":"").($category?" AND a.categoryID=?":""),
-            ($from?'s':'').($to?'s':'').($category?'s':''),
-            array_values(array_filter([$from?:null,$to?:null,$category?:null],fn($v)=>$v!==null)))['total']??0;
+            $ws
+            AND EXISTS(
+                SELECT 1 FROM borrowings b
+                WHERE b.transactionID=tr.transactionID
+                AND b.actualReturnDate IS NULL
+                AND DATE(b.expectedReturnDate)<CURDATE()
+                AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
+            )",$t,$p)['total']??0;
 
         $chart1=q($c,"SELECT DATE_FORMAT(tr.requestDate,'%d %b') label,COUNT(*) total
             FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID $ws
             GROUP BY DATE(tr.requestDate),DATE_FORMAT(tr.requestDate,'%d %b') ORDER BY DATE(tr.requestDate) DESC LIMIT 10",$t,$p);
         $chart1=array_reverse($chart1);
-        $chart2=q($c,"SELECT CASE WHEN EXISTS(SELECT 1 FROM borrowings b WHERE b.transactionID=tr.transactionID AND b.actualReturnDate IS NULL AND DATE(b.expectedReturnDate)<CURDATE() AND b.borrowingStatus IN ('Borrowed','Active','Overdue')) THEN 'Overdue' ELSE tr.requestStatus END label,COUNT(*) total
+        $chart2=q($c,"SELECT CASE WHEN $od THEN 'Overdue' ELSE tr.requestStatus END label,COUNT(*) total
             FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID $ws GROUP BY label ORDER BY total DESC",$t,$p);
         $chart3=q($c,"SELECT c.categoryName label,COUNT(*) total FROM transactionrequests tr
             JOIN assets a ON a.assetID=tr.assetID JOIN categories c ON c.categoryID=a.categoryID
             $ws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$t,$p);
-        $allRows=q($c,"SELECT tr.transactionID,a.assetName,c.categoryName,u.name requesterName,tr.requestStatus,tr.requestDate,
+        $allRows=q($c,"SELECT tr.transactionID,a.assetName,c.categoryName,u.name requesterName,
+            CASE WHEN $od THEN 'Overdue' ELSE tr.requestStatus END requestStatus,tr.requestDate,
             (SELECT MAX(b.actualReturnDate) FROM borrowings b WHERE b.transactionID=tr.transactionID) completedDate
             FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID JOIN categories c ON c.categoryID=a.categoryID JOIN user u ON u.userID=tr.requesterID
             $ws ORDER BY tr.requestDate DESC",$t,$p);
@@ -142,21 +160,57 @@ try{
 
         $chart1=q($c,"SELECT c.categoryName label,COUNT(*) total FROM assets a JOIN categories c ON c.categoryID=a.categoryID $ws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$t,$p);
         $chart2=q($c,"SELECT c.categoryName label,COUNT(*) total FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID JOIN categories c ON c.categoryID=a.categoryID $tws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$tt,$tp);
+        /* Keep current-borrowing chart aligned with the filtered asset metrics. */
         $chart3=q($c,"SELECT c.categoryName label,COUNT(*) total
-            FROM borrowings b JOIN assets a ON a.assetID=b.assetID JOIN categories c ON c.categoryID=a.categoryID
-            WHERE b.actualReturnDate IS NULL AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
-            ".($category?" AND a.categoryID=?":"")."
-            GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",
-            $category?'s':'',$category?[$category]:[]);
+            FROM assets a
+            JOIN categories c ON c.categoryID=a.categoryID
+            $ws AND a.availabilityStatus='Borrowed'
+            GROUP BY c.categoryID,c.categoryName
+            ORDER BY total DESC LIMIT 6",$t,$p);
 
-        $allRows=q($c,"SELECT c.categoryID,c.categoryName,
-            (SELECT COUNT(*) FROM assets x WHERE x.categoryID=c.categoryID AND x.listingStatus<>'Removed') totalAssets,
-            (SELECT COUNT(*) FROM assets x WHERE x.categoryID=c.categoryID AND x.listingStatus<>'Removed' AND x.availabilityStatus='Available') availableAssets,
-            (SELECT COUNT(*) FROM assets x WHERE x.categoryID=c.categoryID AND x.listingStatus<>'Removed' AND x.availabilityStatus='Borrowed') borrowedAssets,
-            (SELECT COUNT(*) FROM transactionrequests tr JOIN assets x ON x.assetID=tr.assetID WHERE x.categoryID=c.categoryID) totalTransactions,
-            (SELECT COUNT(DISTINCT tr.requesterID) FROM transactionrequests tr JOIN assets x ON x.assetID=tr.assetID WHERE x.categoryID=c.categoryID) uniqueRequesters
-            FROM categories c ".($category?"WHERE c.categoryID=?":"")." ORDER BY totalTransactions DESC,totalAssets DESC",
-            $category?'s':'',$category?[$category]:[]);
+        /*
+         * Category table must use the same filters as the cards/charts.
+         * Asset metrics use asset created date + condition.
+         * Transaction metrics use request date + the selected asset condition.
+         */
+        $assetExtra='';
+        $assetParams=[];$assetTypes='';
+        if($from){$assetExtra.=" AND DATE(x.createdDate)>=?";$assetParams[]=$from;$assetTypes.='s';}
+        if($to){$assetExtra.=" AND DATE(x.createdDate)<=?";$assetParams[]=$to;$assetTypes.='s';}
+        if(in_array($condition,$conditions,true)){$assetExtra.=" AND x.assetCondition=?";$assetParams[]=$condition;$assetTypes.='s';}
+
+        $txExtra='';
+        $txParams=[];$txTypes='';
+        if($from){$txExtra.=" AND DATE(tr.requestDate)>=?";$txParams[]=$from;$txTypes.='s';}
+        if($to){$txExtra.=" AND DATE(tr.requestDate)<=?";$txParams[]=$to;$txTypes.='s';}
+        if(in_array($condition,$conditions,true)){$txExtra.=" AND x.assetCondition=?";$txParams[]=$condition;$txTypes.='s';}
+
+        $rowSql="SELECT c.categoryID,c.categoryName,
+            (SELECT COUNT(*) FROM assets x
+             WHERE x.categoryID=c.categoryID AND x.listingStatus<>'Removed' $assetExtra) totalAssets,
+            (SELECT COUNT(*) FROM assets x
+             WHERE x.categoryID=c.categoryID AND x.listingStatus<>'Removed'
+             AND x.availabilityStatus='Available' $assetExtra) availableAssets,
+            (SELECT COUNT(*) FROM assets x
+             WHERE x.categoryID=c.categoryID AND x.listingStatus<>'Removed'
+             AND x.availabilityStatus='Borrowed' $assetExtra) borrowedAssets,
+            (SELECT COUNT(*) FROM transactionrequests tr
+             JOIN assets x ON x.assetID=tr.assetID
+             WHERE x.categoryID=c.categoryID $txExtra) totalTransactions,
+            (SELECT COUNT(DISTINCT tr.requesterID) FROM transactionrequests tr
+             JOIN assets x ON x.assetID=tr.assetID
+             WHERE x.categoryID=c.categoryID $txExtra) uniqueRequesters
+            FROM categories c ".($category?"WHERE c.categoryID=?":"")."
+            ORDER BY totalTransactions DESC,totalAssets DESC";
+
+        /* assetExtra is repeated 3 times and txExtra 2 times in the SQL. */
+        $rowParams=array_merge(
+            $assetParams,$assetParams,$assetParams,
+            $txParams,$txParams,
+            $category?[$category]:[]
+        );
+        $rowTypes=$assetTypes.$assetTypes.$assetTypes.$txTypes.$txTypes.($category?'s':'');
+        $allRows=q($c,$rowSql,$rowTypes,$rowParams);
         $rows=$viewAll?$allRows:array_slice($allRows,0,8);
     }
     $c->close();
@@ -341,7 +395,7 @@ foreach($cards as $x):?>
 <strong>Period:</strong> <?=e(($from?:'All records').' to '.($to?:($from?'Today':'All records')))?><br>
 <strong>Report Data:</strong> <?=($from||$to||$category||$condition||$availability||$listing||$status)?'Filtered records':'Default / all matching records'?><br>
 <strong>Filters:</strong>
-Category <?=e($category?:'All')?><?= $report!=='transaction'?' · Condition '.e($condition?:'All'):'' ?>
+Category <?=e($selectedCategoryName)?><?= $report!=='transaction'?' · Condition '.e($condition?:'All'):'' ?>
 <?= $report==='asset'?' · Availability '.e($availability?:'All').' · Listing '.e($listing?:'All'):'' ?>
 <?= $report==='transaction'?' · Status '.e($status?:'All'):'' ?>
 </p>
