@@ -180,6 +180,7 @@ if($asset&&!empty($asset['imageURL'])){
 <div><strong>Asset Name</strong><span id="confirmAssetName"></span></div>
 <div><strong>Category</strong><span id="confirmAssetCategory"></span></div>
 <div><strong>Condition</strong><span><?=e($asset['assetCondition'])?></span></div>
+<div><strong>Description</strong><span id="confirmAssetDescription"></span></div>
 </div>
 
 <div class="flow-dialog-actions">
@@ -194,6 +195,7 @@ function openEditAssetConfirm(){
     if(!editAssetForm.checkValidity()){editAssetForm.reportValidity();return}
     confirmAssetName.textContent=editAssetForm.assetName.value.trim();
     confirmAssetCategory.textContent=editAssetForm.categoryID.options[editAssetForm.categoryID.selectedIndex].text;
+    confirmAssetDescription.textContent=editAssetForm.description.value.trim()||'-';
     editAssetConfirm.showModal();
 }
 </script>
