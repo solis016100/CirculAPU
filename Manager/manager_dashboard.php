@@ -18,39 +18,41 @@ $managerName=$_SESSION['user_name']??'Resource Manager';
 $totalAssets=$pendingListings=$activeTransactions=$currentBorrowed=0;
 $recentActivities=$notifications=[];$databaseError='';
 
-try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+require_once '../db.php';
 
-    $x=$c->query("
+try{
+    $conn->set_charset('utf8mb4');
+
+    $x=$conn->query("
         SELECT SUM(listingStatus<>'Removed') totalAssets,
                SUM(listingStatus='Pending Review') pendingListings
         FROM assets")->fetch_assoc();
     $totalAssets=(int)($x['totalAssets']??0);
     $pendingListings=(int)($x['pendingListings']??0);
 
-    $currentBorrowed=(int)$c->query("
+    $currentBorrowed=(int)$conn->query("
         SELECT COUNT(*) total FROM borrowings
         WHERE actualReturnDate IS NULL
         AND borrowingStatus IN ('Borrowed','Active','Overdue')
     ")->fetch_assoc()['total'];
 
-    $activeTransactions=(int)$c->query("
+    $activeTransactions=(int)$conn->query("
         SELECT COUNT(*) total FROM transactionrequests
         WHERE requestStatus IN ('Approved','In Progress','Overdue')
     ")->fetch_assoc()['total'];
 
-    $r=$c->query("
+    $r=$conn->query("
         SELECT actionType,refType,refID,description,timeLogged
         FROM systemlog
         WHERE refType IN ('Asset','Category','Transaction','Borrowing')
         ORDER BY timeLogged DESC LIMIT 5");
     while($x=$r->fetch_assoc())$recentActivities[]=$x;
 
-    $s=$c->prepare("SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=? ORDER BY createdDate DESC LIMIT 5");
+    $s=$conn->prepare("SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=? ORDER BY createdDate DESC LIMIT 5");
     $s->bind_param('s',$managerID);$s->execute();$r=$s->get_result();
     while($x=$r->fetch_assoc())$notifications[]=$x;
-    $s->close();$c->close();
-}catch(Throwable $z){error_log($z->getMessage());$databaseError='Unable to load dashboard data. Please make sure MySQL is running.';}
+    $s->close();
+}catch(Throwable $z){error_log($z->getMessage());$databaseError='Unable to load dashboard data. Please check the database connection.';}
 ?>
 <!DOCTYPE html>
 <html lang="en">
