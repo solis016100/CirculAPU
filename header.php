@@ -19,7 +19,7 @@ $role_labels = [
 $display_role = $role_labels[$user_role] ?? $user_role;
 
 $script_dir = rtrim(str_replace('\\','/',dirname($_SERVER['SCRIPT_NAME'])),'/');
-$app_root = preg_replace('#/(Admin|Auditor|Manager|Members)$#i','',$script_dir);
+$app_root = preg_replace('#/(Admin|Auditor|Manager|Member|Members)$#i','',$script_dir);
 if ($app_root === '/') $app_root = '';
 ?>
 
@@ -89,32 +89,23 @@ if ($app_root === '/') $app_root = '';
 </header>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const themeBtn = document.getElementById("theme-toggle-btn");
-    const sunIcon = document.getElementById("theme-icon-sun");
-    const moonIcon = document.getElementById("theme-icon-moon");
+document.addEventListener("DOMContentLoaded", function() {
+  const themeBtn = document.getElementById("theme-toggle-btn");
+  const sunIcon = document.getElementById("theme-icon-sun");
+  const moonIcon = document.getElementById("theme-icon-moon");
 
-    // Apply saved theme state on page load
-    if (localStorage.getItem("theme") === "dark") {
-      document.body.classList.add("dark-mode");
-      sunIcon.style.display = "block";
-      moonIcon.style.display = "none";
-    }
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark-mode");
+    sunIcon.style.display = "block";
+    moonIcon.style.display = "none";
+  }
 
-    // Toggle theme on button click
-    themeBtn.addEventListener("click", function() {
-      document.body.classList.toggle("dark-mode");
-      const isDark = document.body.classList.contains("dark-mode");
-
-      if (isDark) {
-        localStorage.setItem("theme", "dark");
-        sunIcon.style.display = "block";
-        moonIcon.style.display = "none";
-      } else {
-        localStorage.setItem("theme", "light");
-        sunIcon.style.display = "none";
-        moonIcon.style.display = "block";
-      }
-    });
+  themeBtn?.addEventListener("click", function() {
+    document.body.classList.toggle("dark-mode");
+    const isDark = document.body.classList.contains("dark-mode");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    sunIcon.style.display = isDark ? "block" : "none";
+    moonIcon.style.display = isDark ? "none" : "block";
   });
+});
 </script>
