@@ -110,8 +110,8 @@
                     Mission Details
                 </h1>
 
-                <div class="mission-view-card">
-                    <div class="mission-view-body">
+                <div class="management-view-card">
+                    <div class="management-view-body">
                         <div class="auditor-management-detail-row">
                             <label>Mission ID</label>
                             <div class="auditor-management-detail-value">

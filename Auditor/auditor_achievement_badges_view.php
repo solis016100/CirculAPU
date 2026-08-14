@@ -1,292 +1,84 @@
 <?php
-    session_start();
+session_start();
 
-    if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'Auditor') {
-        header("Location: ../login.php");
-        exit();
-    }
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'Auditor') {
+    header("Location: ../login.php");
+    exit();
+}
 
-    require '../db.php';
-    require_once '../print.php';
-    require_once '../delete.php';
+require '../db.php';
+require_once '../print.php';
+require_once '../delete.php';
 
-    $id = $_GET['achieveBadgeID'] ?? '';
+// Change Badge Icon
 
-    // Get Achievement Badge
-    $stmt = $conn->prepare("
-        SELECT
-            achieveBadgeID,
-            achieveBadgeName,
-            achieveBadgeDescription,
-            achieveBadgeRequirement,
-            achieveBadgeIcon
-        FROM achievementbadges
-        WHERE achieveBadgeID = ?
-    ");
+if (isset($_POST['save_icon']) && isset($_FILES['badgeIcon'])) {
 
-    $stmt->bind_param("s", $id);
-    $stmt->execute();
+    $file = $_FILES['badgeIcon'];
 
-    $badge = $stmt->get_result()->fetch_assoc();
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
+    if (
+        $file['error'] === UPLOAD_ERR_OK &&
+        in_array($file['type'], $allowedTypes) &&
+        $file['size'] <= 5 * 1024 * 1024
+    ) {
 
-    // Check Badge
-    if (!$badge) {
-        header("Location: auditor_achievement_badges_management.php");
-        exit();
-    }
+        $uploadDirectory = "../assets/images/";
 
+        $extension = strtolower(
+            pathinfo($file['name'], PATHINFO_EXTENSION)
+        );
 
-    // Save Changes
-    if (isset($_POST['save_changes'])) {
+        $fileName = "badge_" . $id . "_" . time() . "." . $extension;
 
-        if (
-            !isset($_FILES['badgeIcon']) ||
-            $_FILES['badgeIcon']['error'] === UPLOAD_ERR_NO_FILE
-        ) {
+        $targetPath = $uploadDirectory . $fileName;
 
-            $errorMessage = "Please select an image.";
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
 
-        } else {
+            $updateStmt = $conn->prepare("
+                UPDATE achievementbadges
+                SET achieveBadgeIcon = ?
+                WHERE achieveBadgeID = ?
+            ");
 
-            $file = $_FILES['badgeIcon'];
+            $updateStmt->bind_param(
+                "ss",
+                $fileName,
+                $id
+            );
 
-            $allowedTypes = [
-                'image/jpeg',
-                'image/png',
-                'image/webp'
-            ];
+            $updateStmt->execute();
+            $updateStmt->close();
 
+            header(
+                "Location: auditor_achievement_badges_view.php?achieveBadgeID="
+                . urlencode($id)
+                . "&updated=1"
+            );
 
-            // Validate Image
-
-            if ($file['error'] !== UPLOAD_ERR_OK) {
-
-                $errorMessage = "Unable to upload the badge icon.";
-
-            } elseif (!in_array($file['type'], $allowedTypes)) {
-
-                $errorMessage =
-                    "Only JPG, PNG, and WEBP images are allowed.";
-
-            } elseif ($file['size'] > 5 * 1024 * 1024) {
-
-                $errorMessage =
-                    "Badge icon must not exceed 5MB.";
-
-            } else {
-
-                $uploadDirectory = "../assets/images/";
-
-                $extension = strtolower(
-                    pathinfo(
-                        $file['name'],
-                        PATHINFO_EXTENSION
-                    )
-                );
-
-
-                // Generate New File Name
-
-                $safeName = preg_replace(
-                    '/[^A-Za-z0-9_-]/',
-                    '_',
-                    strtolower($badge['achieveBadgeName'])
-                );
-
-                $fileName =
-                    "badge_" .
-                    $safeName .
-                    "_" .
-                    time() .
-                    "." .
-                    $extension;
-
-                $targetPath =
-                    $uploadDirectory . $fileName;
-
-
-                // Upload New Image
-
-                if (!move_uploaded_file(
-                    $file['tmp_name'],
-                    $targetPath
-                )) {
-
-                    $errorMessage =
-                        "Unable to save the badge icon.";
-
-                } else {
-
-
-                    // Update Badge Icon
-
-                    $updateStmt = $conn->prepare("
-                        UPDATE achievementbadges
-                        SET achieveBadgeIcon = ?
-                        WHERE achieveBadgeID = ?
-                    ");
-
-                    $updateStmt->bind_param(
-                        "ss",
-                        $fileName,
-                        $id
-                    );
-
-
-                    if ($updateStmt->execute()) {
-
-                        $updateStmt->close();
-
-
-                        // Delete Old Image
-
-                        $oldImage =
-                            "../assets/images/" .
-                            $badge['achieveBadgeIcon'];
-
-                        if (
-                            !empty($badge['achieveBadgeIcon']) &&
-                            file_exists($oldImage)
-                        ) {
-
-                            unlink($oldImage);
-
-                        }
-
-
-                        // Create System Log
-
-                        $logResult = mysqli_query($conn, "
-                            SELECT MAX(
-                                CAST(
-                                    SUBSTRING(logID, 4)
-                                    AS UNSIGNED
-                                )
-                            ) + 1 AS nextID
-                            FROM systemlog
-                        ");
-
-                        $logRow =
-                            mysqli_fetch_assoc($logResult);
-
-                        $logID = "LOG" . str_pad(
-                            $logRow['nextID'] ?? 1,
-                            3,
-                            "0",
-                            STR_PAD_LEFT
-                        );
-
-
-                        $logDescription =
-                            "Changed achievement badge icon: " .
-                            $badge['achieveBadgeName'];
-
-
-                        $userID =
-                            $_SESSION['user_id'];
-
-
-                        $logStmt = mysqli_prepare($conn, "
-                            INSERT INTO systemlog
-                            (
-                                logID,
-                                userID,
-                                actionType,
-                                refType,
-                                refID,
-                                description
-                            )
-                            VALUES
-                            (
-                                ?,
-                                ?,
-                                'Update',
-                                'Badge',
-                                ?,
-                                ?
-                            )
-                        ");
-
-
-                        if ($logStmt) {
-
-                            mysqli_stmt_bind_param(
-                                $logStmt,
-                                "ssss",
-                                $logID,
-                                $userID,
-                                $id,
-                                $logDescription
-                            );
-
-                            mysqli_stmt_execute(
-                                $logStmt
-                            );
-
-                            mysqli_stmt_close(
-                                $logStmt
-                            );
-                        }
-
-
-                        // Successful Update
-
-                        header(
-                            "Location: auditor_achievement_badges_view.php?achieveBadgeID="
-                            . urlencode($id)
-                            . "&updated=1"
-                        );
-
-                        exit();
-
-
-                    } else {
-
-                        $updateStmt->close();
-
-                        // Remove new image if database update fails
-                        unlink($targetPath);
-
-                        $errorMessage =
-                            "Unable to update the badge icon.";
-                    }
-                }
-            }
+            exit();
         }
     }
+}
 
+$id = $_GET['achieveBadgeID'] ?? '';
 
-    // Successful Update Message
+$stmt = $conn->prepare("
+    SELECT achieveBadgeID, achieveBadgeName, achieveBadgeDescription,
+           achieveBadgeRequirement, achieveBadgeIcon
+    FROM achievementbadges
+    WHERE achieveBadgeID = ?
+");
 
-    $successMessage = "";
+$stmt->bind_param("s", $id);
+$stmt->execute();
+$badge = $stmt->get_result()->fetch_assoc();
 
-    if (isset($_GET['updated']) && $_GET['updated'] == '1') {
-
-        $successMessage =
-            "Achievement badge icon updated successfully.";
-
-    }
-
-
-    // Refresh Badge Data After Update
-
-    $stmt = $conn->prepare("
-        SELECT
-            achieveBadgeID,
-            achieveBadgeName,
-            achieveBadgeDescription,
-            achieveBadgeRequirement,
-            achieveBadgeIcon
-        FROM achievementbadges
-        WHERE achieveBadgeID = ?
-    ");
-
-    $stmt->bind_param("s", $id);
-    $stmt->execute();
-
-    $badge = $stmt->get_result()->fetch_assoc();
-
+if (!$badge) {
+    header("Location: auditor_achievement_badges_management.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -295,221 +87,102 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Auditor Achievement Badge Details - CirculAPU</title>
 
-    <title>
-        Auditor Achievement Badge Details - CirculAPU
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="../style.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="auditor_style.css"
-    >
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="auditor_style.css">
 
 </head>
 
 
 <body class="role-auditor">
 
-    <div class="dashboard-container">
+<div class="dashboard-container">
 
+    <?php include '../sidebar.php'; ?>
 
-        <?php include '../sidebar.php'; ?>
+    <div class="main-content">
 
+        <?php include '../header.php'; ?>
 
-        <div class="main-content">
+        <main class="page-body auditor-management-detail-page">
 
 
-            <?php include '../header.php'; ?>
+            <!-- Breadcrumb -->
 
+            <div class="breadcrumb">
 
-            <main class="page-body auditor-management-detail-page">
+                <a href="auditor_achievement_badges_management.php">
+                    Achievement Badge Management
+                </a>
 
+                &gt; Achievement Badge Details
 
-                <!-- Breadcrumb -->
+            </div>
 
-                <div class="breadcrumb">
 
-                    <a href="auditor_achievement_badges_management.php">
-                        Achievement Badge Management
-                    </a>
+            <h1>Achievement Badge Details</h1>
 
-                    &gt;
 
-                    Achievement Badge Details
+            <!-- Badge Details -->
+<form method="POST" enctype="multipart/form-data">
+            <div class="management-view-card">
 
-                </div>
 
+                <!-- Badge Information -->
 
-                <h1>
-                    Achievement Badge Details
-                </h1>
+                <div class="management-view-body">
 
 
-                <!-- Success Message -->
+                    <!-- Badge ID -->
 
-                <?php if ($successMessage !== ""): ?>
+                    <div class="auditor-management-detail-row">
 
-                    <div class="management-success-message">
+                        <label>Badge ID</label>
 
-                        <?php echo htmlspecialchars($successMessage); ?>
-
-                    </div>
-
-                <?php endif; ?>
-
-
-                <!-- Error Message -->
-
-                <?php if (!empty($errorMessage)): ?>
-
-                    <div class="management-error-message">
-
-                        <?php echo htmlspecialchars($errorMessage); ?>
-
-                    </div>
-
-                <?php endif; ?>
-
-
-                <!-- Badge Details -->
-
-                <form
-                    method="POST"
-                    enctype="multipart/form-data"
-                >
-
-                    <div class="management-form-card">
-
-
-                        <!-- Badge Information -->
-
-                        <div class="auditor-management-detail-information">
-
-
-                            <!-- Badge ID -->
-
-                            <div class="auditor-management-detail-row">
-
-                                <label>
-                                    Badge ID
-                                </label>
-
-                                <div class="auditor-management-detail-value">
-
-                                    <?php
-                                        echo htmlspecialchars(
-                                            $badge['achieveBadgeID']
-                                        );
-                                    ?>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Badge Name -->
-
-                            <div class="auditor-management-detail-row">
-
-                                <label>
-                                    Badge Name
-                                </label>
-
-                                <div class="auditor-management-detail-value">
-
-                                    <?php
-                                        echo htmlspecialchars(
-                                            $badge['achieveBadgeName']
-                                        );
-                                    ?>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Description -->
-
-                            <div class="auditor-management-detail-row">
-
-                                <label>
-                                    Description
-                                </label>
-
-                                <div class="auditor-management-detail-value remarks">
-
-                                    <?php
-                                        echo nl2br(
-                                            htmlspecialchars(
-                                                $badge['achieveBadgeDescription']
-                                            )
-                                        );
-                                    ?>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Requirement -->
-
-                            <div class="auditor-management-detail-row">
-
-                                <label>
-                                    Requirement
-                                </label>
-
-                                <div class="auditor-management-detail-value remarks">
-
-                                    <?php
-                                        echo nl2br(
-                                            htmlspecialchars(
-                                                $badge['achieveBadgeRequirement']
-                                            )
-                                        );
-                                    ?>
-
-                                </div>
-
-                            </div>
-
-
+                        <div class="auditor-management-detail-value">
+                            <?php echo htmlspecialchars($badge['achieveBadgeID']); ?>
                         </div>
 
-
-                        <!-- Badge Icon & Actions -->
-
-                        <div class="auditor-management-detail-side">
+                    </div>
 
 
-                            <!-- Badge Icon -->
+                    <!-- Badge Name -->
 
-                            <div class="auditor-management-detail-image">
+                    <div class="auditor-management-detail-row">
+
+                        <label>Badge Name</label>
+
+                        <div class="auditor-management-detail-value">
+                            <?php echo htmlspecialchars($badge['achieveBadgeName']); ?>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Badge Icon -->
+
+                    <div class="auditor-management-detail-row">
+
+                        <label>Badge Icon</label>
+
+                        <div>
+
+                            <div class="badge-view-icon-box">
 
                                 <img
                                     id="badgeIconPreview"
                                     src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>"
-                                    alt="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>"
+                                    alt="Badge Icon"
                                 >
 
                             </div>
 
-
-                            <!-- Add / Change Icon -->
-
                             <label
                                 for="badgeIcon"
-                                class="badge-icon-change"
+                                class="auditor-management-view-image"
                             >
                                 Add/Change Icon
                             </label>
@@ -522,224 +195,206 @@
                                 hidden
                             >
 
-
-                            <!-- Save Changes -->
-
-                            <button
-                                type="submit"
-                                name="save_changes"
-                                class="auditor-management-detail-action"
-                            >
-
-                                <img
-                                    src="../assets/icons/save.png"
-                                    alt="Save"
-                                >
-
-                                Save Changes
-
-                            </button>
-
-
-                            <!-- Print -->
-
-                            <a
-                                href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&print=1"
-                                class="auditor-management-detail-action"
-                            >
-
-                                <img
-                                    src="../assets/icons/print.png"
-                                    alt="Print"
-                                >
-
-                                Print
-
-                            </a>
-
-
-                            <!-- Delete -->
-
-                            <button
-                                type="button"
-                                class="auditor-management-detail-action delete"
-                                onclick="openDeletePopout()"
-                            >
-
-                                <img
-                                    src="../assets/icons/delete.png"
-                                    alt="Delete"
-                                >
-
-                                Delete
-
-                            </button>
-
-
                         </div>
-
 
                     </div>
 
-                </form>
+
+                    <!-- Description -->
+
+                    <div class="auditor-management-detail-row">
+
+                        <label>Description</label>
+
+                        <div class="auditor-management-detail-value remarks">
+                            <?php echo nl2br(htmlspecialchars($badge['achieveBadgeDescription'])); ?>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Requirement -->
+
+                    <div class="auditor-management-detail-row">
+
+                        <label>Requirement</label>
+
+                        <div class="auditor-management-detail-value remarks">
+                            <?php echo nl2br(htmlspecialchars($badge['achieveBadgeRequirement'])); ?>
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- Action Buttons -->
+
+                <div class="auditor-management-detail-side">
+
+
+                    <!-- Edit -->
+
+                    <a
+                        href="auditor_achievement_badges_edit.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>"
+                        class="auditor-management-detail-action"
+                    >
+
+                        <img src="../assets/icons/edit.png" alt="Edit">
+
+                        Edit
+
+                    </a>
+
+
+                    <!-- Print -->
+
+                    <a
+                        href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&print=1"
+                        class="auditor-management-detail-action"
+                    >
+
+                        <img src="../assets/icons/print.png" alt="Print">
+
+                        Print
+
+                    </a>
+
+
+                    <!-- Delete -->
+
+                    <button
+                        type="button"
+                        class="auditor-management-detail-action delete"
+                        onclick="openDeletePopout()"
+                    >
+
+                        <img src="../assets/icons/delete.png" alt="Delete">
+
+                        Delete
+
+                    </button>
+
+
+                </div>
 
 
                 <!-- Back Button -->
 
                 <div class="auditor-management-detail-back">
 
-                    <a
-                        href="auditor_achievement_badges_management.php"
-                        class="auditor-management-detail-action"
-                    >
+                    <a href="auditor_achievement_badges_management.php">
                         Back
                     </a>
 
                 </div>
 
 
-            </main>
-
-        </div>
-
-    </div>
-
-
-    <!-- Print -->
-
-    <?php if (isset($_GET['print']) && $_GET['print'] == '1'): ?>
-
-        <script>
-
-            window.onload = function() {
-
-                window.print();
-
-            };
-
-
-            window.onafterprint = function() {
-
-                window.location.href =
-                    'auditor_achievement_badges_management.php';
-
-            };
-
-        </script>
-
-    <?php endif; ?>
-
-
-    <!-- Delete Popout -->
-
-    <script>
-
-        function openDeletePopout() {
-
-            document
-                .getElementById('deletePopout')
-                .classList.add('show');
-
-        }
-
-
-        function closeDeletePopout() {
-
-            document
-                .getElementById('deletePopout')
-                .classList.remove('show');
-
-        }
-
-    </script>
-
-
-    <!-- Delete Confirmation -->
-
-    <div
-        id="deletePopout"
-        class="auditor-popout"
-    >
-
-        <div class="auditor-popout-box">
-
-
-            <h2>
-                Delete Achievement Badge Confirmation
-            </h2>
-
-
-            <p>
-                Are you sure you want to delete this achievement badge?
-            </p>
-
-
-            <div class="auditor-popout-actions">
-
-
-                <button
-                    type="button"
-                    onclick="closeDeletePopout()"
-                >
-                    No
-                </button>
-
-
-                <form method="POST">
-
-                    <input
-                        type="hidden"
-                        name="badgeID"
-                        value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>"
-                    >
-
-
-                    <button
-                        type="submit"
-                        name="delete_badge"
-                        class="auditor-popout-confirm"
-                    >
-                        Yes, Delete
-                    </button>
-
-                </form>
-
-
             </div>
 
+
+        </main>
+
+    </div>
+
+</div>
+</form>
+
+
+<!-- Print -->
+
+<?php if (isset($_GET['print']) && $_GET['print'] == '1'): ?>
+
+<script>
+
+window.onload = function() {
+    window.print();
+};
+
+window.onafterprint = function() {
+    window.location.href =
+        'auditor_achievement_badges_management.php';
+};
+
+</script>
+
+<?php endif; ?>
+
+
+<!-- Delete Popout -->
+
+<div id="deletePopout" class="auditor-popout">
+
+    <div class="auditor-popout-box">
+
+        <h2>Delete Achievement Badge Confirmation</h2>
+
+        <p>
+            Are you sure you want to delete this achievement badge?
+        </p>
+
+        <div class="auditor-popout-actions">
+
+            <button
+                type="button"
+                onclick="closeDeletePopout()"
+            >
+                No
+            </button>
+
+
+            <form method="POST">
+
+                <input
+                    type="hidden"
+                    name="badgeID"
+                    value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>"
+                >
+
+                <button
+                    type="submit"
+                    name="delete_badge"
+                    class="auditor-popout-confirm"
+                >
+                    Yes, Delete
+                </button>
+
+            </form>
+
         </div>
 
     </div>
 
-
-    <!-- Badge Icon Preview -->
-
-    <script>
-
-        const badgeIcon =
-            document.getElementById('badgeIcon');
-
-        const badgeIconPreview =
-            document.getElementById('badgeIconPreview');
+</div>
 
 
-        badgeIcon.addEventListener(
-            'change',
-            function () {
+<script>
 
-                if (this.files.length > 0) {
+function openDeletePopout() {
+    document.getElementById('deletePopout').classList.add('show');
+}
 
-                    badgeIconPreview.src =
-                        URL.createObjectURL(
-                            this.files[0]
-                        );
+function closeDeletePopout() {
+    document.getElementById('deletePopout').classList.remove('show');
+}
 
-                }
+const badgeIcon = document.getElementById('badgeIcon');
+const badgeIconPreview = document.getElementById('badgeIconPreview');
+const saveIconBtn = document.getElementById('saveIconBtn');
 
-            }
-        );
+badgeIcon.addEventListener('change', function () {
 
-    </script>
+    if (this.files.length > 0) {
+
+        badgeIconPreview.src =
+            URL.createObjectURL(this.files[0]);
+
+        saveIconBtn.style.display = 'flex';
+    }
+
+});
+</script>
 
 
 </body>
