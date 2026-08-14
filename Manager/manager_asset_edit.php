@@ -106,7 +106,7 @@ if($asset&&!empty($asset['imageURL'])){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Edit Asset - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -126,7 +126,7 @@ if($asset&&!empty($asset['imageURL'])){
 <div class="asset-form-note"><strong>Condition Protection</strong><p>Asset condition is controlled through the review/verification workflow and Return Inspection. It cannot be changed from general Edit Asset.</p></div>
 
 <section class="content-card asset-form-card">
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data" id="editAssetForm">
 <div class="asset-form-layout">
 <div class="asset-form-fields">
 
@@ -161,7 +161,7 @@ if($asset&&!empty($asset['imageURL'])){
 <div class="asset-form-note"><strong>Important</strong><p>Availability, Listing Status and Verification Status are controlled by their proper workflows and cannot be changed here.</p></div>
 
 <div class="asset-form-actions">
-<button type="submit" class="asset-form-submit"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
+<button type="button" class="asset-form-submit" onclick="openEditAssetConfirm()"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
 <button type="reset" class="asset-form-reset"><img src="../assets/icons/reset.png" alt=""> Reset</button>
 <a href="manager_asset_view.php?assetID=<?=e($id)?>" class="asset-form-back">Back</a>
 </div>
@@ -170,7 +170,42 @@ if($asset&&!empty($asset['imageURL'])){
 </div>
 </form>
 </section>
+
+<dialog id="editAssetConfirm" class="flow-dialog">
+<h2>Confirm Asset Update</h2>
+<p>Save these changes to this asset listing?</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Asset ID</strong><span><?=e($asset['assetID'])?></span></div>
+<div><strong>Asset Name</strong><span id="confirmAssetName"></span></div>
+<div><strong>Category</strong><span id="confirmAssetCategory"></span></div>
+<div><strong>Condition</strong><span><?=e($asset['assetCondition'])?></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="editAssetConfirm.close()">No</button>
+<button type="button" class="category-form-submit" onclick="editAssetForm.submit()">Yes, Save Changes</button>
+</div>
+</dialog>
+
+<script>
+const editAssetForm=document.getElementById('editAssetForm');
+function openEditAssetConfirm(){
+    if(!editAssetForm.checkValidity()){editAssetForm.reportValidity();return}
+    confirmAssetName.textContent=editAssetForm.assetName.value.trim();
+    confirmAssetCategory.textContent=editAssetForm.categoryID.options[editAssetForm.categoryID.selectedIndex].text;
+    editAssetConfirm.showModal();
+}
+</script>
 <?php endif;?>
 
-</main></div></div>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
 </body></html>
