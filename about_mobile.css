@@ -1,61 +1,163 @@
-/* Shared About mobile only — all roles */
+/* About CirculAPU mobile only — shared by all 4 roles */
 @media(max-width:600px){
     body.about-page{overflow-x:hidden}
+
     .about-page .sidebar{display:none!important}
-    .about-page .dashboard-container{width:100%!important;min-width:0!important}
+
+    .about-page .dashboard-container{
+        width:100%!important;
+        min-width:0!important;
+    }
+
     .about-page .main-content,
     .about-page .dashboard-container.sidebar-collapsed .main-content{
-        width:100%!important;max-width:100%!important;margin-left:0!important;min-width:0!important
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        margin-left:0!important;
     }
 
     .about-page .app-header{
-        position:sticky;top:0;height:58px;min-height:58px;padding:0 14px;z-index:900
-    }
-    .about-page .header-search-container,.about-page .header-divider{display:none!important}
-    .about-page .header-right-actions{width:100%;justify-content:flex-end;gap:10px}
-    .about-page .user-email-subtitle{display:none}
-    .about-page .user-role-title span{
-        max-width:128px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px
-    }
-    .about-page .app-header::before{
-        content:"CirculAPU";position:absolute;left:14px;top:50%;transform:translateY(-50%);
-        height:30px;padding-left:32px;display:flex;align-items:center;
-        background:url("/CirculAPU/assets/images/logo.png") left center/26px 26px no-repeat;
-        color:#0f172a;font-size:13px;font-weight:700;white-space:nowrap;pointer-events:none
+        position:sticky;
+        top:0;
+        height:58px;
+        min-height:58px;
+        padding:0 14px;
+        z-index:900;
     }
 
-    .about-page .page-body{width:100%;padding:18px 16px 24px}
-    .about-page .breadcrumb{margin-bottom:12px;font-size:10px}
+    .about-page .header-search-container,
+    .about-page .header-divider{
+        display:none!important;
+    }
+
+    .about-page .header-right-actions{
+        width:100%;
+        justify-content:flex-end;
+        gap:10px;
+    }
+
+    .about-page .user-email-subtitle{display:none}
+
+    .about-page .user-role-title span{
+        max-width:128px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:12px;
+    }
+
+    .about-page .app-header::before{
+        content:"CirculAPU";
+        position:absolute;
+        left:14px;
+        top:50%;
+        transform:translateY(-50%);
+        height:30px;
+        padding-left:32px;
+        display:flex;
+        align-items:center;
+        background:url("/CirculAPU/assets/images/logo.png") left center/26px 26px no-repeat;
+        color:#0f172a;
+        font-size:13px;
+        font-weight:700;
+        white-space:nowrap;
+        pointer-events:none;
+    }
+
+    .about-page .page-body{
+        width:100%;
+        padding:18px 16px 24px;
+    }
+
+    .about-page .breadcrumb{
+        margin-bottom:12px;
+        font-size:10px;
+    }
+
     .about-page .page-header{margin-bottom:14px}
-    .about-page .page-header h1{font-size:26px;line-height:1.15}
-    .about-page .subtitle{margin-top:4px;font-size:12px;line-height:1.45}
+
+    .about-page .page-header h1{
+        font-size:26px;
+        line-height:1.15;
+    }
+
+    .about-page .subtitle{
+        margin-top:4px;
+        font-size:12px;
+        line-height:1.45;
+    }
 
     .about-page .about-card{
-        width:100%;max-width:none;margin:0;padding:16px;border-radius:14px
+        width:100%;
+        max-width:none;
+        margin:0;
+        padding:16px;
+        border-radius:14px;
     }
-    .about-page .about-top{display:block;margin-bottom:14px}
+
+    .about-page .about-top{
+        display:block;
+        margin-bottom:14px;
+    }
+
     .about-page .about-logo{
-        width:100px;height:100px;margin:0 auto 16px;border:1px solid var(--border-color);border-radius:14px
+        width:100px;
+        height:100px;
+        margin:0 auto 16px;
+        border:1px solid var(--border-color);
+        border-radius:14px;
     }
-    .about-page .about-logo img{max-width:78%;max-height:78%;padding:5px}
+
+    .about-page .about-logo img{
+        max-width:78%;
+        max-height:78%;
+        padding:5px;
+    }
 
     .about-page .about-details{gap:0}
+
     .about-page .about-details-row{
-        display:grid;grid-template-columns:105px minmax(0,1fr);gap:10px;
-        padding:9px 0;border-bottom:1px solid #eef2f7;align-items:start;font-size:11px
+        display:grid;
+        grid-template-columns:105px minmax(0,1fr);
+        gap:10px;
+        padding:9px 0;
+        border-bottom:1px solid #eef2f7;
+        align-items:start;
+        font-size:11px;
     }
+
     .about-page .about-details-row:last-child{border-bottom:0}
-    .about-page .about-details-label{width:auto;font-size:10px;color:#475569}
+
+    .about-page .about-details-label{
+        width:auto;
+        font-size:10px;
+        color:#475569;
+    }
+
     .about-page .about-details-separator{display:none}
+
     .about-page .about-details-value{
-        min-width:0;text-align:right;font-size:11px;line-height:1.4;overflow-wrap:anywhere
+        min-width:0;
+        text-align:right;
+        font-size:11px;
+        line-height:1.4;
+        overflow-wrap:anywhere;
     }
 
     .about-page .card-divider{margin:0}
-    .about-page .about-description{
-        padding-top:14px;font-size:11px;line-height:1.65;font-weight:500;text-align:left
-    }
-    .about-page .about-footer{margin-top:14px;font-size:10px;line-height:1.4}
 
-    .about-page .right-sidebar{width:min(320px,calc(100vw - 28px))}
+    .about-page .about-description{
+        padding-top:14px;
+        font-size:11px;
+        line-height:1.65;
+        font-weight:500;
+        text-align:left;
+    }
+
+    .about-page .about-footer{
+        margin-top:14px;
+        font-size:10px;
+        line-height:1.4;
+    }
 }

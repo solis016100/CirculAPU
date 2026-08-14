@@ -27,7 +27,6 @@ $user_role_display = htmlspecialchars($_SESSION['user_role']);
 
         <div class="main-content">
             <?php include 'header.php'; ?>
-            <?php include 'right_bar.php'; ?>
 
             <main class="page-body">
                 <div class="breadcrumb">
