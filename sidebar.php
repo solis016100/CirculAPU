@@ -54,7 +54,7 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           <span class="nav-text">Verification</span>
         </a>
-        <a href="/CirculAPU/Aditor/auditor_missions_management.php" class="nav-item <?php echo ($current_page == 'auditor_missions_management.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Auditor/auditor_missions_management.php" class="nav-item <?php echo ($current_page == 'auditor_missions_management.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
           <span class="nav-text">Missions</span>
         </a>
@@ -123,6 +123,16 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
         
         <?php break; ?>
     <?php endswitch; ?>
+
+    <a href="/CirculAPU/notifications.php"
+       class="nav-item <?php echo ($current_page == 'notifications.php') ? 'active' : ''; ?>">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      <span class="nav-text">Notifications</span>
+    </a>
   </nav>
 
   <div class="sidebar-footer">
