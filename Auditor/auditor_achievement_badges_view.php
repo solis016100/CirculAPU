@@ -10,35 +10,56 @@
     require_once '../print.php';
     require_once '../delete.php';
 
-    // Change Badge Icon
-    if (isset($_POST['save_icon']) && isset($_FILES['badgeIcon'])) {
-        $file = $_FILES['badgeIcon'];
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (
-            $file['error'] === UPLOAD_ERR_OK &&
-            in_array($file['type'], $allowedTypes) &&
-            $file['size'] <= 5 * 1024 * 1024
-        ){
-            $uploadDirectory = "../assets/images/";
-            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $fileName = "badge_" . $id . "_" . time() . "." . $extension;
-            $targetPath = $uploadDirectory . $fileName;
-            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                $updateStmt = $conn->prepare("UPDATE achievementbadges SET achieveBadgeIcon = ? WHERE achieveBadgeID = ? ");
-
-                $updateStmt->bind_param("ss", $fileName, $id);
-
-                $updateStmt->execute();
-                $updateStmt->close();
-
-                header("Location: auditor_achievement_badges_view.php?achieveBadgeID=" . urlencode($id) . "&updated=1");
-
-                exit();
-            }
-        }
-    }
 
     $id = $_GET['achieveBadgeID'] ?? '';
+
+    // Delete Badge
+    if (isset($_POST['delete_badge'])) {
+        $badgeID = $_POST['badgeID'];
+        // Get badge name and icon
+        $get = $conn->prepare("SELECT achieveBadgeName, achieveBadgeIcon FROM achievementbadges WHERE achieveBadgeID = ?");
+        $get->bind_param("s", $badgeID);
+        $get->execute();
+        $badgeData = $get->get_result()->fetch_assoc();
+        $get->close();
+
+        if ($badgeData) {
+            // Delete Badge
+            $delete = $conn->prepare("DELETE FROM achievementbadges WHERE achieveBadgeID = ?");
+            $delete->bind_param("s", $badgeID);
+
+            if ($delete->execute()) {
+                // Delete Badge Icon
+                if (!empty($badgeData['achieveBadgeIcon']) && file_exists("../assets/images/" . $badgeData['achieveBadgeIcon'])) {
+                    unlink("../assets/images/" . $badgeData['achieveBadgeIcon']);
+                }
+
+                // Create System Log ID
+                $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
+
+                $row = $result->fetch_assoc();
+
+                $logID = "LOG" . str_pad($row['nextID'], 3, "0", STR_PAD_LEFT);
+
+                // Create System Log
+                $description = "Deleted achievement badge: " . $badgeData['achieveBadgeName'];
+
+                $log = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Badge', ?, ?) ");
+
+                $log->bind_param("ssss", $logID, $_SESSION['user_id'],$badgeID,$description);
+
+                $log->execute();
+                $log->close();
+
+                // Back to Management
+                header("Location: auditor_achievement_badges_management.php?deleted=1");
+                exit();
+            }else {
+                $delete->close();
+            }
+            $delete->close();
+        }
+    }
 
     $stmt = $conn->prepare("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeDescription,
             achieveBadgeRequirement, achieveBadgeIcon FROM achievementbadges WHERE achieveBadgeID = ?");
@@ -104,16 +125,13 @@
                             <!-- Badge Icon -->
                             <div class="auditor-management-detail-row">
                                 <label>Badge Icon</label>
-                                <div>
+                                <div class="badge-edit-icon">
                                     <div class="badge-view-icon-box">
-                                        <img id="badgeIconPreview" src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon">
+                                        <img src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon">
                                     </div>
-
-                                    <label for="badgeIcon" class="auditor-management-view-image">
-                                        Add/Change Icon
-                                    </label>
-
-                                    <input type="file" id="badgeIcon" name="badgeIcon" accept=".jpg,.jpeg,.png,.webp" hidden>
+                                    <a href="#" class="auditor-management-view-image" onclick="openBadgeImage(); return false;">
+                                        View Image
+                                    </a>
                                 </div>
                             </div>
 
@@ -174,6 +192,11 @@
             window.onload = function() {
                 window.print();
             };
+            window.onafterprint = function() {
+                <?php if (isset($_GET['from']) && $_GET['from'] === 'management'): ?>
+                    window.location.href = 'auditor_achievement_badges_management.php';
+                <?php endif; ?>
+            };
         </script>
     <?php endif; ?>
 
@@ -217,6 +240,23 @@
                 saveIconBtn.style.display = 'flex';
             }
         });
+
+        function openBadgeImage() {
+            document.getElementById('badgeImagePopout').style.display = 'flex';
+        }
+
+        function closeBadgeImage() {
+            document.getElementById('badgeImagePopout').style.display = 'none';
+        }
+
     </script>
+
+    <!-- Badge Image Pop Out -->
+    <div id="badgeImagePopout" class="image-popout" onclick="closeBadgeImage()">
+        <span class="image-popout-close" onclick="event.stopPropagation(); closeBadgeImage();">
+            &times;
+        </span>
+        <img src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon" onclick="event.stopPropagation();">
+    </div>
 </body>
 </html>

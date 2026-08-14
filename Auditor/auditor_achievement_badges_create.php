@@ -349,6 +349,25 @@
         </div>
     </div>
 
+    <!-- Create Another Badge Pop Out -->
+    <?php if (isset($_GET['created'])): ?>
+        <div id="createAnotherPopout" class="auditor-popout">
+            <div class="auditor-popout-box">
+                <h2>Achievement Badge Created Successfully</h2>
+                <p>Do you want to create another achievement badge?</p>
+                <div class="auditor-popout-actions">
+                    <button type="button" onclick="goToManagement()">
+                        No
+                    </button>
+
+                    <button type="button" onclick="createAnother()">
+                        Yes, Create Another
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <script>
         const badgeForm = document.getElementById('badgeForm');
         const createBadgeButton = document.getElementById('createBadgeButton');
@@ -418,6 +437,19 @@
             duplicateBadgePopout.classList.remove('show');
             document.getElementById('badgeName').focus();
         });
+
+        function createAnother() {
+            document.getElementById('createAnotherPopout').style.display = 'none';
+        }
+
+        function goToManagement() {
+            window.location.href =
+                'auditor_achievement_badges_management.php?created=1';
+        }
+
+        <?php if (isset($_GET['created'])): ?>
+            document.getElementById('createAnotherPopout').classList.add('show');
+        <?php endif; ?>
     </script>
 </body>
 </html>
