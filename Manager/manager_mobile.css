@@ -6,6 +6,7 @@
 .mobile-transaction-ui,
 .mobile-report-ui,
 .mobile-report-list,
+.mobile-category-assets,
 .mobile-borrowing-ui,
 .manager-mobile-nav{
     display:none;
@@ -1488,5 +1489,220 @@
         width:100%;
         min-height:92px;
         font-size:11px;
+    }
+}
+
+
+/* Category Details mobile design */
+@media(max-width:600px){
+    .desktop-category-assets-list{display:none!important}
+    .mobile-category-assets{display:block}
+
+    .role-manager .category-heading{
+        display:block;
+    }
+
+    .role-manager .category-page-actions{
+        margin-top:12px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+
+    .role-manager .category-page-actions a,
+    .role-manager .category-page-actions button{
+        width:100%;
+        min-height:42px;
+        padding:9px 10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
+        border-radius:11px;
+        font-size:11px;
+        text-align:center;
+    }
+
+    .role-manager .category-page-actions img{
+        width:15px;
+        height:15px;
+        object-fit:contain;
+    }
+
+    .role-manager .category-detail-layout{
+        grid-template-columns:1fr;
+        gap:11px;
+    }
+
+    .role-manager .category-info-card,
+    .role-manager .category-stats-card{
+        padding:14px;
+        border-radius:14px;
+    }
+
+    .role-manager .category-info-card h2,
+    .role-manager .category-stats-card h2{
+        margin-bottom:10px;
+        font-size:14px;
+    }
+
+    .role-manager .category-info-content{
+        display:block;
+    }
+
+    .role-manager .category-main-icon{
+        width:62px;
+        height:62px;
+        margin:0 auto 12px;
+        border-radius:14px;
+    }
+
+    .role-manager .category-main-icon img{
+        width:38px;
+        height:38px;
+        object-fit:contain;
+    }
+
+    .role-manager .category-info-row{
+        padding:9px 0;
+        grid-template-columns:minmax(110px,.9fr) minmax(0,1.1fr);
+        gap:10px;
+        font-size:11px;
+    }
+
+    .role-manager .category-info-row strong{font-size:10px}
+    .role-manager .category-info-row span{
+        min-width:0;
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+
+    .role-manager .category-stats-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:8px;
+    }
+
+    .role-manager .category-stat{
+        min-height:74px;
+        padding:10px 6px;
+        border-radius:11px;
+    }
+
+    .role-manager .category-stat strong{font-size:20px}
+    .role-manager .category-stat span{font-size:9px}
+
+    .mobile-category-asset-card{
+        margin-bottom:11px;
+        padding:14px;
+        border:1px solid #bae6fd;
+        border-radius:14px;
+        background:#fff;
+    }
+
+    .mobile-category-asset-top{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:10px;
+    }
+
+    .mobile-category-asset-top>div{min-width:0}
+
+    .mobile-category-asset-top h3{
+        margin:0;
+        font-size:15px;
+        line-height:1.25;
+        color:#0f172a;
+        overflow-wrap:anywhere;
+    }
+
+    .mobile-category-asset-meta{
+        margin:12px 0;
+        padding:10px 0;
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:7px;
+        border-block:1px solid #eef2f7;
+    }
+
+    .mobile-category-asset-meta span{
+        display:block;
+        margin-bottom:3px;
+        font-size:9px;
+        color:#94a3b8;
+    }
+
+    .mobile-category-asset-meta strong{
+        font-size:10px;
+        color:#334155;
+        overflow-wrap:anywhere;
+    }
+}
+
+/* Category Details print layout only */
+@media print{
+    .role-manager .sidebar,
+    .role-manager .app-header,
+    .role-manager .manager-mobile-nav,
+    .role-manager .breadcrumb,
+    .role-manager .category-page-actions,
+    .role-manager .mobile-category-assets{
+        display:none!important;
+    }
+
+    .role-manager .main-content,
+    .role-manager .dashboard-container.sidebar-collapsed .main-content{
+        width:100%!important;
+        margin:0!important;
+    }
+
+    .role-manager .page-body{
+        width:100%!important;
+        max-width:none!important;
+        padding:0!important;
+    }
+
+    .role-manager .management-heading{
+        margin:0 0 10px!important;
+    }
+
+    .role-manager .management-heading h1{
+        margin:0!important;
+        font-size:20px!important;
+    }
+
+    .role-manager .category-detail-layout{
+        grid-template-columns:1.3fr .7fr!important;
+        gap:10px!important;
+    }
+
+    .role-manager .category-info-card,
+    .role-manager .category-stats-card,
+    .role-manager .category-assets-list{
+        padding:12px!important;
+        box-shadow:none!important;
+        border:1px solid #cbd5e1!important;
+        break-inside:avoid;
+    }
+
+    .role-manager .category-info-row{
+        grid-template-columns:115px 1fr!important;
+        gap:8px!important;
+        padding:5px 0!important;
+        font-size:10px!important;
+    }
+
+    .role-manager .category-assets-list{
+        margin-top:10px!important;
+    }
+
+    .role-manager .category-assets-list .management-table th,
+    .role-manager .category-assets-list .management-table td{
+        padding:5px 6px!important;
+        font-size:9px!important;
+    }
+
+    .role-manager .category-assets-list .management-table-wrapper{
+        overflow:visible!important;
     }
 }
