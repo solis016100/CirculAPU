@@ -136,7 +136,7 @@
 
                         <button type="submit" class="auditor-management-detail-action mission-create-btn">
                             <img src="../assets/icons/create.png" alt="">
-                            Create
+                            Create Mission
                         </button>
                     </div>
                 </form>

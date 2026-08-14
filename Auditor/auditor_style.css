@@ -793,6 +793,117 @@
     line-height: 1.4;
 }
 
+/* Badge Icon in Summary Pop Out */
+.confirm-badge-icon {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    display: block;
+}
+
+.auditor-management-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 35px;
+    width: 100%;
+    max-width: 1100px;
+    box-sizing: border-box;
+}
+
+
+/* Badge Information */
+.auditor-management-detail-information {
+    min-width: 0;
+    width: 100%;
+}
+
+
+/* Detail Row */
+.auditor-management-detail-row {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 22px;
+    width: 100%;
+}
+
+
+/* Detail Value */
+.auditor-management-detail-value {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 10px 14px;
+
+    box-sizing: border-box;
+
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+
+/* Long Text */
+.auditor-management-detail-value.remarks {
+    min-height: 110px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+
+/* Right Side */
+.auditor-management-detail-side {
+    width: 280px;
+    min-width: 0;
+}
+
+
+/* Badge Image */
+.auditor-management-detail-image {
+    width: 100%;
+    height: 280px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-bottom: 20px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+
+    overflow: hidden;
+}
+
+.auditor-management-detail-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+
+/* Action Buttons */
+.auditor-management-detail-side
+.auditor-management-detail-action {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.badge-icon-change {
+    display: inline-block;
+    margin: 10px 0 15px;
+    color: #333;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 
 /* --------------------------------------------------------------------------
    AUDITOR USER TIER MANAGEMENT
