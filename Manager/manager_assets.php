@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
 }
 
 require_once '../delete.php';
+require_once '../db.php';
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function assetDate($v): string { return $v && strtotime($v) ? date('d M Y', strtotime($v)) : '-'; }
@@ -33,7 +34,6 @@ $page = max(1, (int)($_GET['page'] ?? 1));
 $total = 0; $totalPages = 1; $offset = 0;
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     $pending=$conn->query("SELECT assetID FROM assets WHERE listingStatus='Pending Review' ORDER BY createdDate ASC");
@@ -118,7 +118,6 @@ try {
     $stmt->bind_param($types . 'ii', ...$listParams); $stmt->execute();
     $assets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
 
-    $conn->close();
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
