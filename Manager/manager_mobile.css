@@ -3,6 +3,7 @@
 .mobile-asset-tools,
 .mobile-asset-list,
 .mobile-category-ui,
+.mobile-transaction-ui,
 .manager-mobile-nav{
     display:none;
 }
@@ -587,4 +588,25 @@
         white-space:nowrap;
         pointer-events:none;
     }
+}
+
+
+/* Transaction Management mobile design */
+@media(max-width:600px){
+    .desktop-transaction-filter,.desktop-transaction-list{display:none!important}
+    .mobile-transaction-ui{display:block}
+
+    .role-manager .transaction-heading-actions{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
+    .role-manager .transaction-heading-actions .management-create-btn{width:100%;min-height:44px;justify-content:center;border-radius:12px;font-size:12px}
+
+    .mobile-transaction-card{margin-bottom:11px;padding:14px;border:1px solid #bae6fd;border-radius:14px;background:#fff}
+    .mobile-transaction-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .mobile-transaction-top>div{min-width:0}
+    .mobile-transaction-top h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;overflow-wrap:anywhere}
+    .mobile-transaction-top p{margin:3px 0 0;font-size:11px;color:#64748b;overflow-wrap:anywhere}
+    .mobile-status-pill.mobile-overdue{background:#fff1f2;color:#dc2626}
+
+    .mobile-transaction-meta{margin:12px 0;padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;border-block:1px solid #eef2f7}
+    .mobile-transaction-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
+    .mobile-transaction-meta strong{font-size:11px;color:#334155}
 }
