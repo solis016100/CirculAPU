@@ -2,6 +2,7 @@
 .mobile-activity-list,
 .mobile-asset-tools,
 .mobile-asset-list,
+.mobile-category-ui,
 .manager-mobile-nav{
     display:none;
 }
@@ -547,6 +548,23 @@
     .role-manager .flow-dialog-summary div{grid-template-columns:1fr;gap:3px}
     .role-manager .flow-dialog-actions{flex-direction:column}
     .role-manager .flow-dialog-actions button{width:100%}
+}
+
+
+/* Category Management mobile design */
+@media(max-width:600px){
+    .desktop-category-filter,.desktop-category-list{display:none!important}
+    .mobile-category-ui{display:block}
+    .mobile-category-card{margin-bottom:11px;padding:14px;border:1px solid #bae6fd;border-radius:14px;background:#fff}
+    .mobile-category-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .mobile-category-identity{min-width:0;display:flex;align-items:center;gap:10px}
+    .mobile-category-icon{width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:var(--badge-bg)}
+    .mobile-category-icon img{width:26px;height:26px;object-fit:contain}
+    .mobile-category-identity h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;overflow-wrap:anywhere}
+    .mobile-category-desc{margin:10px 0 0;font-size:11px;line-height:1.4;color:#64748b}
+    .mobile-category-meta{margin:12px 0;padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;border-block:1px solid #eef2f7}
+    .mobile-category-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
+    .mobile-category-meta strong{font-size:11px;color:#334155}
 }
 
 

@@ -131,6 +131,7 @@ $query = compact('search','status','dateFrom','dateTo');
     <title>Category Management - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -159,7 +160,71 @@ $query = compact('search','status','dateFrom','dateTo');
 <?php elseif (($_GET['error'] ?? '') === 'active'): ?><div class="alert alert-error">This category is already active.</div>
 <?php elseif (($_GET['error'] ?? '') === 'notfound'): ?><div class="alert alert-error">Category not found.</div><?php endif; ?>
 
-<section class="management-filter">
+
+<section class="mobile-category-ui">
+<details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo)?'open':''?>>
+<summary><span>Filter Categories</span><?php if($search||$status||$dateFrom||$dateTo):?><small>Filters active</small><?php endif;?></summary>
+<form method="GET" class="mobile-filter-form">
+<label><span>Search</span><input name="search" placeholder="ID, name or description" value="<?=e($search)?>"></label>
+<div class="mobile-filter-grid">
+<label><span>Status</span><select name="status">
+<option value="">All</option>
+<option value="Active" <?=$status==='Active'?'selected':''?>>Active</option>
+<option value="Inactive" <?=$status==='Inactive'?'selected':''?>>Inactive</option>
+</select></label>
+<label><span>Date From</span><input type="date" name="dateFrom" value="<?=e($dateFrom)?>"></label>
+</div>
+<label><span>Date To</span><input type="date" name="dateTo" value="<?=e($dateTo)?>"></label>
+<div class="mobile-filter-actions"><a href="manager_categories.php">Reset</a><button>Apply Filters</button></div>
+</form>
+</details>
+
+<div class="mobile-section-heading">
+<div><h2>Category List</h2><p><?=$totalRows?> categor<?=$totalRows===1?'y':'ies'?></p></div>
+<span class="mobile-page-count"><?=$page?> / <?=$totalPages?></span>
+</div>
+
+<?php if(!$categories):?>
+<div class="mobile-empty-card">No categories found.</div>
+<?php else:foreach($categories as $c):
+$icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
+<article class="mobile-category-card">
+<div class="mobile-category-top">
+<div class="mobile-category-identity">
+<?php if($icon):?><span class="mobile-category-icon"><img src="<?=e($icon)?>" alt=""></span><?php endif;?>
+<div><span class="mobile-record-id"><?=e($c['categoryID'])?></span><h3><?=e($c['categoryName'])?></h3></div>
+</div>
+<span class="mobile-status-pill"><?=e($c['status'])?></span>
+</div>
+
+<?php if($c['description']):?><p class="mobile-category-desc"><?=e($c['description'])?></p><?php endif;?>
+
+<div class="mobile-category-meta">
+<div><span>Linked Assets</span><strong><?=$c['linkedAssets']?></strong></div>
+<div><span>Created</span><strong><?=date('d M Y',strtotime($c['createdDate']))?></strong></div>
+</div>
+
+<div class="mobile-card-actions">
+<a href="manager_category_view.php?categoryID=<?=e($c['categoryID'])?>">View</a>
+<a class="primary" href="manager_category_edit.php?categoryID=<?=e($c['categoryID'])?>">Edit</a>
+<button type="button" onclick="openCategoryAction('<?=$c['status']==='Active'?'deactivate':'reactivate'?>','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+<?=$c['status']==='Active'?'Deactivate':'Reactivate'?>
+</button>
+<?php if($canDelete):?><button type="button" class="danger" onclick="openCategoryAction('delete','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">Delete</button><?php endif;?>
+</div>
+</article>
+<?php endforeach;endif;?>
+
+<?php if($totalPages>1):?>
+<nav class="mobile-pagination" aria-label="Category pagination">
+<?php if($page>1):?><a href="<?=e(pageURL($query,$page-1))?>">‹</a><?php endif;?>
+<?php for($p=1;$p<=$totalPages;$p++):?><a href="<?=e(pageURL($query,$p))?>" class="<?=$p===$page?'active':''?>"><?=$p?></a><?php endfor;?>
+<?php if($page<$totalPages):?><a href="<?=e(pageURL($query,$page+1))?>">›</a><?php endif;?>
+</nav>
+<?php endif;?>
+</section>
+
+<section class="management-filter desktop-category-filter">
 <form method="GET">
     <div class="management-filter-group search">
         <label for="search">Search Category</label>
@@ -191,7 +256,7 @@ $query = compact('search','status','dateFrom','dateTo');
 </form>
 </section>
 
-<section class="management-list">
+<section class="management-list desktop-category-list">
 <div class="management-list-header">
     <h2>Category List</h2>
     <strong><?= $totalRows ?> categor<?= $totalRows === 1 ? 'y' : 'ies' ?></strong>
@@ -303,6 +368,13 @@ function openCategoryAction(action,id,name){
 <?php endif;?>
 
 </main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
 </div>
 </div>
 </body>
