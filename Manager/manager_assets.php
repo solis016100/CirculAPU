@@ -136,6 +136,7 @@ $end = min($offset + $perPage, $total);
     <title>Asset Management - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
 <body class="role-manager">
@@ -163,7 +164,7 @@ $end = min($offset + $perPage, $total);
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 <?php if (($_GET['removed'] ?? '') === '1'): ?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif; ?>
 
-<section class="management-filter">
+<section class="management-filter desktop-management-filter">
 <form method="GET">
     <div class="management-filter-group search">
         <label for="search">Search Asset</label>
@@ -224,7 +225,132 @@ $end = min($offset + $perPage, $total);
 </form>
 </section>
 
-<section class="management-list">
+<section class="mobile-asset-tools">
+    <details class="mobile-filter-card" <?=($search||$category||$condition||$availability||$status)?'open':''?>>
+        <summary>
+            <span>Filter Assets</span>
+            <?php if($search||$category||$condition||$availability||$status):?><small>Filters active</small><?php endif;?>
+        </summary>
+
+        <form method="GET" class="mobile-filter-form">
+            <label>
+                <span>Search</span>
+                <input name="search" placeholder="Asset ID or name" value="<?=e($search)?>">
+            </label>
+
+            <label>
+                <span>Category</span>
+                <select name="category">
+                    <option value="">All Categories</option>
+                    <?php foreach($categories as $c):?>
+                    <option value="<?=e($c['categoryID'])?>" <?=$category===$c['categoryID']?'selected':''?>><?=e($c['categoryName'])?></option>
+                    <?php endforeach;?>
+                </select>
+            </label>
+
+            <div class="mobile-filter-grid">
+                <label>
+                    <span>Condition</span>
+                    <select name="condition">
+                        <option value="">All</option>
+                        <?php foreach($conditions as $v):?>
+                        <option value="<?=e($v)?>" <?=$condition===$v?'selected':''?>><?=e($v)?></option>
+                        <?php endforeach;?>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Availability</span>
+                    <select name="availability">
+                        <option value="">All</option>
+                        <?php foreach($availabilities as $v):?>
+                        <option value="<?=e($v)?>" <?=$availability===$v?'selected':''?>><?=e($v)?></option>
+                        <?php endforeach;?>
+                    </select>
+                </label>
+            </div>
+
+            <label>
+                <span>Listing Status</span>
+                <select name="listingStatus">
+                    <option value="">All Statuses</option>
+                    <?php foreach($statuses as $v):?>
+                    <option value="<?=e($v)?>" <?=$status===$v?'selected':''?>><?=e($v)?></option>
+                    <?php endforeach;?>
+                </select>
+            </label>
+
+            <?php if($verification):?><input type="hidden" name="verificationStatus" value="<?=e($verification)?>"><?php endif;?>
+
+            <div class="mobile-filter-actions">
+                <a href="manager_assets.php">Reset</a>
+                <button type="submit">Apply Filters</button>
+            </div>
+        </form>
+    </details>
+</section>
+
+<section class="mobile-asset-list">
+    <div class="mobile-section-heading">
+        <div>
+            <h2>Asset Listings</h2>
+            <p><?=$total?> asset<?=$total===1?'':'s'?> found</p>
+        </div>
+        <span class="mobile-page-count"><?=$page?> / <?=$totalPages?></span>
+    </div>
+
+    <?php if(!$assets):?>
+        <div class="mobile-empty-card">No asset records found.</div>
+    <?php else:foreach($assets as $a):?>
+    <article class="mobile-asset-card">
+        <div class="mobile-asset-card-top">
+            <div class="mobile-asset-identity">
+                <?php if($a['categoryIcon']):?>
+                    <span class="mobile-asset-category-icon"><img src="../<?=e($a['categoryIcon'])?>" alt=""></span>
+                <?php endif;?>
+                <div>
+                    <span class="mobile-record-id"><?=e($a['assetID'])?></span>
+                    <h3><?=e($a['assetName'])?></h3>
+                    <p><?=e($a['categoryName'])?></p>
+                </div>
+            </div>
+            <span class="mobile-status-pill"><?=e($a['listingStatus'])?></span>
+        </div>
+
+        <div class="mobile-asset-meta">
+            <div><span>Condition</span><strong><?=e($a['assetCondition'])?></strong></div>
+            <div><span>Availability</span><strong><?=e($a['availabilityStatus'])?></strong></div>
+            <div><span>Listed</span><strong><?=e(assetDate($a['createdDate']))?></strong></div>
+        </div>
+
+        <div class="mobile-card-actions">
+            <a href="manager_asset_view.php?assetID=<?=e($a['assetID'])?>">View</a>
+
+            <?php if($a['listingStatus']==='Pending Review'):?>
+                <a class="primary" href="review_asset_submission.php?assetID=<?=e($a['assetID'])?>">Review</a>
+            <?php elseif($a['listingStatus']!=='Removed'):?>
+                <a class="primary" href="manager_asset_edit.php?assetID=<?=e($a['assetID'])?>">Edit</a>
+            <?php endif;?>
+
+            <?php if($a['listingStatus']!=='Removed'&&!in_array($a['availabilityStatus'],['Reserved','Borrowed'],true)):?>
+                <button type="button" class="danger" data-id="<?=e($a['assetID'])?>" data-name="<?=e($a['assetName'])?>" onclick="openRemoveDialog(this)">Remove</button>
+            <?php endif;?>
+        </div>
+    </article>
+    <?php endforeach;endif;?>
+
+    <?php if($totalPages>1):?>
+    <nav class="mobile-pagination" aria-label="Asset pagination">
+        <?php if($page>1):?><a href="<?=e(pageURL($page-1))?>">‹</a><?php endif;?>
+        <?php for($p=1;$p<=$totalPages;$p++):?>
+            <a href="<?=e(pageURL($p))?>" class="<?=$p===$page?'active':''?>"><?=$p?></a>
+        <?php endfor;?>
+        <?php if($page<$totalPages):?><a href="<?=e(pageURL($page+1))?>">›</a><?php endif;?>
+    </nav>
+    <?php endif;?>
+</section>
+
+<section class="management-list desktop-asset-list">
     <div class="management-list-header">
         <h2>Asset Listings</h2>
         <p><?= $total ?> asset<?= $total === 1 ? '' : 's' ?> found</p>
@@ -355,6 +481,25 @@ function openRemoveDialog(btn){
 <?php endif;?>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span>
+</a>
+<a href="manager_assets.php" class="active" aria-current="page">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span>
+</a>
+<a href="manager_categories.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span>
+</a>
+<a href="manager_transactions.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span>
+</a>
+<a href="manager_reports.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span>
+</a>
+</nav>
+
 </div>
 </div>
 </body>
