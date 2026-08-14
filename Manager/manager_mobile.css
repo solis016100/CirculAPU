@@ -1447,3 +1447,46 @@
         object-fit:contain;
     }
 }
+
+
+/* Review Asset Submission mobile design */
+@media(max-width:600px){
+    .role-manager .review-asset-actions{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .role-manager .review-asset-actions .asset-form-submit{
+        grid-column:auto;
+    }
+
+    .role-manager .review-asset-actions .asset-form-submit:nth-of-type(3),
+    .role-manager .review-asset-actions .asset-form-back{
+        grid-column:1/-1;
+    }
+
+    .role-manager #reviewConfirm .flow-dialog-summary{
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+
+    .role-manager #reviewConfirm .flow-dialog-summary>div{
+        padding:8px 0;
+        display:grid;
+        grid-template-columns:105px minmax(0,1fr);
+        gap:8px;
+        border-bottom:1px solid #eef2f7;
+    }
+
+    .role-manager #reviewConfirm .flow-dialog-summary>div:last-child{border-bottom:0}
+
+    .role-manager #reviewConfirm .flow-dialog-summary span{
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+
+    .role-manager #correctionDialog .asset-form-row textarea{
+        width:100%;
+        min-height:92px;
+        font-size:11px;
+    }
+}
