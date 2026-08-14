@@ -12,7 +12,7 @@
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
     // Connect to Database
-   require_once '../db.php';
+    require_once '../db.php';
 
     $totalBadges = 0;
     $badgeResult = null;
@@ -111,6 +111,20 @@
                             Create New Achievement Badge
                         </a>
                     </div>
+
+                    <!-- Green bar showing Success Creation -->
+                    <?php if (isset($_GET['created'])): ?>
+                        <div class="alert alert-success">
+                            Achievement badge created successfully.
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Green bar showing Success Delete -->
+                    <?php if (isset($_GET['deleted'])): ?>
+                        <div class="alert alert-success">
+                            Achievement badge deleted successfully.
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Search and Filter -->
                     <div class="management-filter">
@@ -236,12 +250,12 @@
                                                         </a>
 
                                                         <!-- Edit -->
-                                                        <a href="auditor_badge_edit.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="management-action-btn" title="Edit">
+                                                        <a href="auditor_achievement_badges_edit.php?badgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&from=management" class="management-action-btn" title="Edit">
                                                             <img src="../assets/icons/edit.png" alt="Edit">
                                                         </a>
 
                                                         <!-- Print -->
-                                                        <a href="auditor_badge_print.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="management-action-btn" title="Print">
+                                                        <a href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&print=1&from=management" class="management-action-btn" title="Print">
                                                             <img src="../assets/icons/print.png" alt="Print">
                                                         </a>
 

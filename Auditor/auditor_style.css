@@ -980,23 +980,47 @@
 }
 
 /* Add/Change Icon Link */
-.auditor-management-detail-row .auditor-management-view-image {
-    width: auto;
-
-    margin: 0 0 5px;
-
-    font-size: 13px !important;
-    font-weight: 400 !important;
-
-    color: #555;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.auditor-management-detail-row > div {
+.badge-edit-icon {
     display: flex;
     align-items: flex-end;
     gap: 10px;
+}
+
+.badge-edit-icon .auditor-management-view-image {
+    margin: 0 0 5px;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: #555 !important;
+    text-decoration: underline !important;
+    cursor: pointer;
+}
+
+.badge-edit-icon .auditor-management-view-image:hover {
+    color: #222 !important;
+}
+
+/* Badge Icon in Edit page */
+.badge-edit-icon {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.badge-edit-icon img {
+    width: 120px;
+    height: 120px;
+    padding: 8px;
+    box-sizing: border-box;
+    object-fit: contain;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.badge-edit-icon .auditor-management-view-image {
+    margin: 0 0 5px;
+    font-size: 13px !important;
+    font-weight: 400 !important;
 }
 
 
