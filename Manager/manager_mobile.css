@@ -1706,3 +1706,163 @@
         overflow:visible!important;
     }
 }
+
+
+/* Edit Category mobile design */
+@media(max-width:600px){
+    .role-manager .category-form-card{
+        border-radius:14px;
+    }
+
+    .role-manager .category-create-layout{
+        grid-template-columns:1fr!important;
+        gap:12px!important;
+        padding:14px!important;
+    }
+
+    .role-manager .category-form-fields{
+        gap:12px;
+    }
+
+    .role-manager .category-form-row{
+        grid-template-columns:1fr;
+        gap:5px;
+    }
+
+    .role-manager .category-form-row>label{
+        padding-top:0;
+        font-size:10px;
+    }
+
+    .role-manager .category-form-row input,
+    .role-manager .category-form-row select,
+    .role-manager .category-form-row textarea{
+        min-height:42px;
+        padding:9px 10px;
+        border-radius:10px;
+        font-size:11px;
+    }
+
+    .role-manager .category-form-row textarea{
+        min-height:88px;
+    }
+
+    .role-manager .category-form-row small{
+        margin-top:5px;
+        font-size:9px;
+        line-height:1.35;
+    }
+
+    .role-manager .category-selected-preview{
+        width:64px;
+        height:64px;
+        border-radius:11px;
+    }
+
+    .role-manager .category-selected-preview img{
+        width:40px;
+        height:40px;
+    }
+
+    .role-manager .category-icon-panel{
+        padding:12px;
+        border-radius:12px;
+    }
+
+    .role-manager .category-icon-panel h2{
+        margin-bottom:10px;
+        font-size:14px;
+    }
+
+    .role-manager .category-icon-grid{
+        grid-template-columns:repeat(4,1fr)!important;
+        gap:7px!important;
+    }
+
+    .role-manager .category-icon-option{
+        height:58px!important;
+        border-radius:10px;
+    }
+
+    .role-manager .category-icon-option img{
+        width:36px!important;
+        height:36px!important;
+        max-width:36px!important;
+        max-height:36px!important;
+    }
+
+    .role-manager .category-icon-preview{
+        margin-top:12px;
+        padding-top:12px;
+    }
+
+    .role-manager .category-icon-preview h3{
+        margin-bottom:8px;
+        font-size:12px;
+    }
+
+    .role-manager .category-preview-content{
+        gap:9px;
+    }
+
+    .role-manager .category-preview-image{
+        width:50px;
+        height:50px;
+        flex:0 0 50px;
+    }
+
+    .role-manager .category-preview-image img{
+        width:34px;
+        height:34px;
+    }
+
+    .role-manager .category-preview-content strong{font-size:11px}
+    .role-manager .category-preview-content p{
+        margin-top:3px;
+        font-size:9px;
+        line-height:1.35;
+    }
+
+    .role-manager .category-form-actions{
+        padding:12px 14px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+
+    .role-manager .category-form-actions .category-form-back,
+    .role-manager .category-form-actions .category-form-reset,
+    .role-manager .category-form-actions .category-form-submit{
+        width:100%;
+        min-height:42px;
+        padding:9px 10px;
+        border-radius:11px;
+        font-size:11px;
+    }
+
+    .role-manager .category-form-actions .category-form-submit{
+        grid-column:1/-1;
+    }
+
+    .role-manager #editCategoryConfirm .flow-dialog-summary{
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+
+    .role-manager #editCategoryConfirm .flow-dialog-summary>div{
+        padding:8px 0;
+        display:grid;
+        grid-template-columns:105px minmax(0,1fr);
+        gap:8px;
+        border-bottom:1px solid #eef2f7;
+    }
+
+    .role-manager #editCategoryConfirm .flow-dialog-summary>div:last-child{
+        border-bottom:0;
+    }
+
+    .role-manager #editCategoryConfirm .flow-dialog-summary span{
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+}
