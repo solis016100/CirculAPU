@@ -6,6 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { head
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
 require_once '../print.php';
+require_once '../db.php';
 
 function e($v):string{return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function vd($v):bool{if($v==='')return true;$d=DateTime::createFromFormat('Y-m-d',$v);return $d&&$d->format('Y-m-d')===$v;}
@@ -44,7 +45,7 @@ if(!vd($from)||!vd($to))$error='Please enter a valid date.';
 elseif($from&&$to&&$from>$to)$error='Date From cannot be later than Date To.';
 
 try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+    $c=$conn;$c->set_charset('utf8mb4');
     $categories=q($c,"SELECT categoryID,categoryName FROM categories ORDER BY categoryName");
     if($category){
         foreach($categories as $cat){
@@ -213,7 +214,6 @@ try{
         $allRows=q($c,$rowSql,$rowTypes,$rowParams);
         $rows=$viewAll?$allRows:array_slice($allRows,0,8);
     }
-    $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to generate report data. Please try again.';}
 
 $title=['asset'=>'Asset Report','transaction'=>'Transaction Report','category'=>'Category Performance Report'][$report];
