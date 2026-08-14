@@ -231,56 +231,23 @@
                                                 <td>
                                                     <div class="management-actions">
                                                         <!-- View -->
-                                                        <a
-                                                            href="auditor_badge_view.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>"
-                                                            class="management-action-btn"
-                                                            title="View"
-                                                        >
-                                                            <img
-                                                                src="../assets/icons/view.png"
-                                                                alt="View"
-                                                            >
+                                                        <a href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>"class="management-action-btn" title="View">
+                                                            <img src="../assets/icons/view.png" alt="View">
                                                         </a>
-
 
                                                         <!-- Edit -->
-                                                        <a
-                                                            href="auditor_badge_edit.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>"
-                                                            class="management-action-btn"
-                                                            title="Edit"
-                                                        >
-                                                            <img
-                                                                src="../assets/icons/edit.png"
-                                                                alt="Edit"
-                                                            >
-
+                                                        <a href="auditor_badge_edit.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="management-action-btn" title="Edit">
+                                                            <img src="../assets/icons/edit.png" alt="Edit">
                                                         </a>
-
 
                                                         <!-- Print -->
-                                                        <a
-                                                            href="auditor_badge_print.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>"
-                                                            class="management-action-btn"
-                                                            title="Print"
-                                                        >
-                                                            <img
-                                                                src="../assets/icons/print.png"
-                                                                alt="Print"
-                                                            >
-
+                                                        <a href="auditor_badge_print.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="management-action-btn" title="Print">
+                                                            <img src="../assets/icons/print.png" alt="Print">
                                                         </a>
 
-
                                                         <!-- Delete -->
-                                                        <a
-                                                            href="auditor_badge_delete.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>"
-                                                            class="management-action-btn delete"
-                                                            title="Delete"
-                                                        >
-                                                            <img
-                                                                src="../assets/icons/delete.png"
-                                                                alt="Delete"
-                                                            >
+                                                        <a href="auditor_badge_delete.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="management-action-btn delete" title="Delete">
+                                                            <img src="../assets/icons/delete.png" alt="Delete">
                                                         </a>
                                                     </div>
                                                 </td>
