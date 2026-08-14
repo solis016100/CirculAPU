@@ -230,7 +230,7 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title><?=e($title)?> - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .report-tabs{display:flex;gap:0;margin:10px 0 12px}.report-tabs a{padding:8px 14px;border:1px solid #cbd5e1;background:#fff;color:#222;text-decoration:none;font-size:13px}.report-tabs a:first-child{border-radius:6px 0 0 6px}.report-tabs a:last-child{border-radius:0 6px 6px 0}.report-tabs a.active{background:var(--badge-bg);border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
 .report-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -279,7 +279,42 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
 
-<section class="management-filter"><form method="GET">
+
+<section class="mobile-report-ui">
+<details class="mobile-filter-card" <?=($from||$to||$category||$condition||$availability||$listing||$status)?'open':''?>>
+<summary><span>Filter Report</span><?php if($from||$to||$category||$condition||$availability||$listing||$status):?><small>Filters active</small><?php endif;?></summary>
+<form method="GET" class="mobile-filter-form">
+<input type="hidden" name="report" value="<?=e($report)?>">
+<div class="mobile-filter-grid">
+<label><span>Date From</span><input type="date" name="dateFrom" value="<?=e($from)?>"></label>
+<label><span>Date To</span><input type="date" name="dateTo" value="<?=e($to)?>"></label>
+</div>
+<label><span>Category</span><select name="category">
+<option value="">All Categories</option>
+<?php foreach($categories as $x):?><option value="<?=e($x['categoryID'])?>" <?=$category===$x['categoryID']?'selected':''?>><?=e($x['categoryName'])?></option><?php endforeach;?>
+</select></label>
+
+<?php if($report==='asset'):?>
+<div class="mobile-filter-grid">
+<label><span>Condition</span><select name="condition"><option value="">All</option><?php foreach($conditions as $x):?><option <?=$condition===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?></select></label>
+<label><span>Availability</span><select name="availability"><option value="">All</option><?php foreach($availabilities as $x):?><option <?=$availability===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?></select></label>
+</div>
+<label><span>Listing Status</span><select name="listingStatus"><option value="">All</option><?php foreach($listings as $x):?><option <?=$listing===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?></select></label>
+<?php elseif($report==='transaction'):?>
+<label><span>Status</span><select name="requestStatus"><option value="">All</option><?php foreach($txStatuses as $x):?><option <?=$status===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?></select></label>
+<?php else:?>
+<label><span>Condition</span><select name="condition"><option value="">All</option><?php foreach($conditions as $x):?><option <?=$condition===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?></select></label>
+<?php endif;?>
+
+<div class="mobile-filter-actions">
+<a href="manager_reports.php?report=<?=e($report)?>">Reset</a>
+<button>Apply Filters</button>
+</div>
+</form>
+</details>
+</section>
+
+<section class="management-filter desktop-report-filter"><form method="GET">
 <input type="hidden" name="report" value="<?=e($report)?>">
 <div class="management-filter-group"><label>Date From</label><input type="date" name="dateFrom" value="<?=e($from)?>"></div>
 <div class="management-filter-group"><label>Date To</label><input type="date" name="dateTo" value="<?=e($to)?>"></div>
@@ -364,7 +399,62 @@ foreach($cards as $x):?>
 </section>
 <?php endif;?>
 
-<section class="management-list report-list screen-report">
+
+<section class="mobile-report-list">
+<div class="mobile-section-heading">
+<div>
+<h2><?=e($report==='asset'?'Asset List':($report==='transaction'?'Transaction List':'Category Performance'))?></h2>
+<p><?=count($rows)?> of <?=count($allRows)?> matching records</p>
+</div>
+<a class="mobile-view-link" href="<?=e($viewAll?$previewURL:$viewAllURL)?>"><?=$viewAll?'Preview':'View All'?></a>
+</div>
+
+<?php if(!$rows):?>
+<div class="mobile-empty-card">No report data found.</div>
+<?php elseif($report==='asset'):foreach($rows as $x):?>
+<article class="mobile-report-card">
+<div class="mobile-report-top">
+<div><span class="mobile-record-id"><?=e($x['assetID'])?></span><h3><?=e($x['assetName'])?></h3><p><?=e($x['categoryName'])?></p></div>
+<span class="mobile-status-pill"><?=e($x['listingStatus'])?></span>
+</div>
+<div class="mobile-report-meta three">
+<div><span>Condition</span><strong><?=e($x['assetCondition'])?></strong></div>
+<div><span>Availability</span><strong><?=e($x['availabilityStatus'])?></strong></div>
+<div><span>Listed</span><strong><?=e(date('d M Y',strtotime($x['createdDate'])))?></strong></div>
+</div>
+<div class="mobile-report-owner">Owner: <strong><?=e($x['ownerName'])?></strong></div>
+<div class="mobile-card-actions"><a class="primary" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?>">View Asset</a></div>
+</article>
+<?php endforeach;elseif($report==='transaction'):foreach($rows as $x):?>
+<article class="mobile-report-card">
+<div class="mobile-report-top">
+<div><span class="mobile-record-id"><?=e($x['transactionID'])?></span><h3><?=e($x['assetName'])?></h3><p><?=e($x['categoryName'])?> · <?=e($x['requesterName'])?></p></div>
+<span class="mobile-status-pill <?=$x['requestStatus']==='Overdue'?'mobile-overdue':''?>"><?=e($x['requestStatus'])?></span>
+</div>
+<div class="mobile-report-meta">
+<div><span>Requested</span><strong><?=e(date('d M Y',strtotime($x['requestDate'])))?></strong></div>
+<div><span>Completed</span><strong><?=e($x['completedDate']?date('d M Y',strtotime($x['completedDate'])):'-')?></strong></div>
+</div>
+<div class="mobile-card-actions"><a class="primary" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?>">View Transaction</a></div>
+</article>
+<?php endforeach;else:foreach($rows as $x):?>
+<article class="mobile-report-card">
+<div class="mobile-report-top">
+<div><span class="mobile-record-id"><?=e($x['categoryID'])?></span><h3><?=e($x['categoryName'])?></h3></div>
+</div>
+<div class="mobile-report-metrics">
+<div><strong><?=e($x['totalAssets'])?></strong><span>Assets</span></div>
+<div><strong><?=e($x['availableAssets'])?></strong><span>Available</span></div>
+<div><strong><?=e($x['borrowedAssets'])?></strong><span>Borrowed</span></div>
+<div><strong><?=e($x['totalTransactions'])?></strong><span>Transactions</span></div>
+<div><strong><?=e($x['uniqueRequesters'])?></strong><span>Requesters</span></div>
+</div>
+<div class="mobile-card-actions"><a class="primary" href="manager_category_view.php?categoryID=<?=e($x['categoryID'])?>">View Category</a></div>
+</article>
+<?php endforeach;endif;?>
+</section>
+
+<section class="management-list report-list screen-report desktop-report-list">
 <div class="management-list-header">
 <h2><?=e($report==='asset'?'Asset List':($report==='transaction'?'Transaction List':'Category Performance'))?></h2>
 <div>
@@ -414,4 +504,12 @@ Category <?=e($selectedCategoryName)?><?= $report!=='transaction'?' · Condition
 </tbody></table>
 </section>
 <?php endif;?>
-</main></div></div></body></html>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div></body></html>

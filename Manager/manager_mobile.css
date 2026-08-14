@@ -4,6 +4,8 @@
 .mobile-asset-list,
 .mobile-category-ui,
 .mobile-transaction-ui,
+.mobile-report-ui,
+.mobile-report-list,
 .manager-mobile-nav{
     display:none;
 }
@@ -609,4 +611,111 @@
     .mobile-transaction-meta{margin:12px 0;padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;border-block:1px solid #eef2f7}
     .mobile-transaction-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
     .mobile-transaction-meta strong{font-size:11px;color:#334155}
+}
+
+
+/* Reports mobile design */
+@media(max-width:600px){
+    .desktop-report-filter,.desktop-report-list{display:none!important}
+    .mobile-report-ui,.mobile-report-list{display:block}
+
+    .role-manager .report-tabs{
+        margin:10px -2px 12px;
+        padding:2px;
+        display:flex;
+        flex-direction:row;
+        gap:6px;
+        overflow-x:auto;
+        scrollbar-width:none;
+    }
+    .role-manager .report-tabs::-webkit-scrollbar{display:none}
+    .role-manager .report-tabs a{
+        flex:0 0 auto;
+        padding:8px 11px;
+        border-radius:10px!important;
+        white-space:nowrap;
+        font-size:11px;
+    }
+
+    .role-manager .management-heading .management-create-btn{
+        width:100%;
+        min-height:44px;
+        justify-content:center;
+        border-radius:12px;
+        font-size:12px;
+    }
+
+    .role-manager .report-stats{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+    .role-manager .report-stats .stat-card:last-child:nth-child(odd){grid-column:1/-1}
+
+    .role-manager .report-chart-grid{
+        grid-template-columns:1fr;
+        gap:11px;
+        margin:12px 0;
+    }
+    .role-manager .report-chart{padding:14px}
+    .role-manager .report-chart h2{font-size:13px}
+    .role-manager .bar-item{grid-template-columns:86px minmax(90px,1fr) 24px;gap:7px}
+    .role-manager .bar-item small,.role-manager .bar-item strong{font-size:10px}
+    .role-manager .donut-wrap{gap:12px}
+    .role-manager .donut{width:100px;height:100px}
+    .role-manager .donut:after{inset:22px}
+    .role-manager .legend{min-width:0;flex:1;font-size:10px}
+    .role-manager .legend span{gap:8px}
+
+    .mobile-view-link{
+        flex-shrink:0;
+        color:var(--primary-color);
+        font-size:11px;
+        font-weight:700;
+        text-decoration:none;
+    }
+
+    .mobile-report-card{
+        margin-bottom:11px;
+        padding:14px;
+        border:1px solid #bae6fd;
+        border-radius:14px;
+        background:#fff;
+    }
+    .mobile-report-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .mobile-report-top>div{min-width:0}
+    .mobile-report-top h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;overflow-wrap:anywhere}
+    .mobile-report-top p{margin:3px 0 0;font-size:11px;color:#64748b;overflow-wrap:anywhere}
+
+    .mobile-report-meta{
+        margin:12px 0;
+        padding:10px 0;
+        display:grid;
+        grid-template-columns:repeat(2,1fr);
+        gap:8px;
+        border-block:1px solid #eef2f7;
+    }
+    .mobile-report-meta.three{grid-template-columns:repeat(3,1fr)}
+    .mobile-report-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
+    .mobile-report-meta strong{font-size:11px;line-height:1.25;color:#334155;overflow-wrap:anywhere}
+    .mobile-report-owner{margin:-2px 0 11px;font-size:10px;color:#64748b}
+
+    .mobile-report-metrics{
+        margin:12px 0;
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:7px;
+    }
+    .mobile-report-metrics div{
+        min-height:58px;
+        padding:8px 5px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        border:1px solid #eef2f7;
+        border-radius:10px;
+        text-align:center;
+    }
+    .mobile-report-metrics strong{font-size:16px;color:#0f172a}
+    .mobile-report-metrics span{margin-top:2px;font-size:9px;color:#64748b}
 }
