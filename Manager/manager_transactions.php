@@ -92,14 +92,18 @@ try {
         $like = "%$search%"; array_push($params, $like, $like, $like, $like); $types .= 'ssss';
     }
 
+    $overdueSQL = "EXISTS(
+        SELECT 1 FROM borrowings b
+        WHERE b.transactionID=t.transactionID
+        AND DATE(b.expectedReturnDate)<CURDATE()
+        AND b.actualReturnDate IS NULL
+        AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
+    )";
+
     if ($status === 'Overdue') {
-        $where[] = "EXISTS(
-            SELECT 1 FROM borrowings b
-            WHERE b.transactionID=t.transactionID
-            AND DATE(b.expectedReturnDate)<CURDATE()
-            AND b.actualReturnDate IS NULL
-            AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
-        )";
+        $where[] = $overdueSQL;
+    } elseif ($status === 'In Progress') {
+        $where[] = "t.requestStatus='In Progress' AND NOT $overdueSQL";
     } elseif ($status) {
         $where[] = 't.requestStatus=?'; $params[] = $status; $types .= 's';
     }
@@ -138,13 +142,7 @@ try {
             SELECT t.transactionID,t.requestDate,t.requestStatus,a.assetName,
                    u.userID requesterID,u.name requesterName,
                    (SELECT MAX(b.expectedReturnDate) FROM borrowings b WHERE b.transactionID=t.transactionID) dueDate,
-                   EXISTS(
-                       SELECT 1 FROM borrowings b
-                       WHERE b.transactionID=t.transactionID
-                       AND DATE(b.expectedReturnDate)<CURDATE()
-                       AND b.actualReturnDate IS NULL
-                       AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
-                   ) isOverdue
+                   $overdueSQL isOverdue
             FROM transactionrequests t
             JOIN assets a ON t.assetID=a.assetID
             JOIN user u ON t.requesterID=u.userID
