@@ -2169,3 +2169,31 @@
         font-size:8px!important;
     }
 }
+
+
+/* Reports print: table only */
+@media print{
+    .role-manager:has(.print-report) .sidebar,
+    .role-manager:has(.print-report) .app-header,
+    .role-manager:has(.print-report) .right-sidebar,
+    .role-manager:has(.print-report) .right-sidebar-toggle,
+    .role-manager:has(.print-report) .manager-mobile-nav,
+    .role-manager:has(.print-report) .page-body > *:not(.print-report),
+    .role-manager:has(.print-report) .print-report h1,
+    .role-manager:has(.print-report) .print-meta{
+        display:none!important;
+    }
+
+    .role-manager:has(.print-report) .print-report{
+        display:block!important;
+        width:100%!important;
+        margin:0!important;
+        padding:0!important;
+    }
+
+    .role-manager:has(.print-report) .print-report table{
+        width:100%!important;
+        border-collapse:collapse!important;
+        table-layout:auto!important;
+    }
+}
