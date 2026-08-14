@@ -851,3 +851,78 @@
         font-size:11px;
     }
 }
+
+
+/* Return Inspection mobile design */
+@media(max-width:600px){
+    .role-manager .asset-form-card{
+        padding:14px;
+        border-radius:14px;
+    }
+    .role-manager .asset-form-layout{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+    .role-manager .asset-form-fields{gap:10px}
+    .role-manager .asset-form-row{
+        grid-template-columns:1fr;
+        gap:5px;
+    }
+    .role-manager .asset-form-row label{
+        font-size:10px;
+        font-weight:700;
+        color:#475569;
+    }
+    .role-manager .asset-form-row input,
+    .role-manager .asset-form-row select,
+    .role-manager .asset-form-row textarea{
+        width:100%;
+        min-height:42px;
+        padding:9px 10px;
+        border-radius:10px;
+        font-size:11px;
+    }
+    .role-manager .asset-form-row textarea{
+        min-height:86px;
+        resize:vertical;
+    }
+    .role-manager .asset-form-side{
+        gap:10px;
+    }
+    .role-manager .asset-form-side .asset-form-note{
+        margin:0;
+    }
+    .role-manager .asset-form-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+    .role-manager .asset-form-actions .asset-form-submit,
+    .role-manager .asset-form-actions .asset-form-back{
+        width:100%;
+        min-height:42px;
+        padding:9px 10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:11px;
+        font-size:11px;
+        text-align:center;
+    }
+    .role-manager #returnConfirm .flow-dialog-summary{
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+    .role-manager #returnConfirm .flow-dialog-summary>div{
+        padding:8px 0;
+        display:grid;
+        grid-template-columns:115px minmax(0,1fr);
+        gap:8px;
+        border-bottom:1px solid #eef2f7;
+    }
+    .role-manager #returnConfirm .flow-dialog-summary>div:last-child{border-bottom:0}
+    .role-manager #returnConfirm .flow-dialog-summary span{
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+}
