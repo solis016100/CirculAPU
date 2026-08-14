@@ -926,3 +926,178 @@
         overflow-wrap:anywhere;
     }
 }
+
+
+/* Transaction Details mobile design */
+@media(max-width:600px){
+    .role-manager .tx-top,
+    .role-manager .tx-support{
+        grid-template-columns:1fr;
+        gap:11px;
+        margin-bottom:11px;
+    }
+
+    .role-manager .tx-top .content-card,
+    .role-manager .tx-support .content-card,
+    .role-manager .tx-activity{
+        padding:14px;
+        border-radius:14px;
+    }
+
+    .role-manager .tx-side-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+    .role-manager .tx-side-actions form{display:contents}
+    .role-manager .tx-side-actions a,
+    .role-manager .tx-side-actions button{
+        width:100%;
+        min-height:42px;
+        padding:9px 10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:11px;
+        font-size:11px;
+        text-align:center;
+    }
+    .role-manager .tx-side-actions .category-form-submit:last-child{
+        grid-column:1/-1;
+    }
+
+    .role-manager .tx-profile .category-form-actions{margin-top:10px}
+    .role-manager .tx-profile .management-filter-btn{
+        width:100%;
+        min-height:40px;
+        justify-content:center;
+        border-radius:10px;
+        font-size:11px;
+    }
+
+    .role-manager .tx-activity .card-header h2{font-size:14px}
+    .role-manager .tx-activity .table-wrapper,
+    .role-manager .tx-dialog .table-wrapper{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+    .role-manager .tx-activity .data-table,
+    .role-manager .tx-dialog .data-table{
+        min-width:620px;
+    }
+
+    .role-manager .tx-dialog{
+        width:calc(100vw - 24px);
+        max-height:86vh;
+        padding:16px;
+        border-radius:14px;
+    }
+    .role-manager .tx-dialog-small{width:calc(100vw - 24px)}
+    .role-manager .tx-dialog h2{font-size:16px}
+    .role-manager #borrowerHistory>p{font-size:11px}
+
+    .role-manager .flow-dialog-summary{
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+    .role-manager .flow-dialog-summary>div{
+        padding:8px 0;
+        display:grid;
+        grid-template-columns:110px minmax(0,1fr);
+        gap:8px;
+        border-bottom:1px solid #eef2f7;
+    }
+    .role-manager .flow-dialog-summary>div:last-child{border-bottom:0}
+    .role-manager .flow-dialog-summary span{
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+
+    .role-manager .tx-dialog .asset-form-textarea textarea{
+        width:100%;
+        min-height:92px;
+        font-size:11px;
+    }
+}
+
+
+/* Requester History mobile table fix only */
+@media(max-width:600px){
+    .role-manager #borrowerHistory .table-wrapper{overflow:visible}
+
+    .role-manager #borrowerHistory .data-table{
+        width:100%;
+        min-width:0;
+        table-layout:fixed;
+    }
+
+    .role-manager #borrowerHistory .data-table:first-of-type th{
+        width:46%;
+    }
+    .role-manager #borrowerHistory .data-table:first-of-type th,
+    .role-manager #borrowerHistory .data-table:first-of-type td{
+        padding:8px 10px;
+        font-size:10px;
+        white-space:normal;
+        overflow-wrap:anywhere;
+    }
+
+    .role-manager #borrowerHistory .card-header{
+        margin-top:14px;
+    }
+    .role-manager #borrowerHistory .card-header h3{
+        font-size:14px;
+    }
+
+    .role-manager #borrowerHistory .card-header + .table-wrapper{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+    .role-manager #borrowerHistory .card-header + .table-wrapper .data-table{
+        min-width:500px;
+        table-layout:auto;
+    }
+    .role-manager #borrowerHistory .card-header + .table-wrapper th,
+    .role-manager #borrowerHistory .card-header + .table-wrapper td{
+        padding:7px 8px;
+        font-size:9px;
+        white-space:nowrap;
+    }
+}
+
+
+/* Transaction Activity mobile table fix only */
+@media(max-width:600px){
+    .role-manager .tx-activity .table-wrapper{overflow:visible}
+    .role-manager .tx-activity .data-table{
+        width:100%;
+        min-width:0;
+        table-layout:fixed;
+    }
+    .role-manager .tx-activity .data-table th,
+    .role-manager .tx-activity .data-table td{
+        padding:7px 6px;
+        font-size:9px;
+        line-height:1.35;
+        white-space:normal;
+        overflow-wrap:anywhere;
+        vertical-align:top;
+    }
+    .role-manager .tx-activity .data-table th:nth-child(1){width:29%}
+    .role-manager .tx-activity .data-table th:nth-child(2){width:16%}
+    .role-manager .tx-activity .data-table th:nth-child(3){width:22%}
+    .role-manager .tx-activity .data-table th:nth-child(4){width:33%}
+}
+
+
+/* Requester History popup centering only */
+@media(max-width:600px){
+    .role-manager #borrowerHistory{
+        top:50%;
+        left:50%;
+        right:auto;
+        bottom:auto;
+        margin:0;
+        transform:translate(-50%,-50%);
+    }
+}
