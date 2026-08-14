@@ -276,13 +276,11 @@ $end = min($offset + $perPage, $total);
                         <?php endif; ?>
 
                         <?php if ($a['listingStatus'] !== 'Removed' && !in_array($a['availabilityStatus'], ['Reserved','Borrowed'], true)): ?>
-                        <form method="POST" onsubmit="return confirm('Remove this asset listing? The record will be retained for auditing.');">
-                            <input type="hidden" name="action" value="remove">
-                            <input type="hidden" name="assetID" value="<?= e($a['assetID']) ?>">
-                            <button type="submit" class="management-action-btn delete" title="Remove Asset">
-                                <img src="../assets/icons/delete.png" alt="Remove">
-                            </button>
-                        </form>
+                        <button type="button" class="management-action-btn delete" title="Remove Asset"
+                                data-id="<?=e($a['assetID'])?>" data-name="<?=e($a['assetName'])?>"
+                                onclick="openRemoveDialog(this)">
+                            <img src="../assets/icons/delete.png" alt="Remove">
+                        </button>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -306,6 +304,31 @@ $end = min($offset + $perPage, $total);
         <?php endif; ?>
     </div>
 </section>
+
+<dialog id="removeAssetDialog" class="flow-dialog">
+<h2>Confirm Asset Removal</h2>
+<p>Remove this listing from normal use? The record will be retained for auditing.</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Asset ID</strong><span id="removeAssetIDText"></span></div>
+    <div><strong>Asset Name</strong><span id="removeAssetName"></span></div>
+</div>
+
+<form method="POST" class="flow-dialog-actions">
+    <input type="hidden" name="action" value="remove">
+    <input type="hidden" name="assetID" id="removeAssetID">
+    <button type="button" class="category-form-back" onclick="removeAssetDialog.close()">No</button>
+    <button type="submit" class="category-form-submit">Yes, Remove</button>
+</form>
+</dialog>
+
+<script>
+function openRemoveDialog(btn){
+    removeAssetID.value=removeAssetIDText.textContent=btn.dataset.id;
+    removeAssetName.textContent=btn.dataset.name;
+    removeAssetDialog.showModal();
+}
+</script>
 
 <?php if(in_array($_GET['reviewDone']??'',['verify','return'],true)):?>
 <dialog id="nextReviewDialog" class="flow-dialog">

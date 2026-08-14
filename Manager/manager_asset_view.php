@@ -169,14 +169,9 @@ $details = $asset ? [
                     $asset['listingStatus'] !== 'Removed' &&
                     !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true)
                 ): ?>
-                    <form method="POST" action="manager_assets.php"
-                          onsubmit="return confirm('Remove this asset listing? The record will be retained for auditing.');">
-                        <input type="hidden" name="action" value="remove">
-                        <input type="hidden" name="assetID" value="<?= e($assetID) ?>">
-                        <button type="submit" class="asset-detail-action-btn delete">
-                            <img src="../assets/icons/delete.png" alt=""><span>Remove Asset</span>
-                        </button>
-                    </form>
+                    <button type="button" class="asset-detail-action-btn delete" onclick="removeAssetDialog.showModal()">
+                        <img src="../assets/icons/delete.png" alt=""><span>Remove Asset</span>
+                    </button>
                 <?php endif; ?>
 
                 <a href="manager_assets.php" class="asset-detail-back-btn">Back</a>
@@ -185,6 +180,25 @@ $details = $asset ? [
 
     </div>
     </section>
+
+<?php if ($asset && $asset['listingStatus'] !== 'Removed' && !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true)): ?>
+<dialog id="removeAssetDialog" class="flow-dialog">
+<h2>Confirm Asset Removal</h2>
+<p>Remove this listing from normal use? The record will be retained for auditing.</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Asset ID</strong><span><?= e($assetID) ?></span></div>
+    <div><strong>Asset Name</strong><span><?= e($asset['assetName']) ?></span></div>
+</div>
+
+<form method="POST" action="manager_assets.php" class="flow-dialog-actions">
+    <input type="hidden" name="action" value="remove">
+    <input type="hidden" name="assetID" value="<?= e($assetID) ?>">
+    <button type="button" class="category-form-back" onclick="removeAssetDialog.close()">No</button>
+    <button type="submit" class="category-form-submit">Yes, Remove</button>
+</form>
+</dialog>
+<?php endif; ?>
 
 <?php endif; ?>
 
