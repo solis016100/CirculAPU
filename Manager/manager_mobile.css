@@ -6,6 +6,7 @@
 .mobile-transaction-ui,
 .mobile-report-ui,
 .mobile-report-list,
+.mobile-borrowing-ui,
 .manager-mobile-nav{
     display:none;
 }
@@ -718,4 +719,54 @@
     }
     .mobile-report-metrics strong{font-size:16px;color:#0f172a}
     .mobile-report-metrics span{margin-top:2px;font-size:9px;color:#64748b}
+}
+
+
+/* Manage Returns mobile design */
+@media(max-width:600px){
+    .desktop-borrowing-filter,.desktop-borrowing-list{display:none!important}
+    .mobile-borrowing-ui{display:block}
+
+    .mobile-borrowing-card{
+        margin-bottom:11px;
+        padding:14px;
+        border:1px solid #bae6fd;
+        border-radius:14px;
+        background:#fff;
+    }
+    .mobile-borrowing-top{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:10px;
+    }
+    .mobile-borrowing-top>div{min-width:0}
+    .mobile-borrowing-top h3{
+        margin:0;
+        font-size:15px;
+        line-height:1.25;
+        color:#0f172a;
+        overflow-wrap:anywhere;
+    }
+    .mobile-borrowing-top p{
+        margin:3px 0 0;
+        font-size:11px;
+        color:#64748b;
+        overflow-wrap:anywhere;
+    }
+    .mobile-borrowing-meta{
+        margin:12px 0;
+        padding:10px 0;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+        border-block:1px solid #eef2f7;
+    }
+    .mobile-borrowing-meta span{
+        display:block;
+        margin-bottom:3px;
+        font-size:9px;
+        color:#94a3b8;
+    }
+    .mobile-borrowing-meta strong{font-size:11px;color:#334155}
 }
