@@ -16,7 +16,7 @@ $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
   </div>
 
   <div class="header-right-actions">
-    <a href="notifications.php" class="header-action-icon" title="Notifications">
+    <a href="/CirculAPU/notifications.php" class="header-action-icon" title="Notifications">
       <img src="/CirculAPU/assets/icons/notification.png" alt="Notifications" width="20" height="20">
     </a>
 

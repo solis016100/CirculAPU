@@ -79,7 +79,7 @@ try{
     }
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to load the borrowing details. Please try again.';}
 
-$overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+$overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="en">
