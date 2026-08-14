@@ -57,9 +57,13 @@
         $conn->set_charset("utf8mb4");
 
         // Get all verification records with user name
-        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate
+        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate, a.assetCondition
         FROM verificationrecords vr
-        INNER JOIN user u ON vr.userID = u.userID WHERE 1=1";
+        INNER JOIN user u ON vr.userID = u.userID
+        LEFT JOIN assets a
+        ON vr.targetType = 'Asset'
+        AND vr.targetID = a.assetID
+        WHERE 1=1";
 
 
         // Search (filter)
@@ -268,6 +272,7 @@
                                     <th>Verification ID</th>
                                     <th>User</th>
                                     <th>Type</th>
+                                    <th>Condition</th>
                                     <th>Status</th>
                                     <th>Date</th>
                                     <th>Action</th>
@@ -309,6 +314,16 @@
                                                         echo htmlspecialchars(
                                                             $record['targetType']
                                                         );
+                                                    }
+                                                ?>
+                                            </td>
+
+                                            <td>
+                                                <?php
+                                                    if ($record['targetType'] === 'Asset') {
+                                                        echo htmlspecialchars($record['assetCondition'] ?? '-');
+                                                    } else {
+                                                        echo '-';
                                                     }
                                                 ?>
                                             </td>
@@ -363,7 +378,7 @@
                                 <?php else: ?>
 
                                     <tr>
-                                        <td colspan="7" class="management-empty-state">
+                                        <td colspan="8" class="management-empty-state">
                                             No verification records found.
                                         </td>
                                     </tr>

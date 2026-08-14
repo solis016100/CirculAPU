@@ -64,11 +64,7 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
         </a>
         <a href="/CirculAPU/Auditor/auditor_achievement_badges_management.php" class="nav-item <?php echo ($current_page == 'auditor_achievement_badges_management.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.74z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
-          <span class="nav-text">Badges</span>
-        </a>
-        <a href="/CirculAPU/Auditor/auditor_user_tiers_management.php" class="nav-item <?php echo ($current_page == 'auditor_user_tiers_management.php') ? 'active' : ''; ?>">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path><path d="M6 4l6 6 6-6"></path></svg>
-          <span class="nav-text">User Tier</span>
+          <span class="nav-text">Achievement Badges</span>
         </a>
         <?php break; ?>
 

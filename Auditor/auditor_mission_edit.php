@@ -16,6 +16,13 @@
         exit();
     }
 
+    $search = $_GET['search'] ?? '';
+    $missionName = $_GET['missionName'] ?? '';
+    $ecoPoints = $_GET['ecoPoints'] ?? '';
+    $status = $_GET['status'] ?? '';
+
+    $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
+
     /* Get mission record */
     $stmt = $conn->prepare("
         SELECT missionID, missionName, missionDescription,
@@ -84,7 +91,7 @@
 
         $log->execute();
 
-        header("Location: auditor_mission_view.php?missionID=" . urlencode($id));
+        header("Location: auditor_mission_view.php?missionID=" . urlencode($id) . "&success=1");
         exit();
     }
 ?>
@@ -123,6 +130,7 @@
 
             <section class="auditor-management-edit-card">
                 <form method="POST" class="auditor-management-edit-form">
+
                     <div class="auditor-management-edit-row">
                         <label>Mission ID</label>
                         <input type="text"
@@ -140,14 +148,7 @@
 
                     <div class="auditor-management-edit-row">
                         <label>EcoPoints <span class="required">*</span></label>
-                        <select name="ecoPointsReward" required>
-                            <?php foreach ([50, 100, 150, 200, 250] as $points): ?>
-                                <option value="<?= $points ?>"
-                                    <?= $mission['ecoPointsReward'] == $points ? 'selected' : '' ?>>
-                                    <?= $points ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="number" name="ecoPointsReward" min="1" max="1000" value="<?= htmlspecialchars($mission['ecoPointsReward']) ?>" required>
                     </div>
 
                     <div class="auditor-management-edit-row">
@@ -182,7 +183,7 @@
                             Save Changes
                         </button>
 
-                        <a href="<?= $from === 'view' ? 'auditor_mission_view.php?missionID=' . urlencode($id) : 'auditor_missions_management.php' ?>">
+                        <a href="<?= $from === 'view' ? 'auditor_mission_view.php?missionID=' . urlencode($id) : 'auditor_missions_management.php' ?> ">
                             Cancel
                         </a>
                     </div>

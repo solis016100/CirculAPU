@@ -21,6 +21,10 @@
     $search = trim($_GET['search'] ?? '');
     $badgeFilter = trim($_GET['badge'] ?? '');
 
+    $perPage = 8;
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $offset = ($page - 1) * $perPage;
+
     if ($conn->connect_error) {
         $databaseError = "Unable to connect to the database.";
     } else {
@@ -35,6 +39,52 @@
         ";
 
         $badgeFilterResult = mysqli_query($conn, $badgeFilterQuery);
+
+        // Delete Badge
+        if (isset($_POST['delete_badge'])) {
+            $badgeID = $_POST['badgeID'];
+            $get = $conn->prepare("SELECT achieveBadgeName, achieveBadgeIcon FROM achievementbadges WHERE achieveBadgeID = ?");
+
+            $get->bind_param("s", $badgeID);
+            $get->execute();
+
+            $badgeData = $get->get_result()->fetch_assoc();
+            $get->close();
+
+            if ($badgeData) {
+                $delete = $conn->prepare("DELETE FROM achievementbadges WHERE achieveBadgeID = ?");
+
+                $delete->bind_param("s", $badgeID);
+
+                if ($delete->execute()) {
+                    // Delete Badge Icon
+                    if (!empty($badgeData['achieveBadgeIcon']) && file_exists("../assets/images/" . $badgeData['achieveBadgeIcon'])) {
+                        unlink("../assets/images/" . $badgeData['achieveBadgeIcon']);
+                    }
+
+                    // System Log
+                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
+
+                    $row = $result->fetch_assoc();
+
+                    $logID = "LOG" . str_pad($row['nextID'], 3, "0", STR_PAD_LEFT);
+
+                    $description = "Deleted achievement badge: " . $badgeData['achieveBadgeName'];
+
+                    $log = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Badge', ?, ?)");
+
+                    $log->bind_param("ssss", $logID, $_SESSION['user_id'], $badgeID, $description);
+
+                    $log->execute();
+                    $log->close();
+
+                    header("Location: auditor_achievement_badges_management.php?deleted=1");
+
+                    exit();
+                }
+                $delete->close();
+            }
+        }
 
         // Base query
         $badgeQuery = "
@@ -70,13 +120,39 @@
         }
 
 
-        $badgeQuery .= " ORDER BY achieveBadgeID ASC";
+        // Total badges records
+        $countQuery = "
+            SELECT COUNT(*) AS total
+            FROM achievementbadges
+            WHERE 1=1
+        ";
 
-        // Run query
+        if ($search !== '') {
+            $safeSearch = mysqli_real_escape_string($conn, $search);
+            $countQuery .= "
+                AND (
+                    achieveBadgeName LIKE '%$safeSearch%'
+                    OR achieveBadgeRequirement LIKE '%$safeSearch%'
+                )
+            ";
+        }
+
+        if ($badgeFilter !== '') {
+            $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
+            $countQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
+        }
+
+        $countResult = mysqli_query($conn, $countQuery);
+        $totalRecords = mysqli_fetch_assoc($countResult)['total'];
+
+        $totalPages = max(1, ceil($totalRecords / $perPage));
+
+        // Get current page records
+        $badgeQuery .= " ORDER BY achieveBadgeID ASC LIMIT $perPage OFFSET $offset";
+
         $badgeResult = mysqli_query($conn, $badgeQuery);
 
-        // Total displayed badges
-        $totalBadges = mysqli_num_rows($badgeResult);
+        $totalBadges = $totalRecords;
     }
 ?>
 
@@ -205,7 +281,7 @@
 
                                 <tbody>
                                     <?php if (isset($badgeResult) && $badgeResult->num_rows > 0): ?>
-                                        <?php $number = 1; while ($badge = $badgeResult->fetch_assoc()): ?>
+                                        <?php $number = $offset + 1; while ($badge = $badgeResult->fetch_assoc()): ?>
                                             <tr>
                                                 <!-- Number -->
                                                 <td>
@@ -260,9 +336,9 @@
                                                         </a>
 
                                                         <!-- Delete -->
-                                                        <a href="auditor_badge_delete.php?id=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="management-action-btn delete" title="Delete">
+                                                        <button type="button" class="management-action-btn delete" title="Delete" onclick="openDeletePopout('<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>')">
                                                             <img src="../assets/icons/delete.png" alt="Delete">
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -295,31 +371,96 @@
                         <div class="management-table-footer">
 
                             <p>
-                                Showing 1 to 1 of 1 entries
+                                Showing
+                                <?php echo $totalRecords > 0 ? $offset + 1 : 0; ?>
+                                to
+                                <?php echo min($offset + $perPage, $totalRecords); ?>
+                                of
+                                <?php echo $totalRecords; ?>
+                                entries
                             </p>
-
 
                             <div class="pagination">
 
-                                <a href="#" aria-label="Previous">
-                                    &lsaquo;
-                                </a>
+                                <?php if ($page > 1): ?>
 
-                                <a href="#" class="active">
-                                    1
-                                </a>
+                                    <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>">
+                                        &lsaquo;
+                                    </a>
 
-                                <a href="#" aria-label="Next">
-                                    &rsaquo;
-                                </a>
+                                <?php else: ?>
+
+                                    <a href="#" class="disabled">
+                                        &lsaquo;
+                                    </a>
+
+                                <?php endif; ?>
+
+
+                                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+
+                                    <a
+                                        href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>"
+                                        class="<?php echo $i == $page ? 'active' : ''; ?>"
+                                    >
+                                        <?php echo $i; ?>
+                                    </a>
+
+                                <?php endfor; ?>
+
+
+                                <?php if ($page < $totalPages): ?>
+
+                                    <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>">
+                                        &rsaquo;
+                                    </a>
+
+                                <?php else: ?>
+
+                                    <a href="#" class="disabled">
+                                        &rsaquo;
+                                    </a>
+
+                                <?php endif; ?>
 
                             </div>
 
                         </div>
-
                     </div>
                 </main>
         </div>
     </div>
+
+    <!-- Delete Popout -->
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Achievement Badge</h2>
+            <p>Are you sure you want to delete this achievement badge?</p>
+            <div class="auditor-popout-actions">
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST">
+                    <input type="hidden" name="badgeID" id="deleteBadgeID">
+                    <button type="submit" name="delete_badge" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeletePopout(id) {
+            document.getElementById('deleteBadgeID').value = id;
+            document.getElementById('deletePopout').classList.add('show');
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').classList.remove('show');
+        }
+    </script>
+
 </body>
 </html>

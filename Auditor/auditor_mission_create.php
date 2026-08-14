@@ -87,6 +87,13 @@
                     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
+                <!-- Green bar showing Success Creation -->
+                <?php if (isset($_GET['success'])): ?>
+                    <div class="alert alert-success">
+                        Mission created successfully.
+                    </div>
+                <?php endif; ?>
+
                 <form method="POST" id="missionForm" class="content-card mission-create-card">
                     <div class="mission-create-body">
                         <div class="auditor-management-edit-row">
@@ -177,11 +184,11 @@
             <h2>Mission Created Successfully!</h2>
             <p>Do you want to create another mission?</p>
             <div class="auditor-popout-actions">
-                <button type="button" onclick="location.href='auditor_mission_create.php'">
+                <button type="button" onclick="location.href='auditor_mission_create.php?success=1'">
                     Yes
                 </button>
 
-                <button type="button" class="auditor-popout-confirm" onclick="location.href='auditor_missions_management.php'">
+                <button type="button" class="auditor-popout-confirm" onclick="location.href='auditor_missions_management.php?created=1'">
                     No
                 </button>
             </div>

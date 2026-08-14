@@ -82,6 +82,8 @@
     $ecoPoints = isset($_GET['ecoPoints']) ? trim($_GET['ecoPoints']) : '';
     $status = isset($_GET['status']) ? trim($_GET['status']) : '';
 
+    $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
+
     // Store filter conditions
     $conditions = [];
 
@@ -197,6 +199,20 @@
                             Create New Mission
                         </a>
                     </div>
+
+                    <!-- Green bar showing Success Creation -->
+                    <?php if (isset($_GET['created'])): ?>
+                        <div class="alert alert-success">
+                            Mission created successfully.
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Green bar showing Success Deletion -->
+                    <?php if (isset($_GET['deleted'])): ?>
+                        <div class="alert alert-success">
+                            Mission deleted successfully.
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Search and Filter -->
                     <div class="management-filter">
@@ -331,15 +347,15 @@
                                         </td>
                                         <td>
                                             <div class="management-actions">
-                                                <a href="auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>"class="management-action-btn">
+                                                <a href="auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&<?= $filterQuery ?>" class="management-action-btn">
                                                     <img src="../assets/icons/view.png" alt="View">
                                                 </a>
 
-                                                <a href="auditor_mission_edit.php?missionID=<?= urlencode($mission['missionID']) ?>" class="management-action-btn" title="Edit">
+                                                <a href="auditor_mission_edit.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&<?= $filterQuery ?>" class="management-action-btn" title="Edit">
                                                     <img src="../assets/icons/edit.png" alt="Edit">
                                                 </a>
 
-                                                <a href="auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&print=1" class="management-action-btn" title="Print">
+                                                <a href="auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&print=1&<?= $filterQuery ?>" class="management-action-btn" title="Print">
                                                     <img src="../assets/icons/print.png" alt="Print">
                                                 </a>
 

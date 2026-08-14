@@ -29,6 +29,13 @@
         exit();
     }
 
+    $search = $_GET['search'] ?? '';
+    $missionName = $_GET['missionName'] ?? '';
+    $ecoPoints = $_GET['ecoPoints'] ?? '';
+    $status = $_GET['status'] ?? '';
+
+    $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
+
     /* DELETE MISSION */
     if (isset($_POST['delete_mission'])) {
         $stmt = $conn->prepare("SELECT missionName FROM missions WHERE missionID = ?");
@@ -110,6 +117,13 @@
                     Mission Details
                 </h1>
 
+                <!-- Green bar showing Success Updation -->
+                <?php if (isset($_GET['success'])): ?>
+                    <div class="alert alert-success">
+                        Mission updated successfully.
+                    </div>
+                <?php endif; ?>
+
                 <div class="management-view-card">
                     <div class="management-view-body">
                         <div class="auditor-management-detail-row">
@@ -183,7 +197,7 @@
                         </button>
 
                         <div class="auditor-management-detail-back">
-                            <a href="auditor_missions_management.php">
+                            <a href="auditor_missions_management.php?<?= $filterQuery ?>">
                                 Back
                             </a>
                         </div>
