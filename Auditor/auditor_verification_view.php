@@ -221,7 +221,7 @@
                     Verification Record Details
                 </h1>
 
-                <section class="management-form-card">
+                <section class="management-view-card">
 
                     <div class="auditor-management-detail-information">
                         <?php foreach ($fields as $label => $value): ?>

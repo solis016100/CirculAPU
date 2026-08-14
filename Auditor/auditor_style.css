@@ -1,16 +1,9 @@
-/* --------------------------------------------------------------------------
-   Shared by Auditor management detail pages
-   -------------------------------------------------------------------------- */
-.management-form-card {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr;
-    gap: 40px;
-    background: #fff;
-    border: 1px solid #f0c94d;
-    border-radius: 16px;
-    padding: 40px;
-}
+/* ==========================================================================
+   SHARED BY AUDITOR MANAGEMENT DETAIL PAGES
+   ========================================================================== */
 
+
+/* Page */
 .auditor-management-detail-page {
     padding: 20px 36px 30px;
 }
@@ -19,93 +12,224 @@
     margin: -10px 0 8px;
 }
 
-/* Layout */
-.auditor-management-detail-layout {
+
+/* Management View Card */
+
+.management-view-card {
+    width: 100%;
+    max-width: 1200px;
+    margin: 25px auto 30px;
+    padding: 30px;
+    box-sizing: border-box;
+
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: minmax(0, 1fr) 180px;
     gap: 40px;
-    max-width: 1100px;
+
+    background: #fff;
+    border: 1px solid #f0c94d;
+    border-radius: 16px;
 }
+
+
+/* Management View Body */
+.management-view-body {
+    min-width: 0;
+}
+
+.management-view-body .auditor-management-detail-row {
+    margin-bottom: 22px;
+}
+
 
 /* Information */
 .auditor-management-detail-information {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
 }
+
+
+/* Detail Row */
 
 .auditor-management-detail-row,
 .auditor-management-edit-row {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 180px minmax(0, 1fr);
     gap: 20px;
     align-items: center;
 }
+
 
 .auditor-management-detail-row label,
 .auditor-management-edit-row label {
     font-weight: 600;
 }
 
+
 .auditor-management-detail-row label {
     font-size: 15px;
     color: #333;
 }
 
+
+/* Detail Value */
+
 .auditor-management-detail-value {
+    width: 100%;
+    min-width: 0;
     min-height: 42px;
+
     padding: 10px 12px;
+
     display: flex;
     align-items: center;
+
     box-sizing: border-box;
+
     background: #fff;
     border: 1px solid #d1d5db;
     border-radius: 6px;
+
     font-size: 14px;
     color: #333;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
+
 
 /* Remarks */
+
 .auditor-management-detail-value.remarks {
     min-height: 70px;
+    display: flex;
     text-align: left;
+    align-items: flex-start;
 }
 
-/* Right Side Details */
-.auditor-management-detail-side {
+
+/* Right Side */
+
+.management-view-card .auditor-management-detail-side {
     display: flex;
     flex-direction: column;
+    gap: 15px;
+    padding-top: 0;
 }
 
-.auditor-management-detail-side h2 {
-    margin: 0 0 14px;
-    font-size: 20px;
+.management-view-card .auditor-management-detail-side h2{
+    font-size: large;
 }
+
+/* Actions */
+.management-view-card .auditor-management-detail-action {
+    width: 180px;
+    min-height: 50px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-sizing: border-box;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    text-decoration: none;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.management-view-card .auditor-management-detail-action img {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+}
+
+.management-view-card .auditor-management-detail-action:hover {
+    background: #f5f5f5;
+}
+
+.management-view-card .auditor-management-detail-action.delete:hover {
+    background: #fff0f0;
+}
+
+/* Back */
+
+.management-view-card .auditor-management-detail-back {
+    grid-column: 1 / -1;
+
+    display: flex;
+    justify-content: center;
+
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+
+.management-view-card .auditor-management-detail-back a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 90px;
+    height: 42px;
+
+    padding: 0 20px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #333;
+    border-radius: 7px;
+
+    background: #fff;
+    color: #222;
+
+    text-decoration: none;
+}
+
+
+.management-view-card .auditor-management-detail-back a:hover {
+    background: #f5f5f5;
+}
+
 
 /* Images */
+
 .auditor-management-detail-image,
 .auditor-management-no-image {
     width: 100%;
     height: 190px;
+
     box-sizing: border-box;
+
     border: 1px solid #d1d5db;
     border-radius: 6px;
+
     background: #f8f8f8;
 }
+
 
 .auditor-management-detail-image img {
     width: 100%;
     height: 100%;
+
     display: block;
+
     object-fit: contain;
 }
+
 
 .auditor-management-no-image {
     display: flex;
     align-items: center;
     justify-content: center;
+
     color: #777;
 }
+
 
 .auditor-management-view-image {
     align-self: flex-end;
@@ -115,129 +239,82 @@
 }
 
 
-/* Approve or Reject Buttons */
-.auditor-management-decision {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 25px;
-}
+/* Badge Image */
 
-.auditor-management-approve,
-.auditor-management-reject {
-    width: 100%;
-    min-height: 48px;
+.badge-view-icon-box {
+    width: 120px;
+    height: 120px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    border: 1px solid #333;
-    border-radius: 6px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
     background: #fff;
-    font-family: inherit;
-    font-size: 15px;
-    cursor: pointer;
+
+    overflow: hidden;
 }
 
-.auditor-management-approve img,
-.auditor-management-reject img {
-    width: 25px;
-    height: 25px;
+
+.badge-view-icon-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
-.auditor-management-approve:hover {
-    background: #eef9f0;
+
+/* Sidebar Closed */
+
+.dashboard-container.sidebar-collapsed .management-view-card {
+    max-width: none;
 }
 
-.auditor-management-reject:hover {
-    background: #fff0f0;
-}
+
+
 
 
 /* Divider */
+
 .auditor-management-divider {
     height: 1px;
-    margin: 25px 0 25px;
+    margin: 25px 0;
     background: #d1d5db;
 }
 
 
-/* Actions Buttons */
-.auditor-management-detail-action {
-    width: 100%;
-    min-height: 48px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-sizing: border-box;
-    border: 1px solid #333;
-    border-radius: 6px;
-    background: #fff;
-    color: #222;
-    text-decoration: none;
-    font-size: 15px;
-}
+/* Edit Management */
 
-.auditor-management-detail-action img {
-    width: 25px;
-    height: 25px;
-    object-fit: contain;
-}
-
-.auditor-management-detail-action:hover,
-.auditor-management-edit-actions button:hover,
-.auditor-management-edit-actions a:hover,
-.auditor-management-detail-back a:hover {
-    background: #f5f5f5;
-}
-
-.auditor-management-detail-action.delete:hover {
-    background: #fff0f0;
-}
-
-
-/* Back Button */
-.auditor-management-detail-back {
-    display: flex;
-    justify-content: center;
-    margin-top: 25px;
-    padding-top: 150px;
-}
-
-.auditor-management-detail-back a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 90px;
-    height: 42px;
-    box-sizing: border-box;
-    border: 1px solid #333;
-    border-radius: 7px;
-    text-decoration: none;
-}
-
-
-/* Edit Button */
 .auditor-management-edit-form {
-    max-width: 100%;
+    max-width: 900px;
+    margin-top: 25px;
 }
+
 
 .auditor-management-edit-row {
     margin-bottom: 18px;
 }
 
+
 .auditor-management-edit-row input,
 .auditor-management-edit-row select,
-.auditor-management-edit-row textarea {
+.auditor-management-edit-row textarea,
+.auditor-management-edit-row span {
     width: 100%;
+
     box-sizing: border-box;
+
     padding: 12px 14px;
+
     border: 1px solid #d1d5db;
     border-radius: 8px;
+
     font: inherit;
 }
+
 
 .auditor-management-edit-row input[readonly] {
     background: #eeedec;
@@ -245,32 +322,45 @@
     cursor: not-allowed;
 }
 
+
 .auditor-management-edit-row textarea {
     resize: vertical;
 }
 
+
 .auditor-management-edit-actions {
-    width: 100%;
     display: flex;
     justify-content: flex-end;
     gap: 12px;
     margin-top: 25px;
 }
 
+
 .auditor-management-edit-actions button,
 .auditor-management-edit-actions a {
     padding: 10px 20px;
+
     border: 1px solid #333;
     border-radius: 6px;
+
     background: #fff;
     color: #222;
+
     text-decoration: none;
     cursor: pointer;
 }
 
 
+.auditor-management-edit-actions button:hover,
+.auditor-management-edit-actions a:hover {
+    background: #f5f5f5;
+}
+
+
 /* Print Function */
+
 @media print {
+
     .sidebar,
     header,
     .breadcrumb,
@@ -282,6 +372,7 @@
         display: none !important;
     }
 
+
     .main-content,
     .auditor-management-detail-page {
         margin: 0 !important;
@@ -289,49 +380,123 @@
         width: 100% !important;
     }
 
-    .auditor-management-detail-layout {
+
+    .management-view-card {
         max-width: 100% !important;
+        border: none !important;
     }
+
 }
 
 
 /* Required Field */
+
 .required {
     color: red !important;
+    border: none !important;
+}
+
+/* Shared Create Page Buttons */
+.auditor-create-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px;
+    border-top: 1px solid #d1d5db;
+}
+
+.auditor-create-actions button,
+.auditor-back-btn {
+    min-width: 120px;
+    height: 42px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #fff !important;
+    color: #222 !important;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.auditor-create-actions img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Hover for Back + Clear */
+.auditor-create-actions button:hover,
+.auditor-back-btn:hover {
+    background: #f5f5f5 !important;
+}
+
+/* Create Button */
+.auditor-create-actions .auditor-create-btn {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+.auditor-create-actions .auditor-create-btn:hover {
+    background: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+}
+
+.auditor-create-btn img {
+    filter: brightness(0) invert(1);
 }
 
 
-/* Auditor shared Pop Outs */
+/* Auditor Shared Pop Outs */
+
 .auditor-popout {
     display: none;
+
     position: fixed;
     inset: 0;
+
     z-index: 9999;
+
     background: rgba(0, 0, 0, .45);
+
     align-items: center;
     justify-content: center;
 }
+
 
 .auditor-popout.show {
     display: flex;
 }
 
+
 .auditor-popout-box {
     width: 520px;
     max-width: 90%;
     max-height: 85vh;
+
     overflow-y: auto;
+
     padding: 28px;
+
     background: #fff;
+
     border: 1px solid #ddd;
     border-radius: 12px;
+
     box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
 }
+
 
 .auditor-popout-box h2 {
     margin: 0 0 10px;
     font-size: 22px;
 }
+
 
 .auditor-popout-box p {
     margin-bottom: 20px;
@@ -339,23 +504,29 @@
 
 
 /* Summary Pop Out */
+
 .auditor-summary {
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
 }
 
+
 .auditor-summary div {
     display: grid;
     grid-template-columns: 140px 1fr;
     gap: 15px;
+
     padding: 10px 14px;
+
     border-bottom: 1px solid #eee;
 }
+
 
 .auditor-summary div:last-child {
     border-bottom: none;
 }
+
 
 .auditor-summary span {
     word-break: break-word;
@@ -363,6 +534,7 @@
 
 
 /* Pop Out Buttons */
+
 .auditor-popout-actions {
     display: flex;
     justify-content: flex-end;
@@ -370,18 +542,24 @@
     margin-top: 24px;
 }
 
+
 .auditor-popout-actions button {
     padding: 9px 20px;
+
     border: 1px solid #ccc;
     border-radius: 6px;
+
     background: #fff;
+
     cursor: pointer;
     font-size: 14px;
 }
 
+
 .auditor-popout-actions button:hover {
     background: #f5f5f5;
 }
+
 
 .auditor-popout-confirm {
     background: var(--primary-color) !important;
@@ -389,114 +567,185 @@
     color: #fff !important;
 }
 
+
 .auditor-popout-confirm:hover {
     background: var(--primary-hover) !important;
 }
 
 
 /* Successful Pop Outs */
+
 .success-box {
     text-align: center;
 }
+
 
 .success-box .auditor-popout-actions {
     justify-content: center;
 }
 
 
-/* --------------------------------------------------------------------------
-   Auditor Verification Management
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   AUDITOR VERIFICATION MANAGEMENT
+   ========================================================================== */
+
+
 /* Verification Status */
+
 .verification-status {
     display: inline-block;
+
     padding: 8px 14px;
+
     border-radius: 6px;
+
     font-weight: 600;
 }
+
 
 .verification-status.status-pending {
     background: #fff3cd;
     color: #856404;
 }
 
+
 .verification-status.status-approved {
     background: #d4edda;
     color: #155724;
 }
+
 
 .verification-status.status-rejected {
     background: #f8d7da;
     color: #721c24;
 }
 
+/* Approve or Reject Buttons */
+
+.auditor-management-decision {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+
+.auditor-management-approve,
+.auditor-management-reject {
+    width: 100%;
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    border: 1px solid #333;
+    border-radius: 6px;
+
+    background: #fff;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    cursor: pointer;
+}
+
+
+.auditor-management-approve img,
+.auditor-management-reject img {
+    width: 25px;
+    height: 25px;
+}
+
+
+.auditor-management-approve:hover {
+    background: #eef9f0;
+}
+
+
+.auditor-management-reject:hover {
+    background: #fff0f0;
+}
+
+
 /* View Image Pop Out */
+
 .image-popout {
     display: none;
+
     position: fixed;
     inset: 0;
+
     z-index: 9999;
+
     background: rgba(0,0,0,.75);
+
     align-items: center;
     justify-content: center;
 }
 
+
 .image-popout img {
     max-width: 85%;
     max-height: 85%;
+
     object-fit: contain;
+
     border-radius: 8px;
 }
 
+
 .image-popout-close {
     position: absolute;
+
     top: 20px;
     right: 30px;
+
     color: #fff;
+
     font-size: 40px;
+
     cursor: pointer;
 }
 
-/* Outer Card - Edit Page */
-.auditor-management-edit-card {
-    width: 100%;
-    max-width: 1200px;
-    margin: 25px auto 30px;
-    padding: 28px;
-    background: #fff;
-    border: 1px solid #f0c94d;
-    border-radius: 16px;
-}
+
+/* ==========================================================================
+   AUDITOR MISSION MANAGEMENT
+   ========================================================================== */
 
 
-/* --------------------------------------------------------------------------
-   Auditor Mission Management
-   -------------------------------------------------------------------------- */
 /* Mission Table Column Widths */
+
 .mission-table th:nth-child(1),
 .mission-table td:nth-child(1) {
     width: 5%;
 }
+
 
 .mission-table th:nth-child(2),
 .mission-table td:nth-child(2) {
     width: 15%;
 }
 
+
 .mission-table th:nth-child(3),
 .mission-table td:nth-child(3) {
     width: 27%;
 }
+
 
 .mission-table th:nth-child(4),
 .mission-table td:nth-child(4) {
     width: 20%;
 }
 
+
 .mission-table th:nth-child(5),
 .mission-table td:nth-child(5) {
     width: 15%;
 }
+
 
 .mission-table th:nth-child(6),
 .mission-table td:nth-child(6) {
@@ -504,77 +753,24 @@
 }
 
 
-/* Mission Status */
-.mission-status {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.mission-status.active {
-    background: #d4edda;
-    color: #155724;
-}
-
-.mission-status.inactive {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-/* Mission View Outer Card */
-.mission-view-card {
-    width: 100%;
-    max-width: 1200px;
-    margin: 25px auto 30px;
-    padding: 30px;
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: 1fr 180px;
-    gap: 40px;
-    background: #fff;
-    border: 1px solid #f0c94d;
-    border-radius: 16px;
-}
-
-.mission-view-body {
-    min-width: 0;
-}
-
-.mission-view-body .auditor-management-detail-row {
-    margin-bottom: 22px;
-}
-
-/* Right-side buttons */
-.mission-view-card .auditor-management-detail-side {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding-top: 0;
-}
-
-.mission-view-card .auditor-management-detail-action {
-    width: 180px;
-    min-height: 50px;
-    margin: 0;
-}
-
-
 /* Mission Creation */
+
 .mission-create-card {
     width: 100%;
     max-width: 1200px;
+
     margin: 25px auto 30px;
+
     padding: 0 !important;
+
     overflow: hidden;
 }
 
 
-/* Mission Input Content */
 .mission-create-body {
     padding: 28px;
 }
+
 
 .mission-create-body .auditor-management-edit-row {
     grid-template-columns: 180px minmax(0, 1fr);
@@ -582,111 +778,61 @@
 }
 
 
-/* Mission Create Text Area */
 .mission-create-body textarea {
     min-height: 110px;
     resize: vertical;
 }
 
 
-/* Mission Create, Clear, Back Buttons */
-.mission-create-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 28px;
-    border-top: 1px solid #d1d5db;
-    background: #fff;
-}
-
-.mission-create-actions .auditor-management-detail-action {
-    width: auto;
-    min-width: 120px;
-    min-height: 42px;
-    margin: 0;
-    padding: 8px 18px;
-    font-size: 14px;
-}
-
-.mission-create-actions .auditor-management-detail-action img {
-    width: 20px;
-    height: 20px;
-}
-
-.mission-create-btn {
-    background: var(--primary-color) !important;
-    color: #fff !important;
-    border-color: var(--primary-color) !important;
-}
-
-.mission-create-btn:hover {
-    background: var(--primary-hover) !important;
-    border-color: var(--primary-hover) !important;
-}
-
-.mission-create-btn img {
-    filter: brightness(0) invert(1);
-}
-
-.mission-back-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 80px;
-    height: 42px;
-    padding: 0 18px;
-    border: 1px solid #333;
-    border-radius: 6px;
-    background: #fff;
-    color: #222;
-    text-decoration: none;
-}
-
-.mission-back-btn:hover {
-    background: #f5f5f5;
-}
-
-
 /* Sidebar Closed */
-.dashboard-container.sidebar-collapsed .mission-create-card, 
-.dashboard-container.sidebar-collapsed .mission-view-card {
+
+.dashboard-container.sidebar-collapsed .mission-create-card {
     max-width: none;
 }
 
 
-/* --------------------------------------------------------------------------
+/* ==========================================================================
    AUDITOR REWARD MANAGEMENT
-   -------------------------------------------------------------------------- */
+   ========================================================================== */
+
+
 /* Reward Table Column Widths */
+
 .reward-table th:nth-child(1),
 .reward-table td:nth-child(1) {
     width: 5%;
 }
+
 
 .reward-table th:nth-child(2),
 .reward-table td:nth-child(2) {
     width: 12%;
 }
 
+
 .reward-table th:nth-child(3),
 .reward-table td:nth-child(3) {
     width: 22%;
 }
+
 
 .reward-table th:nth-child(4),
 .reward-table td:nth-child(4) {
     width: 14%;
 }
 
+
 .reward-table th:nth-child(5),
 .reward-table td:nth-child(5) {
     width: 10%;
 }
 
+
 .reward-table th:nth-child(6),
 .reward-table td:nth-child(6) {
     width: 14%;
 }
+
 
 .reward-table th:nth-child(7),
 .reward-table td:nth-child(7) {
@@ -695,20 +841,28 @@
 
 
 /* Reward Availability Status */
+
 .reward-availability {
     display: inline-block;
+
     min-width: 90px;
+
     padding: 6px 10px;
+
     border-radius: 20px;
+
     font-size: 12px;
     font-weight: 600;
+
     text-align: center;
 }
+
 
 .availability-available {
     background: #e8f5e9;
     color: #2e7d32;
 }
+
 
 .availability-unavailable {
     background: #ffebee;
@@ -717,52 +871,64 @@
 
 
 /* Reward Filter Sizing */
+
 .auditor-reward-page .management-filter form {
     gap: 12px;
 }
 
+
 .auditor-reward-page .management-filter-group {
     min-width: 120px;
 }
+
 
 .auditor-reward-page .management-filter-group.search {
     flex: 1.8;
     min-width: 240px;
 }
 
+
 .auditor-reward-page .management-filter-buttons {
     flex-shrink: 0;
 }
 
 
-/* --------------------------------------------------------------------------
+/* ==========================================================================
    AUDITOR ACHIEVEMENT BADGE MANAGEMENT
-   -------------------------------------------------------------------------- */
+   ========================================================================== */
+
+
 /* Badge Table Column Widths */
+
 .badge-table th:nth-child(1),
 .badge-table td:nth-child(1) {
     width: 5%;
 }
+
 
 .badge-table th:nth-child(2),
 .badge-table td:nth-child(2) {
     width: 12%;
 }
 
+
 .badge-table th:nth-child(3),
 .badge-table td:nth-child(3) {
     width: 14%;
 }
+
 
 .badge-table th:nth-child(4),
 .badge-table td:nth-child(4) {
     width: 20%;
 }
 
+
 .badge-table th:nth-child(5),
 .badge-table td:nth-child(5) {
     width: 29%;
 }
+
 
 .badge-table th:nth-child(6),
 .badge-table td:nth-child(6) {
@@ -771,167 +937,122 @@
 
 
 /* Badge Icons */
+
 .badge-icon {
     width: 58px;
     height: 58px;
+
     display: block;
+
     margin: 0 auto;
+
     object-fit: contain;
+
     transition: transform .2s;
 }
+
 
 .badge-icon:hover {
     transform: scale(1.1);
 }
 
+
 .badge-table td:nth-child(4) {
     font-weight: 600;
 }
+
 
 .badge-table td:nth-child(5) {
     white-space: normal;
     line-height: 1.4;
 }
 
+
 /* Badge Icon in Summary Pop Out */
+
 .confirm-badge-icon {
     width: 70px;
     height: 70px;
+
     object-fit: contain;
+
     display: block;
 }
 
-.auditor-management-detail-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
-    gap: 35px;
-    width: 100%;
-    max-width: 1100px;
-    box-sizing: border-box;
-}
+/* Add/Change Icon Link */
+.auditor-management-detail-row .auditor-management-view-image {
+    width: auto;
 
+    margin: 0 0 5px;
 
-/* Badge Information */
-.auditor-management-detail-information {
-    min-width: 0;
-    width: 100%;
-}
+    font-size: 13px !important;
+    font-weight: 400 !important;
 
-
-/* Detail Row */
-.auditor-management-detail-row {
-    display: grid;
-    grid-template-columns: 160px minmax(0, 1fr);
-    gap: 20px;
-    align-items: center;
-    margin-bottom: 22px;
-    width: 100%;
-}
-
-
-/* Detail Value */
-.auditor-management-detail-value {
-    width: 100%;
-    min-width: 0;
-    min-height: 42px;
-    padding: 10px 14px;
-
-    box-sizing: border-box;
-
-    background: #fff;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-
-/* Long Text */
-.auditor-management-detail-value.remarks {
-    min-height: 110px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-
-/* Right Side */
-.auditor-management-detail-side {
-    width: 280px;
-    min-width: 0;
-}
-
-
-/* Badge Image */
-.auditor-management-detail-image {
-    width: 100%;
-    height: 280px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    margin-bottom: 20px;
-
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #fff;
-
-    overflow: hidden;
-}
-
-.auditor-management-detail-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-
-/* Action Buttons */
-.auditor-management-detail-side
-.auditor-management-detail-action {
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 15px;
-}
-
-.badge-icon-change {
-    display: inline-block;
-    margin: 10px 0 15px;
-    color: #333;
+    color: #555;
     text-decoration: underline;
     cursor: pointer;
 }
 
+.auditor-management-detail-row > div {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
 
-/* --------------------------------------------------------------------------
+
+/* ==========================================================================
    AUDITOR USER TIER MANAGEMENT
-   -------------------------------------------------------------------------- */
+   ========================================================================== */
 
 
 /* User Tier Table Column Widths */
+
 .usertier-table th:nth-child(1),
 .usertier-table td:nth-child(1) {
     width: 8%;
 }
+
 
 .usertier-table th:nth-child(2),
 .usertier-table td:nth-child(2) {
     width: 20%;
 }
 
+
 .usertier-table th:nth-child(3),
 .usertier-table td:nth-child(3) {
     width: 20%;
 }
+
 
 .usertier-table th:nth-child(4),
 .usertier-table td:nth-child(4) {
     width: 25%;
 }
 
+
 .usertier-table th:nth-child(5),
 .usertier-table td:nth-child(5) {
     width: 27%;
+}
+
+
+/* ==========================================================================
+   OUTER CARD - EDIT PAGE
+   ========================================================================== */
+
+.auditor-management-edit-card {
+    width: 100%;
+    max-width: 1200px;
+
+    margin: 25px auto 30px;
+
+    padding: 28px;
+
+    box-sizing: border-box;
+
+    background: #fff;
+
+    border: 1px solid #f0c94d;
+    border-radius: 16px;
 }

@@ -124,8 +124,8 @@
                         </div>
                     </div>
 
-                    <div class="mission-create-actions">
-                        <a href="auditor_missions_management.php" class="mission-back-btn">
+                    <div class="auditor-create-actions">
+                        <a href="auditor_missions_management.php" class="auditor-back-btn">
                             Back
                         </a>
 
@@ -134,7 +134,7 @@
                             Clear Form
                         </button>
 
-                        <button type="submit" class="auditor-management-detail-action mission-create-btn">
+                        <button type="submit" class="auditor-management-detail-action auditor-create-btn">
                             <img src="../assets/icons/create.png" alt="">
                             Create Mission
                         </button>

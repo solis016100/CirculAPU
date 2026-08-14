@@ -264,19 +264,20 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="mission-create-actions">
+                    <div class="auditor-create-actions">
                         <!-- Back -->
-                        <a href="auditor_achievement_badges_management.php" class="mission-back-btn">
+                        <a href="auditor_achievement_badges_management.php" class="auditor-back-btn">
                             Back
                         </a>
 
                         <!-- Clear -->
                         <button type="reset" class="auditor-management-detail-action">
+                            <img src="../assets/icons/reset.png" alt="">
                             Clear
                         </button>
 
                         <!-- Create -->
-                        <button type="button" id="createBadgeButton" class="auditor-management-detail-action mission-create-btn">
+                        <button type="button" id="createBadgeButton" class="auditor-management-detail-action auditor-create-btn">
                             <img src="../assets/icons/create.png" alt="">
                             Create Badge
                         </button>
