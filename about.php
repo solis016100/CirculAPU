@@ -18,8 +18,9 @@ $user_role_display = htmlspecialchars($_SESSION['user_role']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About CirculAPU</title>
     <link rel="stylesheet" href="/CirculAPU/style.css">
+    <link rel="stylesheet" href="/CirculAPU/about_mobile.css">
 </head>
-<body class="<?php echo htmlspecialchars($theme_class); ?>">
+<body class="<?php echo htmlspecialchars($theme_class); ?> about-page">
     <div class="dashboard-container">
         
         <?php include 'sidebar.php'; ?>

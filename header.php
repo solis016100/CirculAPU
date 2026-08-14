@@ -7,6 +7,12 @@ if (session_status() === PHP_SESSION_NONE) {
 // Read user values directly from the active session
 $user_name  = $_SESSION['user_name']  ?? 'User';
 $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
+
+// Only Resource Manager uses the Manager-specific notification page.
+// All other roles keep the existing shared notifications page.
+$notification_url = ($_SESSION['user_role'] ?? '') === 'Manager'
+    ? '/CirculAPU/Manager/manager_notifications.php'
+    : '/CirculAPU/notifications.php';
 ?>
 
 <header class="app-header">
@@ -16,7 +22,7 @@ $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
   </div>
 
   <div class="header-right-actions">
-    <a href="/CirculAPU/notifications.php" class="header-action-icon" title="Notifications">
+    <a href="<?php echo htmlspecialchars($notification_url, ENT_QUOTES, 'UTF-8'); ?>" class="header-action-icon" title="Notifications">
       <img src="/CirculAPU/assets/icons/notification.png" alt="Notifications" width="20" height="20">
     </a>
 

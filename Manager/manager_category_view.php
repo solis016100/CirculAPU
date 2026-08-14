@@ -85,6 +85,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
     <title>Category Details - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
 <body class="role-manager">
@@ -195,7 +196,42 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 </section>
 
 <!-- Recent Assets -->
-<section class="management-list category-assets-list">
+
+<section class="mobile-category-assets">
+<div class="mobile-section-heading">
+<div>
+<h2>Recent Assets</h2>
+<p><?=count($assets)?> shown</p>
+</div>
+<a class="mobile-view-link" href="manager_assets.php?category=<?=e($categoryID)?>">View All</a>
+</div>
+
+<?php if(!$assets):?>
+<div class="mobile-empty-card">No assets found in this category.</div>
+<?php else:foreach($assets as $a):?>
+<article class="mobile-category-asset-card">
+<div class="mobile-category-asset-top">
+<div>
+<span class="mobile-record-id"><?=e($a['assetID'])?></span>
+<h3><?=e($a['assetName'])?></h3>
+</div>
+<span class="mobile-status-pill"><?=e($a['listingStatus'])?></span>
+</div>
+
+<div class="mobile-category-asset-meta">
+<div><span>Condition</span><strong><?=e($a['assetCondition'])?></strong></div>
+<div><span>Availability</span><strong><?=e($a['availabilityStatus'])?></strong></div>
+<div><span>Listed</span><strong><?=date('d M Y',strtotime($a['createdDate']))?></strong></div>
+</div>
+
+<div class="mobile-card-actions">
+<a class="primary" href="manager_asset_view.php?assetID=<?=e($a['assetID'])?>">View Asset</a>
+</div>
+</article>
+<?php endforeach;endif;?>
+</section>
+
+<section class="management-list category-assets-list desktop-category-assets-list">
     <div class="management-list-header">
         <h2>Recent Assets in This Category</h2>
         <a href="manager_assets.php?category=<?= e($categoryID) ?>">View All</a>
@@ -271,6 +307,15 @@ function openDetailCategoryAction(action){
 <?php endif;?>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
 </body>

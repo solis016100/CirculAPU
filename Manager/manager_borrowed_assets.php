@@ -75,7 +75,7 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Manage Returns - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -90,7 +90,66 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
 
-<section class="management-filter">
+
+<section class="mobile-borrowing-ui">
+<details class="mobile-filter-card" <?=($search||$status)?'open':''?>>
+<summary><span>Filter Borrowings</span><?php if($search||$status):?><small>Filters active</small><?php endif;?></summary>
+<form method="GET" class="mobile-filter-form">
+<label><span>Search</span><input name="search" value="<?=e($search)?>" placeholder="Borrow ID, asset, borrower or transaction"></label>
+<label><span>Return Status</span><select name="status">
+<option value="">All Active Borrowings</option>
+<option value="Borrowed" <?=$status==='Borrowed'?'selected':''?>>Borrowed</option>
+<option value="Overdue" <?=$status==='Overdue'?'selected':''?>>Overdue</option>
+</select></label>
+<div class="mobile-filter-actions">
+<a href="manager_borrowed_assets.php">Reset</a>
+<button>Apply Filters</button>
+</div>
+</form>
+</details>
+
+<div class="mobile-section-heading">
+<div>
+<h2><?=$status==='Overdue'?'Overdue Returns':'Borrowed Assets'?></h2>
+<p><?=$total?> active borrowing<?=$total===1?'':'s'?></p>
+</div>
+<span class="mobile-page-count"><?=$page?> / <?=$totalPages?></span>
+</div>
+
+<?php if(!$rows):?>
+<div class="mobile-empty-card">No active borrowings found.</div>
+<?php else:foreach($rows as $r):$display=$r['isOverdue']?'Overdue':'Borrowed';?>
+<article class="mobile-borrowing-card">
+<div class="mobile-borrowing-top">
+<div>
+<span class="mobile-record-id"><?=e($r['borrowID'])?></span>
+<h3><?=e($r['assetName'])?></h3>
+<p><?=e($r['assetID'])?> · <?=e($r['borrowerName'])?> (<?=e($r['borrowerID'])?>)</p>
+</div>
+<span class="mobile-status-pill <?=$r['isOverdue']?'mobile-overdue':''?>"><?=e($display)?></span>
+</div>
+
+<div class="mobile-borrowing-meta">
+<div><span>Pickup Date</span><strong><?=e(d($r['borrowDate']))?></strong></div>
+<div><span>Due Date</span><strong><?=e(d($r['expectedReturnDate']))?></strong></div>
+</div>
+
+<div class="mobile-card-actions">
+<a class="primary" href="manager_borrowed_asset_view.php?transactionID=<?=e($r['transactionID'])?>">Manage Return</a>
+</div>
+</article>
+<?php endforeach;endif;?>
+
+<?php if($totalPages>1):?>
+<nav class="mobile-pagination" aria-label="Borrowing pagination">
+<?php if($page>1):?><a href="<?=e(pageURL($page-1))?>">‹</a><?php endif;?>
+<?php for($p=1;$p<=$totalPages;$p++):?><a href="<?=e(pageURL($p))?>" class="<?=$p===$page?'active':''?>"><?=$p?></a><?php endfor;?>
+<?php if($page<$totalPages):?><a href="<?=e(pageURL($page+1))?>">›</a><?php endif;?>
+</nav>
+<?php endif;?>
+</section>
+
+<section class="management-filter desktop-borrowing-filter">
 <form method="GET">
 <div class="management-filter-group search">
 <label for="search">Search Borrowing</label>
@@ -112,7 +171,7 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 </form>
 </section>
 
-<section class="management-list">
+<section class="management-list desktop-borrowing-list">
 <div class="management-list-header">
 <h2><?= $status==='Overdue'?'Overdue Returns':'Borrowed Assets' ?></h2>
 <p><?= $total ?> active borrowing<?= $total===1?'':'s' ?> found</p>
@@ -167,5 +226,13 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 <script>returnDoneDialog.showModal();</script>
 <?php endif;?>
 
-</main></div></div>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
 </body></html>

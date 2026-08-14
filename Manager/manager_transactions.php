@@ -167,7 +167,7 @@ $end = min($offset + $perPage, $total);
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Management - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .transaction-list-meta{display:flex;align-items:center;gap:10px}
 .transaction-list-meta a{color:var(--primary-color);font-size:13px;font-weight:600;text-decoration:none}
@@ -229,7 +229,68 @@ Confirm Pickups (<?=$stats['pickup']?>)
 </a>
 </section>
 
-<section class="management-filter">
+
+<section class="mobile-transaction-ui">
+<details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo)?'open':''?>>
+<summary><span>Filter Transactions</span><?php if($search||$status||$dateFrom||$dateTo):?><small>Filters active</small><?php endif;?></summary>
+<form method="GET" class="mobile-filter-form">
+<label><span>Search</span><input name="search" placeholder="ID, asset or requester" value="<?=e($search)?>"></label>
+<div class="mobile-filter-grid">
+<label><span>Status</span><select name="requestStatus">
+<option value="">All</option>
+<?php foreach($statuses as $v):?><option value="<?=e($v)?>" <?=$status===$v?'selected':''?>><?=e($v)?></option><?php endforeach;?>
+</select></label>
+<label><span>Date From</span><input type="date" name="dateFrom" value="<?=e($dateFrom)?>"></label>
+</div>
+<label><span>Date To</span><input type="date" name="dateTo" value="<?=e($dateTo)?>"></label>
+<?php if($activeOnly):?><input type="hidden" name="active" value="1"><?php endif;?>
+<?php if($activeTransaction):?><input type="hidden" name="activeTransaction" value="1"><?php endif;?>
+<div class="mobile-filter-actions"><a href="manager_transactions.php">Reset</a><button>Apply Filters</button></div>
+</form>
+</details>
+
+<div class="mobile-section-heading">
+<div><h2>Transaction Requests</h2><p><?=$total?> transaction<?=$total===1?'':'s'?></p></div>
+<span class="mobile-page-count"><?=$page?> / <?=$totalPages?></span>
+</div>
+
+<?php if(!$transactions):?>
+<div class="mobile-empty-card">No transaction requests found.</div>
+<?php else:foreach($transactions as $t):
+$displayStatus=$t['isOverdue']?'Overdue':$t['requestStatus'];?>
+<article class="mobile-transaction-card">
+<div class="mobile-transaction-top">
+<div>
+<span class="mobile-record-id"><?=e($t['transactionID'])?></span>
+<h3><?=e($t['assetName'])?></h3>
+<p><?=e($t['requesterName'])?> · <?=e($t['requesterID'])?></p>
+</div>
+<span class="mobile-status-pill <?=$t['isOverdue']?'mobile-overdue':''?>"><?=e($displayStatus)?></span>
+</div>
+
+<div class="mobile-transaction-meta">
+<div><span>Requested</span><strong><?=e(showDate($t['requestDate']))?></strong></div>
+<div><span>Expected Return</span><strong><?=e(showDate($t['dueDate']))?></strong></div>
+</div>
+
+<div class="mobile-card-actions">
+<a class="primary" href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>">
+<?=$t['requestStatus']==='Pending'?'Review Request':'View Details'?>
+</a>
+</div>
+</article>
+<?php endforeach;endif;?>
+
+<?php if(!$viewAll&&$totalPages>1):?>
+<nav class="mobile-pagination" aria-label="Transaction pagination">
+<?php if($page>1):?><a href="<?=e(pageURL($page-1))?>">‹</a><?php endif;?>
+<?php for($p=1;$p<=$totalPages;$p++):?><a href="<?=e(pageURL($p))?>" class="<?=$p===$page?'active':''?>"><?=$p?></a><?php endfor;?>
+<?php if($page<$totalPages):?><a href="<?=e(pageURL($page+1))?>">›</a><?php endif;?>
+</nav>
+<?php endif;?>
+</section>
+
+<section class="management-filter desktop-transaction-filter">
 <form method="GET">
 <div class="management-filter-group search">
 <label for="search">Search Transaction</label>
@@ -257,7 +318,7 @@ Confirm Pickups (<?=$stats['pickup']?>)
 </form>
 </section>
 
-<section class="management-list">
+<section class="management-list desktop-transaction-list">
 <div class="management-list-header">
 <h2>Transaction Requests</h2>
 <div class="transaction-list-meta">
@@ -367,5 +428,13 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPic
 <script>nextRequestDialog.showModal()</script>
 <?php endif;?>
 
-</main></div></div>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
 </body></html>
