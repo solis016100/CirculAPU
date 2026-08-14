@@ -548,3 +548,25 @@
     .role-manager .flow-dialog-actions{flex-direction:column}
     .role-manager .flow-dialog-actions button{width:100%}
 }
+
+
+/* Mobile header brand only */
+@media(max-width:600px){
+    .role-manager .app-header::before{
+        content:"CirculAPU";
+        position:absolute;
+        left:14px;
+        top:50%;
+        transform:translateY(-50%);
+        height:30px;
+        padding-left:32px;
+        display:flex;
+        align-items:center;
+        background:url("../assets/images/logo.png") left center/26px 26px no-repeat;
+        color:#0f172a;
+        font-size:13px;
+        font-weight:700;
+        white-space:nowrap;
+        pointer-events:none;
+    }
+}
