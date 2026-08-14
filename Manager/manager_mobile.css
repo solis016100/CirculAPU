@@ -1,0 +1,299 @@
+/* Manager Mobile UI — only active on phones */
+.mobile-activity-list,
+.manager-mobile-nav{
+    display:none;
+}
+
+@media(max-width:600px){
+    body.role-manager{
+        overflow-x:hidden;
+        padding-bottom:72px;
+    }
+
+    .role-manager .sidebar{
+        display:none!important;
+    }
+
+    .role-manager .main-content,
+    .role-manager .dashboard-container.sidebar-collapsed .main-content{
+        margin-left:0!important;
+        width:100%!important;
+        max-width:100%!important;
+    }
+
+    .role-manager .app-header{
+        height:58px;
+        min-height:58px;
+        padding:0 14px;
+        position:sticky;
+        top:0;
+        z-index:50;
+    }
+
+    .role-manager .header-search-container,
+    .role-manager .header-divider{
+        display:none;
+    }
+
+    .role-manager .header-right-actions{
+        width:100%;
+        justify-content:flex-end;
+        gap:10px;
+    }
+
+    .role-manager .header-user-profile{
+        min-width:0;
+    }
+
+    .role-manager .user-email-subtitle{
+        display:none;
+    }
+
+    .role-manager .user-role-title span{
+        max-width:145px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:13px;
+    }
+
+    .role-manager .dashboard-page{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        padding:16px 14px 24px;
+    }
+
+    .role-manager .dashboard-welcome{order:1;margin:0}
+    .role-manager .dashboard-error-message{order:2}
+    .role-manager .stats-grid{order:3}
+    .role-manager .quick-actions{order:4}
+    .role-manager .dashboard-lower-grid{order:5}
+
+    .role-manager .dashboard-welcome h1{
+        font-size:26px;
+        line-height:1.15;
+        margin-bottom:7px;
+    }
+
+    .role-manager .dashboard-welcome p{
+        max-width:330px;
+        font-size:14px;
+        line-height:1.45;
+    }
+
+    .role-manager .stats-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+        margin:0;
+    }
+
+    .role-manager .stat-card{
+        min-height:122px;
+        padding:14px;
+        gap:10px;
+        align-items:flex-start;
+        flex-direction:column;
+        border-radius:14px;
+    }
+
+    .role-manager .stat-icon{
+        width:38px;
+        height:38px;
+    }
+
+    .role-manager .stat-icon img{
+        width:22px;
+        height:22px;
+    }
+
+    .role-manager .stat-content h3{
+        font-size:12px;
+        line-height:1.25;
+        margin:0 0 5px;
+    }
+
+    .role-manager .stat-value{
+        font-size:26px;
+    }
+
+    .role-manager .stat-description{
+        display:none;
+    }
+
+    .role-manager .content-card{
+        margin:0;
+        padding:16px;
+        border-radius:14px;
+    }
+
+    .role-manager .card-header{
+        margin-bottom:12px;
+    }
+
+    .role-manager .card-header h2{
+        font-size:18px;
+    }
+
+    .role-manager .card-header a{
+        font-size:12px;
+    }
+
+    .role-manager .quick-action-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+
+    .role-manager .quick-action{
+        min-height:92px;
+        padding:12px 10px;
+        gap:9px;
+        flex-direction:column;
+        text-align:center;
+        justify-content:center;
+    }
+
+    .role-manager .quick-action img{
+        width:24px;
+        height:24px;
+    }
+
+    .role-manager .quick-action span{
+        font-size:12px;
+        line-height:1.3;
+    }
+
+    .role-manager .quick-action:last-child{
+        grid-column:1/-1;
+        min-height:70px;
+        flex-direction:row;
+    }
+
+    .role-manager .dashboard-lower-grid{
+        grid-template-columns:1fr;
+        gap:14px;
+        margin:0;
+    }
+
+    .role-manager .desktop-activity-table{
+        display:none;
+    }
+
+    .mobile-activity-list{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .mobile-activity-item{
+        display:grid;
+        grid-template-columns:40px minmax(0,1fr);
+        gap:10px;
+        padding:12px;
+        border:1px solid #e2e8f0;
+        border-radius:12px;
+        background:#fff;
+    }
+
+    .mobile-activity-icon{
+        width:40px;
+        height:40px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:10px;
+        background:var(--badge-bg);
+    }
+
+    .mobile-activity-icon img{
+        width:20px;
+        height:20px;
+        object-fit:contain;
+    }
+
+    .mobile-activity-content{
+        min-width:0;
+    }
+
+    .mobile-activity-content strong{
+        display:block;
+        margin-bottom:4px;
+        font-size:13px;
+        color:#1e293b;
+    }
+
+    .mobile-activity-content p{
+        margin:0 0 6px;
+        font-size:12px;
+        line-height:1.4;
+        color:#475569;
+        overflow-wrap:anywhere;
+    }
+
+    .mobile-activity-content time{
+        font-size:11px;
+        color:#94a3b8;
+    }
+
+    .role-manager .notification-item{
+        padding:12px 0;
+        gap:10px;
+    }
+
+    .role-manager .notification-icon{
+        width:36px;
+        height:36px;
+    }
+
+    .role-manager .notification-content strong{
+        font-size:13px;
+    }
+
+    .role-manager .notification-content p{
+        font-size:12px;
+        line-height:1.4;
+    }
+
+    .role-manager .notification-content time{
+        font-size:11px;
+    }
+
+    .manager-mobile-nav{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:0;
+        z-index:80;
+        height:64px;
+        padding:6px 8px max(6px,env(safe-area-inset-bottom));
+        display:grid;
+        grid-template-columns:repeat(5,1fr);
+        background:#fff;
+        border-top:1px solid #dbeafe;
+        box-shadow:0 -6px 20px rgba(15,23,42,.08);
+    }
+
+    .manager-mobile-nav a{
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:3px;
+        color:#64748b;
+        font-size:10px;
+        font-weight:600;
+        text-decoration:none;
+        border-radius:10px;
+    }
+
+    .manager-mobile-nav a.active{
+        color:var(--primary-color);
+        background:var(--badge-bg);
+    }
+
+    .manager-mobile-nav svg{
+        width:20px;
+        height:20px;
+        stroke:currentColor;
+    }
+}
