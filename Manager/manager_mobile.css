@@ -770,3 +770,84 @@
     }
     .mobile-borrowing-meta strong{font-size:11px;color:#334155}
 }
+
+
+/* Borrowed Asset Details mobile design */
+@media(max-width:600px){
+    .role-manager .category-detail-layout{
+        grid-template-columns:1fr;
+        gap:11px;
+    }
+
+    .role-manager .category-info-card{
+        padding:14px;
+        border-radius:14px;
+    }
+    .role-manager .category-info-card h2{
+        margin-bottom:10px;
+        font-size:14px;
+    }
+    .role-manager .category-info-fields{gap:0}
+    .role-manager .category-info-row{
+        padding:9px 0;
+        display:grid;
+        grid-template-columns:minmax(115px,.9fr) minmax(0,1.1fr);
+        gap:10px;
+        align-items:start;
+        font-size:11px;
+    }
+    .role-manager .category-info-row strong{font-size:10px}
+    .role-manager .category-info-row span{
+        min-width:0;
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+
+    .role-manager .asset-form-note{
+        padding:12px 14px;
+        border-radius:12px;
+    }
+    .role-manager .asset-form-note strong{font-size:12px}
+    .role-manager .asset-form-note p{margin:4px 0 0;font-size:11px}
+
+    .role-manager .return-actions{
+        margin-top:14px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+    .role-manager .return-actions form{display:contents}
+    .role-manager .return-actions .category-form-back,
+    .role-manager .return-actions .category-form-reset,
+    .role-manager .return-actions .category-form-submit{
+        width:100%;
+        min-height:42px;
+        padding:9px 10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:11px;
+        font-size:11px;
+        text-align:center;
+    }
+    .role-manager .return-actions .category-form-submit:last-child{
+        grid-column:1/-1;
+    }
+
+    .role-manager .flow-dialog-inner{padding:18px 16px 16px}
+    .role-manager .flow-dialog h2{font-size:16px}
+    .role-manager .flow-dialog p{font-size:12px}
+    .role-manager .flow-dialog-summary{
+        grid-template-columns:105px minmax(0,1fr);
+        gap:8px 10px;
+        font-size:11px;
+    }
+    .role-manager .flow-dialog-summary span{overflow-wrap:anywhere}
+    .role-manager .flow-dialog-actions{gap:8px}
+    .role-manager .dialog-btn{
+        min-width:0;
+        flex:1;
+        padding:9px 10px;
+        font-size:11px;
+    }
+}
