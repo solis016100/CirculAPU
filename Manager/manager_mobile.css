@@ -1866,3 +1866,27 @@
         overflow-wrap:anywhere;
     }
 }
+
+
+/* Create Category mobile design */
+@media(max-width:600px){
+    .role-manager #categoryConfirm .flow-dialog-summary{
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+
+    .role-manager #categoryConfirm .flow-dialog-summary>div{
+        padding:8px 0;
+        display:grid;
+        grid-template-columns:105px minmax(0,1fr);
+        gap:8px;
+        border-bottom:1px solid #eef2f7;
+    }
+
+    .role-manager #categoryConfirm .flow-dialog-summary>div:last-child{border-bottom:0}
+
+    .role-manager #categoryConfirm .flow-dialog-summary span{
+        text-align:right;
+        overflow-wrap:anywhere;
+    }
+}
