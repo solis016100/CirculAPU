@@ -95,11 +95,14 @@
 document.addEventListener('DOMContentLoaded', function () {
   const dialog = document.getElementById('logoutConfirmDialog');
   const openBtn = document.getElementById('openLogoutConfirm');
+  const sidebarBtn = document.getElementById('openSidebarLogoutConfirm');
   const cancelBtn = document.getElementById('cancelLogoutConfirm');
+  let lastTrigger = null;
 
-  if (!dialog || !openBtn || !cancelBtn) return;
+  if (!dialog || !cancelBtn) return;
 
-  const openDialog = () => {
+  const openDialog = (event) => {
+    lastTrigger = event?.currentTarget || null;
     dialog.classList.add('active');
     dialog.setAttribute('aria-hidden', 'false');
     cancelBtn.focus();
@@ -108,10 +111,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const closeDialog = () => {
     dialog.classList.remove('active');
     dialog.setAttribute('aria-hidden', 'true');
-    openBtn.focus();
+    if (lastTrigger) lastTrigger.focus();
   };
 
-  openBtn.addEventListener('click', openDialog);
+  if (openBtn) openBtn.addEventListener('click', openDialog);
+  if (sidebarBtn) sidebarBtn.addEventListener('click', openDialog);
   cancelBtn.addEventListener('click', closeDialog);
 
   dialog.addEventListener('click', function (event) {
