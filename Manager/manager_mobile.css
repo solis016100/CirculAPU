@@ -444,14 +444,23 @@
     .mobile-section-heading p{margin:0;font-size:11px;color:#64748b}
     .mobile-page-count{font-size:11px;font-weight:700;color:#64748b}
 
-    .mobile-asset-card{
-        margin-bottom:11px;
-        padding:14px;
-        border:1px solid #bae6fd;
-        border-radius:14px;
-        background:#fff;
-        box-shadow:0 4px 14px rgba(15,23,42,.035);
+
+    /* Shared mobile card patterns */
+    .mobile-asset-card,.mobile-category-card,.mobile-transaction-card,
+    .mobile-report-card,.mobile-borrowing-card,.mobile-category-asset-card,
+    .mobile-activity-history-card{
+        margin-bottom:11px;padding:14px;border:1px solid #bae6fd;border-radius:14px;background:#fff;
     }
+    .mobile-category-top,.mobile-transaction-top,.mobile-report-top,
+    .mobile-borrowing-top,.mobile-category-asset-top{
+        display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    }
+    .mobile-category-meta,.mobile-transaction-meta,.mobile-report-meta,
+    .mobile-borrowing-meta,.mobile-activity-history-meta{
+        margin:12px 0;padding:10px 0;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;border-block:1px solid #eef2f7;
+    }
+
+    .mobile-asset-card{box-shadow:0 4px 14px rgba(15,23,42,.035)}
 
     .mobile-asset-card-top{
         display:flex;
@@ -560,14 +569,11 @@
 @media(max-width:600px){
     .desktop-category-filter,.desktop-category-list{display:none!important}
     .mobile-category-ui{display:block}
-    .mobile-category-card{margin-bottom:11px;padding:14px;border:1px solid #bae6fd;border-radius:14px;background:#fff}
-    .mobile-category-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .mobile-category-identity{min-width:0;display:flex;align-items:center;gap:10px}
     .mobile-category-icon{width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:var(--badge-bg)}
     .mobile-category-icon img{width:26px;height:26px;object-fit:contain}
     .mobile-category-identity h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;overflow-wrap:anywhere}
     .mobile-category-desc{margin:10px 0 0;font-size:11px;line-height:1.4;color:#64748b}
-    .mobile-category-meta{margin:12px 0;padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;border-block:1px solid #eef2f7}
     .mobile-category-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
     .mobile-category-meta strong{font-size:11px;color:#334155}
 }
@@ -603,14 +609,11 @@
     .role-manager .transaction-heading-actions{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
     .role-manager .transaction-heading-actions .management-create-btn{width:100%;min-height:44px;justify-content:center;border-radius:12px;font-size:12px}
 
-    .mobile-transaction-card{margin-bottom:11px;padding:14px;border:1px solid #bae6fd;border-radius:14px;background:#fff}
-    .mobile-transaction-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .mobile-transaction-top>div{min-width:0}
     .mobile-transaction-top h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;overflow-wrap:anywhere}
     .mobile-transaction-top p{margin:3px 0 0;font-size:11px;color:#64748b;overflow-wrap:anywhere}
     .mobile-status-pill.mobile-overdue{background:#fff1f2;color:#dc2626}
 
-    .mobile-transaction-meta{margin:12px 0;padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;border-block:1px solid #eef2f7}
     .mobile-transaction-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
     .mobile-transaction-meta strong{font-size:11px;color:#334155}
 }
@@ -676,26 +679,10 @@
         text-decoration:none;
     }
 
-    .mobile-report-card{
-        margin-bottom:11px;
-        padding:14px;
-        border:1px solid #bae6fd;
-        border-radius:14px;
-        background:#fff;
-    }
-    .mobile-report-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .mobile-report-top>div{min-width:0}
     .mobile-report-top h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;overflow-wrap:anywhere}
     .mobile-report-top p{margin:3px 0 0;font-size:11px;color:#64748b;overflow-wrap:anywhere}
 
-    .mobile-report-meta{
-        margin:12px 0;
-        padding:10px 0;
-        display:grid;
-        grid-template-columns:repeat(2,1fr);
-        gap:8px;
-        border-block:1px solid #eef2f7;
-    }
     .mobile-report-meta.three{grid-template-columns:repeat(3,1fr)}
     .mobile-report-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
     .mobile-report-meta strong{font-size:11px;line-height:1.25;color:#334155;overflow-wrap:anywhere}
@@ -728,19 +715,6 @@
     .desktop-borrowing-filter,.desktop-borrowing-list{display:none!important}
     .mobile-borrowing-ui{display:block}
 
-    .mobile-borrowing-card{
-        margin-bottom:11px;
-        padding:14px;
-        border:1px solid #bae6fd;
-        border-radius:14px;
-        background:#fff;
-    }
-    .mobile-borrowing-top{
-        display:flex;
-        align-items:flex-start;
-        justify-content:space-between;
-        gap:10px;
-    }
     .mobile-borrowing-top>div{min-width:0}
     .mobile-borrowing-top h3{
         margin:0;
@@ -754,14 +728,6 @@
         font-size:11px;
         color:#64748b;
         overflow-wrap:anywhere;
-    }
-    .mobile-borrowing-meta{
-        margin:12px 0;
-        padding:10px 0;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-        border-block:1px solid #eef2f7;
     }
     .mobile-borrowing-meta span{
         display:block;
@@ -1591,20 +1557,7 @@
     .role-manager .category-stat strong{font-size:20px}
     .role-manager .category-stat span{font-size:9px}
 
-    .mobile-category-asset-card{
-        margin-bottom:11px;
-        padding:14px;
-        border:1px solid #bae6fd;
-        border-radius:14px;
-        background:#fff;
-    }
 
-    .mobile-category-asset-top{
-        display:flex;
-        align-items:flex-start;
-        justify-content:space-between;
-        gap:10px;
-    }
 
     .mobile-category-asset-top>div{min-width:0}
 
@@ -1899,13 +1852,6 @@
     .desktop-activity-filter,.desktop-activity-history{display:none!important}
     .mobile-recent-activities-ui{display:block}
 
-    .mobile-activity-history-card{
-        margin-bottom:11px;
-        padding:14px;
-        border:1px solid #bae6fd;
-        border-radius:14px;
-        background:#fff;
-    }
 
     .mobile-activity-history-top{
         display:flex;
@@ -1939,14 +1885,6 @@
         color:#64748b;
     }
 
-    .mobile-activity-history-meta{
-        margin:12px 0;
-        padding:10px 0;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-        border-block:1px solid #eef2f7;
-    }
 
     .mobile-activity-history-meta span,
     .mobile-activity-history-details>span{
@@ -1979,11 +1917,6 @@
 @media(max-width:600px){
     .desktop-notification-filter,.desktop-notification-list{display:none!important}
     .mobile-notifications-ui{display:block}
-
-    .role-manager .stats-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-        gap:10px;
-    }
 
     .mobile-mark-all{
         min-height:34px;
@@ -2195,5 +2128,93 @@
         width:100%!important;
         border-collapse:collapse!important;
         table-layout:auto!important;
+    }
+}
+
+
+/* Transaction validation / reservation workflow mobile support */
+@media(max-width:600px){
+    .role-manager #rejectBox{
+        width:calc(100vw - 24px);
+        max-height:88dvh;
+        padding:16px;
+        overflow-y:auto;
+        border-radius:14px;
+    }
+
+    .role-manager #rejectBox>p{
+        margin:0 0 10px;
+        font-size:11px;
+        line-height:1.45;
+    }
+
+    .role-manager #rejectBox .tx-validation{
+        margin:10px 0 12px;
+        padding:10px;
+        border-radius:11px;
+    }
+
+    .role-manager #rejectBox .tx-validation h3{
+        margin-bottom:6px;
+        font-size:12px;
+    }
+
+    .role-manager #rejectBox .tx-validation-row{
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:7px;
+        padding:7px 0;
+    }
+
+    .role-manager #rejectBox .tx-validation-row strong{
+        font-size:10px;
+        line-height:1.3;
+    }
+
+    .role-manager #rejectBox .tx-validation-row small{
+        font-size:9px;
+        line-height:1.35;
+        overflow-wrap:anywhere;
+    }
+
+    .role-manager #rejectBox .tx-validation-state{
+        padding:3px 6px;
+        font-size:8px;
+    }
+
+    .role-manager #rejectBox .asset-form-row{
+        grid-template-columns:1fr;
+        gap:5px;
+    }
+
+    .role-manager #rejectBox .asset-form-row label{
+        font-size:10px;
+    }
+
+    .role-manager #rejectBox textarea{
+        width:100%;
+        min-height:86px;
+        padding:9px 10px;
+        font-size:10px;
+        line-height:1.4;
+        border-radius:10px;
+    }
+
+    .role-manager #rejectBox .tx-auto-note{
+        margin:5px 0 0;
+        font-size:9px;
+        line-height:1.4;
+    }
+
+    .role-manager #rejectBox .flow-dialog-actions{
+        margin-top:12px;
+    }
+
+    .role-manager .tx-side-actions button:disabled{
+        min-height:42px;
+        white-space:normal;
+    }
+
+    .role-manager .asset-form-note p{
+        overflow-wrap:anywhere;
     }
 }

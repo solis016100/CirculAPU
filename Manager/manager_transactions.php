@@ -32,6 +32,7 @@ $dateFrom = trim($_GET['dateFrom'] ?? '');
 $dateTo = trim($_GET['dateTo'] ?? '');
 $activeOnly = ($_GET['active'] ?? '') === '1';
 $activeTransaction = ($_GET['activeTransaction'] ?? '') === '1';
+$pickupOnly = ($_GET['pickup'] ?? '') === '1';
 $viewAll = ($_GET['viewAll'] ?? '') === '1';
 
 $statuses = ['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'];
@@ -53,17 +54,14 @@ try {
         SELECT
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Pending') pending,
             (SELECT COUNT(*) FROM transactionrequests t
+             JOIN borrowings b ON b.transactionID=t.transactionID
+             JOIN assets a ON a.assetID=t.assetID
              WHERE t.requestStatus='Approved'
-             AND EXISTS(
-                 SELECT 1 FROM borrowings b
-                 WHERE b.transactionID=t.transactionID
-                 AND b.actualReturnDate IS NULL
-                 AND b.borrowingStatus='Approved'
-             )
-             AND EXISTS(
-                 SELECT 1 FROM assets a
-                 WHERE a.assetID=t.assetID AND a.availabilityStatus='Reserved'
-             )) pickup,
+             AND b.actualReturnDate IS NULL
+             AND b.borrowingStatus='Approved'
+             AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+             AND a.availabilityStatus<>'Unavailable'
+) pickup,
             (SELECT COUNT(*) FROM borrowings
              WHERE actualReturnDate IS NULL AND borrowingStatus IN ('Borrowed','Active','Overdue')) active,
             (SELECT COUNT(*) FROM borrowings
@@ -78,7 +76,9 @@ try {
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND a.availabilityStatus='Reserved'
+             AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+             AND a.availabilityStatus<>'Unavailable'
+
              ORDER BY DATE(b.borrowDate) ASC,t.requestDate ASC
              LIMIT 1) nextPickup
     ")->fetch_assoc();
@@ -108,8 +108,9 @@ try {
         $where[] = 't.requestStatus=?'; $params[] = $status; $types .= 's';
     }
 
-    if ($dateFrom) { $where[] = 'DATE(t.requestDate)>=?'; $params[] = $dateFrom; $types .= 's'; }
-    if ($dateTo) { $where[] = 'DATE(t.requestDate)<=?'; $params[] = $dateTo; $types .= 's'; }
+    $dateField=$pickupOnly?'(SELECT MAX(DATE(bd.borrowDate)) FROM borrowings bd WHERE bd.transactionID=t.transactionID)':'DATE(t.requestDate)';
+    if ($dateFrom) { $where[] = "$dateField>=?"; $params[] = $dateFrom; $types .= 's'; }
+    if ($dateTo) { $where[] = "$dateField<=?"; $params[] = $dateTo; $types .= 's'; }
 
     if ($activeOnly) {
         $where[] = "EXISTS(
@@ -120,9 +121,12 @@ try {
         )";
     }
 
-    if ($activeTransaction) {
-        $where[] = "t.requestStatus IN ('Approved','In Progress','Overdue')";
-    }
+    if ($activeTransaction) $where[] = "t.requestStatus IN ('Approved','In Progress','Overdue')";
+    if ($pickupOnly) $where[] = "t.requestStatus='Approved' AND a.availabilityStatus<>'Unavailable' AND EXISTS(
+        SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID
+        AND b.actualReturnDate IS NULL AND b.borrowingStatus='Approved'
+        AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+    )";
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -138,16 +142,18 @@ try {
         $totalPages = max(1, (int)ceil($total / $perPage));
         $page = min($page, $totalPages); $offset = ($page - 1) * $perPage;
 
+        $order=$pickupOnly?'pickupDate ASC,t.requestDate ASC':($status==='Pending'?'t.requestDate ASC':'t.requestDate DESC');
         $stmt = $conn->prepare("
             SELECT t.transactionID,t.requestDate,t.requestStatus,a.assetName,
                    u.userID requesterID,u.name requesterName,
+                   (SELECT MAX(b.borrowDate) FROM borrowings b WHERE b.transactionID=t.transactionID) pickupDate,
                    (SELECT MAX(b.expectedReturnDate) FROM borrowings b WHERE b.transactionID=t.transactionID) dueDate,
                    $overdueSQL isOverdue
             FROM transactionrequests t
             JOIN assets a ON t.assetID=a.assetID
             JOIN user u ON t.requesterID=u.userID
             $whereSQL
-            ORDER BY t.requestDate DESC LIMIT ? OFFSET ?
+            ORDER BY $order LIMIT ? OFFSET ?
         ");
         $list = [...$params, $perPage, $offset];
         $stmt->bind_param($types . 'ii', ...$list);
@@ -161,6 +167,8 @@ try {
 
 $start = $total ? $offset + 1 : 0;
 $end = min($offset + $perPage, $total);
+$listTitle=$pickupOnly?'Waiting for Pickup Confirmation':($status==='Pending'?'Pending Requests':'Transaction Requests');
+$resetURL=$pickupOnly?'manager_transactions.php?pickup=1':($status==='Pending'?'manager_transactions.php?requestStatus=Pending':'manager_transactions.php');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -173,6 +181,8 @@ $end = min($offset + $perPage, $total);
 .transaction-list-meta a{color:var(--primary-color);font-size:13px;font-weight:600;text-decoration:none}
 .transaction-list-meta a:hover{text-decoration:underline}
 .transaction-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.queue-action-link{display:inline-flex;padding:6px 10px;border-radius:6px;background:var(--primary-color);color:#fff;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap}
+.queue-action-link:hover{background:var(--primary-hover)}
 @media(max-width:650px){.transaction-heading-actions{justify-content:stretch}.transaction-heading-actions .management-create-btn{flex:1}}
 </style>
 </head>
@@ -189,15 +199,15 @@ $end = min($offset + $perPage, $total);
 <?php if($nextPending||$nextPickup):?>
 <div class="transaction-heading-actions">
 <?php if($nextPending):?>
-<a href="manager_transaction_view.php?transactionID=<?=e($nextPending)?>" class="management-create-btn">
+<a href="manager_transaction_view.php?transactionID=<?=e($nextPending)?>&from=pending" class="management-create-btn">
 <img src="../assets/icons/pendingVerification.png" alt="">
 Review Pending Requests (<?=$stats['pending']?>)
 </a>
 <?php endif;?>
 <?php if($nextPickup):?>
-<a href="manager_transaction_view.php?transactionID=<?=e($nextPickup)?>" class="management-create-btn">
+<a href="manager_transactions.php?pickup=1" class="management-create-btn">
 <img src="../assets/icons/borrowed-assets.png" alt="">
-Confirm Pickups (<?=$stats['pickup']?>)
+Waiting for Pickup Confirmation (<?=$stats['pickup']?>)
 </a>
 <?php endif;?>
 </div>
@@ -231,10 +241,11 @@ Confirm Pickups (<?=$stats['pickup']?>)
 
 
 <section class="mobile-transaction-ui">
-<details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo)?'open':''?>>
-<summary><span>Filter Transactions</span><?php if($search||$status||$dateFrom||$dateTo):?><small>Filters active</small><?php endif;?></summary>
+<details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo||$pickupOnly)?'open':''?>>
+<summary><span>Filter Transactions</span><?php if($search||$status||$dateFrom||$dateTo||$pickupOnly):?><small>Filters active</small><?php endif;?></summary>
 <form method="GET" class="mobile-filter-form">
 <label><span>Search</span><input name="search" placeholder="ID, asset or requester" value="<?=e($search)?>"></label>
+<?php if(!$pickupOnly):?>
 <div class="mobile-filter-grid">
 <label><span>Status</span><select name="requestStatus">
 <option value="">All</option>
@@ -242,22 +253,24 @@ Confirm Pickups (<?=$stats['pickup']?>)
 </select></label>
 <label><span>Date From</span><input type="date" name="dateFrom" value="<?=e($dateFrom)?>"></label>
 </div>
-<label><span>Date To</span><input type="date" name="dateTo" value="<?=e($dateTo)?>"></label>
+<?php else:?><label><span>Pickup From</span><input type="date" name="dateFrom" value="<?=e($dateFrom)?>"></label><?php endif;?>
+<label><span><?=$pickupOnly?'Pickup To':'Date To'?></span><input type="date" name="dateTo" value="<?=e($dateTo)?>"></label>
 <?php if($activeOnly):?><input type="hidden" name="active" value="1"><?php endif;?>
 <?php if($activeTransaction):?><input type="hidden" name="activeTransaction" value="1"><?php endif;?>
-<div class="mobile-filter-actions"><a href="manager_transactions.php">Reset</a><button>Apply Filters</button></div>
+<?php if($pickupOnly):?><input type="hidden" name="pickup" value="1"><?php endif;?>
+<div class="mobile-filter-actions"><a href="<?=e($resetURL)?>">Reset</a><button>Apply Filters</button></div>
 </form>
 </details>
 
 <div class="mobile-section-heading">
-<div><h2>Transaction Requests</h2><p><?=$total?> transaction<?=$total===1?'':'s'?></p></div>
+<div><h2><?=e($listTitle)?></h2><p><?=$total?> transaction<?=$total===1?'':'s'?></p></div>
 <span class="mobile-page-count"><?=$page?> / <?=$totalPages?></span>
 </div>
 
 <?php if(!$transactions):?>
 <div class="mobile-empty-card">No transaction requests found.</div>
 <?php else:foreach($transactions as $t):
-$displayStatus=$t['isOverdue']?'Overdue':$t['requestStatus'];?>
+$displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']);?>
 <article class="mobile-transaction-card">
 <div class="mobile-transaction-top">
 <div>
@@ -269,13 +282,13 @@ $displayStatus=$t['isOverdue']?'Overdue':$t['requestStatus'];?>
 </div>
 
 <div class="mobile-transaction-meta">
-<div><span>Requested</span><strong><?=e(showDate($t['requestDate']))?></strong></div>
+<div><span><?=$pickupOnly?'Pickup':'Requested'?></span><strong><?=e(showDate($pickupOnly?$t['pickupDate']:$t['requestDate']))?></strong></div>
 <div><span>Expected Return</span><strong><?=e(showDate($t['dueDate']))?></strong></div>
 </div>
 
 <div class="mobile-card-actions">
-<a class="primary" href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>">
-<?=$t['requestStatus']==='Pending'?'Review Request':'View Details'?>
+<a class="primary" href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?><?=$pickupOnly?'&from=pickup':($status==='Pending'?'&from=pending':'')?>">
+<?=$pickupOnly?'Confirm Pickup':($t['requestStatus']==='Pending'?'Review Request':'View Details')?>
 </a>
 </div>
 </article>
@@ -292,12 +305,14 @@ $displayStatus=$t['isOverdue']?'Overdue':$t['requestStatus'];?>
 
 <section class="management-filter desktop-transaction-filter">
 <form method="GET">
+<?php if($pickupOnly):?><input type="hidden" name="pickup" value="1"><?php endif;?>
 <div class="management-filter-group search">
 <label for="search">Search Transaction</label>
 <div class="management-search-input"><img src="../assets/icons/search.png" alt="">
 <input id="search" name="search" value="<?= e($search) ?>" placeholder="Transaction ID, asset or requester"></div>
 </div>
 
+<?php if(!$pickupOnly):?>
 <div class="management-filter-group">
 <label for="requestStatus">Status</label>
 <select id="requestStatus" name="requestStatus">
@@ -307,20 +322,20 @@ $displayStatus=$t['isOverdue']?'Overdue':$t['requestStatus'];?>
 <?php endforeach; ?>
 </select>
 </div>
-
-<div class="management-filter-group"><label for="dateFrom">Date From</label><input type="date" id="dateFrom" name="dateFrom" value="<?= e($dateFrom) ?>"></div>
-<div class="management-filter-group"><label for="dateTo">Date To</label><input type="date" id="dateTo" name="dateTo" value="<?= e($dateTo) ?>"></div>
+<?php endif;?>
+<div class="management-filter-group"><label for="dateFrom"><?=$pickupOnly?'Pickup From':'Date From'?></label><input type="date" id="dateFrom" name="dateFrom" value="<?= e($dateFrom) ?>"></div>
+<div class="management-filter-group"><label for="dateTo"><?=$pickupOnly?'Pickup To':'Date To'?></label><input type="date" id="dateTo" name="dateTo" value="<?= e($dateTo) ?>"></div>
 
 <div class="management-filter-buttons">
 <button type="submit" class="management-filter-btn"><img src="../assets/icons/filter.png" alt=""> Filter</button>
-<a href="manager_transactions.php" class="management-reset-btn"><img src="../assets/icons/reset.png" alt=""> Reset</a>
+<a href="<?=e($resetURL)?>" class="management-reset-btn"><img src="../assets/icons/reset.png" alt=""> Reset</a>
 </div>
 </form>
 </section>
 
 <section class="management-list desktop-transaction-list">
 <div class="management-list-header">
-<h2>Transaction Requests</h2>
+<h2><?=e($listTitle)?></h2>
 <div class="transaction-list-meta">
 <span><?= $total ?> transaction<?= $total===1?'':'s' ?></span>
 <a href="<?=e(viewAllURL($viewAll))?>"><?=$viewAll?'Paginated View':'View All'?></a>
@@ -328,22 +343,28 @@ $displayStatus=$t['isOverdue']?'Overdue':$t['requestStatus'];?>
 </div>
 <div class="management-table-wrapper">
 <table class="management-table">
-<thead><tr><th>#</th><th>Transaction ID</th><th>Asset Name</th><th>Requester</th><th>Status</th><th>Request Date</th><th>Expected Return</th><th>Action</th></tr></thead>
+<thead><tr><th>#</th><th>Transaction ID</th><th>Asset Name</th><th>Requester</th><th>Status</th><th><?=$pickupOnly?'Pickup Date':'Request Date'?></th><th>Expected Return</th><th>Action</th></tr></thead>
 <tbody>
 <?php if (!$transactions): ?>
 <tr><td colspan="8" class="management-empty-state">No transaction requests found.</td></tr>
-<?php else: foreach ($transactions as $i => $t): $displayStatus = $t['isOverdue'] ? 'Overdue' : $t['requestStatus']; ?>
+<?php else: foreach ($transactions as $i => $t): $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']); ?>
 <tr>
 <td><?= $offset + $i + 1 ?></td>
 <td><strong><?= e($t['transactionID']) ?></strong></td>
 <td><?= e($t['assetName']) ?></td>
 <td><?= e($t['requesterName'] . ' (' . $t['requesterID'] . ')') ?></td>
 <td><span class="status-badge <?= $t['isOverdue'] ? 'alert-error' : '' ?>"><?= e($displayStatus) ?></span></td>
-<td><?= e(showDate($t['requestDate'])) ?></td>
+<td><?= e(showDate($pickupOnly?$t['pickupDate']:$t['requestDate'])) ?></td>
 <td><?= e(showDate($t['dueDate'])) ?></td>
-<td><a href="manager_transaction_view.php?transactionID=<?= e($t['transactionID']) ?>" class="management-action-btn"
-title="<?= $t['requestStatus'] === 'Pending' ? 'Review Transaction Request' : 'View Transaction Details' ?>">
-<img src="../assets/icons/view.png" alt="View"></a></td>
+<td>
+<?php if($pickupOnly||$status==='Pending'):?>
+<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>&from=<?=$pickupOnly?'pickup':'pending'?>" class="queue-action-link"><?=$pickupOnly?'Confirm Pickup':'Review Request'?></a>
+<?php else:?>
+<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>" class="management-action-btn"
+title="<?=$t['requestStatus']==='Pending'?'Review Transaction Request':'View Transaction Details'?>">
+<img src="../assets/icons/view.png" alt="View"></a>
+<?php endif;?>
+</td>
 </tr>
 <?php endforeach; endif; ?>
 </tbody>
@@ -375,14 +396,14 @@ title="<?= $t['requestStatus'] === 'Pending' ? 'Review Transaction Request' : 'V
 </div>
 
 <?php if($nextPickup):?>
-<p style="margin-top:12px">There <?=$stats['pickup']===1?'is':'are'?> still <strong><?=$stats['pickup']?></strong> approved reservation<?=$stats['pickup']===1?'':'s'?> waiting for pickup confirmation.</p>
+<p style="margin-top:12px">There <?=$stats['pickup']===1?'is':'are'?> still <strong><?=$stats['pickup']?></strong> reservation<?=$stats['pickup']===1?'':'s'?> waiting for pickup confirmation.</p>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="pickupDoneDialog.close()">Done</button>
 <button type="button" class="category-form-submit"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>'">Confirm Another Pickup</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">Confirm Next Pickup</button>
 </div>
 <?php else:?>
-<p style="margin-top:12px">There are no more approved reservations waiting for pickup confirmation.</p>
+<p style="margin-top:12px">There are no more reservations waiting for pickup confirmation.</p>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-submit" onclick="pickupDoneDialog.close()">Done</button>
 </div>
@@ -395,7 +416,7 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPic
 <dialog id="nextRequestDialog" class="flow-dialog">
 <h2>Request Review Completed</h2>
 <p><?=($_GET['reviewDone']==='approve')
-    ?'The request was approved and the asset has been reserved.'
+    ?'The request was approved and the future reservation has been confirmed.'
     :'The borrowing request was rejected successfully.'?></p>
 
 <?php if($nextPending):?>
@@ -404,10 +425,10 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPic
 <button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
 <?php if($nextPickup):?>
 <button type="button" class="category-form-back"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>'">Process Pickups (<?=$stats['pickup']?>)</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">Process Pickups (<?=$stats['pickup']?>)</button>
 <?php endif;?>
 <button type="button" class="category-form-submit"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPending)?>'">Review Another</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPending)?>&from=pending'">Review Next Request</button>
 </div>
 <?php else:?>
 <p style="margin-top:12px">There are no more pending requests to review.</p>
@@ -416,7 +437,7 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPen
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
 <button type="button" class="category-form-submit"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>'">Confirm Pickups</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">Confirm Pickups</button>
 </div>
 <?php else:?>
 <div class="flow-dialog-actions">

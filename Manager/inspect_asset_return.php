@@ -28,7 +28,7 @@ function notify(mysqli $c,string $uid,string $title,string $text): void {
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
-$conditions=['New','Like New','Good','Fair','Poor'];$t=$b=null;$error='';
+$conditions=['New','Like New','Good','Fair','Poor'];$t=$b=$upcomingReservation=null;$error='';
 
 try{
     $c=$conn;$c->set_charset('utf8mb4');
@@ -44,6 +44,20 @@ try{
     else{
         $s=$c->prepare("SELECT * FROM borrowings WHERE transactionID=? ORDER BY borrowDate DESC LIMIT 1");
         $s->bind_param('s',$id);$s->execute();$b=$s->get_result()->fetch_assoc();$s->close();
+
+        $s=$c->prepare("
+            SELECT tr.transactionID,br.borrowDate,br.expectedReturnDate,u.name requesterName
+            FROM transactionrequests tr
+            JOIN borrowings br ON br.transactionID=tr.transactionID
+            JOIN user u ON u.userID=tr.requesterID
+            WHERE tr.assetID=? AND tr.transactionID<>?
+              AND tr.requestStatus='Approved'
+              AND br.borrowingStatus='Approved'
+              AND br.actualReturnDate IS NULL
+              AND CURDATE() BETWEEN DATE_SUB(DATE(br.borrowDate),INTERVAL 7 DAY) AND DATE(br.expectedReturnDate)
+            ORDER BY DATE(br.borrowDate) ASC LIMIT 1");
+        $s->bind_param('ss',$t['assetID'],$id);$s->execute();
+        $upcomingReservation=$s->get_result()->fetch_assoc();$s->close();
 
         $active=$b&&!$b['actualReturnDate']&&(
             $t['availabilityStatus']==='Borrowed'||
@@ -72,6 +86,8 @@ try{
             elseif(!$penaltyAllowed&&$deduct>0)$error='EcoPoints can only be deducted for an overdue, damaged, lost or unavailable return.';
             elseif(strlen($reason)>255)$error='Reason must not exceed 255 characters.';
             else{
+                $finalOutcome=($outcome==='Available'&&$upcomingReservation)?'Reserved':$outcome;
+
                 $c->begin_transaction();
                 try{
                     $s=$c->prepare("UPDATE transactionrequests SET requestStatus='Completed' WHERE transactionID=?");
@@ -82,12 +98,13 @@ try{
 
                     $old=$t['availabilityStatus'];
                     $s=$c->prepare("UPDATE assets SET assetCondition=?,availabilityStatus=?,updatedDate=CURRENT_TIMESTAMP WHERE assetID=?");
-                    $s->bind_param('sss',$returned,$outcome,$t['assetID']);$s->execute();$s->close();
+                    $s->bind_param('sss',$returned,$finalOutcome,$t['assetID']);$s->execute();$s->close();
 
-                    if($old!==$outcome){
+                    if($old!==$finalOutcome){
                         $hid=nextID($c,'assetstatushistory','historyID','H');$why="Return inspection completed for $id";
+                        if($finalOutcome==='Reserved'&&$upcomingReservation)$why="Return inspected; protected for upcoming reservation {$upcomingReservation['transactionID']}";
                         $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
-                        $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$outcome,$why);$s->execute();$s->close();
+                        $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$finalOutcome,$why);$s->execute();$s->close();
                     }
 
                     if($deduct){
@@ -101,12 +118,12 @@ try{
                     }
 
                     $newBalance=(int)$t['ecopoint']-$deduct;
-                    $text="Return completed for {$t['assetName']}: {$t['assetCondition']} → $returned; asset $outcome";
+                    $text="Return completed for {$t['assetName']}: {$t['assetCondition']} → $returned; asset $finalOutcome";
                     if($deduct)$text.="; deducted $deduct EcoPoints (new balance: $newBalance). Reason: $reason";
                     if($late)$text.='; returned overdue.';
                     logTx($c,$manager,$id,$text);
 
-                    $msg="Return for {$t['assetName']} completed. Returned condition: $returned. Asset status: $outcome.";
+                    $msg="Return for {$t['assetName']} completed. Returned condition: $returned. Asset status: $finalOutcome.";
                     if($deduct)$msg.=" $deduct EcoPoints were deducted. New balance: $newBalance. Reason: $reason";
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
@@ -144,6 +161,13 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <div class="alert alert-error"><strong>Overdue Return</strong><br>Expected return was <?=e(d($b['expectedReturnDate'],false))?>.</div>
 <?php else:?>
 <div class="asset-form-note"><strong>Return Accepted Before / On Due Date</strong><p>Expected return: <?=e(d($b['expectedReturnDate'],false))?>. The member may return the asset at any time while borrowing is active.</p></div>
+<?php endif;?>
+
+<?php if($upcomingReservation):?>
+<div class="asset-form-note">
+<strong>Upcoming Reservation Protection</strong>
+<p>This asset has reservation <?=e($upcomingReservation['transactionID'])?> with pickup on <?=e(d($upcomingReservation['borrowDate'],false))?>. If the returned asset is usable, CirculAPU will automatically set it to Reserved instead of Available.</p>
+</div>
 <?php endif;?>
 
 <section class="content-card asset-form-card">
@@ -221,6 +245,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <div><strong>Borrower</strong><span><?=e($t['borrowerName'])?></span></div>
 <div><strong>Returned Condition</strong><span id="confirmReturnedCondition"></span></div>
 <div><strong>Asset After Return</strong><span id="confirmReturnOutcome"></span></div>
+<?php if($upcomingReservation):?><div><strong>Reservation Protection</strong><span>Usable asset will become Reserved</span></div><?php endif;?>
 <div><strong>EcoPoint Deduction</strong><span id="confirmDeduction"></span></div>
 <div id="confirmReasonRow" hidden><strong>Reason</strong><span id="confirmReturnReason"></span></div>
 </div>

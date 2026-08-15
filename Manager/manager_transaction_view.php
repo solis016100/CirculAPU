@@ -32,28 +32,193 @@ function assetStatus(mysqli $c,string $asset,string $manager,string $old,string 
     $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
     $s->bind_param('ssssss',$x,$asset,$manager,$old,$new,$why);$s->execute();$s->close();
 }
-function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $status):string{
-    if($status!=='Pending')return 'Only Pending requests can be approved and reserved.';
+function protectionDate(string $pickup):string{
+    return date('Y-m-d',strtotime($pickup.' -7 days'));
+}
+function scheduleCheck(mysqli $c,string $asset,string $currentTx,?array $b):array{
+    $result=['issue'=>'','detail'=>'No conflicting approved or active booking detected.','conflict'=>null];
+    if(!$b||empty($b['borrowDate'])||empty($b['expectedReturnDate']))return $result;
+
+    $pickup=date('Y-m-d',strtotime($b['borrowDate']));
+    $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
+    $protectedFrom=protectionDate($pickup);
+
+    $s=$c->prepare("
+        SELECT t.transactionID,t.requestStatus,b.borrowDate,b.expectedReturnDate,b.borrowingStatus,
+               u.name borrowerName
+        FROM borrowings b
+        JOIN transactionrequests t ON t.transactionID=b.transactionID
+        JOIN user u ON u.userID=b.borrowerID
+        WHERE b.assetID=? AND b.transactionID<>?
+          AND b.actualReturnDate IS NULL
+          AND t.requestStatus IN ('Approved','In Progress')
+          AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+        ORDER BY DATE(b.borrowDate) ASC");
+    $s->bind_param('ss',$asset,$currentTx);$s->execute();
+    $rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
+
+    foreach($rows as $x){
+        if(empty($x['borrowDate'])||empty($x['expectedReturnDate']))continue;
+        $existingPickup=date('Y-m-d',strtotime($x['borrowDate']));
+        $existingReturn=date('Y-m-d',strtotime($x['expectedReturnDate']));
+        $existingProtectedFrom=protectionDate($existingPickup);
+        $isActive=in_array($x['borrowingStatus'],['Borrowed','Active','Overdue'],true);
+        $isOverdue=$isActive&&$existingReturn<date('Y-m-d');
+
+        if($isOverdue){
+            $result['issue']="Approval blocked: this asset is still with an overdue borrower from transaction {$x['transactionID']}.";
+            $result['detail']="Transaction {$x['transactionID']} is overdue and the asset has not been returned.";
+            $result['conflict']=$x;
+            return $result;
+        }
+
+        if($protectedFrom<=$existingReturn&&$return>=$existingProtectedFrom){
+            $result['issue']="Approval blocked: requested dates conflict with transaction {$x['transactionID']} or its 7-day protection window.";
+            $result['detail']="Conflicts with {$x['transactionID']} ({$existingPickup} to {$existingReturn}); protection begins {$existingProtectedFrom}.";
+            $result['conflict']=$x;
+            return $result;
+        }
+    }
+    return $result;
+}
+function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $status,array $schedule):string{
+    if($status!=='Pending')return 'Only Pending requests can be approved.';
     if($blocked)return ($summary['overdue']??0)>0
-        ?'Approval blocked: borrower has an overdue unreturned asset.'
-        :'Approval blocked: borrower already has 5 active borrowings.';
+        ?'Approval blocked: requester has an overdue unreturned asset.'
+        :'Approval blocked: requester already has 5 active borrowings or reservations.';
     if(!$b||empty($b['borrowDate'])||empty($b['expectedReturnDate']))
         return 'Approval blocked: the member request is missing pickup or return date.';
     $pickup=date('Y-m-d',strtotime($b['borrowDate']));
     $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
     if($pickup<date('Y-m-d'))return 'Approval blocked: the requested pickup date has already passed.';
-    if($return<=$pickup)return 'Requested return date must be after the pickup date.';
-    if($t['listingStatus']!=='Published'||$t['verificationStatus']!=='Approved'||$t['availabilityStatus']!=='Available')
-        return 'Approval blocked: this asset is not currently available for borrowing.';
+    if($return<=$pickup)return 'Approval blocked: requested return date must be after the pickup date.';
+    if($t['listingStatus']!=='Published'||$t['verificationStatus']!=='Approved')
+        return 'Approval blocked: this asset is not Published and Auditor-approved.';
+    if($t['availabilityStatus']==='Unavailable')
+        return 'Approval blocked: this asset is operationally unavailable.';
+    if($schedule['issue'])return $schedule['issue'];
     return '';
 }
-function go(string $id):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&updated=1');exit();}
-function reviewDone(string $action):never{header("Location: manager_transactions.php?reviewDone=$action");exit();}
+function validationChecks(array $t,?array $b,array $summary,string $status,array $schedule):array{
+    $active=(int)($summary['active']??0);
+    $overdue=(int)($summary['overdue']??0);
+    $pickup=$b&&!empty($b['borrowDate'])?date('Y-m-d',strtotime($b['borrowDate'])):'';
+    $return=$b&&!empty($b['expectedReturnDate'])?date('Y-m-d',strtotime($b['expectedReturnDate'])):'';
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
+    $dateOk=(bool)($pickup&&$return&&$pickup>=date('Y-m-d')&&$return>$pickup);
+    $dateDetail='Pickup and return dates are valid.';
+    $dateReason='';
+    if(!$pickup||!$return){
+        $dateDetail='Pickup or return date is missing.';
+        $dateReason='The borrowing request is missing a valid pickup or return date.';
+    }elseif($pickup<date('Y-m-d')){
+        $dateDetail='The requested pickup date has already passed.';
+        $dateReason='The requested pickup date has already passed. Please submit a new request with a valid pickup date.';
+    }elseif($return<=$pickup){
+        $dateDetail='The return date must be after the pickup date.';
+        $dateReason='The requested return date must be after the pickup date.';
+    }
+
+    $scheduleReason='';
+    if($schedule['issue']){
+        $scheduleReason=str_contains($schedule['issue'],'overdue borrower')
+            ?'This asset is still with an overdue borrower and cannot be safely reserved yet. Please choose another asset or submit a new request after it is returned.'
+            :'The requested borrowing period conflicts with an existing reservation or its 7-day protection window. Please submit a new request with different dates.';
+    }
+
+    return [
+        [
+            'label'=>'Current overdue borrowing',
+            'ok'=>$overdue===0,
+            'detail'=>$overdue===0?'Requester has no overdue unreturned asset.':"$overdue overdue unreturned borrowing(s) detected for this requester.",
+            'reason'=>$overdue===0?'':'You currently have an overdue borrowing that has not been returned. Please return the overdue asset before submitting another borrowing request.'
+        ],
+        [
+            'label'=>'Maximum active borrowings',
+            'ok'=>$active<5,
+            'detail'=>"$active / 5 active borrowings or reservations.",
+            'reason'=>$active<5?'':'You have reached the maximum limit of 5 active borrowings or reservations. Please complete an existing borrowing before submitting another request.'
+        ],
+        [
+            'label'=>'Requested borrowing dates',
+            'ok'=>$dateOk,
+            'detail'=>$dateDetail,
+            'reason'=>$dateReason
+        ],
+        [
+            'label'=>'Reservation schedule & 7-day protection',
+            'ok'=>!$schedule['issue'],
+            'detail'=>$schedule['detail'],
+            'reason'=>$scheduleReason
+        ],
+        [
+            'label'=>'Asset listing eligibility',
+            'ok'=>$t['listingStatus']==='Published'&&$t['verificationStatus']==='Approved',
+            'detail'=>($t['listingStatus']==='Published'&&$t['verificationStatus']==='Approved')
+                ?'Asset is Published and Auditor-approved.'
+                :'Asset is not currently Published and Auditor-approved.',
+            'reason'=>($t['listingStatus']==='Published'&&$t['verificationStatus']==='Approved')
+                ?'':'This asset is not currently eligible for borrowing.'
+        ],
+        [
+            'label'=>'Asset operational status',
+            'ok'=>$t['availabilityStatus']!=='Unavailable',
+            'detail'=>$t['availabilityStatus']==='Unavailable'
+                ?'Asset is currently Unavailable.'
+                :'Current status: '.$t['availabilityStatus'].'. Schedule validation determines whether the requested dates are safe.',
+            'reason'=>$t['availabilityStatus']==='Unavailable'
+                ?'This asset is currently unavailable for borrowing. Please select another asset or try again when it becomes available.'
+                :''
+        ]
+    ];
+}
+function autoRejectReason(array $checks):string{
+    $reasons=[];
+    foreach($checks as $check){
+        if(!$check['ok']&&!empty($check['reason']))$reasons[]=$check['reason'];
+    }
+    return implode(' ',$reasons);
+}
+function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):string{
+    if($status!=='Approved'||!$b)return 'Pickup can only be confirmed for an approved reservation.';
+    if(empty($b['borrowDate'])||empty($b['expectedReturnDate']))return 'Pickup cannot be confirmed because the reservation dates are incomplete.';
+
+    $pickup=date('Y-m-d',strtotime($b['borrowDate']));
+    $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
+    $earliest=protectionDate($pickup);
+    $today=date('Y-m-d');
+
+    if($today<$earliest)return 'Pickup is too early. Earliest allowed confirmation is '.date('d M Y',strtotime($earliest)).'.';
+    if($today>$return)return 'Pickup cannot be confirmed because the approved borrowing period has already ended.';
+    if($t['availabilityStatus']==='Unavailable')return 'Pickup cannot be confirmed because the asset is currently Unavailable.';
+
+    $s=$c->prepare("
+        SELECT b.transactionID,b.expectedReturnDate,u.name borrowerName
+        FROM borrowings b
+        JOIN transactionrequests tr ON tr.transactionID=b.transactionID
+        JOIN user u ON u.userID=b.borrowerID
+        WHERE b.assetID=? AND b.transactionID<>?
+          AND b.actualReturnDate IS NULL
+          AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
+        ORDER BY DATE(b.expectedReturnDate) ASC LIMIT 1");
+    $s->bind_param('ss',$t['assetID'],$id);$s->execute();
+    $hold=$s->get_result()->fetch_assoc();$s->close();
+
+    if($hold){
+        $due=!empty($hold['expectedReturnDate'])?date('d M Y',strtotime($hold['expectedReturnDate'])):'unknown';
+        return "Pickup cannot be confirmed because the previous borrower has not returned this asset yet (transaction {$hold['transactionID']}, expected return $due).";
+    }
+    if($t['availabilityStatus']==='Borrowed')return 'Pickup cannot be confirmed because the asset is still marked Borrowed.';
+    return '';
+}
+
+function go(string $id):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&updated=1');exit();}
+function reviewDone(string $action):never{header("Location: manager_transactions.php?requestStatus=Pending&reviewDone=$action");exit();}
+
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$backURL=$from==='pickup'?'manager_transactions.php?pickup=1':($from==='pending'?'manager_transactions.php?requestStatus=Pending':'manager_transactions.php');
 if(!$id){header('Location: manager_transactions.php');exit();}
 
-$t=$b=null;$summary=[];$past=$eco=$logs=[];$error='';
+$t=$b=null;$summary=[];$past=$eco=$logs=$validationChecks=[];$schedule=['issue'=>'','detail'=>'No conflicting approved or active booking detected.','conflict'=>null];$autoRejectReason=$pickupIssue='';$error='';
 
 try{
     $c=$conn;$c->set_charset('utf8mb4');
@@ -95,7 +260,17 @@ try{
         $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
         $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
         $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
-        $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
+        $schedule=scheduleCheck($c,$t['assetID'],$id,$b);
+        $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status,$schedule);
+        $validationChecks=validationChecks($t,$b,$summary,$status,$schedule);
+        $autoRejectReason=autoRejectReason($validationChecks);
+        $pickupIssue=pickupIssue($c,$t,$b,$status,$id);
+
+        if($_SERVER['REQUEST_METHOD']!=='POST'&&$status==='Approved'&&!$pickupIssue&&$t['availabilityStatus']==='Available'){
+            assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"7-day reservation protection activated for request $id");
+            logTx($c,$manager,'Update',$id,"Reservation protection activated for {$t['assetName']}");
+            $t['availabilityStatus']='Reserved';
+        }
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $action=$_POST['action']??'';$remark=trim($_POST['managerRemark']??'');
@@ -104,23 +279,42 @@ try{
                 $pickup=$b['borrowDate']??'';$return=$b['expectedReturnDate']??'';
                 if($approvalIssue)$error=$approvalIssue;
                 else{
+                    $pickupDate=date('Y-m-d',strtotime($pickup));
+                    $protectedFrom=protectionDate($pickupDate);
+                    $insideProtection=date('Y-m-d')>=$protectedFrom;
+                    $reserveNow=$insideProtection&&$t['availabilityStatus']==='Available';
+
                     $c->begin_transaction();
                     try{
                         $s=$c->prepare("UPDATE transactionrequests SET requestStatus='Approved',managerRemark=?,decisionDate=NOW() WHERE transactionID=?");
                         $s->bind_param('ss',$remark,$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Approved' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"Approved and reserved for request $id");
-                        logTx($c,$manager,'Approve',$id,"Approved borrowing request and reserved {$t['assetName']}");
-                        notify($c,$t['requesterID'],'Request Approved & Asset Reserved',"Your request $id for {$t['assetName']} was approved and the asset is reserved for you. Pickup: ".d($pickup).". Return by: ".d($return).'.');
+
+                        if($reserveNow){
+                            assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"7-day reservation protection activated for request $id");
+                        }
+
+                        $stateText=$reserveNow?'asset reserved inside the 7-day protection window':'future reservation confirmed; asset not locked early';
+                        logTx($c,$manager,'Approve',$id,"Approved borrowing request for {$t['assetName']}; $stateText");
+                        notify(
+                            $c,$t['requesterID'],'Reservation Confirmed',
+                            "Your request $id for {$t['assetName']} was approved. Pickup: ".d($pickup).
+                            ". Return by: ".d($return).
+                            ". Reservation protection begins ".d($protectedFrom)."."
+                        );
                         $c->commit();reviewDone('approve');
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
 
             if($action==='reject'){
+                $managerNote=trim($_POST['managerNote']??'');
+                $remark=trim($autoRejectReason.($managerNote?($autoRejectReason?' Manager note: ':'').$managerNote:''));
+                $remark=substr($remark,0,255);
+
                 if($status!=='Pending')$error='Only Pending requests can be rejected.';
-                elseif(!$remark)$error='Please enter a rejection reason.';
+                elseif(!$remark)$error='No automatic validation issue was detected. Please enter a Manager rejection reason.';
                 else{
                     $c->begin_transaction();
                     try{
@@ -135,7 +329,8 @@ try{
             }
 
             if($action==='start'){
-                if($status!=='Approved'||!$b||$t['availabilityStatus']!=='Reserved')$error='Pickup can only be confirmed for an approved request with a Reserved asset.';
+                $pickupIssue=pickupIssue($c,$t,$b,$status,$id);
+                if($pickupIssue)$error=$pickupIssue;
                 else{
                     $c->begin_transaction();
                     try{
@@ -143,11 +338,11 @@ try{
                         $s->bind_param('s',$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Borrowed' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,'Reserved','Borrowed',"Asset picked up for $id");
+                        assetStatus($c,$t['assetID'],$manager,$t['availabilityStatus'],'Borrowed',"Asset picked up for $id");
                         logTx($c,$manager,'Assign',$id,"Pickup confirmed; borrowing started for {$t['assetName']}");
                         notify($c,$t['requesterID'],'Pickup Confirmed',"Pickup for {$t['assetName']} was confirmed. Your borrowing has started. Return by: ".d($b['expectedReturnDate']).'.');
                         $c->commit();
-                        header('Location: manager_transactions.php?pickupDone='.rawurlencode($id));
+                        header('Location: manager_transactions.php?pickup=1&pickupDone='.rawurlencode($id));
                         exit();
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
@@ -163,7 +358,12 @@ try{
                         $s->bind_param('ss',$remark,$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Cancelled' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,'Reserved','Available',"Cancelled reservation $id");
+                        $currentProtected=$b&&!empty($b['borrowDate'])&&!empty($b['expectedReturnDate'])
+                            &&date('Y-m-d')>=protectionDate(date('Y-m-d',strtotime($b['borrowDate'])))
+                            &&date('Y-m-d')<=date('Y-m-d',strtotime($b['expectedReturnDate']));
+                        if($t['availabilityStatus']==='Reserved'&&$currentProtected){
+                            assetStatus($c,$t['assetID'],$manager,'Reserved','Available',"Cancelled protected reservation $id");
+                        }
                         logTx($c,$manager,'Update',$id,"Cancelled reservation before pickup. Reason: $remark");
                         notify($c,$t['requesterID'],'Reservation Cancelled',"The reservation for transaction $id was cancelled before pickup. Reason: $remark");
                         $c->commit();go($id);
@@ -182,7 +382,12 @@ if($t){
     $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
     $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
     $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
-    $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
+    $schedule=scheduleCheck($conn,$t['assetID'],$id,$b);
+    $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status,$schedule);
+    $validationChecks=validationChecks($t,$b,$summary,$status,$schedule);
+    $autoRejectReason=autoRejectReason($validationChecks);
+    $pickupIssue=pickupIssue($conn,$t,$b,$status,$id);
+    $pickupEarliest=$b&&!empty($b['borrowDate'])?protectionDate(date('Y-m-d',strtotime($b['borrowDate']))):'';
     $personLabel=in_array($status,['Pending','Rejected','Cancelled'],true)?'Requester':'Borrower';
 }
 ?>
@@ -218,6 +423,18 @@ if($t){
 .tx-side-actions{display:flex;flex-direction:column;gap:12px}
 .tx-side-actions form{margin:0}
 .tx-side-actions a,.tx-side-actions button{width:100%;justify-content:center}
+.tx-validation{margin:14px 0;padding:12px;border:1px solid #dbe7ef;border-radius:10px;background:#f8fbfd}
+.tx-validation h3{margin:0 0 9px;font-size:14px}
+.tx-validation-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:8px 0;border-top:1px solid #e8eef3}
+.tx-validation-row:first-of-type{border-top:0}
+.tx-validation-row strong{display:block;font-size:13px}
+.tx-validation-row small{display:block;margin-top:2px;color:#64748b;line-height:1.35}
+.tx-validation-state{align-self:start;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.tx-validation-state.ok{background:#dcfce7;color:#166534}
+.tx-validation-state.fail{background:#fee2e2;color:#991b1b}
+.tx-reject-reason{margin:12px 0;padding:12px 14px;border:1px solid #fecaca;border-radius:8px;background:#fff1f2;color:#991b1b;line-height:1.45}
+.tx-reject-pass{margin:12px 0;padding:10px 12px;border:1px solid #bbf7d0;border-radius:8px;background:#f0fdf4;color:#166534;font-size:13px}
+.tx-auto-note{margin:6px 0 0;color:#64748b;font-size:12px;line-height:1.4}
 @media print{
 @page{size:A4 landscape;margin:10mm}
 .sidebar,.app-header,.breadcrumb,.management-heading p,.tx-side-actions,.tx-dialog,.flow-dialog,.tx-profile .category-form-actions{display:none!important}
@@ -258,6 +475,10 @@ if($t){
 <div class="alert alert-error"><strong>Approval Blocked</strong> · <?=e(preg_replace('/^Approval blocked:\s*/i','',$approvalIssue))?></div>
 <?php elseif($status==='Completed'):?>
 <div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
+<?php elseif($status==='Approved'&&$pickupIssue):?>
+<div class="asset-form-note"><strong>Reservation Confirmed</strong><p><?=e($pickupIssue)?></p></div>
+<?php elseif($status==='Approved'):?>
+<div class="asset-form-note"><strong>Pickup Window Open</strong><p>The reservation is protected and pickup may be confirmed when the member physically collects the asset.</p></div>
 <?php else:?>
 <div class="asset-form-note"><strong>Status: <?=e($status)?></strong></div>
 <?php endif;?>
@@ -275,15 +496,17 @@ if($t){
 </div></article>
 <div class="tx-side-actions">
 <button type="button" class="category-form-back" onclick="window.print()">Print Details</button>
-<a href="manager_transactions.php" class="category-form-back">Back</a>
+<a href="<?=e($backURL)?>" class="category-form-back">Back</a>
 <?php if($status==='Pending'):?>
 <button type="button" class="category-form-reset" onclick="rejectBox.showModal()">Reject Request</button>
 <button type="button" class="category-form-submit"
 <?=$approvalIssue?'disabled title="'.e($approvalIssue).'"':''?>
-onclick="approveBox.showModal()">Approve &amp; Reserve</button>
+onclick="approveBox.showModal()">Approve Reservation</button>
 <?php elseif($status==='Approved'):?>
 <button type="button" class="category-form-reset" onclick="cancelBox.showModal()">Cancel Reservation</button>
-<button type="button" class="category-form-submit" onclick="pickupBox.showModal()">Confirm Pickup</button>
+<button type="button" class="category-form-submit"
+<?=$pickupIssue?'disabled title="'.e($pickupIssue).'"':''?>
+onclick="pickupBox.showModal()">Confirm Pickup</button>
 <?php endif;?>
 </div>
 </div>
@@ -365,33 +588,55 @@ onclick="approveBox.showModal()">Approve &amp; Reserve</button>
 <?php if($status==='Pending'):?>
 <dialog id="approveBox" class="flow-dialog">
 <h2>Confirm Request Approval</h2>
-<p>Approve this request and reserve the asset for this member?</p>
+<p>Approve this request and confirm the requested borrowing period for this member?</p>
 <div class="flow-dialog-summary">
 <div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
 <div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
 <div><strong>Requester</strong><span><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></span></div>
 <div><strong>Pickup Date</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
 <div><strong>Return Date</strong><span><?=e(d($b['expectedReturnDate']??null))?></span></div>
+<div><strong>Protection Begins</strong><span><?=e($b&&!empty($b['borrowDate'])?d(protectionDate(date('Y-m-d',strtotime($b['borrowDate'])))):'-')?></span></div>
 </div>
 <form method="POST" class="flow-dialog-actions">
 <input type="hidden" name="action" value="approve">
 <button type="button" class="category-form-back" onclick="approveBox.close()">No</button>
-<button class="category-form-submit">Yes, Approve &amp; Reserve</button>
+<button class="category-form-submit">Yes, Approve Reservation</button>
 </form>
 </dialog>
 
 <dialog id="rejectBox" class="flow-dialog">
 <h2>Reject Request</h2>
-<p>Enter a clear reason explaining why this borrowing request cannot be approved.</p>
+<p>CirculAPU checks the current request automatically and prepares the rejection reason for the Manager.</p>
+
+<div class="tx-validation">
+<h3>System Validation</h3>
+<?php foreach($validationChecks as $check):?>
+<div class="tx-validation-row">
+<div>
+<strong><?=e($check['label'])?></strong>
+<small><?=e($check['detail'])?></small>
+</div>
+<span class="tx-validation-state <?=$check['ok']?'ok':'fail'?>"><?=$check['ok']?'Passed':'Issue'?></span>
+</div>
+<?php endforeach;?>
+</div>
 
 <form method="POST">
 <input type="hidden" name="action" value="reject">
 
+<?php if($autoRejectReason):?>
+<label>System-Generated Rejection Reason</label>
+<div class="tx-reject-reason"><?=e($autoRejectReason)?></div>
+<p class="tx-auto-note">This reason will be sent to the requester automatically.</p>
+<?php else:?>
+<div class="tx-reject-pass"><strong>All system validations passed.</strong> Enter a Manager rejection reason only if you still need to reject this request.</div>
+<?php endif;?>
+
 <div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
-<label for="rejectReason">Rejection Reason *</label>
-<textarea id="rejectReason" name="managerRemark" maxlength="255" rows="4"
-          placeholder="Example: The request cannot be approved because the borrowing requirements are not met."
-          required></textarea>
+<label for="managerNote"><?=$autoRejectReason?'Additional Manager Note (Optional)':'Manager Rejection Reason *'?></label>
+<textarea id="managerNote" name="managerNote" maxlength="<?=$autoRejectReason?'120':'255'?>" rows="3"
+          placeholder="<?=$autoRejectReason?'Add any extra explanation for the requester if needed.':'Enter the reason for rejecting this request.'?>"
+          <?=$autoRejectReason?'':'required'?>></textarea>
 </div>
 
 <div class="flow-dialog-actions">
@@ -403,13 +648,14 @@ onclick="approveBox.showModal()">Approve &amp; Reserve</button>
 <?php elseif($status==='Approved'):?>
 <dialog id="pickupBox" class="flow-dialog">
 <h2>Confirm Asset Pickup</h2>
-<p>Confirm that the member has collected this reserved asset. Borrowing will start immediately.</p>
+<p>Confirm only when the member physically collects the asset. Borrowing will start immediately.</p>
 
 <div class="flow-dialog-summary">
 <div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
 <div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
 <div><strong>Borrower</strong><span><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></span></div>
-<div><strong>Pickup Date</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
+<div><strong>Requested Pickup</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
+<div><strong>Earliest Confirmation</strong><span><?=e($pickupEarliest?d($pickupEarliest):'-')?></span></div>
 <div><strong>Return Date</strong><span><?=e(d($b['expectedReturnDate']??null))?></span></div>
 <div><strong>Current Asset Status</strong><span><?=e($t['availabilityStatus'])?></span></div>
 </div>
