@@ -11,8 +11,11 @@
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
-    // Connect to Database
     require_once '../db.php';
+    require_once '../delete.php';
+    require_once '../print.php';
+
+    // Connect to Database
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
@@ -41,12 +44,7 @@
         // Search
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $conditions[] = "(
-                rewardName LIKE '%$safeSearch%'
-                OR ecoPointsCost LIKE '%$safeSearch%'
-                OR quantity LIKE '%$safeSearch%'
-                OR availability LIKE '%$safeSearch%'
-            )";
+            $conditions[] = "(rewardName LIKE '%$safeSearch%' OR ecoPointsCost LIKE '%$safeSearch%' OR quantity LIKE '%$safeSearch%' OR availability LIKE '%$safeSearch%')";
         }
 
         // Filter by Reward Name
@@ -80,63 +78,36 @@
         }
 
         // Count Filtered Rewards
-        $countQuery = "SELECT COUNT(*) AS total
-                    FROM rewards
-                    $whereClause";
+        $countQuery = "SELECT COUNT(*) AS total FROM rewards $whereClause";
         $countResult = mysqli_query($conn, $countQuery);
         $countRow = mysqli_fetch_assoc($countResult);
         $totalRewards = $countRow['total'];
 
-
         // Pagination
-        $totalPages = ceil($totalRewards / $recordsPerPage);
+        $totalPages = max(1, ceil($totalRewards / $recordsPerPage));
         if ($totalPages > 0 && $page > $totalPages) {
             $page = $totalPages;
         }
         $offset = ($page - 1) * $recordsPerPage;
 
-
         // Get Rewards
-        $query = "SELECT *
-                FROM rewards
-                $whereClause
-                ORDER BY rewardID ASC
-                LIMIT $recordsPerPage OFFSET $offset";
+        $query = "SELECT * FROM rewards $whereClause ORDER BY rewardID ASC LIMIT $recordsPerPage OFFSET $offset";
         $result = mysqli_query($conn, $query);
 
-
         // Get Reward Names for Dropdown
-        $rewardNameQuery = "
-            SELECT DISTINCT rewardName
-            FROM rewards
-            ORDER BY rewardName ASC
-        ";
+        $rewardNameQuery = "SELECT DISTINCT rewardName FROM rewards ORDER BY rewardName ASC";
         $rewardNameResult = mysqli_query($conn, $rewardNameQuery);
 
         // Get EcoPoints Costs for Dropdown
-        $ecoPointsQuery = "
-            SELECT DISTINCT ecoPointsCost
-            FROM rewards
-            ORDER BY ecoPointsCost ASC
-        ";
+        $ecoPointsQuery = "SELECT DISTINCT ecoPointsCost FROM rewards ORDER BY ecoPointsCost ASC";
         $ecoPointsResult = mysqli_query($conn, $ecoPointsQuery);
 
-
         // Get Quantities for Dropdown
-        $quantityQuery = "
-            SELECT DISTINCT quantity
-            FROM rewards
-            ORDER BY quantity ASC
-        ";
+        $quantityQuery = "SELECT DISTINCT quantity FROM rewards ORDER BY quantity ASC";
         $quantityResult = mysqli_query($conn, $quantityQuery);
 
-
         // Get Availability for Dropdown
-        $availabilityQuery = "
-            SELECT DISTINCT availability
-            FROM rewards
-            ORDER BY availability ASC
-        ";
+        $availabilityQuery = "SELECT DISTINCT availability FROM rewards ORDER BY availability ASC";
         $availabilityResult = mysqli_query($conn, $availabilityQuery);
     }
 ?>
@@ -152,15 +123,10 @@
 </head>
 <body class="role-auditor">
     <div class="dashboard-container">
-
         <?php include '../sidebar.php'; ?>
-
         <div class="main-content">
-            
             <?php include '../header.php'; ?>
-
             <main class="page-body auditor-reward-page">
-
                 <!-- Page Title -->
                 <div class="management-heading management-heading-action">
                     <div class="management-heading-text">
@@ -174,25 +140,24 @@
                     </a>
                 </div>
 
+                <!-- Green bar showing Success Creation -->
+                <?php if (isset($_GET['created'])): ?>
+                    <div class="alert alert-success">
+                        Reward created successfully.
+                    </div>
+                <?php endif; ?>
+
                 <!-- Search and Filter -->
                 <div class="management-filter">
                     <form method="GET" action="auditor_rewards_management.php">
-
                         <!-- Search Reward -->
                         <div class="management-filter-group search">
                             <label for="search">Search Reward</label>
                             <div class="management-search-input">
                                 <img src="../assets/icons/search.png" alt="Search">
-                                <input
-                                    type="text"
-                                    id="search"
-                                    name="search"
-                                    placeholder="Search by reward name, ecopoints cost, quantity, availability..."
-                                    value="<?php echo htmlspecialchars($search); ?>"
-                                >
+                                <input type="text" id="search" name="search" placeholder="Search by reward name, ecopoints cost, quantity, availability..." value="<?php echo htmlspecialchars($search); ?>">
                             </div>
                         </div>
-
 
                         <!-- Filter by Reward Name -->
                         <div class="management-filter-group">
@@ -200,20 +165,12 @@
                             <select id="rewardName" name="rewardName">
                                 <option value="">All Reward</option>
                                 <?php while ($row = mysqli_fetch_assoc($rewardNameResult)) { ?>
-                                    <option
-                                        value="<?php echo htmlspecialchars($row['rewardName']); ?>"
-                                        <?php
-                                            if ($rewardName === $row['rewardName']) {
-                                                echo 'selected';
-                                            }
-                                        ?>
-                                    >
+                                    <option value="<?php echo htmlspecialchars($row['rewardName']); ?>" <?php if ($rewardName === $row['rewardName']) {echo 'selected';}?>>
                                         <?php echo htmlspecialchars($row['rewardName']); ?>
                                     </option>
                                 <?php } ?>
                             </select>
                         </div>
-
 
                         <!-- Filter by EcoPoints -->
                         <div class="management-filter-group">
@@ -221,20 +178,12 @@
                             <select id="ecoPoints" name="ecoPoints">
                                 <option value="">All EcoPoints</option>
                                 <?php while ($row = mysqli_fetch_assoc($ecoPointsResult)) { ?>
-                                    <option
-                                        value="<?php echo $row['ecoPointsCost']; ?>"
-                                        <?php
-                                            if ($ecoPoints == $row['ecoPointsCost']) {
-                                                echo 'selected';
-                                            }
-                                        ?>
-                                    >
+                                    <option value="<?php echo $row['ecoPointsCost']; ?>" <?php if ($ecoPoints == $row['ecoPointsCost']) {echo 'selected';}?>>
                                         <?php echo $row['ecoPointsCost']; ?>
                                     </option>
                                 <?php } ?>
                             </select>
                         </div>
-
 
                         <!-- Filter by Quantity -->
                         <div class="management-filter-group">
@@ -242,14 +191,7 @@
                             <select id="quantity" name="quantity">
                                 <option value="">All Quantity</option>
                                 <?php while ($row = mysqli_fetch_assoc($quantityResult)) { ?>
-                                    <option
-                                        value="<?php echo $row['quantity']; ?>"
-                                        <?php
-                                            if ($quantity == $row['quantity']) {
-                                                echo 'selected';
-                                            }
-                                        ?>
-                                    >
+                                    <option value="<?php echo $row['quantity']; ?>"<?php if ($quantity == $row['quantity']) {echo 'selected';}?>>
                                         <?php echo $row['quantity']; ?>
                                     </option>
                                 <?php } ?>
@@ -262,20 +204,12 @@
                             <select id="availability" name="availability">
                                 <option value="">All Availability</option>
                                 <?php while ($row = mysqli_fetch_assoc($availabilityResult)) { ?>
-                                    <option
-                                        value="<?php echo htmlspecialchars($row['availability']); ?>"
-                                        <?php
-                                            if ($availability === $row['availability']) {
-                                                echo 'selected';
-                                            }
-                                        ?>
-                                    >
+                                    <option value="<?php echo htmlspecialchars($row['availability']); ?>" <?php if ($availability === $row['availability']) {echo 'selected';}?>>
                                         <?php echo htmlspecialchars($row['availability']); ?>
                                     </option>
                                 <?php } ?>
                             </select>
                         </div>
-
 
                         <!-- Filter & Reset Buttons -->
                         <div class="management-filter-buttons">
@@ -292,16 +226,13 @@
                     </form>
                 </div>
 
-
                 <!-- Reward List -->
                 <div class="management-list">
-
                     <!-- Table Headings -->
                     <div class="management-list-header">
                         <h2>Reward List</h2>
-                        <h3>Total Reward: <?php echo $totalRewards; ?></h3>
+                        <p>Total Rewards: <?php echo $totalRewards; ?></p>
                     </div>
-
 
                     <!-- Reward List Table -->
                     <div class="management-table-wrapper">
@@ -310,6 +241,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Reward ID</th>
+                                    <th>Reward Image</th>
                                     <th>Reward Name</th>
                                     <th>EcoPoints Cost</th>
                                     <th>Quantity</th>
@@ -327,6 +259,14 @@
 
                                         <td>
                                             <?php echo htmlspecialchars($row['rewardID']); ?>
+                                        </td>
+
+                                        <td>
+                                            <?php if (!empty($row['rewardImage'])): ?>
+                                                <img src="../assets/images/<?php echo htmlspecialchars($row['rewardImage']); ?>" alt="<?php echo htmlspecialchars($row['rewardName']); ?>" class="management-table-image">
+                                            <?php else: ?>
+                                                <span>No Image</span>
+                                            <?php endif; ?>
                                         </td>
 
                                         <td>
@@ -348,7 +288,6 @@
                                             </span>
                                         </td>
 
-
                                         <!-- Action Icons -->
                                         <td>
                                             <div class="management-actions">
@@ -357,18 +296,15 @@
                                                     <img src="../assets/icons/view.png" alt="View">
                                                 </a>
 
-
                                                 <!-- Edit -->
                                                 <a href="auditor_edit_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="Edit Reward">
                                                     <img src="../assets/icons/edit.png" alt="Edit">
                                                 </a>
 
-
                                                 <!-- Print -->
                                                 <a href="auditor_print_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="Print Reward">
                                                     <img src="../assets/icons/print.png" alt="Print">
                                                 </a>
-
 
                                                 <!-- Delete -->
                                                 <a href="auditor_delete_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn delete" title="Delete Reward">
@@ -377,56 +313,57 @@
                                             </div>
                                         </td>
                                     </tr>
-
                                 <?php $number++; } ?>
-
                             </tbody>
                         </table>
                     </div>
 
-
                     <!-- Table Footer -->
                     <div class="management-table-footer">
-
                         <!-- Showing Records -->
-                        <div class="showing-records">
-                            <?php
-                                if ($totalRewards > 0) {
-                                    $startRecord = $offset + 1;
-                                    $endRecord = min($offset + $recordsPerPage, $totalRewards);
-                                    echo "Showing $startRecord to $endRecord of $totalRewards entries";
-                                } else {
-                                    echo "Showing 0 to 0 of 0 entries";
-                                }
-                            ?>
-                        </div>
+                        <p>
+                            Showing <?php echo $totalRewards > 0 ? $offset + 1 : 0; ?>
+                            to <?php echo min($offset + $recordsPerPage, $totalRewards); ?>
+                            of <?php echo $totalRewards; ?>
+                            entries
+                        </p>
 
                         <!-- Pagination -->
-                        <?php $paginationParams = $_GET;?>
+                        <div class="pagination">
+                            <?php $paginationParams = $_GET;?>
 
-                        <?php if ($page > 1) {$paginationParams['page'] = $page - 1; ?>
-                                <a href="?<?php echo http_build_query($paginationParams); ?>" class="pagination-btn">
+                            <!-- Previous -->
+                            <?php if ($page > 1): ?>
+                                <?php $paginationParams['page'] = $page - 1; ?>
+                                <a href="?<?php echo http_build_query($paginationParams); ?>">
                                     &lsaquo;
                                 </a>
-                            <?php } ?>
+                            <?php else: ?>
+                                <a href="#" class="disabled">
+                                    &lsaquo;
+                                </a>
+                            <?php endif; ?>
 
-                                <!-- Page Numbers -->
-                                <?php for ($i = 1; $i <= $totalPages; $i++) {$paginationParams['page'] = $i; ?>
-                                    <a href="?<?php echo http_build_query($paginationParams); ?>"
-                                    class="pagination-btn <?php echo ($i == $page) ? 'active' : ''; ?>">
-                                        <?php echo $i; ?>
-                                    </a>
-                                <?php } ?>
+                            <!-- Page Numbers -->
+                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                <?php $paginationParams['page'] = $i; ?>
+                                <a href="?<?php echo http_build_query($paginationParams); ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            <?php endfor; ?>
 
-
-                                <!-- Next Button -->
-                                <?php if ($page < $totalPages) {$paginationParams['page'] = $page + 1; ?>
-                                    <a href="?<?php echo http_build_query($paginationParams); ?>"
-                                    class="pagination-btn">
-                                        &rsaquo;
-                                    </a>
-                                <?php } ?>
-                            </div>
+                            <!-- Next -->
+                            <?php if ($page < $totalPages): ?>
+                                <?php $paginationParams['page'] = $page + 1; ?>
+                                <a href="?<?php echo http_build_query($paginationParams); ?>">
+                                    &rsaquo;
+                                </a>
+                            <?php else: ?>
+                                <a href="#" class="disabled">
+                                    &rsaquo;
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </main>

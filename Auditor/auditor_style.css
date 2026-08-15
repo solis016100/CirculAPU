@@ -1,3 +1,13 @@
+
+.management-table-image {
+    width: 58px;
+    height: 58px;
+    display: block;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+
 /* ==========================================================================
    SHARED BY AUDITOR MANAGEMENT DETAIL PAGES
    ========================================================================== */
@@ -823,59 +833,54 @@
 /* ==========================================================================
    AUDITOR REWARD MANAGEMENT
    ========================================================================== */
-
-
 /* Reward Table Column Widths */
-
 .reward-table th:nth-child(1),
 .reward-table td:nth-child(1) {
     width: 5%;
 }
-
 
 .reward-table th:nth-child(2),
 .reward-table td:nth-child(2) {
     width: 12%;
 }
 
-
 .reward-table th:nth-child(3),
 .reward-table td:nth-child(3) {
-    width: 22%;
+    width: 14%;
 }
-
 
 .reward-table th:nth-child(4),
 .reward-table td:nth-child(4) {
-    width: 14%;
+    width: 22%;
+    font-weight: 600;
 }
-
 
 .reward-table th:nth-child(5),
 .reward-table td:nth-child(5) {
-    width: 10%;
+    width: 13%;
 }
-
 
 .reward-table th:nth-child(6),
 .reward-table td:nth-child(6) {
-    width: 14%;
+    width: 10%;
 }
-
 
 .reward-table th:nth-child(7),
 .reward-table td:nth-child(7) {
-    width: 23%;
+    width: 12%;
+}
+
+.reward-table th:nth-child(8),
+.reward-table td:nth-child(8) {
+    width: 12%;
 }
 
 
 /* Reward Availability Status */
-
 .reward-availability {
     display: inline-block;
 
     min-width: 90px;
-
     padding: 6px 10px;
 
     border-radius: 20px;
@@ -886,12 +891,10 @@
     text-align: center;
 }
 
-
 .availability-available {
     background: #e8f5e9;
     color: #2e7d32;
 }
-
 
 .availability-unavailable {
     background: #ffebee;
@@ -900,25 +903,32 @@
 
 
 /* Reward Filter Sizing */
-
 .auditor-reward-page .management-filter form {
     gap: 12px;
 }
 
-
 .auditor-reward-page .management-filter-group {
     min-width: 120px;
 }
-
 
 .auditor-reward-page .management-filter-group.search {
     flex: 1.8;
     min-width: 240px;
 }
 
-
 .auditor-reward-page .management-filter-buttons {
     flex-shrink: 0;
+}
+
+/* Reward Image */
+.reward-image {
+    width: 58px;
+    height: 58px;
+
+    display: block;
+    margin: 0 auto;
+
+    object-fit: contain;
 }
 
 
@@ -950,6 +960,7 @@
 .badge-table th:nth-child(4),
 .badge-table td:nth-child(4) {
     width: 20%;
+    font-weight: 600;
 }
 
 
@@ -965,41 +976,8 @@
 }
 
 
-/* Badge Icons */
-
-.badge-icon {
-    width: 58px;
-    height: 58px;
-
-    display: block;
-
-    margin: 0 auto;
-
-    object-fit: contain;
-
-    transition: transform .2s;
-}
-
-
-.badge-icon:hover {
-    transform: scale(1.1);
-}
-
-
-.badge-table td:nth-child(4) {
-    font-weight: 600;
-}
-
-
-.badge-table td:nth-child(5) {
-    white-space: normal;
-    line-height: 1.4;
-}
-
-
-/* Badge Icon in Summary Pop Out */
-
-.confirm-badge-icon {
+/* Badge Icon & Reward Image in Summary Pop Out */
+.confirm-item-image {
     width: 70px;
     height: 70px;
 
@@ -1050,43 +1028,6 @@
     margin: 0 0 5px;
     font-size: 13px !important;
     font-weight: 400 !important;
-}
-
-
-/* ==========================================================================
-   AUDITOR USER TIER MANAGEMENT
-   ========================================================================== */
-
-
-/* User Tier Table Column Widths */
-
-.usertier-table th:nth-child(1),
-.usertier-table td:nth-child(1) {
-    width: 8%;
-}
-
-
-.usertier-table th:nth-child(2),
-.usertier-table td:nth-child(2) {
-    width: 20%;
-}
-
-
-.usertier-table th:nth-child(3),
-.usertier-table td:nth-child(3) {
-    width: 20%;
-}
-
-
-.usertier-table th:nth-child(4),
-.usertier-table td:nth-child(4) {
-    width: 25%;
-}
-
-
-.usertier-table th:nth-child(5),
-.usertier-table td:nth-child(5) {
-    width: 27%;
 }
 
 

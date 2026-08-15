@@ -300,7 +300,7 @@
                                                     <img
                                                         src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>"
                                                         alt="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>"
-                                                        class="badge-icon"
+                                                        class="management-table-image"
                                                     >
                                                 </td>
 

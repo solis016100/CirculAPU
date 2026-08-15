@@ -318,7 +318,7 @@
                 <div>
                     <strong>Badge Icon</strong>
                     <span>
-                        <img id="confirmBadgeIcon" src="" alt="Badge Icon" class="confirm-badge-icon">
+                        <img id="confirmBadgeIcon" src="" alt="Badge Icon" class="confirm-item-image">
                     </span>
                 </div>
             </div>
