@@ -21,6 +21,9 @@
     $typeFilter = $_GET['type'] ?? '';
     $statusFilter = $_GET['status'] ?? '';
 
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $recordsPerPage = 8;
+
     $filter = http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter]);
 
     // Connect to Database
@@ -46,7 +49,7 @@
             "Deleted verification record: $id"
         );
 
-        header("Location: auditor_verification_management.php");
+        header("Location: auditor_verification_management.php?deleted=1");
         exit();
     }
 
@@ -111,6 +114,49 @@
         }
 
         $sql .= " ORDER BY vr.verifiedDate DESC";
+
+        $countSql = "SELECT COUNT(*) AS total
+             FROM verificationrecords vr
+             INNER JOIN user u ON vr.userID = u.userID
+             WHERE 1=1";
+
+        if ($search !== '') {
+            $safeSearch = $conn->real_escape_string($search);
+            $countSql .= " AND (
+                vr.verificationID LIKE '%$safeSearch%'
+                OR u.name LIKE '%$safeSearch%'
+                OR vr.targetType LIKE '%$safeSearch%'
+                OR vr.status LIKE '%$safeSearch%'
+            )";
+        }
+
+        if ($userFilter !== '') {
+            $safeUser = $conn->real_escape_string($userFilter);
+            $countSql .= " AND vr.userID = '$safeUser'";
+        }
+
+        if ($typeFilter !== '') {
+            $safeType = $conn->real_escape_string($typeFilter);
+            $countSql .= " AND vr.targetType = '$safeType'";
+        }
+
+        if ($statusFilter !== '') {
+            $safeStatus = $conn->real_escape_string($statusFilter);
+            $countSql .= " AND vr.status = '$safeStatus'";
+        }
+
+        $totalResult = $conn->query($countSql);
+        $totalRecords = $totalResult->fetch_assoc()['total'];
+
+        $totalPages = max(1, ceil($totalRecords / $recordsPerPage));
+
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $recordsPerPage;
+
+        $sql .= " LIMIT $offset, $recordsPerPage";
 
         $result = $conn->query($sql);
 
@@ -178,6 +224,19 @@
                     </div>
                 <?php endif; ?>
 
+                <!-- Green bar showing Success Deletion -->
+                <?php if (isset($_GET['deleted'])): ?>
+                    <div class="alert alert-success">
+                        Verification record deleted successfully.
+                    </div>
+                <?php endif; ?>
+
+                <!-- Green Bar showing Success Updation -->
+                <?php if (isset($_GET['success'])): ?>
+                    <div class="alert alert-success">
+                        Verification updated successfully.
+                    </div>
+                <?php endif; ?>
 
                 <!-- Search and Filter -->
                 <form class="management-filter" method="get" action="auditor_verification_management.php">
@@ -260,7 +319,7 @@
                         <h2>Verification Record List</h2>
                         <strong>
                             Total Records:
-                            <?php echo count($verificationRecords); ?>
+                            <?php echo $totalRecords; ?>
                         </strong>
                     </div>
 
@@ -391,11 +450,36 @@
 
                     <!-- Temporary Footer for verification table -->
                     <div class="management-table-footer">
-                        <span>
-                            Showing
-                            <?php echo count($verificationRecords); ?>
-                            record(s)
-                        </span>
+                        <div class="showing-records">
+                            <?php if ($totalRecords > 0) {
+                                $start = $offset + 1; $end = min($offset + $recordsPerPage, $totalRecords); echo "Showing $start to $end of $totalRecords entries";
+                                }else {
+                                    echo "Showing 0 to 0 of 0 entries";
+                                }
+                            ?>
+                        </div>
+
+                        <?php if ($totalPages > 1): ?>
+                            <div class="pagination">
+                                <?php if ($page > 1): ?>
+                                    <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $page - 1]) ?>">
+                                        &laquo;
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                    <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $i]) ?>" class="<?= $i == $page ? 'active' : '' ?>">
+                                        <?= $i ?>
+                                    </a>
+                                <?php endfor; ?>
+
+                                <?php if ($page < $totalPages): ?>
+                                    <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $page + 1]) ?>">
+                                        &raquo;
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </section>
             </main>

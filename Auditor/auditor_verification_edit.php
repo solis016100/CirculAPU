@@ -75,7 +75,13 @@
             "Updated verification remarks: $id"
         );
 
-        header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
+        header(
+            "Location: auditor_verification_view.php?"
+            . http_build_query([
+                'verificationID' => $id,
+                'success' => 1
+            ])
+        );
         exit();
     }
 ?>

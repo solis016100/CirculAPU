@@ -216,9 +216,7 @@
                                 Description
                                 <span class="required">*</span>
                             </label>
-                            <textarea id="rewardDescription" name="rewardDescription" rows="5" maxlength="500" placeholder="Enter reward description" required>
-                                <?php echo htmlspecialchars($rewardDescription); ?>
-                            </textarea>
+                            <textarea id="rewardDescription" name="rewardDescription" rows="5" maxlength="500" placeholder="Enter reward description" required><?php echo htmlspecialchars($rewardDescription); ?></textarea>
                         </div>
 
                         <!-- EcoPoints Cost -->
@@ -227,7 +225,7 @@
                                 EcoPoints Cost
                                 <span class="required">*</span>
                             </label>
-                            <input type="number" id="ecoPointsCost" name="ecoPointsCost" min="0" step="1" placeholder="Enter EcoPoints cost" value="<?php echo htmlspecialchars($ecoPointsCost); ?>" required>
+                            <input type="number" id="ecoPointsCost" name="ecoPointsCost" min="0" max="1000" placeholder="Enter EcoPoints cost" value="<?php echo htmlspecialchars($ecoPointsCost); ?>" required>
                         </div>
 
                         <!-- Quantity -->

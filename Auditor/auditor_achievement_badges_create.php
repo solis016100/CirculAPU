@@ -19,12 +19,7 @@
     // Check Duplicate Badge Name
     if (isset($_POST['checkBadgeName'])) {
         $badgeName = trim($_POST['badgeName'] ?? '');
-        $nameStmt = mysqli_prepare($conn, "
-            SELECT achieveBadgeID
-            FROM achievementbadges
-            WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?))
-            LIMIT 1
-        ");
+        $nameStmt = mysqli_prepare($conn, "SELECT achieveBadgeID FROM achievementbadges WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?)) LIMIT 1");
 
         mysqli_stmt_bind_param($nameStmt, "s", $badgeName);
 
@@ -108,11 +103,8 @@
 
                 // Generate Safe File Name
                 $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
                 $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', strtolower($badgeName));
-
                 $fileName = "badge_" . $safeName . "_" . time() . "." . $extension;
-
                 $targetPath = $uploadDirectory . $fileName;
 
                 // Move Uploaded File
@@ -141,9 +133,7 @@
 
                         if ($logStmt) {
                             mysqli_stmt_bind_param($logStmt, "ssss", $logID, $userID, $nextBadgeID, $logDescription);
-
                             mysqli_stmt_execute($logStmt);
-
                             mysqli_stmt_close($logStmt);
                         }
 

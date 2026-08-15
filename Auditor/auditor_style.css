@@ -730,6 +730,31 @@
     font-weight: 600;
 }
 
+/* Decision Condition Popout */
+.decision-condition {
+    width: 100%;
+    margin: 8px 0 18px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
+    background: #fff;
+}
+
+/* Decision Remarks Popout */
+.decision-remarks {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    resize: vertical;
+    font: inherit;
+}
+
+
 
 /* ==========================================================================
    AUDITOR MISSION MANAGEMENT

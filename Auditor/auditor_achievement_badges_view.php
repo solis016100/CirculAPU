@@ -10,7 +10,6 @@
     require_once '../print.php';
     require_once '../delete.php';
 
-
     $id = $_GET['achieveBadgeID'] ?? '';
 
     // Delete Badge
@@ -36,18 +35,13 @@
 
                 // Create System Log ID
                 $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
-
                 $row = $result->fetch_assoc();
-
                 $logID = "LOG" . str_pad($row['nextID'], 3, "0", STR_PAD_LEFT);
 
                 // Create System Log
                 $description = "Deleted achievement badge: " . $badgeData['achieveBadgeName'];
-
                 $log = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Badge', ?, ?) ");
-
                 $log->bind_param("ssss", $logID, $_SESSION['user_id'],$badgeID,$description);
-
                 $log->execute();
                 $log->close();
 
@@ -172,13 +166,13 @@
                                 <img src="../assets/icons/delete.png" alt="Delete">
                                 Delete
                             </button>
-                        </div>
 
-                        <!-- Back Button -->
-                        <div class="auditor-management-detail-back">
-                            <a href="auditor_achievement_badges_management.php">
-                                Back
-                            </a>
+                            <!-- Back Button -->
+                            <div class="auditor-management-detail-back">
+                                <a href="auditor_achievement_badges_management.php">
+                                    Back
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -229,17 +223,6 @@
         function closeDeletePopout() {
             document.getElementById('deletePopout').classList.remove('show');
         }
-
-        const badgeIcon = document.getElementById('badgeIcon');
-        const badgeIconPreview = document.getElementById('badgeIconPreview');
-        const saveIconBtn = document.getElementById('saveIconBtn');
-
-        badgeIcon.addEventListener('change', function () {
-            if (this.files.length > 0) {
-                badgeIconPreview.src = URL.createObjectURL(this.files[0]);
-                saveIconBtn.style.display = 'flex';
-            }
-        });
 
         function openBadgeImage() {
             document.getElementById('badgeImagePopout').style.display = 'flex';

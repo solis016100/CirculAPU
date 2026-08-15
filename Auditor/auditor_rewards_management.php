@@ -15,6 +15,53 @@
     require_once '../delete.php';
     require_once '../print.php';
 
+    // Delete reward
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_reward'])) {
+        $deleteID = $_POST['rewardID'] ?? '';
+        if ($deleteID !== '') {
+            // Get reward information before deleting
+            $stmt = $conn->prepare("SELECT rewardName, rewardImage FROM rewards WHERE rewardID = ?");
+
+            $stmt->bind_param("s", $deleteID);
+            $stmt->execute();
+
+            $rewardData = $stmt->get_result()->fetch_assoc();
+
+            $stmt->close();
+
+            if ($rewardData) {
+                // Delete reward
+                $stmt = $conn->prepare("DELETE FROM rewards WHERE rewardID = ?");
+
+                $stmt->bind_param("s", $deleteID);
+
+                if ($stmt->execute()) {
+                    $stmt->close();
+
+                    // Delete reward image
+                    if (!empty($rewardData['rewardImage']) && file_exists("../assets/images/" . $rewardData['rewardImage'])) {
+                        unlink("../assets/images/" . $rewardData['rewardImage']);
+                    }
+
+                    // Create Delete System Log
+                    createDeleteLog($conn, $_SESSION['user_id'], 'Reward', $deleteID, 'Deleted reward: ' . $rewardData['rewardName']);
+
+                    // Successful delete
+                    header("Location: auditor_rewards_management.php?deleted=1");
+
+                    exit();
+                }else {
+                    $stmt->close();
+                    header("Location: auditor_rewards_management.php?delete_error=1");
+                    exit();
+                }
+            }else {
+                header("Location: auditor_rewards_management.php?delete_error=1");
+                exit();
+            }
+        }
+    }
+
     // Connect to Database
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
@@ -144,6 +191,20 @@
                 <?php if (isset($_GET['created'])): ?>
                     <div class="alert alert-success">
                         Reward created successfully.
+                    </div>
+                <?php endif; ?>
+
+                <!-- Green bar showing Success Delete -->
+                <?php if (isset($_GET['deleted'])): ?>
+                    <div class="alert alert-success">
+                        Reward deleted successfully.
+                    </div>
+                <?php endif; ?>
+
+                <!-- Green bar showing Success Updation -->
+                <?php if (isset($_GET['updated'])): ?>
+                    <div class="alert alert-success">
+                        Reward updated successfully.
                     </div>
                 <?php endif; ?>
 
@@ -292,24 +353,24 @@
                                         <td>
                                             <div class="management-actions">
                                                 <!-- View -->
-                                                <a href="auditor_view_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="View Reward">
+                                                <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="View Reward">
                                                     <img src="../assets/icons/view.png" alt="View">
                                                 </a>
 
                                                 <!-- Edit -->
-                                                <a href="auditor_edit_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="Edit Reward">
+                                                <a href="auditor_reward_edit.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&from=management" class="management-action-btn" title="Edit Reward">
                                                     <img src="../assets/icons/edit.png" alt="Edit">
                                                 </a>
 
                                                 <!-- Print -->
-                                                <a href="auditor_print_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="Print Reward">
+                                                <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&print=1&from=management" class="management-action-btn" title="Print Reward">
                                                     <img src="../assets/icons/print.png" alt="Print">
                                                 </a>
 
                                                 <!-- Delete -->
-                                                <a href="auditor_delete_reward.php?id=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn delete" title="Delete Reward">
+                                                <button type="button" class="management-action-btn delete" title="Delete" onclick="openDeletePopout('<?php echo htmlspecialchars($row['rewardID']); ?>')">
                                                     <img src="../assets/icons/delete.png" alt="Delete">
-                                                </a>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -369,5 +430,36 @@
             </main>
         </div>
     </div>
+
+    <!-- Delete Popout -->
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Reward</h2>
+            <p>Are you sure you want to delete this reward?</p>
+            <div class="auditor-popout-actions">
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST">
+                    <input type="hidden" name="rewardID" id="deleteRewardID">
+                    <button type="submit" name="delete_reward" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeletePopout(rewardID) {
+            document.getElementById('deleteRewardID').value = rewardID;
+            document.getElementById('deletePopout').classList.add('show');
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').classList.remove('show');
+        }
+    </script>
 </body>
 </html>

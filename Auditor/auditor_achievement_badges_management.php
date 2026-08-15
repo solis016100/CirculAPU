@@ -66,15 +66,10 @@
                     $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
 
                     $row = $result->fetch_assoc();
-
                     $logID = "LOG" . str_pad($row['nextID'], 3, "0", STR_PAD_LEFT);
-
                     $description = "Deleted achievement badge: " . $badgeData['achieveBadgeName'];
-
                     $log = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Badge', ?, ?)");
-
                     $log->bind_param("ssss", $logID, $_SESSION['user_id'], $badgeID, $description);
-
                     $log->execute();
                     $log->close();
 
@@ -87,59 +82,31 @@
         }
 
         // Base query
-        $badgeQuery = "
-            SELECT
-                achieveBadgeID,
-                achieveBadgeName,
-                achieveBadgeDescription,
-                achieveBadgeRequirement,
-                achieveBadgeIcon
-            FROM achievementbadges
-            WHERE 1=1
-        ";
-
+        $badgeQuery = "SELECT achieveBadgeID, achieveBadgeName, achieveBadgeDescription, achieveBadgeRequirement, achieveBadgeIcon FROM achievementbadges WHERE 1=1";
 
         // Search
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $badgeQuery .= "
-                AND (
-                    achieveBadgeName LIKE '%$safeSearch%'
-                    OR achieveBadgeRequirement LIKE '%$safeSearch%'
-                )
-            ";
+            $badgeQuery .= "AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
-
 
         // Filter by badge
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
-            $badgeQuery .= "
-                AND achieveBadgeID = '$safeBadgeFilter'
-            ";
+            $badgeQuery .= "AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
-
         // Total badges records
-        $countQuery = "
-            SELECT COUNT(*) AS total
-            FROM achievementbadges
-            WHERE 1=1
-        ";
+        $countQuery = "SELECT COUNT(*) AS total FROM achievementbadges WHERE 1=1";
 
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $countQuery .= "
-                AND (
-                    achieveBadgeName LIKE '%$safeSearch%'
-                    OR achieveBadgeRequirement LIKE '%$safeSearch%'
-                )
-            ";
+            $countQuery .= "AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
 
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
-            $countQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
+            $countQuery .= "AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
         $countResult = mysqli_query($conn, $countQuery);
@@ -149,9 +116,7 @@
 
         // Get current page records
         $badgeQuery .= " ORDER BY achieveBadgeID ASC LIMIT $perPage OFFSET $offset";
-
         $badgeResult = mysqli_query($conn, $badgeQuery);
-
         $totalBadges = $totalRecords;
     }
 ?>
@@ -167,15 +132,10 @@
 </head>
 <body class="role-auditor">
     <div class="dashboard-container">
-
         <?php include '../sidebar.php'; ?>
-
         <div class="main-content">
-            
             <?php include '../header.php'; ?>
-
                 <main class="page-body auditor-badge-page">
-
                     <div class="management-heading management-heading-action">
                         <div class="management-heading-text">
                             <h1>Achievement Badges Management</h1>
@@ -205,22 +165,14 @@
                     <!-- Search and Filter -->
                     <div class="management-filter">
                         <form method="GET" action="auditor_achievement_badges_management.php">
-
                             <!-- Search Achievement Badges -->
                             <div class="management-filter-group search">
                                 <label for="search">Search Achievement Badges</label>
                                 <div class="management-search-input">
                                     <img src="../assets/icons/search.png" alt="Search">
-                                    <input
-                                        type="text"
-                                        id="search"
-                                        name="search"
-                                        placeholder="Search by badge name, requirement..."
-                                        value="<?php echo htmlspecialchars($search); ?>"
-                                    >
+                                    <input type="text" id="search" name="search" placeholder="Search by badge name, requirement..." value="<?php echo htmlspecialchars($search); ?>">
                                 </div>
                             </div>
-
 
                             <!-- Filter by Badge Name -->
                             <div class="management-filter-group">
@@ -228,16 +180,12 @@
                                 <select id="badge" name="badge">
                                     <option value="">All Badges</option>
                                     <?php while ($badge = mysqli_fetch_assoc($badgeFilterResult)): ?>
-                                        <option
-                                            value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>"
-                                            <?php echo (($badgeFilter ?? '') == $badge['achieveBadgeID']) ? 'selected' : ''; ?>
-                                        >
+                                        <option value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>" <?php echo (($badgeFilter ?? '') == $badge['achieveBadgeID']) ? 'selected' : ''; ?>>
                                             <?php echo htmlspecialchars($badge['achieveBadgeName']); ?>
                                         </option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
-
 
                             <!-- Filter Buttons -->
                             <div class="management-filter-buttons">
@@ -264,7 +212,6 @@
                             </p>
                         </div>
 
-
                         <!-- Achievement Badge Table -->
                         <div class="management-table-wrapper">
                             <table class="management-table badge-table">
@@ -284,38 +231,21 @@
                                         <?php $number = $offset + 1; while ($badge = $badgeResult->fetch_assoc()): ?>
                                             <tr>
                                                 <!-- Number -->
-                                                <td>
-                                                    <?php echo $number; ?>
-                                                </td>
-
+                                                <td><?php echo $number; ?></td>
 
                                                 <!-- Badge ID -->
-                                                <td>
-                                                    <?php echo htmlspecialchars($badge['achieveBadgeID']); ?>
-                                                </td>
-
+                                                <td><?php echo htmlspecialchars($badge['achieveBadgeID']); ?></td>
 
                                                 <!-- Badge Icon -->
                                                 <td>
-                                                    <img
-                                                        src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>"
-                                                        alt="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>"
-                                                        class="management-table-image"
-                                                    >
+                                                    <img src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>" class="management-table-image">
                                                 </td>
-
 
                                                 <!-- Badge Name -->
-                                                <td>
-                                                    <?php echo htmlspecialchars($badge['achieveBadgeName']); ?>
-                                                </td>
-
+                                                <td><?php echo htmlspecialchars($badge['achieveBadgeName']); ?></td>
 
                                                 <!-- Requirement -->
-                                                <td>
-                                                    <?php echo htmlspecialchars($badge['achieveBadgeRequirement']); ?>
-                                                </td>
-
+                                                <td><?php echo htmlspecialchars($badge['achieveBadgeRequirement']); ?></td>
 
                                                 <!-- Actions -->
                                                 <td>
@@ -344,87 +274,54 @@
                                             </tr>
 
                                             <?php $number++; ?>
-
                                         <?php endwhile; ?>
-
-
                                     <?php else: ?>
-
                                         <tr>
-
                                             <td colspan="6" class="management-empty-state">
                                                 No achievement badges found.
                                             </td>
-
                                         </tr>
-
                                     <?php endif; ?>
-
                                 </tbody>
-
                             </table>
-
                         </div>
-
 
                         <!-- Table Footer -->
                         <div class="management-table-footer">
-
                             <p>
-                                Showing
-                                <?php echo $totalRecords > 0 ? $offset + 1 : 0; ?>
-                                to
-                                <?php echo min($offset + $perPage, $totalRecords); ?>
-                                of
-                                <?php echo $totalRecords; ?>
+                                Showing <?php echo $totalRecords > 0 ? $offset + 1 : 0; ?>
+                                to <?php echo min($offset + $perPage, $totalRecords); ?>
+                                of <?php echo $totalRecords; ?>
                                 entries
                             </p>
 
                             <div class="pagination">
-
                                 <?php if ($page > 1): ?>
-
                                     <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>">
                                         &lsaquo;
                                     </a>
-
                                 <?php else: ?>
-
                                     <a href="#" class="disabled">
                                         &lsaquo;
                                     </a>
-
                                 <?php endif; ?>
 
-
                                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-
-                                    <a
-                                        href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>"
-                                        class="<?php echo $i == $page ? 'active' : ''; ?>"
-                                    >
+                                    <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>" class="<?php echo $i == $page ? 'active' : ''; ?>">
                                         <?php echo $i; ?>
                                     </a>
-
                                 <?php endfor; ?>
 
-
                                 <?php if ($page < $totalPages): ?>
-
                                     <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&badge=<?php echo urlencode($badgeFilter); ?>">
                                         &rsaquo;
                                     </a>
-
                                 <?php else: ?>
-
                                     <a href="#" class="disabled">
                                         &rsaquo;
                                     </a>
-
                                 <?php endif; ?>
-
                             </div>
-
                         </div>
                     </div>
                 </main>

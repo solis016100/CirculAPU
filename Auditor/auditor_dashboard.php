@@ -17,8 +17,8 @@
     // Default Dashboard Values
     $pendingAssets = 0;
     $pendingMissions = 0;
-    $rewardRedemptions = 0;
-    $userTierUpgrades = 0;
+    $lowStockRewards = 0;
+    $outOfStockRewards = 0;
     $unreadNotifications = 0;
 
     $recentActivities = [];
@@ -50,11 +50,11 @@
         // Count pending mission submission
         $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'MissionSubmission'");
 
-        // Count reward redemption
-        $rewardRedemptions = getCount($conn, "SELECT COUNT(*) AS total FROM rewardredemption WHERE redemptionDate = CURRENT_DATE");
+        // Count Low Stock Rewards
+        $lowStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity < 3;");
 
-        // Count user tier upgrades
-        $userTierUpgrades = getCount($conn, "SELECT COUNT(*) AS total FROM usertier WHERE assignedDate = CURRENT_DATE");
+        // Count Out of Stock Rewards
+        $outOfStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity = 0");
 
         // Count unread notification
         $unreadStatement = $conn->prepare("SELECT COUNT(*) AS total FROM notification WHERE userID = ? AND status = 'Unread'");
@@ -213,31 +213,31 @@
                         </div>
                     </a>
 
-                    <!-- Reward Redemptions -->
-                    <a href="auditor_rewards.php" class="stat-card">
+                    <!-- Low Stock Rewards -->
+                    <a href="auditor_rewards_management.php?quantity=low" class="stat-card">
                         <div class="stat-icon">
-                            <img src="../assets/icons/reward.png" alt="Reward">
+                            <img src="../assets/icons/low-stock.png" alt="lowStock">
                         </div>
 
                         <div class="stat-content">
                             <strong class="stat-value">
-                                <?php echo $rewardRedemptions; ?>
+                                <?php echo $lowStockRewards; ?>
                             </strong>
-                            <h3>Reward Redemptions</h3>
+                            <h3>Low Stock Rewards</h3>
                         </div>
                     </a>
 
-                    <!-- User Tier Upgrades -->
-                    <a href="auditor_usertiers.php" class="stat-card">
+                    <!-- Out of Stock Rewards -->
+                    <a href="auditor_rewards_management.php?quantity=Out%20of%20Stock" class="stat-card">
                         <div class="stat-icon">
-                            <img src="../assets/icons/tier.png" alt="User Tier">
+                            <img src="../assets/icons/out-of-stock.png" alt="OutofStock">
                         </div>
 
                         <div class="stat-content">
                             <strong class="stat-value">
-                                <?php echo $userTierUpgrades; ?>
+                                <?php echo $outOfStockRewards; ?>
                             </strong>
-                            <h3>User Tier Upgrades</h3>
+                            <h3>Out of Stock Rewards</h3>
                         </div>
                     </a>
                 </section>

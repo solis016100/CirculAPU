@@ -92,13 +92,9 @@
                         $errorMessage = "Badge icon must not exceed 5MB.";
                     }else {
                         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
                         $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', strtolower($badgeName));
-
                         $icon = "badge_" . $safeName . "_" . time() . "." . $extension;
-
                         $targetPath = "../assets/images/" . $icon;
-
                         if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                             $errorMessage = "Unable to save the badge icon.";
                         }
@@ -184,82 +180,60 @@
                 <?php endif; ?>
 
                 <section class="auditor-management-edit-card">
+                    <form method="POST" enctype="multipart/form-data" class="auditor-management-edit-form">
+                        <div class="auditor-management-edit-row">
+                            <label>Badge ID</label>
+                            <input value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>" readonly>
+                        </div>
 
-    <form
-        method="POST"
-        enctype="multipart/form-data"
-        class="auditor-management-edit-form"
-    >
+                        <div class="auditor-management-edit-row">
+                            <label>Badge Name</label>
+                            <input type="text" name="badgeName" value="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>" required>
+                        </div>
 
-        <div class="auditor-management-edit-row">
-            <label>Badge ID</label>
-            <input value="<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>" readonly>
-        </div>
+                        <div class="auditor-management-edit-row">
+                            <label>Badge Icon</label>
+                            <div class="badge-edit-icon">
+                                <img id="badgeIconPreview" src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon">
+                                <label for="badgeIcon" class="auditor-management-view-image">
+                                    Add/Change Icon
+                                </label>
+                                <input type="file" id="badgeIcon" name="badgeIcon" accept=".jpg,.jpeg,.png,.webp" hidden>
+                            </div>
+                        </div>
 
-        <div class="auditor-management-edit-row">
-            <label>Badge Name</label>
-            <input
-                type="text"
-                name="badgeName"
-                value="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>"
-                required
-            >
-        </div>
+                        <div class="auditor-management-edit-row">
+                            <label>Description</label>
+                            <textarea name="badgeDescription" required><?php echo htmlspecialchars($badge['achieveBadgeDescription']); ?></textarea>
+                        </div>
 
-        <div class="auditor-management-edit-row">
-            <label>Badge Icon</label>
+                        <div class="auditor-management-edit-row">
+                            <label>Requirement</label>
+                            <textarea name="badgeRequirement" required><?php echo htmlspecialchars($badge['achieveBadgeRequirement']); ?></textarea>
+                        </div>
 
-            <div class="badge-edit-icon">
-                <img id="badgeIconPreview" src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon">
+                        <div class="auditor-management-edit-actions">
+                            <a href="<?php echo isset($_GET['from']) && $_GET['from'] === 'management' ? 'auditor_achievement_badges_management.php' : 'auditor_achievement_badges_view.php?achieveBadgeID=' . urlencode($id); ?>" class="auditor-management-edit-cancel">
+                                Cancel
+                            </a>
 
-                <label for="badgeIcon" class="auditor-management-view-image">
-                    Add/Change Icon
-                </label>
-
-                <input type="file" id="badgeIcon" name="badgeIcon" accept=".jpg,.jpeg,.png,.webp" hidden>
-            </div>
-        </div>
-
-        <div class="auditor-management-edit-row">
-            <label>Description</label>
-            <textarea
-                name="badgeDescription"
-                required
-            ><?php echo htmlspecialchars($badge['achieveBadgeDescription']); ?></textarea>
-        </div>
-
-        <div class="auditor-management-edit-row">
-            <label>Requirement</label>
-            <textarea
-                name="badgeRequirement"
-                required
-            ><?php echo htmlspecialchars($badge['achieveBadgeRequirement']); ?></textarea>
-        </div>
-
-        <div class="auditor-management-edit-actions">
-
-            <a href="<?php echo isset($_GET['from']) && $_GET['from'] === 'management' ? 'auditor_achievement_badges_management.php' : 'auditor_achievement_badges_view.php?achieveBadgeID=' . urlencode($id); ?>" class="auditor-management-edit-cancel">
-                Cancel
-            </a>
-
-            <button type="submit">
-                Save Changes
-            </button>
-        </div>
-    </form>
-</section>
+                            <button type="submit">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </section>
             </main>
         </div>
     </div>
 
     <script>
-document.getElementById('badgeIcon').addEventListener('change', function () {
-    if (this.files.length) {
-        document.getElementById('badgeIconPreview').src =
-            URL.createObjectURL(this.files[0]);
-    }
-});
-</script>
-
+        document.getElementById('badgeIcon').addEventListener('change', function () {
+            if (this.files.length) {
+                document.getElementById('badgeIconPreview').src =
+                    URL.createObjectURL(this.files[0]);
+            }
+        });
+    </script>
 </body>
 </html>
