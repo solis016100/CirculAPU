@@ -537,3 +537,30 @@
     .flow-dialog-summary div{grid-template-columns:1fr;gap:3px}
     .flow-dialog-actions{flex-direction:column}
 }
+
+/* Manager status badges */
+.status-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:76px;padding:6px 10px;border-radius:8px;
+    background:#f1f5f9;color:#475569;font-size:12px;font-weight:700;line-height:1;white-space:nowrap;
+}
+.status-badge[data-status="Available"],
+.status-badge[data-status="Published"],
+.mobile-status-pill[data-status="Published"]{background:#dcfce7;color:#166534}
+
+.status-badge[data-status="Pending Review"],
+.mobile-status-pill[data-status="Pending Review"]{background:#fef3c7;color:#92400e}
+
+.status-badge[data-status="Reserved"],
+.status-badge[data-status="Borrowed"],
+.status-badge[data-status="Ready for Verification"],
+.mobile-status-pill[data-status="Ready for Verification"]{background:#dbeafe;color:#1d4ed8}
+
+.status-badge[data-status="Unavailable"],
+.status-badge[data-status="Rejected"],
+.status-badge[data-status="Removed"],
+.mobile-status-pill[data-status="Rejected"],
+.mobile-status-pill[data-status="Removed"]{background:#fee2e2;color:#b91c1c}
+
+.status-badge[data-status="Draft"],
+.mobile-status-pill[data-status="Draft"]{background:#e2e8f0;color:#475569}

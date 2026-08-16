@@ -2218,3 +2218,33 @@
         overflow-wrap:anywhere;
     }
 }
+
+/* Reuse the same status colours on mobile */
+@media(max-width:600px){
+    .mobile-status-pill[data-status="Approved"],
+    .mobile-status-pill[data-status="Available"],
+    .mobile-status-pill[data-status="Active"],
+    .mobile-status-pill[data-status="Published"],
+    .mobile-status-pill[data-status="Completed"]{background:#dcfce7;color:#166534}
+
+    .mobile-status-pill[data-status="Pending"],
+    .mobile-status-pill[data-status="Pending Review"]{background:#fef3c7;color:#92400e}
+
+    .mobile-status-pill[data-status="Reserved"],
+    .mobile-status-pill[data-status="Borrowed"],
+    .mobile-status-pill[data-status="In Progress"],
+    .mobile-status-pill[data-status="Ready for Verification"],
+    .mobile-status-pill[data-status="Awaiting Pickup"]{background:#dbeafe;color:#1d4ed8}
+
+    .mobile-status-pill[data-status="Rejected"],
+    .mobile-status-pill[data-status="Cancelled"],
+    .mobile-status-pill[data-status="Overdue"],
+    .mobile-status-pill[data-status="Unavailable"],
+    .mobile-status-pill[data-status="Inactive"],
+    .mobile-status-pill[data-status="Removed"]{background:#fee2e2;color:#b91c1c}
+
+    .mobile-status-pill[data-status="Draft"],
+    .mobile-status-pill[data-status="Read"]{background:#e2e8f0;color:#475569}
+    .mobile-status-pill[data-status="Unread"]{background:#e0f2fe;color:#0369a1}
+}
+

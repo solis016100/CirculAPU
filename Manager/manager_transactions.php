@@ -278,7 +278,7 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 <h3><?=e($t['assetName'])?></h3>
 <p><?=e($t['requesterName'])?> · <?=e($t['requesterID'])?></p>
 </div>
-<span class="mobile-status-pill <?=$t['isOverdue']?'mobile-overdue':''?>"><?=e($displayStatus)?></span>
+<span class="mobile-status-pill <?=$t['isOverdue']?'mobile-overdue':''?>" data-status="<?=e($displayStatus)?>"><?=e($displayStatus)?></span>
 </div>
 
 <div class="mobile-transaction-meta">
@@ -353,7 +353,7 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 <td><strong><?= e($t['transactionID']) ?></strong></td>
 <td><?= e($t['assetName']) ?></td>
 <td><?= e($t['requesterName'] . ' (' . $t['requesterID'] . ')') ?></td>
-<td><span class="status-badge <?= $t['isOverdue'] ? 'alert-error' : '' ?>"><?= e($displayStatus) ?></span></td>
+<td><span class="status-badge" data-status="<?=e($displayStatus)?>"><?=e($displayStatus)?></span></td>
 <td><?= e(showDate($pickupOnly?$t['pickupDate']:$t['requestDate'])) ?></td>
 <td><?= e(showDate($t['dueDate'])) ?></td>
 <td>

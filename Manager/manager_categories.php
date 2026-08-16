@@ -194,7 +194,7 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
 <?php if($icon):?><span class="mobile-category-icon"><img src="<?=e($icon)?>" alt=""></span><?php endif;?>
 <div><span class="mobile-record-id"><?=e($c['categoryID'])?></span><h3><?=e($c['categoryName'])?></h3></div>
 </div>
-<span class="mobile-status-pill"><?=e($c['status'])?></span>
+<span class="mobile-status-pill" data-status="<?=e($c['status'])?>"><?=e($c['status'])?></span>
 </div>
 
 <?php if($c['description']):?><p class="mobile-category-desc"><?=e($c['description'])?></p><?php endif;?>
@@ -273,7 +273,7 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
     <td><strong><?= e($c['categoryID']) ?></strong></td>
     <td><div class="category-name-cell"><?php if ($icon): ?><img src="<?= e($icon) ?>" alt=""><?php endif; ?><span><?= e($c['categoryName']) ?></span></div></td>
     <td><?= e($c['description'] ?: '-') ?></td>
-    <td><span class="status-badge <?= strtolower($c['status']) ?>"><?= e($c['status']) ?></span></td>
+    <td><span class="status-badge" data-status="<?=e($c['status'])?>"><?=e($c['status'])?></span></td>
     <td><?= date('d M Y', strtotime($c['createdDate'])) ?></td>
     <td><div class="management-actions">
         <a href="manager_category_view.php?categoryID=<?= e($c['categoryID']) ?>" class="management-action-btn" title="View"><img src="../assets/icons/view.png" alt="View"></a>

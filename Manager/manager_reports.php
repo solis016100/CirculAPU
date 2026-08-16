@@ -415,11 +415,11 @@ foreach($cards as $x):?>
 <article class="mobile-report-card">
 <div class="mobile-report-top">
 <div><span class="mobile-record-id"><?=e($x['assetID'])?></span><h3><?=e($x['assetName'])?></h3><p><?=e($x['categoryName'])?></p></div>
-<span class="mobile-status-pill"><?=e($x['listingStatus'])?></span>
+<span class="mobile-status-pill" data-status="<?=e($x['listingStatus'])?>"><?=e($x['listingStatus'])?></span>
 </div>
 <div class="mobile-report-meta three">
 <div><span>Condition</span><strong><?=e($x['assetCondition'])?></strong></div>
-<div><span>Availability</span><strong><?=e($x['availabilityStatus'])?></strong></div>
+<div><span>Availability</span><span class="status-badge" data-status="<?=e($x['availabilityStatus'])?>"><?=e($x['availabilityStatus'])?></span></div>
 <div><span>Listed</span><strong><?=e(date('d M Y',strtotime($x['createdDate'])))?></strong></div>
 </div>
 <div class="mobile-report-owner">Owner: <strong><?=e($x['ownerName'])?></strong></div>
@@ -429,7 +429,7 @@ foreach($cards as $x):?>
 <article class="mobile-report-card">
 <div class="mobile-report-top">
 <div><span class="mobile-record-id"><?=e($x['transactionID'])?></span><h3><?=e($x['assetName'])?></h3><p><?=e($x['categoryName'])?> · <?=e($x['requesterName'])?></p></div>
-<span class="mobile-status-pill <?=$x['requestStatus']==='Overdue'?'mobile-overdue':''?>"><?=e($x['requestStatus'])?></span>
+<span class="mobile-status-pill <?=$x['requestStatus']==='Overdue'?'mobile-overdue':''?>" data-status="<?=e($x['requestStatus'])?>"><?=e($x['requestStatus'])?></span>
 </div>
 <div class="mobile-report-meta">
 <div><span>Requested</span><strong><?=e(date('d M Y',strtotime($x['requestDate'])))?></strong></div>
@@ -466,10 +466,10 @@ foreach($cards as $x):?>
 <div class="management-table-wrapper"><table class="management-table">
 <?php if($report==='asset'):?>
 <thead><tr><th>#</th><th>Asset ID</th><th>Asset Name</th><th>Category</th><th>Condition</th><th>Availability</th><th>Listing Status</th><th>Owner</th><th>Date Listed</th><th>Action</th></tr></thead><tbody>
-<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['assetID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['assetCondition'])?></td><td><?=e($x['availabilityStatus'])?></td><td><?=e($x['listingStatus'])?></td><td><?=e($x['ownerName'])?></td><td><?=e(date('d M Y',strtotime($x['createdDate'])))?></td><td><a class="management-action-btn" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
+<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['assetID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['assetCondition'])?></td><td><span class="status-badge" data-status="<?=e($x['availabilityStatus'])?>"><?=e($x['availabilityStatus'])?></span></td><td><span class="status-badge" data-status="<?=e($x['listingStatus'])?>"><?=e($x['listingStatus'])?></span></td><td><?=e($x['ownerName'])?></td><td><?=e(date('d M Y',strtotime($x['createdDate'])))?></td><td><a class="management-action-btn" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
 <?php elseif($report==='transaction'):?>
 <thead><tr><th>#</th><th>Transaction ID</th><th>Asset</th><th>Category</th><th>Requester</th><th>Status</th><th>Request Date</th><th>Completed Date</th><th>Action</th></tr></thead><tbody>
-<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['transactionID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['requesterName'])?></td><td><?=e($x['requestStatus'])?></td><td><?=e(date('d M Y',strtotime($x['requestDate'])))?></td><td><?=e($x['completedDate']?date('d M Y',strtotime($x['completedDate'])):'-')?></td><td><a class="management-action-btn" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
+<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['transactionID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['requesterName'])?></td><td><span class="status-badge" data-status="<?=e($x['requestStatus'])?>"><?=e($x['requestStatus'])?></span></td><td><?=e(date('d M Y',strtotime($x['requestDate'])))?></td><td><?=e($x['completedDate']?date('d M Y',strtotime($x['completedDate'])):'-')?></td><td><a class="management-action-btn" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
 <?php else:?>
 <thead><tr><th>#</th><th>Category</th><th>Total Assets</th><th>Available</th><th>Borrowed</th><th>Total Transactions</th><th>Unique Requesters</th><th>Action</th></tr></thead><tbody>
 <?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['totalAssets'])?></td><td><?=e($x['availableAssets'])?></td><td><?=e($x['borrowedAssets'])?></td><td><?=e($x['totalTransactions'])?></td><td><?=e($x['uniqueRequesters'])?></td><td><a class="management-action-btn" href="manager_category_view.php?categoryID=<?=e($x['categoryID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>

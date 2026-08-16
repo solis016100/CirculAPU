@@ -174,7 +174,7 @@ try {
 <h3><?=e($n['title'])?></h3>
 <p><?=e(date('d M Y, h:i A',strtotime($n['createdDate'])))?></p>
 </div>
-<span class="mobile-status-pill"><?=e($n['status'])?></span>
+<span class="mobile-status-pill" data-status="<?=e($n['status'])?>"><?=e($n['status'])?></span>
 </div>
 
 <p class="mobile-notification-message"><?=e($n['content'])?></p>
@@ -241,7 +241,7 @@ try {
             <tr class="<?= $n['status'] === 'Unread' ? 'notification-unread' : '' ?>">
                 <td><strong><?= e($n['title']) ?></strong></td>
                 <td><?= e($n['content']) ?></td>
-                <td><?= e($n['status']) ?></td>
+                <td><span class="status-badge" data-status="<?=e($n['status'])?>"><?=e($n['status'])?></span></td>
                 <td><?= e(date('d M Y, h:i A', strtotime($n['createdDate']))) ?></td>
                 <td>
                     <?php if ($n['status'] === 'Unread'): ?>

@@ -126,7 +126,7 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 <h3><?=e($r['assetName'])?></h3>
 <p><?=e($r['assetID'])?> · <?=e($r['borrowerName'])?> (<?=e($r['borrowerID'])?>)</p>
 </div>
-<span class="mobile-status-pill <?=$r['isOverdue']?'mobile-overdue':''?>"><?=e($display)?></span>
+<span class="mobile-status-pill <?=$r['isOverdue']?'mobile-overdue':''?>" data-status="<?=e($display)?>"><?=e($display)?></span>
 </div>
 
 <div class="mobile-borrowing-meta">
@@ -190,7 +190,7 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 <td><?=e($r['borrowerName'].' ('.$r['borrowerID'].')')?></td>
 <td><?=e(d($r['borrowDate']))?></td>
 <td><?=e(d($r['expectedReturnDate']))?></td>
-<td><span class="status-badge <?=$r['isOverdue']?'alert-error':''?>"><?=e($display)?></span></td>
+<td><span class="status-badge" data-status="<?=e($display)?>"><?=e($display)?></span></td>
 <td>
 <a href="manager_borrowed_asset_view.php?transactionID=<?=e($r['transactionID'])?>" class="management-action-btn" title="View Borrowing">
 <img src="../assets/icons/view.png" alt="View">

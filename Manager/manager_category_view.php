@@ -176,7 +176,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
             ?>
             <div class="category-info-row">
                 <strong><?= e($label) ?></strong>
-                <span><?= e($value) ?></span>
+                <span><?php if($label==='Status'):?><span class="status-badge" data-status="<?=e($value)?>"><?=e($value)?></span><?php else:?><?=e($value)?><?php endif;?></span>
             </div>
             <?php endforeach; ?>
         </div>
@@ -215,12 +215,12 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <span class="mobile-record-id"><?=e($a['assetID'])?></span>
 <h3><?=e($a['assetName'])?></h3>
 </div>
-<span class="mobile-status-pill"><?=e($a['listingStatus'])?></span>
+<span class="mobile-status-pill" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span>
 </div>
 
 <div class="mobile-category-asset-meta">
 <div><span>Condition</span><strong><?=e($a['assetCondition'])?></strong></div>
-<div><span>Availability</span><strong><?=e($a['availabilityStatus'])?></strong></div>
+<div><span>Availability</span><span class="status-badge" data-status="<?=e($a['availabilityStatus'])?>"><?=e($a['availabilityStatus'])?></span></div>
 <div><span>Listed</span><strong><?=date('d M Y',strtotime($a['createdDate']))?></strong></div>
 </div>
 
@@ -255,8 +255,8 @@ $icon = iconPath($category['categoryIcon'] ?? '');
                 <td><strong><?= e($a['assetID']) ?></strong></td>
                 <td><?= e($a['assetName']) ?></td>
                 <td><?= e($a['assetCondition']) ?></td>
-                <td><?= e($a['availabilityStatus']) ?></td>
-                <td><?= e($a['listingStatus']) ?></td>
+                <td><span class="status-badge" data-status="<?=e($a['availabilityStatus'])?>"><?=e($a['availabilityStatus'])?></span></td>
+                <td><span class="status-badge" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span></td>
                 <td><?= date('d M Y', strtotime($a['createdDate'])) ?></td>
                 <td>
                     <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?>"

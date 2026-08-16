@@ -314,12 +314,12 @@ $end = min($offset + $perPage, $total);
                     <p><?=e($a['categoryName'])?></p>
                 </div>
             </div>
-            <span class="mobile-status-pill"><?=e($a['listingStatus'])?></span>
+            <span class="mobile-status-pill" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span>
         </div>
 
         <div class="mobile-asset-meta">
             <div><span>Condition</span><strong><?=e($a['assetCondition'])?></strong></div>
-            <div><span>Availability</span><strong><?=e($a['availabilityStatus'])?></strong></div>
+            <div><span>Availability</span><span class="status-badge" data-status="<?=e($a['availabilityStatus'])?>"><?=e($a['availabilityStatus'])?></span></div>
             <div><span>Listed</span><strong><?=e(assetDate($a['createdDate']))?></strong></div>
         </div>
 
@@ -382,8 +382,8 @@ $end = min($offset + $perPage, $total);
                     </div>
                 </td>
                 <td><?= e($a['assetCondition']) ?></td>
-                <td><?= e($a['availabilityStatus']) ?></td>
-                <td><?= e($a['listingStatus']) ?></td>
+                <td><span class="status-badge" data-status="<?=e($a['availabilityStatus'])?>"><?=e($a['availabilityStatus'])?></span></td>
+                <td><span class="status-badge" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span></td>
                 <td><?= e(assetDate($a['createdDate'])) ?></td>
                 <td>
                     <div class="management-actions">
