@@ -333,7 +333,6 @@
                                 </thead>
 
                                 <tbody>
-
                                     <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)): ?>
                                     <tr>
                                         <td><?= $number ?></td>
