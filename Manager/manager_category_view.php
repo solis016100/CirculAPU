@@ -286,7 +286,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <form method="POST" action="manager_categories.php" class="flow-dialog-actions">
     <input type="hidden" name="action" id="detailActionInput">
-    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>">
+    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>"><input type="hidden" name="returnQuery" value="<?=e($source==='categories'?$back:'')?>">
     <button type="button" class="category-form-back" onclick="detailCategoryActionDialog.close()">No</button>
     <button type="submit" class="category-form-submit" id="detailActionConfirm">Confirm</button>
 </form>

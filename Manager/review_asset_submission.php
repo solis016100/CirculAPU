@@ -159,7 +159,7 @@ try {
                 $conn->commit();
                 $url=$action==='save'
                     ?'review_asset_submission.php?assetID='.rawurlencode($assetID).$navParam.'&saved=1'
-                    :"manager_assets.php?listingStatus=Pending+Review&reviewDone=$action";
+                    :$backURL.(str_contains($backURL,'?')?'&':'?').'reviewDone='.rawurlencode($action);
                 header("Location: $url"); exit();
 
             } catch (Throwable $e) {
@@ -190,7 +190,7 @@ $image = imagePath($asset['imageURL'] ?? '');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Asset Submission - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 

@@ -94,7 +94,7 @@ $details = $asset ? [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Details - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
@@ -200,7 +200,7 @@ $details = $asset ? [
 
 <form method="POST" action="manager_assets.php" class="flow-dialog-actions">
     <input type="hidden" name="action" value="remove">
-    <input type="hidden" name="assetID" value="<?= e($assetID) ?>">
+    <input type="hidden" name="assetID" value="<?= e($assetID) ?>"><input type="hidden" name="returnQuery" value="<?=e($source==='assets'?$back:'')?>">
     <button type="button" class="category-form-back" onclick="removeAssetDialog.close()">No</button>
     <button type="submit" class="category-form-submit">Yes, Remove</button>
 </form>

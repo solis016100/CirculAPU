@@ -588,3 +588,6 @@
     background:#fee2e2;
     color:#b91c1c;
 }
+
+.status-badge[data-status="Read"]{background:#e2e8f0;color:#475569}
+.status-badge[data-status="Unread"]{background:#e0f2fe;color:#0369a1}

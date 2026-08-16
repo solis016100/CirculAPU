@@ -19,7 +19,13 @@ function iconPath(?string $v): string {
     if (!$v) return '';
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim($v, '/');
 }
-function go(string $q): never { header('Location: manager_categories.php?' . $q); exit(); }
+function go(string $q): never {
+    $state=[];$rq=trim($_POST['returnQuery']??'');
+    if($rq) parse_str($rq,$state);
+    else $state=array_intersect_key($_GET,array_flip(['search','status','dateFrom','dateTo','page']));
+    parse_str($q,$extra);$state=array_merge($state,$extra);
+    header('Location: manager_categories.php?'.http_build_query($state)); exit();
+}
 function pageURL(array $q, int $p): string {
     $q['page'] = $p;
     return '?' . http_build_query(array_filter($q, fn($v) => $v !== ''));
@@ -325,7 +331,7 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
 
 <form method="POST" id="categoryActionForm" class="flow-dialog-actions">
     <input type="hidden" name="action" id="categoryActionInput">
-    <input type="hidden" name="categoryID" id="categoryActionCategoryID">
+    <input type="hidden" name="categoryID" id="categoryActionCategoryID"><input type="hidden" name="returnQuery" value="<?=e($back)?>">
     <button type="button" class="category-form-back" onclick="categoryActionDialog.close()">No</button>
     <button type="submit" class="category-form-submit" id="categoryActionConfirm">Confirm</button>
 </form>

@@ -9,6 +9,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
 require_once '../db.php';
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+function notificationReturn(string $flag): never {
+    $q=array_filter(['search'=>trim($_GET['search']??''),'status'=>trim($_GET['status']??'')],fn($v)=>$v!=='');
+    $q[$flag]='1'; header('Location: manager_notifications.php?'.http_build_query($q)); exit();
+}
 
 $managerID = $_SESSION['user_id'];
 $search = trim($_GET['search'] ?? '');
@@ -30,7 +34,7 @@ try {
             $stmt->bind_param('ss', $notificationID, $managerID);
             $stmt->execute(); $stmt->close();
 
-            header('Location: manager_notifications.php?updated=1'); exit();
+            notificationReturn('updated');
         }
 
         if ($action === 'mark_all') {
@@ -38,7 +42,7 @@ try {
             $stmt->bind_param('s', $managerID);
             $stmt->execute(); $stmt->close();
 
-            header('Location: manager_notifications.php?allread=1'); exit();
+            notificationReturn('allread');
         }
     }
 

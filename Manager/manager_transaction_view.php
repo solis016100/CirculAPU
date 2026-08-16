@@ -213,7 +213,9 @@ function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):str
 }
 
 function go(string $id,string $nav=''):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).$nav.'&updated=1');exit();}
-function reviewDone(string $action):never{header("Location: manager_transactions.php?requestStatus=Pending&reviewDone=$action");exit();}
+function returnTo(string $url,array $q):never{
+    header('Location: '.$url.(str_contains($url,'?')?'&':'?').http_build_query($q));exit();
+}
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$back=trim($_GET['back']??'');$source=$_GET['source']??'transactions';
 $backStatus=in_array($from,['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'],true)?$from:($from==='pending'?'Pending':'');
@@ -306,7 +308,7 @@ try{
                             ". Return by: ".d($return).
                             ". Reservation protection begins ".d($protectedFrom)."."
                         );
-                        $c->commit();reviewDone('approve');
+                        $c->commit();returnTo($backURL,['reviewDone'=>'approve']);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -326,7 +328,7 @@ try{
                         if($b){$s=$c->prepare("UPDATE borrowings SET borrowingStatus='Cancelled' WHERE borrowID=?");$s->bind_param('s',$b['borrowID']);$s->execute();$s->close();}
                         logTx($c,$manager,'Reject',$id,"Rejected borrowing request for {$t['assetName']}. Reason: $remark");
                         notify($c,$t['requesterID'],'Borrowing Request Rejected',"Your request $id for {$t['assetName']} was rejected. Reason: $remark");
-                        $c->commit();reviewDone('reject');
+                        $c->commit();returnTo($backURL,['reviewDone'=>'reject']);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -345,7 +347,7 @@ try{
                         logTx($c,$manager,'Assign',$id,"Pickup confirmed; borrowing started for {$t['assetName']}");
                         notify($c,$t['requesterID'],'Pickup Confirmed',"Pickup for {$t['assetName']} was confirmed. Your borrowing has started. Return by: ".d($b['expectedReturnDate']).'.');
                         $c->commit();
-                        header('Location: manager_transactions.php?pickup=1&pickupDone='.rawurlencode($id));
+                        returnTo($backURL,['pickupDone'=>$id]);
                         exit();
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }

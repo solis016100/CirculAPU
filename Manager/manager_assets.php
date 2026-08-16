@@ -60,7 +60,12 @@ try {
 
                 createDeleteLog($conn, $managerID, 'Asset', $removeID, "Removed asset listing: {$asset['assetName']}");
                 $conn->commit();
-                header('Location: manager_assets.php?removed=1'); exit();
+                $q=[];
+                $rq=trim($_POST['returnQuery']??'');
+                if($rq) parse_str($rq,$q);
+                else $q=array_intersect_key($_GET,array_flip(['search','category','condition','availability','listingStatus','verificationStatus','page']));
+                $q['removed']='1';
+                header('Location: manager_assets.php?'.http_build_query($q)); exit();
             } catch (Throwable $e) {
                 $conn->rollback(); throw $e;
             }
@@ -447,7 +452,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 
 <form method="POST" class="flow-dialog-actions">
     <input type="hidden" name="action" value="remove">
-    <input type="hidden" name="assetID" id="removeAssetID">
+    <input type="hidden" name="assetID" id="removeAssetID"><input type="hidden" name="returnQuery" value="<?=e($back)?>">
     <button type="button" class="category-form-back" onclick="removeAssetDialog.close()">No</button>
     <button type="submit" class="category-form-submit">Yes, Remove</button>
 </form>
