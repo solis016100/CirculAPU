@@ -25,7 +25,9 @@ function notify(mysqli $c,string $uid,string $title,string $text): void {
     $s->bind_param('ssss',$id,$uid,$title,$text);$s->execute();$s->close();
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');
+$backURL='manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=$back?'&back='.rawurlencode($back):'';
+$returnQ=[];if($back)parse_str($back,$returnQ);$returnQ['returnDone']='1';$returnURL='manager_borrowed_assets.php?'.http_build_query($returnQ);
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$t=$b=$upcomingReservation=null;$error='';
@@ -128,7 +130,7 @@ try{
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
                     $c->commit();
-                    header('Location: manager_borrowed_assets.php?returnDone=1');exit();
+                    header('Location: '.$returnURL);exit();
                 }catch(Throwable $z){$c->rollback();throw $z;}
             }
         }
@@ -142,7 +144,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Inspect Asset Return - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -150,7 +152,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_borrowed_assets.php">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($backURL)?>">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
 <h1>Return Inspection</h1><p>Inspect the returned asset before completing the borrowing transaction.</p>
 </section>
 
@@ -215,7 +217,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 </div>
 <div class="asset-form-actions">
 <button type="button" class="asset-form-submit" onclick="openReturnConfirm()">Confirm Return</button>
-<a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
+<a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
 

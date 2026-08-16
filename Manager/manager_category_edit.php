@@ -30,7 +30,7 @@ $icons = [
 ];
 
 $managerID = $_SESSION['user_id'];
-$categoryID = trim($_GET['categoryID'] ?? '');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
@@ -83,7 +83,7 @@ try {
                 $stmt->close();
 
                 $conn->commit();
-                header("Location: manager_category_view.php?categoryID=" . rawurlencode($categoryID) . "&updated=1"); exit();
+                header("Location: manager_category_view.php?categoryID=".rawurlencode($categoryID).$navParam."&updated=1"); exit();
             } catch (Throwable $e) {
                 $conn->rollback(); throw $e;
             }
@@ -112,7 +112,7 @@ $status = $category['status'] ?? 'Active';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Category - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
     <style>
         .category-selected-preview [hidden]{display:none!important}
@@ -129,8 +129,8 @@ $status = $category['status'] ?? 'Active';
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_categories.php">Category Management</a><span>›</span>
-        <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?>">Category Details</a><span>›</span>
+        <a href="<?=e($backURL)?>">Category Management</a><span>›</span>
+        <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>">Category Details</a><span>›</span>
         <span class="breadcrumb-current">Edit Category</span>
     </div>
     <h1>Edit Category</h1>
@@ -206,7 +206,7 @@ $status = $category['status'] ?? 'Active';
 </div>
 
 <div class="category-form-actions">
-    <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?>" class="category-form-back">Back</a>
+    <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>" class="category-form-back">Back</a>
     <button type="reset" class="category-form-reset"><img src="../assets/icons/reset.png" alt=""> Reset</button>
     <button type="button" class="category-form-submit" onclick="openEditConfirm()">
         <img src="../assets/icons/edit.png" alt=""> Save Changes

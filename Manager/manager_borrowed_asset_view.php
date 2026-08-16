@@ -25,7 +25,7 @@ function logReminder(mysqli $c,string $uid,string $ref,string $text):void{
     $s->bind_param('ssss',$lid,$uid,$ref,$text);$s->execute();$s->close();
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');$backURL='manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=$back?'&back='.rawurlencode($back):'';
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
 $t=null;$b=null;$error='';$remindedToday=false;$reminderCount=0;$lastReminder=null;
@@ -73,7 +73,7 @@ try{
                 notify($c,$t['borrowerID'],'Overdue Asset Return Reminder',
                     "Transaction $id: Your borrowed asset {$t['assetName']} was due on $due. Please return the asset as soon as possible.");
                 logReminder($c,$manager,$id,"Return reminder sent to {$t['borrowerName']} for overdue asset {$t['assetName']}.");
-                header('Location: manager_borrowed_asset_view.php?transactionID='.rawurlencode($id).'&reminded=1');exit();
+                header('Location: manager_borrowed_asset_view.php?transactionID='.rawurlencode($id).$backParam.'&reminded=1');exit();
             }
         }
     }
@@ -86,7 +86,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Borrowed Asset Details - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .return-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:22px}
 .return-actions form{margin:0}
@@ -155,7 +155,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_borrowed_assets.php">Manage Returns</a><span>›</span><span class="breadcrumb-current">Borrowed Asset Details</span></div>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($backURL)?>">Manage Returns</a><span>›</span><span class="breadcrumb-current">Borrowed Asset Details</span></div>
 <h1>Borrowed Asset Details</h1><p>Review the active borrowing, send overdue reminders and process the returned asset.</p>
 </section>
 
@@ -196,7 +196,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 </div>
 
 <div class="return-actions">
-<a href="manager_borrowed_assets.php" class="category-form-back">Back</a>
+<a href="<?=e($backURL)?>" class="category-form-back">Back</a>
 <?php if($overdue):?>
 <form method="POST" id="remindForm">
 <input type="hidden" name="action" value="remind">
@@ -205,7 +205,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 </button>
 </form>
 <?php endif;?>
-<a href="inspect_asset_return.php?transactionID=<?=e($id)?>" class="category-form-submit">Process Return</a>
+<a href="inspect_asset_return.php?transactionID=<?=e($id)?><?=e($backParam)?>" class="category-form-submit">Process Return</a>
 </div>
 </section>
 <?php endif;?>

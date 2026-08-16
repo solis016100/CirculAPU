@@ -169,13 +169,19 @@ $start = $total ? $offset + 1 : 0;
 $end = min($offset + $perPage, $total);
 $listTitle=$pickupOnly?'Waiting for Pickup Confirmation':($status==='Pending'?'Pending Requests':'Transaction Requests');
 $resetURL=$pickupOnly?'manager_transactions.php?pickup=1':($status==='Pending'?'manager_transactions.php?requestStatus=Pending':'manager_transactions.php');
+$back=http_build_query(array_filter([
+    'search'=>$search,'requestStatus'=>$status,'dateFrom'=>$dateFrom,'dateTo'=>$dateTo,
+    'active'=>$activeOnly?'1':'','activeTransaction'=>$activeTransaction?'1':'',
+    'pickup'=>$pickupOnly?'1':'','viewAll'=>$viewAll?'1':'','page'=>$page
+],fn($v)=>$v!==''&&$v!==1));
+$backParam=$back?'&back='.rawurlencode($back):'';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Management - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .transaction-list-meta{display:flex;align-items:center;gap:10px}
 .transaction-list-meta a{color:var(--primary-color);font-size:13px;font-weight:600;text-decoration:none}
@@ -287,7 +293,7 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 </div>
 
 <div class="mobile-card-actions">
-<a class="primary" href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?><?=$pickupOnly?'&from=pickup':($status==='Pending'?'&from=pending':'')?>">
+<a class="primary" href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?><?=$pickupOnly?'&from=pickup':($status?'&from='.rawurlencode($status):'')?><?=$backParam?>">
 <?=$pickupOnly?'Confirm Pickup':($t['requestStatus']==='Pending'?'Review Request':'View Details')?>
 </a>
 </div>
@@ -358,9 +364,9 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 <td><?= e(showDate($t['dueDate'])) ?></td>
 <td>
 <?php if($pickupOnly||$status==='Pending'):?>
-<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>&from=<?=$pickupOnly?'pickup':'pending'?>" class="queue-action-link"><?=$pickupOnly?'Confirm Pickup':'Review Request'?></a>
+<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>&from=<?=rawurlencode($pickupOnly?'pickup':$status)?><?=$backParam?>" class="queue-action-link"><?=$pickupOnly?'Confirm Pickup':'Review Request'?></a>
 <?php else:?>
-<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>" class="management-action-btn"
+<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?><?=$status?'&from='.rawurlencode($status):''?><?=$backParam?>" class="management-action-btn"
 title="<?=$t['requestStatus']==='Pending'?'Review Transaction Request':'View Transaction Details'?>">
 <img src="../assets/icons/view.png" alt="View"></a>
 <?php endif;?>

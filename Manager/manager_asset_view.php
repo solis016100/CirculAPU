@@ -28,7 +28,10 @@ function imagePath($v): string {
         : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$assetID = trim($_GET['assetID'] ?? '');
+$assetID=trim($_GET['assetID']??'');
+$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
+$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 
 if (!$assetID) {
     header('Location: manager_assets.php');
@@ -62,6 +65,9 @@ try {
     error_log($e->getMessage());
     $error = 'Unable to load the asset details. Please try again.';
 }
+
+if(!$back&&$source!=='reports'&&($asset['listingStatus']??'')==='Pending Review')
+    $backURL='manager_assets.php?listingStatus=Pending+Review';
 
 $image = imagePath($asset['imageURL'] ?? '');
 $categoryIcon = imagePath($asset['categoryIcon'] ?? '');
@@ -103,7 +109,7 @@ $details = $asset ? [
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_assets.php">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
         <span class="breadcrumb-current">Asset Details</span>
     </div>
     <h1>Asset Details</h1>
@@ -157,11 +163,11 @@ $details = $asset ? [
                 <?php printButton('Print', '../assets/icons/print.png', 'asset-detail-action-btn'); ?>
 
                 <?php if ($asset['listingStatus'] === 'Pending Review'): ?>
-                    <a href="review_asset_submission.php?assetID=<?= e($assetID) ?>" class="asset-detail-action-btn">
+                    <a href="review_asset_submission.php?assetID=<?= e($assetID) ?><?=e($navParam)?>" class="asset-detail-action-btn">
                         <img src="../assets/icons/edit.png" alt=""><span>Review Submission</span>
                     </a>
                 <?php elseif ($asset['listingStatus'] !== 'Removed'): ?>
-                    <a href="manager_asset_edit.php?assetID=<?= e($assetID) ?>" class="asset-detail-action-btn">
+                    <a href="manager_asset_edit.php?assetID=<?= e($assetID) ?><?=e($navParam)?>" class="asset-detail-action-btn">
                         <img src="../assets/icons/edit.png" alt=""><span>Edit Asset</span>
                     </a>
                 <?php endif; ?>
@@ -175,7 +181,7 @@ $details = $asset ? [
                     </button>
                 <?php endif; ?>
 
-                <a href="manager_assets.php" class="asset-detail-back-btn">Back</a>
+                <a href="<?=e($backURL)?>" class="asset-detail-back-btn">Back</a>
             </div>
         </aside>
 

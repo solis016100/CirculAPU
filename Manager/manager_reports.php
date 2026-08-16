@@ -40,6 +40,7 @@ $availabilities=['Available','Reserved','Borrowed','Unavailable'];
 $listings=['Draft','Pending Review','Ready for Verification','Published','Rejected','Removed'];
 $txStatuses=['Pending','Approved','In Progress','Completed','Cancelled','Rejected','Overdue'];
 $error='';$categories=[];$selectedCategoryName='All';$stats=[];$chart1=$chart2=$chart3=$rows=$allRows=[];
+$reportBack=http_build_query($_GET);$reportBackParam='&source=reports'.($reportBack?'&back='.rawurlencode($reportBack):'');
 
 if(!vd($from)||!vd($to))$error='Please enter a valid date.';
 elseif($from&&$to&&$from>$to)$error='Date From cannot be later than Date To.';
@@ -230,7 +231,7 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title><?=e($title)?> - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .report-tabs{display:flex;gap:0;margin:10px 0 12px}.report-tabs a{padding:8px 14px;border:1px solid #cbd5e1;background:#fff;color:#222;text-decoration:none;font-size:13px}.report-tabs a:first-child{border-radius:6px 0 0 6px}.report-tabs a:last-child{border-radius:0 6px 6px 0}.report-tabs a.active{background:var(--badge-bg);border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
 .report-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -423,7 +424,7 @@ foreach($cards as $x):?>
 <div><span>Listed</span><strong><?=e(date('d M Y',strtotime($x['createdDate'])))?></strong></div>
 </div>
 <div class="mobile-report-owner">Owner: <strong><?=e($x['ownerName'])?></strong></div>
-<div class="mobile-card-actions"><a class="primary" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?>">View Asset</a></div>
+<div class="mobile-card-actions"><a class="primary" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?><?=e($reportBackParam)?>">View Asset</a></div>
 </article>
 <?php endforeach;elseif($report==='transaction'):foreach($rows as $x):?>
 <article class="mobile-report-card">
@@ -435,7 +436,7 @@ foreach($cards as $x):?>
 <div><span>Requested</span><strong><?=e(date('d M Y',strtotime($x['requestDate'])))?></strong></div>
 <div><span>Completed</span><strong><?=e($x['completedDate']?date('d M Y',strtotime($x['completedDate'])):'-')?></strong></div>
 </div>
-<div class="mobile-card-actions"><a class="primary" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?>">View Transaction</a></div>
+<div class="mobile-card-actions"><a class="primary" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?><?=e($reportBackParam)?>">View Transaction</a></div>
 </article>
 <?php endforeach;else:foreach($rows as $x):?>
 <article class="mobile-report-card">
@@ -449,7 +450,7 @@ foreach($cards as $x):?>
 <div><strong><?=e($x['totalTransactions'])?></strong><span>Transactions</span></div>
 <div><strong><?=e($x['uniqueRequesters'])?></strong><span>Requesters</span></div>
 </div>
-<div class="mobile-card-actions"><a class="primary" href="manager_category_view.php?categoryID=<?=e($x['categoryID'])?>">View Category</a></div>
+<div class="mobile-card-actions"><a class="primary" href="manager_category_view.php?categoryID=<?=e($x['categoryID'])?><?=e($reportBackParam)?>">View Category</a></div>
 </article>
 <?php endforeach;endif;?>
 </section>
@@ -466,13 +467,13 @@ foreach($cards as $x):?>
 <div class="management-table-wrapper"><table class="management-table">
 <?php if($report==='asset'):?>
 <thead><tr><th>#</th><th>Asset ID</th><th>Asset Name</th><th>Category</th><th>Condition</th><th>Availability</th><th>Listing Status</th><th>Owner</th><th>Date Listed</th><th>Action</th></tr></thead><tbody>
-<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['assetID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['assetCondition'])?></td><td><span class="status-badge" data-status="<?=e($x['availabilityStatus'])?>"><?=e($x['availabilityStatus'])?></span></td><td><span class="status-badge" data-status="<?=e($x['listingStatus'])?>"><?=e($x['listingStatus'])?></span></td><td><?=e($x['ownerName'])?></td><td><?=e(date('d M Y',strtotime($x['createdDate'])))?></td><td><a class="management-action-btn" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
+<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['assetID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['assetCondition'])?></td><td><span class="status-badge" data-status="<?=e($x['availabilityStatus'])?>"><?=e($x['availabilityStatus'])?></span></td><td><span class="status-badge" data-status="<?=e($x['listingStatus'])?>"><?=e($x['listingStatus'])?></span></td><td><?=e($x['ownerName'])?></td><td><?=e(date('d M Y',strtotime($x['createdDate'])))?></td><td><a class="management-action-btn" href="manager_asset_view.php?assetID=<?=e($x['assetID'])?><?=e($reportBackParam)?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
 <?php elseif($report==='transaction'):?>
 <thead><tr><th>#</th><th>Transaction ID</th><th>Asset</th><th>Category</th><th>Requester</th><th>Status</th><th>Request Date</th><th>Completed Date</th><th>Action</th></tr></thead><tbody>
-<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['transactionID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['requesterName'])?></td><td><span class="status-badge" data-status="<?=e($x['requestStatus'])?>"><?=e($x['requestStatus'])?></span></td><td><?=e(date('d M Y',strtotime($x['requestDate'])))?></td><td><?=e($x['completedDate']?date('d M Y',strtotime($x['completedDate'])):'-')?></td><td><a class="management-action-btn" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
+<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['transactionID'])?></td><td><?=e($x['assetName'])?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['requesterName'])?></td><td><span class="status-badge" data-status="<?=e($x['requestStatus'])?>"><?=e($x['requestStatus'])?></span></td><td><?=e(date('d M Y',strtotime($x['requestDate'])))?></td><td><?=e($x['completedDate']?date('d M Y',strtotime($x['completedDate'])):'-')?></td><td><a class="management-action-btn" href="manager_transaction_view.php?transactionID=<?=e($x['transactionID'])?><?=e($reportBackParam)?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
 <?php else:?>
 <thead><tr><th>#</th><th>Category</th><th>Total Assets</th><th>Available</th><th>Borrowed</th><th>Total Transactions</th><th>Unique Requesters</th><th>Action</th></tr></thead><tbody>
-<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['totalAssets'])?></td><td><?=e($x['availableAssets'])?></td><td><?=e($x['borrowedAssets'])?></td><td><?=e($x['totalTransactions'])?></td><td><?=e($x['uniqueRequesters'])?></td><td><a class="management-action-btn" href="manager_category_view.php?categoryID=<?=e($x['categoryID'])?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
+<?php foreach($rows as $i=>$x):?><tr><td><?=$i+1?></td><td><?=e($x['categoryName'])?></td><td><?=e($x['totalAssets'])?></td><td><?=e($x['availableAssets'])?></td><td><?=e($x['borrowedAssets'])?></td><td><?=e($x['totalTransactions'])?></td><td><?=e($x['uniqueRequesters'])?></td><td><a class="management-action-btn" href="manager_category_view.php?categoryID=<?=e($x['categoryID'])?><?=e($reportBackParam)?>"><img src="../assets/icons/view.png" alt=""></a></td></tr><?php endforeach;?>
 <?php endif;?>
 <?php if(!$rows):?><tr><td colspan="10" class="management-empty-state">No report data found.</td></tr><?php endif;?>
 </tbody></table></div>

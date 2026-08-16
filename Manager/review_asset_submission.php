@@ -23,8 +23,10 @@ function imagePath($v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$managerID = $_SESSION['user_id'];
-$assetID = trim($_GET['assetID'] ?? '');
+$managerID=$_SESSION['user_id'];
+$assetID=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
+$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review');
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$assetID) { header('Location: manager_assets.php'); exit(); }
 
 $asset = null;
@@ -50,7 +52,7 @@ try {
     if (!$asset) {
         $error = 'The selected asset submission could not be found.';
     } elseif ($asset['listingStatus'] !== 'Pending Review') {
-        header("Location: manager_asset_view.php?assetID=$assetID"); exit();
+        header("Location: manager_asset_view.php?assetID=".rawurlencode($assetID).$navParam); exit();
     }
 
     /* 2. Active Categories + Current Category */
@@ -156,8 +158,8 @@ try {
 
                 $conn->commit();
                 $url=$action==='save'
-                    ?"review_asset_submission.php?assetID=$assetID&saved=1"
-                    :"manager_assets.php?reviewDone=$action";
+                    ?'review_asset_submission.php?assetID='.rawurlencode($assetID).$navParam.'&saved=1'
+                    :"manager_assets.php?listingStatus=Pending+Review&reviewDone=$action";
                 header("Location: $url"); exit();
 
             } catch (Throwable $e) {
@@ -203,7 +205,7 @@ $image = imagePath($asset['imageURL'] ?? '');
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_assets.php">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
         <span class="breadcrumb-current">Review Asset Submission</span>
     </div>
     <h1>Review Asset Submission</h1>
@@ -297,7 +299,7 @@ $image = imagePath($asset['imageURL'] ?? '');
             <img src="../assets/icons/pendingVerification.png" alt=""> Send for Verification
         </button>
 
-        <a href="manager_assets.php" class="asset-form-back">Back</a>
+        <a href="<?=e($backURL)?>" class="asset-form-back">Back</a>
     </div>
 </aside>
 

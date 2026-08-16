@@ -212,10 +212,13 @@ function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):str
     return '';
 }
 
-function go(string $id):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&updated=1');exit();}
+function go(string $id,string $nav=''):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).$nav.'&updated=1');exit();}
 function reviewDone(string $action):never{header("Location: manager_transactions.php?requestStatus=Pending&reviewDone=$action");exit();}
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$backURL=$from==='pickup'?'manager_transactions.php?pickup=1':($from==='pending'?'manager_transactions.php?requestStatus=Pending':'manager_transactions.php');
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$back=trim($_GET['back']??'');$source=$_GET['source']??'transactions';
+$backStatus=in_array($from,['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'],true)?$from:($from==='pending'?'Pending':'');
+$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_transactions.php?'.$back:($from==='pickup'?'manager_transactions.php?pickup=1':($backStatus?'manager_transactions.php?requestStatus='.rawurlencode($backStatus):'manager_transactions.php')));
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'').($from?'&from='.rawurlencode($from):'');
 if(!$id){header('Location: manager_transactions.php');exit();}
 
 $t=$b=null;$summary=[];$past=$eco=$logs=$validationChecks=[];$schedule=['issue'=>'','detail'=>'No conflicting approved or active booking detected.','conflict'=>null];$autoRejectReason=$pickupIssue='';$error='';
@@ -366,7 +369,7 @@ try{
                         }
                         logTx($c,$manager,'Update',$id,"Cancelled reservation before pickup. Reason: $remark");
                         notify($c,$t['requesterID'],'Reservation Cancelled',"The reservation for transaction $id was cancelled before pickup. Reason: $remark");
-                        $c->commit();go($id);
+                        $c->commit();go($id,$navParam);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -396,7 +399,7 @@ if($t){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Details - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .tx-dialog{position:fixed;inset:0;margin:auto;width:min(760px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid #bfe4fb;border-radius:12px;padding:24px}
 .tx-dialog-small{width:min(520px,calc(100% - 32px))}
@@ -461,7 +464,7 @@ if($t){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><span class="breadcrumb-current">Transaction Details</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>">Transaction Management</a><span>›</span><span class="breadcrumb-current">Transaction Details</span></div>
 <h1>Transaction Details</h1><p>Review the request, borrower background and borrowing progress.</p>
 </section>
 

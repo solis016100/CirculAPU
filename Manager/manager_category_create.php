@@ -93,7 +93,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Category - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">

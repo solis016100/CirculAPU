@@ -11,7 +11,7 @@ function nextID(mysqli $c,string $t,string $col,string $p): string {
     return sprintf($p.'%03d',$n);
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if(!$id){header('Location: manager_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$asset=null;$categories=[];$error='';$dbError='';$newFile='';
@@ -26,7 +26,7 @@ try{
     $s->bind_param('s',$id);$s->execute();$asset=$s->get_result()->fetch_assoc();$s->close();
 
     if(!$asset)$dbError='The selected asset record could not be found.';
-    elseif($asset['listingStatus']==='Pending Review'){header('Location: review_asset_submission.php?assetID='.rawurlencode($id));exit();}
+    elseif($asset['listingStatus']==='Pending Review'){header('Location: review_asset_submission.php?assetID='.rawurlencode($id).$navParam);exit();}
     elseif($asset['listingStatus']==='Removed')$dbError='Removed assets cannot be edited.';
     else{
         $s=$c->prepare("SELECT categoryID,categoryName FROM categories WHERE status='Active' OR categoryID=? ORDER BY categoryName");
@@ -82,7 +82,7 @@ try{
                     $s->bind_param('ssss',$log,$manager,$id,$text);$s->execute();$s->close();
 
                     $c->commit();
-                    header('Location: manager_asset_view.php?assetID='.rawurlencode($id).'&updated=1');exit();
+                    header('Location: manager_asset_view.php?assetID='.rawurlencode($id).$navParam.'&updated=1');exit();
                 }catch(Throwable $z){
                     $c->rollback();if($newFile&&file_exists($newFile))unlink($newFile);throw $z;
                 }
@@ -106,7 +106,7 @@ if($asset&&!empty($asset['imageURL'])){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Edit Asset - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -114,13 +114,13 @@ if($asset&&!empty($asset['imageURL'])){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_assets.php">Asset Management</a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>">Asset Management</a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
 <h1>Edit Asset Information</h1><p>Update listing information while preserving transaction, review and verification status.</p>
 </section>
 
 <?php if($dbError):?>
 <div class="dashboard-error-message"><?=e($dbError)?></div>
-<a href="manager_assets.php" class="management-create-btn">Back to Asset Management</a>
+<a href="<?=e($backURL)?>" class="management-create-btn">Back to Asset Management</a>
 <?php elseif($asset):?>
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
 <div class="asset-form-note"><strong>Condition Protection</strong><p>Asset condition is controlled through the review/verification workflow and Return Inspection. It cannot be changed from general Edit Asset.</p></div>
@@ -163,7 +163,7 @@ if($asset&&!empty($asset['imageURL'])){
 <div class="asset-form-actions">
 <button type="button" class="asset-form-submit" onclick="openEditAssetConfirm()"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
 <button type="reset" class="asset-form-reset"><img src="../assets/icons/reset.png" alt=""> Reset</button>
-<a href="manager_asset_view.php?assetID=<?=e($id)?>" class="asset-form-back">Back</a>
+<a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
 

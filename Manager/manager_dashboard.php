@@ -59,7 +59,7 @@ try{
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Resource Manager Dashboard - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
 <link rel="stylesheet" href="manager_mobile.css">
 <style>
 .quick-action-grid{grid-template-columns:repeat(5,minmax(0,1fr))}

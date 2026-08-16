@@ -69,13 +69,15 @@ try{
 }
 
 $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
+$back=http_build_query(array_filter(['search'=>$search,'status'=>$status,'page'=>$page],fn($v)=>$v!==''&&$v!==1));
+$backParam=$back?'&back='.rawurlencode($back):'';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Manage Returns - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -135,7 +137,7 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 </div>
 
 <div class="mobile-card-actions">
-<a class="primary" href="manager_borrowed_asset_view.php?transactionID=<?=e($r['transactionID'])?>">Manage Return</a>
+<a class="primary" href="manager_borrowed_asset_view.php?transactionID=<?=e($r['transactionID'])?><?=$backParam?>">Manage Return</a>
 </div>
 </article>
 <?php endforeach;endif;?>
@@ -192,7 +194,7 @@ $start=$total?$offset+1:0;$end=min($offset+$perPage,$total);
 <td><?=e(d($r['expectedReturnDate']))?></td>
 <td><span class="status-badge" data-status="<?=e($display)?>"><?=e($display)?></span></td>
 <td>
-<a href="manager_borrowed_asset_view.php?transactionID=<?=e($r['transactionID'])?>" class="management-action-btn" title="View Borrowing">
+<a href="manager_borrowed_asset_view.php?transactionID=<?=e($r['transactionID'])?><?=$backParam?>" class="management-action-btn" title="View Borrowing">
 <img src="../assets/icons/view.png" alt="View">
 </a>
 </td>

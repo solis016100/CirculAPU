@@ -121,7 +121,9 @@ try {
     $error = 'Unable to load Category Management. Please try again.';
 }
 
-$query = compact('search','status','dateFrom','dateTo');
+$query=compact('search','status','dateFrom','dateTo');
+$back=http_build_query(array_filter($query+['page'=>$page],fn($v)=>$v!==''&&$v!==1));
+$backParam=$back?'&back='.rawurlencode($back):'';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -130,7 +132,7 @@ $query = compact('search','status','dateFrom','dateTo');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Management - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
@@ -205,8 +207,8 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
 </div>
 
 <div class="mobile-card-actions">
-<a href="manager_category_view.php?categoryID=<?=e($c['categoryID'])?>">View</a>
-<a class="primary" href="manager_category_edit.php?categoryID=<?=e($c['categoryID'])?>">Edit</a>
+<a href="manager_category_view.php?categoryID=<?=e($c['categoryID'])?><?=$backParam?>">View</a>
+<a class="primary" href="manager_category_edit.php?categoryID=<?=e($c['categoryID'])?><?=$backParam?>">Edit</a>
 <button type="button" onclick="openCategoryAction('<?=$c['status']==='Active'?'deactivate':'reactivate'?>','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
 <?=$c['status']==='Active'?'Deactivate':'Reactivate'?>
 </button>
@@ -276,8 +278,8 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
     <td><span class="status-badge" data-status="<?=e($c['status'])?>"><?=e($c['status'])?></span></td>
     <td><?= date('d M Y', strtotime($c['createdDate'])) ?></td>
     <td><div class="management-actions">
-        <a href="manager_category_view.php?categoryID=<?= e($c['categoryID']) ?>" class="management-action-btn" title="View"><img src="../assets/icons/view.png" alt="View"></a>
-        <a href="manager_category_edit.php?categoryID=<?= e($c['categoryID']) ?>" class="management-action-btn" title="Edit"><img src="../assets/icons/edit.png" alt="Edit"></a>
+        <a href="manager_category_view.php?categoryID=<?= e($c['categoryID']) ?><?=e($backParam)?>" class="management-action-btn" title="View"><img src="../assets/icons/view.png" alt="View"></a>
+        <a href="manager_category_edit.php?categoryID=<?= e($c['categoryID']) ?><?=e($backParam)?>" class="management-action-btn" title="Edit"><img src="../assets/icons/edit.png" alt="Edit"></a>
         <?php if ($c['status'] === 'Active'): ?>
         <button type="button" class="management-action-btn deactivate" title="Deactivate"
                 onclick="openCategoryAction('deactivate','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">

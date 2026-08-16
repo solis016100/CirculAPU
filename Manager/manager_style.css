@@ -564,3 +564,27 @@
 
 .status-badge[data-status="Draft"],
 .mobile-status-pill[data-status="Draft"]{background:#e2e8f0;color:#475569}
+.status-badge[data-status="Active"],
+.status-badge[data-status="Approved"],
+.status-badge[data-status="Completed"]{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-badge[data-status="Pending"]{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.status-badge[data-status="In Progress"],
+.status-badge[data-status="Awaiting Pickup"]{
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+.status-badge[data-status="Inactive"],
+.status-badge[data-status="Cancelled"],
+.status-badge[data-status="Overdue"]{
+    background:#fee2e2;
+    color:#b91c1c;
+}

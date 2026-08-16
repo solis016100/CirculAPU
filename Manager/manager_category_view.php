@@ -16,7 +16,7 @@ function iconPath($v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$categoryID = trim($_GET['categoryID'] ?? '');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
@@ -84,7 +84,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Details - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
@@ -100,7 +100,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <?php if ($error): ?>
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_categories.php">Category Management</a>
+        <a href="<?=e($backURL)?>">Category Management</a>
         <span>›</span><span class="breadcrumb-current">Category Details</span>
     </div>
     <h1>Category Details</h1>
@@ -113,7 +113,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <section class="management-heading category-heading">
     <div>
         <div class="breadcrumb">
-            <a href="manager_categories.php">Category Management</a>
+            <a href="<?=e($backURL)?>">Category Management</a>
             <span>›</span><span class="breadcrumb-current">Category Details</span>
         </div>
         <h1>Category Details</h1>
@@ -121,7 +121,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
     </div>
 
     <div class="category-page-actions">
-        <a href="manager_category_edit.php?categoryID=<?= e($categoryID) ?>">
+        <a href="manager_category_edit.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>">
             <img src="../assets/icons/edit.png" alt=""> Edit
         </a>
 

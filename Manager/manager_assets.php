@@ -126,6 +126,11 @@ try {
 
 $start = $total ? $offset + 1 : 0;
 $end = min($offset + $perPage, $total);
+$back=http_build_query(array_filter([
+    'search'=>$search,'category'=>$category,'condition'=>$condition,'availability'=>$availability,
+    'listingStatus'=>$status,'verificationStatus'=>$verification,'page'=>$page
+],fn($v)=>$v!==''&&$v!==1));
+$backParam=$back?'&back='.rawurlencode($back):'';
 ?>
 
 <!DOCTYPE html>
@@ -135,7 +140,7 @@ $end = min($offset + $perPage, $total);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Management - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
@@ -324,12 +329,12 @@ $end = min($offset + $perPage, $total);
         </div>
 
         <div class="mobile-card-actions">
-            <a href="manager_asset_view.php?assetID=<?=e($a['assetID'])?>">View</a>
+            <a href="manager_asset_view.php?assetID=<?=e($a['assetID'])?><?=$backParam?>">View</a>
 
             <?php if($a['listingStatus']==='Pending Review'):?>
-                <a class="primary" href="review_asset_submission.php?assetID=<?=e($a['assetID'])?>">Review</a>
+                <a class="primary" href="review_asset_submission.php?assetID=<?=e($a['assetID'])?><?=$backParam?>">Review</a>
             <?php elseif($a['listingStatus']!=='Removed'):?>
-                <a class="primary" href="manager_asset_edit.php?assetID=<?=e($a['assetID'])?>">Edit</a>
+                <a class="primary" href="manager_asset_edit.php?assetID=<?=e($a['assetID'])?><?=$backParam?>">Edit</a>
             <?php endif;?>
 
             <?php if($a['listingStatus']!=='Removed'&&!in_array($a['availabilityStatus'],['Reserved','Borrowed'],true)):?>
@@ -387,16 +392,16 @@ $end = min($offset + $perPage, $total);
                 <td><?= e(assetDate($a['createdDate'])) ?></td>
                 <td>
                     <div class="management-actions">
-                        <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?>" class="management-action-btn" title="View Asset">
+                        <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?><?=e($backParam)?>" class="management-action-btn" title="View Asset">
                             <img src="../assets/icons/view.png" alt="View">
                         </a>
 
                         <?php if ($a['listingStatus'] === 'Pending Review'): ?>
-                        <a href="review_asset_submission.php?assetID=<?= e($a['assetID']) ?>" class="management-action-btn" title="Review Asset Submission">
+                        <a href="review_asset_submission.php?assetID=<?= e($a['assetID']) ?><?=e($backParam)?>" class="management-action-btn" title="Review Asset Submission">
                             <img src="../assets/icons/edit.png" alt="Review">
                         </a>
                         <?php elseif ($a['listingStatus'] !== 'Removed'): ?>
-                        <a href="manager_asset_edit.php?assetID=<?= e($a['assetID']) ?>" class="management-action-btn" title="Edit Asset Information">
+                        <a href="manager_asset_edit.php?assetID=<?= e($a['assetID']) ?><?=e($backParam)?>" class="management-action-btn" title="Edit Asset Information">
                             <img src="../assets/icons/edit.png" alt="Edit">
                         </a>
                         <?php endif; ?>
