@@ -533,5 +533,7 @@
             document.getElementById('deletePopout').classList.remove('show');
         }
     </script>
+
+    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

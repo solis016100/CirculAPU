@@ -241,5 +241,7 @@
         </span>
         <img src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon" onclick="event.stopPropagation();">
     </div>
+
+    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

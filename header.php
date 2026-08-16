@@ -10,9 +10,21 @@ $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
 
 // Only Resource Manager uses the Manager-specific notification page.
 // All other roles keep the existing shared notifications page.
-$notification_url = ($_SESSION['user_role'] ?? '') === 'Manager'
-    ? '/CirculAPU/Manager/manager_notifications.php'
-    : '/CirculAPU/notifications.php';
+// $notification_url = ($_SESSION['user_role'] ?? '') === 'Manager'
+//     ? '/CirculAPU/Manager/manager_notifications.php'
+//     : '/CirculAPU/notifications.php';
+//
+
+$role = $_SESSION['user_role'] ?? '';
+
+if ($role == 'Manager') {
+    $notification_url = '/CirculAPU/Manager/manager_notifications.php';
+} elseif ($role == 'Auditor') {
+    $notification_url = '/CirculAPU/Auditor/auditor_notification.php';
+} else {
+    $notification_url = '/CirculAPU/notifications.php';
+}
+
 ?>
 
 <header class="app-header">

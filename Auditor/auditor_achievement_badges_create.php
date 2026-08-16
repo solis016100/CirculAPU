@@ -441,5 +441,7 @@
             document.getElementById('createAnotherPopout').classList.add('show');
         <?php endif; ?>
     </script>
+
+    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>
