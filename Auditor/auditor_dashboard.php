@@ -87,7 +87,7 @@
         $notificationStatement = $conn->prepare("SELECT notificationID, title, content, status, createdDate
         FROM notification WHERE userID = ?
         ORDER BY createdDate DESC
-        LIMIT 4");
+        LIMIT 3");
         if ($notificationStatement){
             $notificationStatement->bind_param("s", $auditorID);
             $notificationStatement->execute();
@@ -323,12 +323,6 @@
                         <div class="card-header">
                             <div>
                                 <h2>Notifications</h2>
-                                <p>
-                                    <?php
-                                        echo $unreadNotifications . ' unread notification' .
-                                            ($unreadNotifications === 1 ? '' : 's');
-                                    ?>
-                                </p>
                             </div>
 
                             <a href="auditor_notification.php">View All</a>

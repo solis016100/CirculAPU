@@ -16,6 +16,18 @@
     $page=max(1,(int)($_GET['page']??1));
     $limit=8;
 
+    // Change notification status from unread to read
+    if(isset($_GET['read'])){
+        $s=$conn->prepare("UPDATE notification SET status='Read' WHERE notificationID=? AND userID=? AND status='Unread'");
+        $s->bind_param('ss',$_GET['read'],$uid);
+        $s->execute();
+
+        $q=$_GET;
+        unset($q['read']);
+        header("Location: auditor_notification.php?".http_build_query($q));
+        exit;
+    }
+
     // Action Buttons
     if($_SERVER['REQUEST_METHOD']=='POST'){
         $a=$_POST['action']??'';
@@ -181,92 +193,124 @@
                     </div>
 
                     <div class="management-table-wrapper">
-                        <table class="management-table notification-table">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>#</th>
-                                    <th>Notification</th>
-                                    <th>Type</th>
-                                    <th>Related To</th>
-                                    <th>Date & Time</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
+                        <form method="POST" id="notificationForm">
+                            <input type="hidden" name="action" id="action">
+                            <table class="management-table notification-table">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Notification</th>
+                                        <th>Type</th>
+                                        <th>Related To</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
 
-                            <tbody>
-                                <?php if($rows):$n=$start;foreach($rows as $r): ?>
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" name="ids[]" class="notification-checkbox" value="<?=e($r['notificationID'])?>">
-                                    </td>
+                                <tbody>
+                                    <?php if($rows):$n=$start;foreach($rows as $r): ?>
+                                    <tr class="<?=$r['status']=='Unread'?'unread':'read'?>">
+                                        <td>
+                                            <input type="checkbox" name="ids[]" class="notification-checkbox" value="<?=e($r['notificationID'])?>">
+                                        </td>
 
-                                    <td><?=$n++?></td>
+                                        <td>
+                                            <strong><?=e($r['title'])?></strong><br>
+                                            <small><?=e($r['content'])?></small>
+                                        </td>
 
-                                    <td>
-                                        <strong><?=e($r['title'])?></strong><br>
-                                        <small><?=e($r['content'])?></small>
-                                    </td>
+                                        <td><?=$r['type']?></td>
 
-                                    <td><?=$r['type']?></td>
+                                        <td><?=$r['related']?></td>
 
-                                    <td><?=$r['related']?></td>
+                                        <td>
+                                            <?=date('d M Y',strtotime($r['createdDate']))?><br>
+                                            <?=date('h:i A',strtotime($r['createdDate']))?>
+                                        </td>
 
-                                    <td>
-                                        <?=date('d M Y',strtotime($r['createdDate']))?><br>
-                                        <?=date('h:i A',strtotime($r['createdDate']))?>
-                                    </td>
+                                        <td>
+                                            <span class="status-badge <?=$r['status']=='Read'?'approved':'rejected'?>">
+                                                <?=$r['status']?>
+                                            </span>
+                                        </td>
 
-                                    <td>
-                                        <span class="status-badge <?=$r['status']=='Read'?'approved':'rejected'?>">
-                                            <?=$r['status']?>
-                                        </span>
-                                    </td>
+                                        <td>
+                                            <a href="?read=<?=urlencode($r['notificationID'])?>">
+                                                <img src="../assets/icons/view.png" width="18">
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach;else: ?>
+                                        <tr><td colspan="8">No notifications found.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
 
-                                    <td>
-                                        <a href="auditor_notification_view.php?id=<?=urlencode($r['notificationID'])?>">
-                                            <img src="../assets/icons/view.png" width="22">
+                            <!-- Automatic Page Number -->
+                            <?php
+                                if ($total > 0) {
+                                    $startRecord = ($page - 1) * $limit + 1;
+                                    $endRecord = min($page * $limit, $total);
+                                }else {
+                                    $startRecord = 0;
+                                    $endRecord = 0;
+                                }
+
+                                $paginationParams = [];
+
+                                if ($search !== '') $paginationParams['search'] = $search;
+                                if ($type !== '') $paginationParams['type'] = $type;
+                                if ($status !== '') $paginationParams['status'] = $status;
+                            ?>
+
+                            <div class="management-table-footer">
+                                <p>
+                                    Showing <?= $startRecord ?> to <?= $endRecord ?>
+                                    of <?= $total ?> entries
+                                </p>
+
+                                <div class="pagination">
+                                    <!-- Previous -->
+                                    <?php if ($page > 1):$paginationParams['page'] = $page - 1;?>
+                                        <a href="?<?= http_build_query($paginationParams) ?>">&lt;</a>
+                                    <?php endif; ?>
+
+                                    <!-- Page Numbers -->
+                                    <?php for ($i = 1; $i <= $pages; $i++):$paginationParams['page'] = $i;?>
+                                        <a href="?<?= http_build_query($paginationParams) ?>" class="<?= $i == $page ? 'active' : '' ?>">
+                                            <?= $i ?>
                                         </a>
-                                    </td>
-                                </tr>
-                                <?php endforeach;else: ?>
-                                    <tr><td colspan="8">No notifications found.</td></tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                    <?php endfor; ?>
 
-                        <!-- Automatic page nunmber -->
-                        <div class="management-pagination">
-                            <span>Showing <?=$start?> to <?=$end?> of <?=$total?> entries</span>
-                            <?php if($page>1): ?>
-                                <a href="?page=<?=$page-1?>&<?=$q?>">&lsaquo;</a>
-                            <?php endif; ?>
-
-                            <?php for($p=1;$p<=$pages;$p++): ?>
-                                <a class="<?=$p==$page?'active':''?>" href="?page=<?=$p?>&<?=$q?>"><?=$p?></a>
-                            <?php endfor; ?>
-
-                            <?php if($page<$pages): ?>
-                                <a href="?page=<?=$page+1?>&<?=$q?>">&rsaquo;</a>
-                            <?php endif; ?>
-                        </div>
+                                    <!-- Next -->
+                                    <?php if ($page < $pages):$paginationParams['page'] = $page + 1;?>
+                                        <a href="?<?= http_build_query($paginationParams) ?>">&gt;</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </section>
             </main>
         </div>
     </div>
 
-
     <script>
-    function act(a){
-    let x=document.querySelectorAll('.notification-checkbox:checked');
-    if(a!='all'&&!x.length)return alert('Please select at least one notification.');
-    if(a=='delete'&&!confirm('Delete selected notifications?'))return;
-    if(a=='all'&&!confirm('Mark all notifications as read?'))return;
-    document.getElementById('action').value=a;
-    document.getElementById('notificationForm').submit();
-    }
+        function act(a){
+            let x=document.querySelectorAll('.notification-checkbox:checked');
+
+            if(a!='all'&&!x.length){
+                alert('Please select at least one notification.');
+                return;
+            }
+
+            if(a=='delete'&&!confirm('Delete selected notifications?'))return;
+            if(a=='all'&&!confirm('Mark all notifications as read?'))return;
+
+            document.getElementById('action').value=a;
+            document.getElementById('notificationForm').submit();
+        }
     </script>
 
 </body>

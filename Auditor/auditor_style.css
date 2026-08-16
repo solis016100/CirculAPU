@@ -1262,3 +1262,6 @@
 }
 
 .notification-action-btn img{width:22px;height:22px}
+
+.notification-table tbody tr.read{background:#f1f1f0;font-weight:400}
+.notification-table tbody tr.unread{background:#fff;font-weight:600}

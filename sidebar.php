@@ -46,23 +46,23 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
         <?php break; ?>
 
       <?php case 'Auditor': ?>
-        <a href="/CirculAPU/Auditor/auditor_dashboard.php" class="nav-item <?php echo ($current_page == 'auditor_dashboard.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Auditor/auditor_dashboard.php" class="nav-item <?php echo in_array($current_page, ['auditor_dashboard.php','auditor_notification.php', 'auditor_recent_activities.php']) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span class="nav-text">Dashboard</span>
         </a>
-        <a href="/CirculAPU/Auditor/auditor_verification_management.php" class="nav-item <?php echo ($current_page == 'auditor_verification_management.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Auditor/auditor_verification_management.php" class="nav-item <?php echo in_array($current_page, ['auditor_verification_management.php', 'auditor_verification_view.php', 'auditor_verification_edit.php']) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           <span class="nav-text">Verification</span>
         </a>
-        <a href="/CirculAPU/Auditor/auditor_missions_management.php" class="nav-item <?php echo ($current_page == 'auditor_missions_management.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Auditor/auditor_missions_management.php" class="nav-item <?php echo in_array($current_page, ['auditor_missions_management.php', 'auditor_mission_create.php', 'auditor_mission_view.php', 'auditor_mission_edit.php']) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
           <span class="nav-text">Missions</span>
         </a>
-        <a href="/CirculAPU/Auditor/auditor_rewards_management.php" class="nav-item <?php echo ($current_page == 'auditor_rewards_management.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Auditor/auditor_rewards_management.php" class="nav-item <?php echo in_array($current_page, ['auditor_rewards_management.php', 'auditor_reward_create.php', 'auditor_reward_view.php', 'auditor_reward_edit.php']) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
           <span class="nav-text">Rewards</span>
         </a>
-        <a href="/CirculAPU/Auditor/auditor_achievement_badges_management.php" class="nav-item <?php echo ($current_page == 'auditor_achievement_badges_management.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Auditor/auditor_achievement_badges_management.php" class="nav-item <?php echo in_array($current_page, ['auditor_achievement_badges_management.php', 'auditor_achievement_badges_create.php', 'auditor_achievement_badges_view.php', 'auditor_achievement_badges_edit.php']) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.74z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
           <span class="nav-text">Achievement Badges</span>
         </a>
