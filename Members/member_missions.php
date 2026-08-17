@@ -1,45 +1,73 @@
 <?php
 session_start();
 
-$conn=new mysqli("localhost","root","","circulapu_db");
-
-if($conn->connect_error){
-    die("Database Connection Failed: ".$conn->connect_error);
-}
-
-if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Member'){
+// Access Control Guard for Community Member Role
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-$userID=$_SESSION['user_id'];
-$message="";
-$error="";
+// Get Member's information from login
+$memberID = $_SESSION['user_id'];
+$memberName = $_SESSION['user_name'] ?? 'Member';
+$userID = $memberID;
+
+// Connect to Database
+require_once '../db.php';
+
+if ($conn->connect_error) {
+    $databaseError = "Unable to connect to the database.";
+} else {
+    // UTF-8 allows the database to handle different languages
+    $conn->set_charset("utf8mb4");
+}
+
+$message = "";
+$error = "";
 
 /* Generate Submission ID */
-function generateSubmissionID($conn){
-    $result=$conn->query("
+function generateSubmissionID($conn) {
+    $result = $conn->query("
     SELECT submissionID
     FROM missionsubmission
-    WHERE submissionID IS NOT NULL
-    AND submissionID!=''
-    ORDER BY CAST(SUBSTRING(submissionID,2) AS UNSIGNED) DESC
+    WHERE submissionID LIKE 'MS%'
+    ORDER BY CAST(SUBSTRING(submissionID,3) AS UNSIGNED) DESC
     LIMIT 1
     ");
 
-    if($result&&$result->num_rows>0){
-        $row=$result->fetch_assoc();
-        $number=(int)substr($row['submissionID'],1)+1;
-    }else{
-        $number=1;
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $number = (int)substr($row['submissionID'],2) + 1;
+    } else {
+        $number = 1;
     }
 
-    return "S".str_pad($number,3,"0",STR_PAD_LEFT);
+    return "MS".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
+/* Generate Verification ID */
+function generateVerificationID($conn) {
+    $result = $conn->query("
+    SELECT verificationID
+    FROM verificationrecords
+    WHERE verificationID LIKE 'V%'
+    ORDER BY CAST(SUBSTRING(verificationID,2) AS UNSIGNED) DESC
+    LIMIT 1
+    ");
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $number = (int)substr($row['verificationID'],1) + 1;
+    } else {
+        $number = 1;
+    }
+
+    return "V".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
 /* Join Mission */
-if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['joinMission'])){
-    $missionID=$conn->real_escape_string($_POST['missionID']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['joinMission'])) {
+    $missionID = $conn->real_escape_string($_POST['missionID']);
 
     $checkQuery="
     SELECT submissionID
@@ -49,35 +77,35 @@ if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['joinMission'])){
     LIMIT 1
     ";
 
-    $checkResult=$conn->query($checkQuery);
+    $checkResult = $conn->query($checkQuery);
 
-    if($checkResult&&$checkResult->num_rows===0){
-        $submissionID=generateSubmissionID($conn);
+    if ($checkResult && $checkResult->num_rows === 0) {
+        $submissionID = generateSubmissionID($conn);
 
         $joinQuery="
         INSERT INTO missionsubmission
-        (submissionID,userID,missionID,evidencePath,submissionDate,submissionStatus)
+        (submissionID, userID, missionID, evidencePath, submissionDate, submissionStatus)
         VALUES
-        ('$submissionID','$userID','$missionID','',NOW(),'In Progress')
+        ('$submissionID', '$userID', '$missionID', '', NOW(), 'In Progress')
         ";
 
-        if($conn->query($joinQuery)){
+        if ($conn->query($joinQuery)) {
             header("Location: member_missions.php?tab=my&joined=1");
             exit();
-        }else{
-            $error="Unable to join mission: ".$conn->error;
+        } else {
+            $error = "Unable to join mission: ".$conn->error;
         }
-    }else{
+    } else {
         header("Location: member_missions.php?tab=my");
         exit();
     }
 }
 
 /* Upload Proof */
-if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['uploadProof'])){
-    $missionID=$conn->real_escape_string($_POST['missionID']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uploadProof'])) {
+    $missionID = $conn->real_escape_string($_POST['missionID']);
 
-    $checkQuery="
+    $checkQuery = "
     SELECT submissionID
     FROM missionsubmission
     WHERE userID='$userID'
@@ -85,34 +113,37 @@ if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['uploadProof'])){
     LIMIT 1
     ";
 
-    $checkResult=$conn->query($checkQuery);
+    $checkResult = $conn->query($checkQuery);
 
-    if(!$checkResult||$checkResult->num_rows===0){
+    if (!$checkResult || $checkResult->num_rows === 0) {
         $error="You must join the mission before uploading proof.";
-    }elseif(!isset($_FILES['evidenceImage'])||$_FILES['evidenceImage']['error']!==UPLOAD_ERR_OK){
-        $error="Please select a proof image.";
-    }else{
-        $file=$_FILES['evidenceImage'];
-        $allowedExtensions=['jpg','jpeg','png','webp'];
-        $extension=strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
+    } elseif (!isset($_FILES['evidenceImage']) || $_FILES['evidenceImage']['error'] !== UPLOAD_ERR_OK) {
+        $error = "Please select a proof image.";
+    } else {
+        $submissionData = $checkResult->fetch_assoc();
+        $submissionID = $submissionData['submissionID'];
 
-        if(!in_array($extension,$allowedExtensions)){
-            $error="Only JPG, PNG and WEBP images are allowed.";
-        }elseif($file['size']>5*1024*1024){
-            $error="Image must be smaller than 5MB.";
-        }else{
-            $uploadFolder="../uploads/submissions/";
+        $file = $_FILES['evidenceImage'];
+        $allowedExtensions = ['jpg','jpeg','png','webp'];
+        $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
 
-            if(!is_dir($uploadFolder)){
+        if (!in_array($extension,$allowedExtensions)) {
+            $error = "Only JPG, PNG and WEBP images are allowed.";
+        } elseif ($file['size'] > 5*1024*1024) {
+            $error = "Image must be smaller than 5MB.";
+        } else {
+            $uploadFolder = "../uploads/submissions/";
+
+            if (!is_dir($uploadFolder)) {
                 mkdir($uploadFolder,0777,true);
             }
 
-            $fileName=$userID."_".$missionID."_".time().".".$extension;
-            $filePath=$uploadFolder.$fileName;
-            $databasePath="uploads/submissions/".$fileName;
+            $fileName = $userID."_".$missionID."_".time().".".$extension;
+            $filePath = $uploadFolder.$fileName;
+            $databasePath = "uploads/submissions/".$fileName;
 
-            if(move_uploaded_file($file['tmp_name'],$filePath)){
-                $safePath=$conn->real_escape_string($databasePath);
+            if (move_uploaded_file($file['tmp_name'],$filePath)) {
+                $safePath = $conn->real_escape_string($databasePath);
 
                 $updateQuery="
                 UPDATE missionsubmission
@@ -123,13 +154,55 @@ if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['uploadProof'])){
                 AND missionID='$missionID'
                 ";
 
-                if($conn->query($updateQuery)){
-                    header("Location: member_missions.php?tab=my&uploaded=1");
-                    exit();
-                }else{
-                    $error="Unable to save proof: ".$conn->error;
+                if ($conn->query($updateQuery)) {
+
+                    /* Add Mission Submission to Verification Record */
+                    $verificationCheck = $conn->query("
+                    SELECT verificationID
+                    FROM verificationrecords
+                    WHERE targetID='$submissionID'
+                    AND targetType='MissionSubmission'
+                    LIMIT 1
+                    ");
+
+                    if ($verificationCheck && $verificationCheck->num_rows > 0) {
+
+                        // Reset existing record when member uploads proof again
+                        $verificationQuery = "
+                        UPDATE verificationrecords
+                        SET status='Pending',
+                            verifiedBy=NULL,
+                            remarks=NULL,
+                            verifiedDate=NOW()
+                        WHERE targetID='$submissionID'
+                        AND targetType='MissionSubmission'
+                        ";
+
+                    } else {
+
+                        $verificationID = generateVerificationID($conn);
+
+                        $verificationQuery = "
+                        INSERT INTO verificationrecords
+                        (verificationID, userID, verifiedBy, targetID,
+                         targetType, status, remarks, verifiedDate)
+                        VALUES
+                        ('$verificationID', '$userID', NULL, '$submissionID',
+                         'MissionSubmission', 'Pending', NULL, NOW())
+                        ";
+                    }
+
+                    if ($conn->query($verificationQuery)) {
+                        header("Location: member_missions.php?tab=my&uploaded=1");
+                        exit();
+                    } else {
+                        $error = "Unable to create verification record: ".$conn->error;
+                    }
+
+                } else {
+                    $error = "Unable to save proof: ".$conn->error;
                 }
-            }else{
+            } else {
                 $error="Unable to upload the image.";
             }
         }
@@ -137,23 +210,23 @@ if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['uploadProof'])){
 }
 
 /* Success Messages */
-if(isset($_GET['joined'])){
-    $message="Mission joined successfully.";
+if (isset($_GET['joined'])) {
+    $message = "Mission joined successfully.";
 }
 
-if(isset($_GET['uploaded'])){
-    $message="Proof uploaded successfully. Waiting for verification.";
+if (isset($_GET['uploaded'])) {
+    $message = "Proof uploaded successfully. Waiting for verification.";
 }
 
 /* Mission Details */
-$selectedMission=null;
-$missionJoined=false;
-$missionUserStatus="";
-$missionEvidence="";
-$missionSubmissionDate="";
+$selectedMission = null;
+$missionJoined = false;
+$missionUserStatus = "";
+$missionEvidence = "";
+$missionSubmissionDate = "";
 
-if(isset($_GET['mission'])&&$_GET['mission']!==""){
-    $selectedMissionID=$conn->real_escape_string($_GET['mission']);
+if (isset($_GET['mission']) && $_GET['mission'] !== "") {
+    $selectedMissionID = $conn->real_escape_string($_GET['mission']);
 
     $detailQuery="
     SELECT missionID,missionName,missionDescription,
@@ -163,10 +236,10 @@ if(isset($_GET['mission'])&&$_GET['mission']!==""){
     LIMIT 1
     ";
 
-    $detailResult=$conn->query($detailQuery);
+    $detailResult = $conn->query($detailQuery);
 
-    if($detailResult&&$detailResult->num_rows>0){
-        $selectedMission=$detailResult->fetch_assoc();
+    if ($detailResult && $detailResult->num_rows > 0) {
+        $selectedMission = $detailResult->fetch_assoc();
     }
 
     $joinedQuery="
@@ -177,11 +250,11 @@ if(isset($_GET['mission'])&&$_GET['mission']!==""){
     LIMIT 1
     ";
 
-    $joinedResult=$conn->query($joinedQuery);
+    $joinedResult = $conn->query($joinedQuery);
 
-    if($joinedResult&&$joinedResult->num_rows>0){
-        $missionJoined=true;
-        $joinedData=$joinedResult->fetch_assoc();
+    if ($joinedResult && $joinedResult->num_rows > 0) {
+        $missionJoined = true;
+        $joinedData = $joinedResult->fetch_assoc();
         $missionUserStatus=$joinedData['submissionStatus']?:'In Progress';
         $missionEvidence=$joinedData['evidencePath']??'';
         $missionSubmissionDate=$joinedData['submissionDate']??'';
@@ -203,9 +276,9 @@ AND NOT EXISTS(
 ORDER BY m.missionID ASC
 ";
 
-$availableResult=$conn->query($availableQuery);
+$availableResult = $conn->query($availableQuery);
 
-if(!$availableResult){
+if (!$availableResult) {
     die("Available Mission Query Failed: ".$conn->error);
 }
 
@@ -221,9 +294,9 @@ WHERE ms.userID='$userID'
 ORDER BY ms.submissionDate DESC
 ";
 
-$myMissionResult=$conn->query($myMissionQuery);
+$myMissionResult = $conn->query($myMissionQuery);
 
-if(!$myMissionResult){
+if (!$myMissionResult) {
     die("My Mission Query Failed: ".$conn->error);
 }
 ?>
@@ -235,7 +308,7 @@ if(!$myMissionResult){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Missions - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_style.css">
+<link rel="stylesheet" href="member_new_style.css">
 </head>
 
 <body class="role-member">

@@ -1,21 +1,25 @@
 <?php
 session_start();
 
-$is_admin=isset($_SESSION['user_role'])&&$_SESSION['user_role']==='Admin';
-$is_preview=isset($_GET['preview']);
-
-$conn=new mysqli("localhost","root","","circulapu_db");
-
-if($conn->connect_error){
-    die("Database Connection Failed: ".$conn->connect_error);
-}
-
-if(!isset($_SESSION['user_id'])||($_SESSION['user_role']!=='Member'&&!($is_admin&&$is_preview))){
+// Access Control Guard for Community Member Role
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-$userID=$_SESSION['user_id'];
+// Get Member's information from login
+$userID = $_SESSION['user_id'];
+$memberName = $_SESSION['user_name'] ?? 'Member';
+
+// Connect to Database
+require_once '../db.php';
+
+if ($conn->connect_error) {
+    $databaseError = "Unable to connect to the database.";
+} else {
+    // UTF-8 allows the database to handle different languages
+    $conn->set_charset("utf8mb4");
+}
 
 /* User */
 $userResult=$conn->query("
@@ -149,7 +153,7 @@ if($currentTier){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Member Portal - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_style.css">
+<link rel="stylesheet" href="member_new_style.css">
 </head>
 
 <body class="role-member">
@@ -302,10 +306,6 @@ if($currentTier){
             <?php if($missionListResult&&$missionListResult->num_rows>0): ?>
                 <?php while($mission=$missionListResult->fetch_assoc()): ?>
                     <div class="mission-preview-item">
-                        <div class="mission-preview-icon">
-                            <img src="../assets/icons/mission.png" alt="Mission">
-                        </div>
-
                         <div class="mission-preview-info">
                             <h3>
                                 <?php echo htmlspecialchars($mission['missionName']); ?>

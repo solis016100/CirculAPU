@@ -92,27 +92,27 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
         <?php break; ?>
 
       <?php default: 'Member' ?>
-        <a href="/CirculAPU/Member/member_dashboard.php" class="nav-item <?php echo ($current_page == 'member_dashboard.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Members/member_dashboard.php" class="nav-item <?php echo ($current_page == 'member_dashboard.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span class="nav-text">Dashboard</span>
         </a>
-        <a href="/CirculAPU/Member/member_marketplace.php" class="nav-item <?php echo ($current_page == 'member_marketplace.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Members/member_marketplace.php" class="nav-item <?php echo ($current_page == 'member_marketplace.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
           <span class="nav-text">Assets Marketplace</span>
         </a>
-        <a href="/CirculAPU/Member/member_requests.php" class="nav-item <?php echo ($current_page == 'member_requests.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Members/member_requests.php" class="nav-item <?php echo ($current_page == 'member_requests.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           <span class="nav-text">My Request</span>
         </a>
-        <a href="/CirculAPU/Member/member_missions.php" class="nav-item <?php echo ($current_page == 'member_missions.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Members/member_missions.php" class="nav-item <?php echo ($current_page == 'member_missions.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
           <span class="nav-text">Missions</span>
         </a>
-        <a href="/CirculAPU/Member/member_rewards.php" class="nav-item <?php echo ($current_page == 'member_rewards.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Members/member_rewards.php" class="nav-item <?php echo ($current_page == 'member_rewards.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
           <span class="nav-text">Rewards & Redemption</span>
         </a>
-        <a href="/CirculAPU/Member/member_badges.php" class="nav-item <?php echo ($current_page == 'member_badges.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Members/member_badges.php" class="nav-item <?php echo ($current_page == 'member_badges.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.74z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
           <span class="nav-text">Achievement Badges</span>
         </a>

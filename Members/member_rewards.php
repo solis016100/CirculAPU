@@ -227,7 +227,7 @@ if($redeemProgress>100){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rewards & Redemption - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_style.css?v=32">
+<link rel="stylesheet" href="member_new_style.css?v=32">
 </head>
 
 <body class="role-member">
