@@ -25,6 +25,8 @@
     $page = max(1, (int)($_GET['page'] ?? 1));
     $offset = ($page - 1) * $perPage;
 
+    $badgeFilterURL = http_build_query(['search' => $search, 'badge' => $badgeFilter, 'page' => $page]);
+
     if ($conn->connect_error) {
         $databaseError = "Unable to connect to the database.";
     } else {
@@ -229,7 +231,7 @@
                                 <tbody>
                                     <?php if (isset($badgeResult) && $badgeResult->num_rows > 0): ?>
                                         <?php $number = $offset + 1; while ($badge = $badgeResult->fetch_assoc()): ?>
-                                            <tr>
+                                            <tr ondblclick="window.location.href='auditor_achievement_badges_view.php?achieveBadgeID=<?= urlencode($badge['achieveBadgeID']) ?>&from=management&<?= $badgeFilterURL ?>'">
                                                 <!-- Number -->
                                                 <td><?php echo $number; ?></td>
 

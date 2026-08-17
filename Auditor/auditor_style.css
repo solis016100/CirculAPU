@@ -598,16 +598,20 @@
 
 
 /* Responsive */
-.management-create-btn {
+@media (max-width:768px) {
+    .management-create-btn {
         padding:4px 8px!important;
         font-size:8px!important;
+    }
 }
 
 
 /* ==========================================================================
    AUDITOR VERIFICATION MANAGEMENT
    ========================================================================== */
-
+.verification-table tbody tr {
+    cursor: pointer;
+}
 
 /* Verification Status */
 
@@ -800,7 +804,9 @@
 /* ==========================================================================
    AUDITOR MISSION MANAGEMENT
    ========================================================================== */
-
+.mission-table tbody tr {
+    cursor: pointer;
+}
 
 /* Mission Table Column Widths */
 
@@ -936,6 +942,11 @@
 /* ==========================================================================
    AUDITOR REWARD MANAGEMENT
    ========================================================================== */
+
+.reward-table tbody tr {
+    cursor: pointer;
+}
+
 /* Reward Table Column Widths */
 .reward-table th:nth-child(1),
 .reward-table td:nth-child(1) {
@@ -1034,12 +1045,59 @@
     object-fit: contain;
 }
 
+@media (max-width:768px) {
+    .reward-table {
+        width:100%!important;
+        min-width:0!important;
+        table-layout:fixed;
+    }
+
+    .reward-table th:nth-child(4),
+    .reward-table td:nth-child(4),
+    .reward-table th:nth-child(8),
+    .reward-table td:nth-child(8) {
+        display:none;
+    }
+
+    .reward-table th,
+    .reward-table td {
+        padding:8px 4px;
+        font-size:11px;
+    }
+
+    .reward-table th:nth-child(1),
+    .reward-table td:nth-child(1) { width:7%; }
+
+    .reward-table th:nth-child(2),
+    .reward-table td:nth-child(2) { width:13%; }
+
+    .reward-table th:nth-child(3),
+    .reward-table td:nth-child(3) { width:23%; }
+
+    .reward-table th:nth-child(5),
+    .reward-table td:nth-child(5) { width:20%; }
+
+    .reward-table th:nth-child(6),
+    .reward-table td:nth-child(6) { width:12%; }
+
+    .reward-table th:nth-child(7),
+    .reward-table td:nth-child(7) { width:29%; }
+
+    .reward-availability {
+        font-size:9px!important;
+        padding:4px 5px!important;
+    }
+
+}
+
 
 
 /* ==========================================================================
    AUDITOR ACHIEVEMENT BADGE MANAGEMENT
    ========================================================================== */
-
+.badge-table tbody tr {
+    cursor: pointer;
+}
 
 /* Badge Table Column Widths */
 
@@ -1134,6 +1192,26 @@
     font-weight: 400 !important;
 }
 
+@media (max-width:768px) {
+    .badge-table {
+        width:100%!important;
+        min-width:0!important;
+        table-layout:fixed;
+    }
+
+    .badge-table th,
+    .badge-table td {
+        padding:8px 4px;
+        font-size:11px;
+        word-break:break-word;
+    }
+
+    .badge-table th:last-child,
+    .badge-table td:last-child {
+        display:none;
+    }
+}
+
 
 /* ==========================================================================
    OUTER CARD - EDIT PAGE
@@ -1218,6 +1296,9 @@
 
 
 /* ===== RESPONSIVE ===== */
+.mobile-bottom-nav {
+    display: none;
+}
 
 @media (max-width: 768px) {
     header {

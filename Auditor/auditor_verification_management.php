@@ -344,7 +344,7 @@
                                         $number = 1;
                                         foreach ($verificationRecords as $record):
                                     ?>
-                                        <tr>
+                                        <tr ondblclick="window.location.href='auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&from=management&<?= $filter ?>'">
                                             <td>
                                                 <?php echo $number; ?>
                                             </td>

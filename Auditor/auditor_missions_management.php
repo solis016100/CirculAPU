@@ -334,7 +334,7 @@
 
                                 <tbody>
                                     <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)): ?>
-                                    <tr>
+                                    <tr ondblclick="window.location.href='auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&<?= $filterQuery ?>'">
                                         <td><?= $number ?></td>
                                         <td><?= htmlspecialchars($mission['missionID']) ?></td>
                                         <td><?= htmlspecialchars($mission['missionName']) ?></td>
