@@ -6,6 +6,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
     header('Location: ../login.php'); exit();
 }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
     $start = strlen($prefix) + 1;
@@ -37,7 +39,6 @@ $status = 'Active';
 $error = '';
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -84,7 +85,6 @@ try {
     error_log($e->getMessage());
     $error = $error ?: 'Unable to create the category. Please try again.';
 }
-if (isset($conn) && $conn instanceof mysqli) $conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,7 +93,8 @@ if (isset($conn) && $conn instanceof mysqli) $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Category - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -171,17 +172,61 @@ if (isset($conn) && $conn instanceof mysqli) $conn->close();
 <div class="category-form-actions">
     <a href="manager_categories.php" class="category-form-back">Back</a>
     <button type="button" class="category-form-reset" id="clearForm"><img src="../assets/icons/reset.png" alt=""> Clear Form</button>
-    <button type="submit" class="category-form-submit"><img src="../assets/icons/create.png" alt=""> Create Category</button>
+    <button type="button" class="category-form-submit" onclick="openCategoryConfirm()">
+        <img src="../assets/icons/create.png" alt=""> Create Category
+    </button>
 </div>
 </form>
 </section>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
 
+<dialog id="categoryConfirm" class="flow-dialog">
+<h2>Confirm Category Creation</h2>
+<p>Are you sure you want to create this category with these details?</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category Name</strong><span id="confirmCategoryName"></span></div>
+    <div><strong>Icon</strong><span id="confirmCategoryIcon"></span></div>
+    <div><strong>Status</strong><span id="confirmCategoryStatus"></span></div>
+    <div><strong>Description</strong><span id="confirmCategoryDescription"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="categoryConfirm.close()">No</button>
+    <button type="button" class="category-form-submit" onclick="confirmCategoryCreate()">Yes, Create</button>
+</div>
+</dialog>
+
 <script>
 const form=document.getElementById('categoryForm'), nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), statusInput=document.getElementById('status'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), placeholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+
+
+function openCategoryConfirm(){
+    if(!form.checkValidity()){form.reportValidity();return}
+
+    const icon=form.querySelector('input[name="categoryIcon"]:checked');
+    confirmCategoryName.textContent=nameInput.value.trim();
+    confirmCategoryIcon.textContent=icon?.closest('label')?.title||'-';
+    confirmCategoryStatus.textContent=statusInput.value;
+    confirmCategoryDescription.textContent=descInput.value.trim()||'-';
+    categoryConfirm.showModal();
+}
+
+function confirmCategoryCreate(){
+    document.getElementById('categoryForm').submit();
+}
 
 document.querySelectorAll('input[name="categoryIcon"]').forEach(input=>input.addEventListener('change',()=>{
     document.querySelectorAll('.category-icon-option').forEach(x=>x.classList.remove('selected'));

@@ -6,7 +6,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
     header('Location: ../login.php'); exit();
 }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+function notificationReturn(string $flag): never {
+    $q=array_filter(['search'=>trim($_GET['search']??''),'status'=>trim($_GET['status']??'')],fn($v)=>$v!=='');
+    $q[$flag]='1'; header('Location: manager_notifications.php?'.http_build_query($q)); exit();
+}
 
 $managerID = $_SESSION['user_id'];
 $search = trim($_GET['search'] ?? '');
@@ -16,7 +22,6 @@ $total = $unread = 0;
 $error = '';
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     /* 1. Actions */
@@ -29,7 +34,7 @@ try {
             $stmt->bind_param('ss', $notificationID, $managerID);
             $stmt->execute(); $stmt->close();
 
-            header('Location: manager_notifications.php?updated=1'); exit();
+            notificationReturn('updated');
         }
 
         if ($action === 'mark_all') {
@@ -37,7 +42,7 @@ try {
             $stmt->bind_param('s', $managerID);
             $stmt->execute(); $stmt->close();
 
-            header('Location: manager_notifications.php?allread=1'); exit();
+            notificationReturn('allread');
         }
     }
 
@@ -79,7 +84,6 @@ try {
     $notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    $conn->close();
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -94,7 +98,8 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
 <body class="role-manager">
@@ -121,25 +126,75 @@ try {
 
 <!-- Summary -->
 <section class="stats-grid">
-    <div class="stat-card">
+    <a href="manager_notifications.php" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/notification.png" alt=""></div>
         <div class="stat-content">
             <h3>Total Notifications</h3><strong class="stat-value"><?= $total ?></strong>
             <p class="stat-description">All manager notifications</p>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card">
+    <a href="manager_notifications.php?status=Unread" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/envelope.png" alt=""></div>
         <div class="stat-content">
             <h3>Unread</h3><strong class="stat-value"><?= $unread ?></strong>
             <p class="stat-description">Require your attention</p>
         </div>
-    </div>
+    </a>
 </section>
 
 <!-- Filters -->
-<section class="management-filter">
+
+<section class="mobile-notifications-ui">
+<details class="mobile-filter-card" <?=($search||$status)?'open':''?>>
+<summary><span>Filter Notifications</span><?php if($search||$status):?><small>Filters active</small><?php endif;?></summary>
+<form method="GET" class="mobile-filter-form">
+<label><span>Search</span><input name="search" value="<?=e($search)?>" placeholder="Notification title or content"></label>
+<label><span>Status</span><select name="status">
+<option value="">All Statuses</option>
+<option value="Unread" <?=$status==='Unread'?'selected':''?>>Unread</option>
+<option value="Read" <?=$status==='Read'?'selected':''?>>Read</option>
+</select></label>
+<div class="mobile-filter-actions"><a href="manager_notifications.php">Reset</a><button>Apply Filters</button></div>
+</form>
+</details>
+
+<div class="mobile-section-heading">
+<div><h2>All Notifications</h2><p><?=count($notifications)?> shown · <?=$unread?> unread</p></div>
+<?php if($unread>0):?>
+<form method="POST" onsubmit="return confirm('Mark all notifications as read?');">
+<input type="hidden" name="action" value="mark_all">
+<button type="submit" class="mobile-mark-all">Mark All Read</button>
+</form>
+<?php endif;?>
+</div>
+
+<?php if(!$notifications):?>
+<div class="mobile-empty-card">No notifications found.</div>
+<?php else:foreach($notifications as $n):?>
+<article class="mobile-notification-card <?=$n['status']==='Unread'?'unread':''?>">
+<div class="mobile-notification-top">
+<div>
+<h3><?=e($n['title'])?></h3>
+<p><?=e(date('d M Y, h:i A',strtotime($n['createdDate'])))?></p>
+</div>
+<span class="mobile-status-pill" data-status="<?=e($n['status'])?>"><?=e($n['status'])?></span>
+</div>
+
+<p class="mobile-notification-message"><?=e($n['content'])?></p>
+
+<?php if($n['status']==='Unread'):?>
+<form method="POST" class="mobile-notification-action">
+<input type="hidden" name="action" value="mark_read">
+<input type="hidden" name="notificationID" value="<?=e($n['notificationID'])?>">
+<button type="submit">Mark as Read</button>
+</form>
+<?php endif;?>
+</article>
+<?php endforeach;endif;?>
+</section>
+
+<section class="management-filter desktop-notification-filter">
 <form method="GET">
     <div class="management-filter-group search">
         <label for="search">Search Notification</label>
@@ -166,7 +221,7 @@ try {
 </section>
 
 <!-- Notification List -->
-<section class="content-card">
+<section class="content-card desktop-notification-list">
     <div class="card-header">
         <h2>All Notifications</h2>
 
@@ -190,14 +245,14 @@ try {
             <tr class="<?= $n['status'] === 'Unread' ? 'notification-unread' : '' ?>">
                 <td><strong><?= e($n['title']) ?></strong></td>
                 <td><?= e($n['content']) ?></td>
-                <td><?= e($n['status']) ?></td>
+                <td><span class="status-badge" data-status="<?=e($n['status'])?>"><?=e($n['status'])?></span></td>
                 <td><?= e(date('d M Y, h:i A', strtotime($n['createdDate']))) ?></td>
                 <td>
                     <?php if ($n['status'] === 'Unread'): ?>
                     <form method="POST">
                         <input type="hidden" name="action" value="mark_read">
                         <input type="hidden" name="notificationID" value="<?= e($n['notificationID']) ?>">
-                        <button type="submit" class="table-action-btn" title="Mark as Read">
+                        <button type="submit" class="management-action-btn" title="Mark as Read">
                             <img src="../assets/icons/mark_as_read.png" alt="Mark as Read">
                         </button>
                     </form>
@@ -211,6 +266,15 @@ try {
 </section>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
 </body>

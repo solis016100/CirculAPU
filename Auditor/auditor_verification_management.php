@@ -21,6 +21,9 @@
     $typeFilter = $_GET['type'] ?? '';
     $statusFilter = $_GET['status'] ?? '';
 
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $recordsPerPage = 8;
+
     $filter = http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter]);
 
     // Connect to Database
@@ -46,7 +49,7 @@
             "Deleted verification record: $id"
         );
 
-        header("Location: auditor_verification_management.php");
+        header("Location: auditor_verification_management.php?deleted=1");
         exit();
     }
 
@@ -57,9 +60,13 @@
         $conn->set_charset("utf8mb4");
 
         // Get all verification records with user name
-        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate
+        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate, a.assetCondition
         FROM verificationrecords vr
-        INNER JOIN user u ON vr.userID = u.userID WHERE 1=1";
+        INNER JOIN user u ON vr.userID = u.userID
+        LEFT JOIN assets a
+        ON vr.targetType = 'Asset'
+        AND vr.targetID = a.assetID
+        WHERE 1=1";
 
 
         // Search (filter)
@@ -107,6 +114,49 @@
         }
 
         $sql .= " ORDER BY vr.verifiedDate DESC";
+
+        $countSql = "SELECT COUNT(*) AS total
+             FROM verificationrecords vr
+             INNER JOIN user u ON vr.userID = u.userID
+             WHERE 1=1";
+
+        if ($search !== '') {
+            $safeSearch = $conn->real_escape_string($search);
+            $countSql .= " AND (
+                vr.verificationID LIKE '%$safeSearch%'
+                OR u.name LIKE '%$safeSearch%'
+                OR vr.targetType LIKE '%$safeSearch%'
+                OR vr.status LIKE '%$safeSearch%'
+            )";
+        }
+
+        if ($userFilter !== '') {
+            $safeUser = $conn->real_escape_string($userFilter);
+            $countSql .= " AND vr.userID = '$safeUser'";
+        }
+
+        if ($typeFilter !== '') {
+            $safeType = $conn->real_escape_string($typeFilter);
+            $countSql .= " AND vr.targetType = '$safeType'";
+        }
+
+        if ($statusFilter !== '') {
+            $safeStatus = $conn->real_escape_string($statusFilter);
+            $countSql .= " AND vr.status = '$safeStatus'";
+        }
+
+        $totalResult = $conn->query($countSql);
+        $totalRecords = $totalResult->fetch_assoc()['total'];
+
+        $totalPages = max(1, ceil($totalRecords / $recordsPerPage));
+
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $recordsPerPage;
+
+        $sql .= " LIMIT $offset, $recordsPerPage";
 
         $result = $conn->query($sql);
 
@@ -174,6 +224,19 @@
                     </div>
                 <?php endif; ?>
 
+                <!-- Green bar showing Success Deletion -->
+                <?php if (isset($_GET['deleted'])): ?>
+                    <div class="alert alert-success">
+                        Verification record deleted successfully.
+                    </div>
+                <?php endif; ?>
+
+                <!-- Green Bar showing Success Updation -->
+                <?php if (isset($_GET['success'])): ?>
+                    <div class="alert alert-success">
+                        Verification updated successfully.
+                    </div>
+                <?php endif; ?>
 
                 <!-- Search and Filter -->
                 <form class="management-filter" method="get" action="auditor_verification_management.php">
@@ -256,7 +319,7 @@
                         <h2>Verification Record List</h2>
                         <strong>
                             Total Records:
-                            <?php echo count($verificationRecords); ?>
+                            <?php echo $totalRecords; ?>
                         </strong>
                     </div>
 
@@ -268,6 +331,7 @@
                                     <th>Verification ID</th>
                                     <th>User</th>
                                     <th>Type</th>
+                                    <th>Condition</th>
                                     <th>Status</th>
                                     <th>Date</th>
                                     <th>Action</th>
@@ -314,6 +378,16 @@
                                             </td>
 
                                             <td>
+                                                <?php
+                                                    if ($record['targetType'] === 'Asset') {
+                                                        echo htmlspecialchars($record['assetCondition'] ?? '-');
+                                                    } else {
+                                                        echo '-';
+                                                    }
+                                                ?>
+                                            </td>
+
+                                            <td>
                                                 <span class="verification-status 
                                                     status-<?php echo strtolower(
                                                         $record['status']
@@ -337,10 +411,7 @@
 
                                             <td>
                                                 <div class="management-actions">
-                                                    <a
-                                                        href="auditor_verification_view.php?verificationID=<?php echo $record['verificationID']; ?>"
-                                                        class="management-action-btn"
-                                                        title="View">
+                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&from=management&<?= $filter ?>" class="management-action-btn" title="View">
                                                         <img src="../assets/icons/view.png" alt="View">
                                                     </a>
 
@@ -348,16 +419,13 @@
                                                         <img src="../assets/icons/edit.png" alt="Edit">
                                                     </a>
 
-                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($id)?>&from=management&<?= $filter ?>" class="management-action-btn">
+                                                    <a href="auditor_verification_view.php?verificationID=<?= urlencode($record['verificationID']) ?>&from=management&print=1&<?= $filter ?>" class="management-action-btn" title="Print">
                                                         <img src="../assets/icons/print.png" alt="Print">
                                                     </a>
 
-                                                    <form method="POST" onsubmit="return confirm('Delete this verification record?');"> 
-                                                        <input type="hidden" name="deleteID" value="<?= htmlspecialchars($record['verificationID']) ?>">
-                                                        <button type="submit" class="management-action-btn delete" title="Delete">
-                                                            <img src="../assets/icons/delete.png" alt="Delete">
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="management-action-btn" title="Delete" onclick="openDeletePopout('<?= htmlspecialchars($record['verificationID']) ?>')">
+                                                        <img src="../assets/icons/delete.png" alt="Delete">
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -369,7 +437,7 @@
                                 <?php else: ?>
 
                                     <tr>
-                                        <td colspan="7" class="management-empty-state">
+                                        <td colspan="8" class="management-empty-state">
                                             No verification records found.
                                         </td>
                                     </tr>
@@ -382,15 +450,74 @@
 
                     <!-- Temporary Footer for verification table -->
                     <div class="management-table-footer">
-                        <span>
-                            Showing
-                            <?php echo count($verificationRecords); ?>
-                            record(s)
-                        </span>
+                        <div class="showing-records">
+                            <?php if ($totalRecords > 0) {
+                                $start = $offset + 1; $end = min($offset + $recordsPerPage, $totalRecords); echo "Showing $start to $end of $totalRecords entries";
+                                }else {
+                                    echo "Showing 0 to 0 of 0 entries";
+                                }
+                            ?>
+                        </div>
+
+                        <?php if ($totalPages > 1): ?>
+                            <div class="pagination">
+                                <?php if ($page > 1): ?>
+                                    <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $page - 1]) ?>">
+                                        &laquo;
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                    <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $i]) ?>" class="<?= $i == $page ? 'active' : '' ?>">
+                                        <?= $i ?>
+                                    </a>
+                                <?php endfor; ?>
+
+                                <?php if ($page < $totalPages): ?>
+                                    <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $page + 1]) ?>">
+                                        &raquo;
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </section>
             </main>
         </div>
     </div>
+
+    <script>
+        function openDeletePopout(id) {
+            document.getElementById('deleteID').value = id;
+            document.getElementById('deletePopout').style.display = 'flex';
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').style.display = 'none';
+        }
+    </script>
+
+
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Verification Confirmation</h2>
+            <p>Are you sure you want to delete this verification record?</p>
+            <div class="auditor-popout-actions">
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST" action="auditor_verification_management.php">
+                    <input type="hidden" name="deleteID" id="deleteID">
+
+                    <button type="submit" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

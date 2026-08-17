@@ -6,6 +6,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
     header('Location: ../login.php'); exit();
 }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
     $start = strlen($prefix) + 1;
@@ -21,8 +23,10 @@ function imagePath($v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$managerID = $_SESSION['user_id'];
-$assetID = trim($_GET['assetID'] ?? '');
+$managerID=$_SESSION['user_id'];
+$assetID=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
+$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review');
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$assetID) { header('Location: manager_assets.php'); exit(); }
 
 $asset = null;
@@ -31,7 +35,6 @@ $error = '';
 $conditions = ['New','Like New','Good','Fair','Poor'];
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     /* 1. Load Asset */
@@ -49,7 +52,7 @@ try {
     if (!$asset) {
         $error = 'The selected asset submission could not be found.';
     } elseif ($asset['listingStatus'] !== 'Pending Review') {
-        header("Location: manager_asset_view.php?assetID=$assetID"); exit();
+        header("Location: manager_asset_view.php?assetID=".rawurlencode($assetID).$navParam); exit();
     }
 
     /* 2. Active Categories + Current Category */
@@ -154,9 +157,9 @@ try {
                 }
 
                 $conn->commit();
-                $url = $action === 'save'
-                    ? "review_asset_submission.php?assetID=$assetID&saved=1"
-                    : 'manager_assets.php?reviewed=1';
+                $url=$action==='save'
+                    ?'review_asset_submission.php?assetID='.rawurlencode($assetID).$navParam.'&saved=1'
+                    :$backURL.(str_contains($backURL,'?')?'&':'?').'reviewDone='.rawurlencode($action);
                 header("Location: $url"); exit();
 
             } catch (Throwable $e) {
@@ -171,7 +174,6 @@ try {
         $asset['availabilityStatus'] = $availability;
     }
 
-    $conn->close();
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -179,7 +181,6 @@ try {
 }
 
 $image = imagePath($asset['imageURL'] ?? '');
-$showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction'] ?? '') === 'return';
 ?>
 
 <!DOCTYPE html>
@@ -189,7 +190,8 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Asset Submission - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
 <body class="role-manager">
@@ -203,7 +205,7 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_assets.php">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
         <span class="breadcrumb-current">Review Asset Submission</span>
     </div>
     <h1>Review Asset Submission</h1>
@@ -215,7 +217,8 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
 
 <?php if ($asset): ?>
 <section class="content-card asset-form-card">
-<form method="POST">
+<form method="POST" id="reviewForm">
+<input type="hidden" name="reviewAction" id="reviewAction">
 <div class="asset-form-layout">
 
 <div class="asset-form-fields">
@@ -265,12 +268,6 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
     ?>
     <div class="asset-form-row"><label><?= e($label) ?></label><input value="<?= e($value) ?>" readonly></div>
     <?php endforeach; ?>
-
-    <div class="asset-form-row asset-form-textarea" id="correctionBox" style="<?= $showCorrection ? '' : 'display:none;' ?>">
-        <label for="correctionReason">Correction Reason *</label>
-        <textarea id="correctionReason" name="correctionReason" maxlength="150" rows="3"
-                  placeholder="Explain clearly what the Community Member needs to correct"><?= e($_POST['correctionReason'] ?? '') ?></textarea>
-    </div>
 </div>
 
 <aside class="asset-form-side">
@@ -289,22 +286,20 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
         <p>Check completeness, category, duplicate information and appropriate listing details.</p>
     </div>
 
-    <div class="asset-form-actions">
-        <button type="submit" name="reviewAction" value="save" class="asset-form-submit">
+    <div class="asset-form-actions review-asset-actions">
+        <button type="button" class="asset-form-submit" onclick="openReviewConfirm('save')">
             <img src="../assets/icons/edit.png" alt=""> Save Changes
         </button>
 
-        <button type="submit" name="reviewAction" value="return" class="asset-form-reset" onclick="return prepareReturn(event)">
-            <img src="../assets/icons/reset.png" alt="">
-            <span id="returnButtonText"><?= $showCorrection ? 'Confirm Return' : 'Return for Correction' ?></span>
+        <button type="button" class="asset-form-reset" onclick="openCorrectionDialog()">
+            <img src="../assets/icons/reset.png" alt=""> Return for Correction
         </button>
 
-        <button type="submit" name="reviewAction" value="verify" class="asset-form-submit"
-                onclick="return confirm('Send this listing for Sustainability Auditor verification?')">
+        <button type="button" class="asset-form-submit" onclick="openReviewConfirm('verify')">
             <img src="../assets/icons/pendingVerification.png" alt=""> Send for Verification
         </button>
 
-        <a href="manager_assets.php" class="asset-form-back">Back</a>
+        <a href="<?=e($backURL)?>" class="asset-form-back">Back</a>
     </div>
 </aside>
 
@@ -314,23 +309,97 @@ $showCorrection = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['reviewAction
 <?php endif; ?>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
+
+<dialog id="reviewConfirm" class="flow-dialog">
+<h2 id="confirmTitle"></h2>
+<p id="confirmMessage"></p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Asset ID</strong><span><?=e($assetID)?></span></div>
+    <div><strong>Asset Name</strong><span id="confirmName"></span></div>
+    <div><strong>Category</strong><span id="confirmCategory"></span></div>
+    <div><strong>Condition</strong><span id="confirmCondition"></span></div>
+    <div><strong>Availability</strong><span>Unavailable</span></div>
+    <div><strong>Description</strong><span id="confirmDescription"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="reviewConfirm.close()">No</button>
+    <button type="button" class="category-form-submit" id="confirmButton" onclick="submitReview()">Confirm</button>
+</div>
+</dialog>
+
+<dialog id="correctionDialog" class="flow-dialog">
+<h2>Return Listing for Correction</h2>
+<p>Enter a clear reason explaining what the Community Member needs to correct.</p>
+
+<div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
+    <label for="correctionReason">Correction Reason *</label>
+    <textarea id="correctionReason" name="correctionReason" form="reviewForm"
+              maxlength="150" rows="4"
+              placeholder="Example: Please provide a clearer description or correct the selected category."></textarea>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="correctionDialog.close()">Cancel</button>
+    <button type="button" class="category-form-submit" onclick="submitCorrection()">Yes, Return</button>
+</div>
+</dialog>
 
 <script>
-function prepareReturn(e){
-    const box=document.getElementById('correctionBox'),
-          reason=document.getElementById('correctionReason'),
-          text=document.getElementById('returnButtonText');
+const form=document.getElementById('reviewForm'),
+      actionInput=document.getElementById('reviewAction'),
+      correctionReason=document.getElementById('correctionReason');
 
-    if(box.style.display==='none'){
-        e.preventDefault(); box.style.display='grid'; text.textContent='Confirm Return'; reason.focus(); return false;
-    }
-    if(!reason.value.trim()){
-        e.preventDefault(); alert('Please enter a correction reason.'); reason.focus(); return false;
-    }
-    return confirm('Return this listing to the Community Member for correction?');
+function fillSummary(){
+    confirmName.textContent=form.assetName.value.trim();
+    confirmCategory.textContent=form.categoryID.options[form.categoryID.selectedIndex]?.text||'-';
+    confirmCondition.textContent=form.assetCondition.value;
+    confirmDescription.textContent=form.description.value.trim()||'-';
 }
+
+function openReviewConfirm(action){
+    if(!form.checkValidity()){form.reportValidity();return}
+
+    actionInput.value=action;
+    fillSummary();
+
+    const saving=action==='save';
+    confirmTitle.textContent=saving?'Confirm Save Changes':'Confirm Verification Submission';
+    confirmMessage.textContent=saving
+        ?'Save these changes to the asset listing?'
+        :'Send this reviewed listing to the Sustainability Auditor?';
+    confirmButton.textContent=saving?'Yes, Save Changes':'Yes, Send';
+    reviewConfirm.showModal();
+}
+
+function openCorrectionDialog(){
+    if(!form.checkValidity()){form.reportValidity();return}
+    correctionDialog.showModal();
+    correctionReason.focus();
+}
+
+function submitCorrection(){
+    if(!correctionReason.value.trim()){
+        correctionReason.focus();
+        return;
+    }
+    actionInput.value='return';
+    form.submit();
+}
+
+function submitReview(){form.submit()}
 </script>
 
 </body>

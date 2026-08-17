@@ -18,50 +18,52 @@ $managerName=$_SESSION['user_name']??'Resource Manager';
 $totalAssets=$pendingListings=$activeTransactions=$currentBorrowed=0;
 $recentActivities=$notifications=[];$databaseError='';
 
-try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+require_once '../db.php';
 
-    $x=$c->query("
+try{
+    $conn->set_charset('utf8mb4');
+
+    $x=$conn->query("
         SELECT SUM(listingStatus<>'Removed') totalAssets,
                SUM(listingStatus='Pending Review') pendingListings
         FROM assets")->fetch_assoc();
     $totalAssets=(int)($x['totalAssets']??0);
     $pendingListings=(int)($x['pendingListings']??0);
 
-    $currentBorrowed=(int)$c->query("
+    $currentBorrowed=(int)$conn->query("
         SELECT COUNT(*) total FROM borrowings
         WHERE actualReturnDate IS NULL
         AND borrowingStatus IN ('Borrowed','Active','Overdue')
     ")->fetch_assoc()['total'];
 
-    $activeTransactions=(int)$c->query("
+    $activeTransactions=(int)$conn->query("
         SELECT COUNT(*) total FROM transactionrequests
         WHERE requestStatus IN ('Approved','In Progress','Overdue')
     ")->fetch_assoc()['total'];
 
-    $r=$c->query("
+    $r=$conn->query("
         SELECT actionType,refType,refID,description,timeLogged
         FROM systemlog
         WHERE refType IN ('Asset','Category','Transaction','Borrowing')
         ORDER BY timeLogged DESC LIMIT 5");
     while($x=$r->fetch_assoc())$recentActivities[]=$x;
 
-    $s=$c->prepare("SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=? ORDER BY createdDate DESC LIMIT 5");
+    $s=$conn->prepare("SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=? ORDER BY createdDate DESC LIMIT 5");
     $s->bind_param('s',$managerID);$s->execute();$r=$s->get_result();
     while($x=$r->fetch_assoc())$notifications[]=$x;
-    $s->close();$c->close();
-}catch(Throwable $z){error_log($z->getMessage());$databaseError='Unable to load dashboard data. Please make sure MySQL is running.';}
+    $s->close();
+}catch(Throwable $z){error_log($z->getMessage());$databaseError='Unable to load dashboard data. Please check the database connection.';}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Resource Manager Dashboard - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+<link rel="stylesheet" href="manager_mobile.css">
 <style>
 .quick-action-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1100px){.quick-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:700px){.quick-action-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="role-manager">
@@ -102,7 +104,7 @@ try{
 <section class="dashboard-lower-grid">
 <article class="content-card dashboard-panel">
 <div class="card-header"><h2>Recent Activities</h2><a href="manager_recent_activities.php">View All</a></div>
-<div class="table-wrapper"><table class="data-table manager-activity-table">
+<div class="table-wrapper desktop-activity-table"><table class="data-table manager-activity-table">
 <thead><tr><th>Activity</th><th>Details</th><th>Time</th></tr></thead><tbody>
 <?php if(!$recentActivities):?><tr><td colspan="3" class="dashboard-empty-state">No recent activities available.</td></tr>
 <?php else:foreach($recentActivities as $x):?>
@@ -112,6 +114,21 @@ try{
 </tr>
 <?php endforeach;endif;?>
 </tbody></table></div>
+
+<div class="mobile-activity-list">
+<?php if(!$recentActivities):?>
+<div class="dashboard-empty-state">No recent activities available.</div>
+<?php else:foreach($recentActivities as $x):?>
+<div class="mobile-activity-item">
+    <span class="mobile-activity-icon"><img src="../assets/icons/<?=e(activityIcon($x['actionType']))?>" alt=""></span>
+    <div class="mobile-activity-content">
+        <strong><?=e(activityLabel($x['actionType'],$x['refType']))?></strong>
+        <p><?=e($x['description'])?></p>
+        <time><?=e(managerDate($x['timeLogged']))?></time>
+    </div>
+</div>
+<?php endforeach;endif;?>
+</div>
 </article>
 
 <article class="content-card dashboard-panel">
@@ -141,5 +158,29 @@ try{
 </section>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php" class="active" aria-current="page">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+<span>Home</span>
+</a>
+<a href="manager_assets.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+<span>Assets</span>
+</a>
+<a href="manager_categories.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg>
+<span>Categories</span>
+</a>
+<a href="manager_transactions.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+<span>Transactions</span>
+</a>
+<a href="manager_reports.php">
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
+<span>Reports</span>
+</a>
+</nav>
+
 </div></div>
 </body></html>

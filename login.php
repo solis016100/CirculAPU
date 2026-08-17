@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div style="text-align: center; margin-bottom: 16px;">
                 <img src="assets/images/logo.png" alt="CirculAPU Logo" style="max-width: 140px; height: auto;">
             </div>
-            <h1 class="login-title">Welcome</h1>
+            <h1 class="login-title">Welcome to CirculAPU</h1>
 
             <?php if (!empty($error_message)): ?>
                 <div class="error-alert"><?php echo htmlspecialchars($error_message); ?></div>

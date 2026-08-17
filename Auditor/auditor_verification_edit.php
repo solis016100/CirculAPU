@@ -75,7 +75,13 @@
             "Updated verification remarks: $id"
         );
 
-        header("Location: auditor_verification_view.php?verificationID=" . urlencode($id));
+        header(
+            "Location: auditor_verification_view.php?"
+            . http_build_query([
+                'verificationID' => $id,
+                'success' => 1
+            ])
+        );
         exit();
     }
 ?>
@@ -115,83 +121,86 @@
 
             <h1>Edit Verification Record</h1>
 
-            <form method="POST" class="auditor-management-edit-form">
+            <section class="auditor-management-edit-card">
+                <form method="POST" class="auditor-management-edit-form">
 
-                <div class="auditor-management-edit-row">
-                    <label>Verification ID</label>
-                    <input
-                        type="text"
-                        value="<?php echo htmlspecialchars($r['verificationID']); ?>"
-                        readonly>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>Verification ID</label>
+                        <input
+                            type="text"
+                            value="<?php echo htmlspecialchars($r['verificationID']); ?>"
+                            readonly>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>User</label>
-                    <input
-                        type="text"
-                        value="<?php echo htmlspecialchars($r['userName'] . ' (' . $r['userID'] . ')'); ?>"
-                        readonly>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>User</label>
+                        <input
+                            type="text"
+                            value="<?php echo htmlspecialchars($r['userName'] . ' (' . $r['userID'] . ')'); ?>"
+                            readonly>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>Target Type</label>
-                    <input
-                        type="text"
-                        value="<?php echo htmlspecialchars($r['targetType']); ?>"
-                        readonly>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>Target Type</label>
+                        <input
+                            type="text"
+                            value="<?php echo htmlspecialchars($r['targetType']); ?>"
+                            readonly>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>Target ID</label>
-                    <input
-                        type="text"
-                        value="<?php echo htmlspecialchars($r['targetID']); ?>"
-                        readonly>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>Target ID</label>
+                        <input
+                            type="text"
+                            value="<?php echo htmlspecialchars($r['targetID']); ?>"
+                            readonly>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>Verified By</label>
-                    <input
-                        type="text"
-                        value="<?php echo htmlspecialchars($r['verifiedBy'] ?? '-'); ?>"
-                        readonly>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>Verified By</label>
+                        <input
+                            type="text"
+                            value="<?php echo htmlspecialchars($r['verifiedBy'] ?? '-'); ?>"
+                            readonly>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>Verified Date</label>
-                    <input
-                        type="text"
-                        value="<?= $r['verifiedDate'] ? date('d M Y, h:i A', strtotime($r['verifiedDate'])) : '-' ?>"
-                        readonly>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>Verified Date</label>
+                        <input
+                            type="text"
+                            value="<?= $r['verifiedDate'] ? date('d M Y, h:i A', strtotime($r['verifiedDate'])) : '-' ?>"
+                            readonly>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>Status</label>
-                    <span class="verification-status status-<?php echo strtolower($r['status']); ?>">
-                        <?php echo htmlspecialchars($r['status']); ?>
-                    </span>
-                </div>
+                    <div class="auditor-management-edit-row">
+                        <label>Status</label>
+                        <span class="verification-status status-<?php echo strtolower($r['status']); ?>">
+                            <?php echo htmlspecialchars($r['status']); ?>
+                        </span>
+                    </div>
 
-                <div class="auditor-management-edit-row">
-                    <label>Remarks</label>
+                    <div class="auditor-management-edit-row">
+                        <label>Remarks</label>
 
-                    <textarea
-                        name="remarks"
-                        rows="5"><?php echo htmlspecialchars($r['remarks'] ?? ''); ?></textarea>
-                </div>
+                        <textarea
+                            name="remarks"
+                            rows="5"><?php echo htmlspecialchars($r['remarks'] ?? ''); ?></textarea>
+                    </div>
 
-                <div class="auditor-management-edit-actions">
-                    <button type="submit">
-                        Save Changes
-                    </button>
-                    <a href="<?= $from === 'view' ? 'auditor_verification_view.php?verificationID=' . urlencode($id) : 'auditor_verification_management.php' ?>">
-                        Cancel
-                    </a>
-                </div>
-            </form>
+                    <div class="auditor-management-edit-actions">
+                        <button type="submit">
+                            Save Changes
+                        </button>
+                        <a href="<?= $from === 'view' ? 'auditor_verification_view.php?verificationID=' . urlencode($id) : 'auditor_verification_management.php' ?>">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </section>
         </main>
     </div>
 </div>
 
+<?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

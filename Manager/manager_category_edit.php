@@ -6,6 +6,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
     header('Location: ../login.php'); exit();
 }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function nextID(mysqli $conn, string $table, string $column, string $prefix): string {
     $row = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING($column,4) AS UNSIGNED)),0)+1 nextID FROM $table")->fetch_assoc();
@@ -28,14 +30,13 @@ $icons = [
 ];
 
 $managerID = $_SESSION['user_id'];
-$categoryID = trim($_GET['categoryID'] ?? '');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
 $error = '';
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     $stmt = $conn->prepare("SELECT * FROM categories WHERE categoryID=? LIMIT 1");
@@ -82,7 +83,7 @@ try {
                 $stmt->close();
 
                 $conn->commit();
-                header("Location: manager_category_view.php?categoryID=" . rawurlencode($categoryID) . "&updated=1"); exit();
+                header("Location: manager_category_view.php?categoryID=".rawurlencode($categoryID).$navParam."&updated=1"); exit();
             } catch (Throwable $e) {
                 $conn->rollback(); throw $e;
             }
@@ -94,7 +95,6 @@ try {
         $category['status'] = $status;
     }
 
-    $conn->close();
 } catch (Throwable $e) {
     error_log($e->getMessage());
     $error = $error ?: 'Unable to update the category. Please try again.';
@@ -112,7 +112,8 @@ $status = $category['status'] ?? 'Active';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Category - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_mobile.css">
     <style>
         .category-selected-preview [hidden]{display:none!important}
         .category-selected-preview img{display:block}
@@ -128,8 +129,8 @@ $status = $category['status'] ?? 'Active';
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_categories.php">Category Management</a><span>›</span>
-        <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?>">Category Details</a><span>›</span>
+        <a href="<?=e($backURL)?>">Category Management</a><span>›</span>
+        <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>">Category Details</a><span>›</span>
         <span class="breadcrumb-current">Edit Category</span>
     </div>
     <h1>Edit Category</h1>
@@ -140,7 +141,7 @@ $status = $category['status'] ?? 'Active';
 
 <?php if ($category): ?>
 <section class="content-card category-form-card">
-<form method="POST">
+<form method="POST" id="categoryEditForm">
 <div class="category-create-layout">
 
 <div class="category-form-fields">
@@ -205,20 +206,65 @@ $status = $category['status'] ?? 'Active';
 </div>
 
 <div class="category-form-actions">
-    <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?>" class="category-form-back">Back</a>
+    <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>" class="category-form-back">Back</a>
     <button type="reset" class="category-form-reset"><img src="../assets/icons/reset.png" alt=""> Reset</button>
-    <button type="submit" class="category-form-submit"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
+    <button type="button" class="category-form-submit" onclick="openEditConfirm()">
+        <img src="../assets/icons/edit.png" alt=""> Save Changes
+    </button>
 </div>
 </form>
 </section>
 <?php endif; ?>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
 
+<dialog id="editCategoryConfirm" class="flow-dialog">
+<h2>Confirm Category Changes</h2>
+<p>Save these changes to this category?</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category ID</strong><span><?=e($categoryID)?></span></div>
+    <div><strong>Category Name</strong><span id="editConfirmName"></span></div>
+    <div><strong>Icon</strong><span id="editConfirmIcon"></span></div>
+    <div><strong>Status</strong><span id="editConfirmStatus"></span></div>
+    <div><strong>Description</strong><span id="editConfirmDescription"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="editCategoryConfirm.close()">No</button>
+    <button type="button" class="category-form-submit" onclick="confirmCategoryEdit()">Yes, Save Changes</button>
+</div>
+</dialog>
+
 <script>
-const nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), iconPlaceholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+const editForm=document.getElementById('categoryEditForm'),
+      nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), iconPlaceholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+
+
+function openEditConfirm(){
+    if(!editForm.checkValidity()){editForm.reportValidity();return}
+
+    const icon=editForm.querySelector('input[name="categoryIcon"]:checked');
+    editConfirmName.textContent=nameInput.value.trim();
+    editConfirmIcon.textContent=icon?.closest('label')?.title||'-';
+    editConfirmStatus.textContent=document.getElementById('status').value;
+    editConfirmDescription.textContent=descInput.value.trim()||'-';
+    editCategoryConfirm.showModal();
+}
+function confirmCategoryEdit(){
+    document.getElementById('categoryEditForm').submit();
+}
 
 document.querySelectorAll('input[name="categoryIcon"]').forEach(input=>input.addEventListener('change',()=>{
     document.querySelectorAll('.category-icon-option').forEach(option=>option.classList.remove('selected'));

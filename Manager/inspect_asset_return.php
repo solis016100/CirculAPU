@@ -3,6 +3,8 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { header('Location: ../login.php'); exit(); }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
 function d($v,bool $time=true): string { return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-'; }
 function nextID(mysqli $c,string $t,string $col,string $p): string {
@@ -23,13 +25,15 @@ function notify(mysqli $c,string $uid,string $title,string $text): void {
     $s->bind_param('ssss',$id,$uid,$title,$text);$s->execute();$s->close();
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');
+$backURL='manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=$back?'&back='.rawurlencode($back):'';
+$returnQ=[];if($back)parse_str($back,$returnQ);$returnQ['returnDone']='1';$returnURL='manager_borrowed_assets.php?'.http_build_query($returnQ);
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
-$conditions=['New','Like New','Good','Fair','Poor'];$t=$b=null;$error='';
+$conditions=['New','Like New','Good','Fair','Poor'];$t=$b=$upcomingReservation=null;$error='';
 
 try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+    $c=$conn;$c->set_charset('utf8mb4');
 
     $s=$c->prepare("
         SELECT t.transactionID,t.requestStatus,t.requesterID,a.assetID,a.assetName,a.assetCondition,a.availabilityStatus,
@@ -42,6 +46,20 @@ try{
     else{
         $s=$c->prepare("SELECT * FROM borrowings WHERE transactionID=? ORDER BY borrowDate DESC LIMIT 1");
         $s->bind_param('s',$id);$s->execute();$b=$s->get_result()->fetch_assoc();$s->close();
+
+        $s=$c->prepare("
+            SELECT tr.transactionID,br.borrowDate,br.expectedReturnDate,u.name requesterName
+            FROM transactionrequests tr
+            JOIN borrowings br ON br.transactionID=tr.transactionID
+            JOIN user u ON u.userID=tr.requesterID
+            WHERE tr.assetID=? AND tr.transactionID<>?
+              AND tr.requestStatus='Approved'
+              AND br.borrowingStatus='Approved'
+              AND br.actualReturnDate IS NULL
+              AND CURDATE() BETWEEN DATE_SUB(DATE(br.borrowDate),INTERVAL 7 DAY) AND DATE(br.expectedReturnDate)
+            ORDER BY DATE(br.borrowDate) ASC LIMIT 1");
+        $s->bind_param('ss',$t['assetID'],$id);$s->execute();
+        $upcomingReservation=$s->get_result()->fetch_assoc();$s->close();
 
         $active=$b&&!$b['actualReturnDate']&&(
             $t['availabilityStatus']==='Borrowed'||
@@ -70,6 +88,8 @@ try{
             elseif(!$penaltyAllowed&&$deduct>0)$error='EcoPoints can only be deducted for an overdue, damaged, lost or unavailable return.';
             elseif(strlen($reason)>255)$error='Reason must not exceed 255 characters.';
             else{
+                $finalOutcome=($outcome==='Available'&&$upcomingReservation)?'Reserved':$outcome;
+
                 $c->begin_transaction();
                 try{
                     $s=$c->prepare("UPDATE transactionrequests SET requestStatus='Completed' WHERE transactionID=?");
@@ -80,12 +100,13 @@ try{
 
                     $old=$t['availabilityStatus'];
                     $s=$c->prepare("UPDATE assets SET assetCondition=?,availabilityStatus=?,updatedDate=CURRENT_TIMESTAMP WHERE assetID=?");
-                    $s->bind_param('sss',$returned,$outcome,$t['assetID']);$s->execute();$s->close();
+                    $s->bind_param('sss',$returned,$finalOutcome,$t['assetID']);$s->execute();$s->close();
 
-                    if($old!==$outcome){
+                    if($old!==$finalOutcome){
                         $hid=nextID($c,'assetstatushistory','historyID','H');$why="Return inspection completed for $id";
+                        if($finalOutcome==='Reserved'&&$upcomingReservation)$why="Return inspected; protected for upcoming reservation {$upcomingReservation['transactionID']}";
                         $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
-                        $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$outcome,$why);$s->execute();$s->close();
+                        $s->bind_param('ssssss',$hid,$t['assetID'],$manager,$old,$finalOutcome,$why);$s->execute();$s->close();
                     }
 
                     if($deduct){
@@ -99,22 +120,21 @@ try{
                     }
 
                     $newBalance=(int)$t['ecopoint']-$deduct;
-                    $text="Return completed for {$t['assetName']}: {$t['assetCondition']} → $returned; asset $outcome";
+                    $text="Return completed for {$t['assetName']}: {$t['assetCondition']} → $returned; asset $finalOutcome";
                     if($deduct)$text.="; deducted $deduct EcoPoints (new balance: $newBalance). Reason: $reason";
                     if($late)$text.='; returned overdue.';
                     logTx($c,$manager,$id,$text);
 
-                    $msg="Return for {$t['assetName']} completed. Returned condition: $returned. Asset status: $outcome.";
+                    $msg="Return for {$t['assetName']} completed. Returned condition: $returned. Asset status: $finalOutcome.";
                     if($deduct)$msg.=" $deduct EcoPoints were deducted. New balance: $newBalance. Reason: $reason";
                     notify($c,$t['requesterID'],'Asset Return Completed',$msg);
 
                     $c->commit();
-                    header('Location: manager_borrowed_assets.php?returned=1');exit();
+                    header('Location: '.$returnURL);exit();
                 }catch(Throwable $z){$c->rollback();throw $z;}
             }
         }
     }
-    $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to process the asset return. Please try again.';}
 
 $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
@@ -124,7 +144,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Inspect Asset Return - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -132,7 +152,7 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_borrowed_assets.php">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($backURL)?>">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
 <h1>Return Inspection</h1><p>Inspect the returned asset before completing the borrowing transaction.</p>
 </section>
 
@@ -145,8 +165,15 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <div class="asset-form-note"><strong>Return Accepted Before / On Due Date</strong><p>Expected return: <?=e(d($b['expectedReturnDate'],false))?>. The member may return the asset at any time while borrowing is active.</p></div>
 <?php endif;?>
 
+<?php if($upcomingReservation):?>
+<div class="asset-form-note">
+<strong>Upcoming Reservation Protection</strong>
+<p>This asset has reservation <?=e($upcomingReservation['transactionID'])?> with pickup on <?=e(d($upcomingReservation['borrowDate'],false))?>. If the returned asset is usable, CirculAPU will automatically set it to Reserved instead of Available.</p>
+</div>
+<?php endif;?>
+
 <section class="content-card asset-form-card">
-<form method="POST">
+<form method="POST" id="returnForm">
 <div class="asset-form-layout">
 
 <div class="asset-form-fields">
@@ -189,8 +216,8 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <p>Overdue returns may receive an EcoPoint penalty. Worse, damaged, lost or unavailable assets require a deduction and reason. The member balance may become negative.</p>
 </div>
 <div class="asset-form-actions">
-<button type="submit" class="asset-form-submit" onclick="return confirm('Confirm this return inspection and complete the transaction?')">Confirm Return</button>
-<a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?>" class="asset-form-back">Back</a>
+<button type="button" class="asset-form-submit" onclick="openReturnConfirm()">Confirm Return</button>
+<a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
 
@@ -199,5 +226,55 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 </section>
 <?php endif;?>
 
-</main></div></div>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
+
+<?php if($t&&$b):?>
+<dialog id="returnConfirm" class="flow-dialog">
+<h2>Confirm Asset Return</h2>
+<p>Complete this return inspection and close the borrowing transaction?</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Transaction</strong><span><?=e($id)?></span></div>
+<div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
+<div><strong>Borrower</strong><span><?=e($t['borrowerName'])?></span></div>
+<div><strong>Returned Condition</strong><span id="confirmReturnedCondition"></span></div>
+<div><strong>Asset After Return</strong><span id="confirmReturnOutcome"></span></div>
+<?php if($upcomingReservation):?><div><strong>Reservation Protection</strong><span>Usable asset will become Reserved</span></div><?php endif;?>
+<div><strong>EcoPoint Deduction</strong><span id="confirmDeduction"></span></div>
+<div id="confirmReasonRow" hidden><strong>Reason</strong><span id="confirmReturnReason"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="returnConfirm.close()">No</button>
+<button type="button" class="category-form-submit" onclick="returnForm.submit()">Yes, Complete Return</button>
+</div>
+</dialog>
+
+<script>
+const returnForm=document.getElementById('returnForm');
+function openReturnConfirm(){
+    if(!returnForm.checkValidity()){returnForm.reportValidity();return}
+
+    const deduction=Number(returnForm.ecoDeduction.value||0),
+          reason=returnForm.reason.value.trim();
+
+    if(deduction>0&&!reason){returnForm.reason.focus();return}
+
+    confirmReturnedCondition.textContent=returnForm.returnedCondition.value;
+    confirmReturnOutcome.textContent=returnForm.returnOutcome.options[returnForm.returnOutcome.selectedIndex].text;
+    confirmDeduction.textContent=deduction+' EcoPoints';
+    confirmReasonRow.hidden=!reason;
+    confirmReturnReason.textContent=reason;
+    returnConfirm.showModal();
+}
+</script>
+<?php endif;?>
 </body></html>

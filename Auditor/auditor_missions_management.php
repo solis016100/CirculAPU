@@ -7,12 +7,15 @@
         exit();
     }
 
+    require '../db.php';
+    require_once '../delete.php';
+    require_once '../print.php';
+
     // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
     // Connect to Database
-    require_once '../db.php';
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
@@ -20,11 +23,66 @@
         $conn->set_charset("utf8mb4");
     }
 
+    $missionID = $_GET['missionID'] ?? '';
+
+    /* Delete Mission */
+    if (isset($_POST['deleteID'])) {
+
+        $id = $_POST['deleteID'];
+
+        $stmt = $conn->prepare("SELECT missionName FROM missions WHERE missionID = ?");
+        $stmt->bind_param("s", $id);
+        $stmt->execute();
+        $mission = $stmt->get_result()->fetch_assoc();
+
+        if ($mission) {
+
+            $stmt = $conn->prepare("DELETE FROM missions WHERE missionID = ?");
+            $stmt->bind_param("s", $id);
+            $stmt->execute();
+
+            $r = $conn->query("
+                SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 n
+                FROM systemlog
+            ");
+
+            $logID = 'LOG' . str_pad(
+                $r->fetch_assoc()['n'],
+                3,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            $description = "Deleted mission: " . $mission['missionName'];
+
+            $log = $conn->prepare("
+                INSERT INTO systemlog
+                (logID,userID,actionType,refType,refID,description)
+                VALUES (?,?,'Delete','Mission',?,?)
+            ");
+
+            $log->bind_param(
+                "ssss",
+                $logID,
+                $_SESSION['user_id'],
+                $id,
+                $description
+            );
+
+            $log->execute();
+
+            header("Location: auditor_missions_management.php?deleted=1");
+            exit();
+        }
+    }
+
     // Get filter values from URL
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $missionName = isset($_GET['missionName']) ? trim($_GET['missionName']) : '';
     $ecoPoints = isset($_GET['ecoPoints']) ? trim($_GET['ecoPoints']) : '';
     $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+
+    $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
 
     // Store filter conditions
     $conditions = [];
@@ -106,6 +164,8 @@
     // Get Status values for dropdown from database
     $statusQuery = "SELECT DISTINCT status FROM missions ORDER BY status ASC";
     $statusResult = mysqli_query($conn, $statusQuery);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -139,6 +199,20 @@
                             Create New Mission
                         </a>
                     </div>
+
+                    <!-- Green bar showing Success Creation -->
+                    <?php if (isset($_GET['created'])): ?>
+                        <div class="alert alert-success">
+                            Mission created successfully.
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Green bar showing Success Deletion -->
+                    <?php if (isset($_GET['deleted'])): ?>
+                        <div class="alert alert-success">
+                            Mission deleted successfully.
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Search and Filter -->
                     <div class="management-filter">
@@ -259,45 +333,38 @@
                                 </thead>
 
                                 <tbody>
+                                    <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)): ?>
+                                    <tr>
+                                        <td><?= $number ?></td>
+                                        <td><?= htmlspecialchars($mission['missionID']) ?></td>
+                                        <td><?= htmlspecialchars($mission['missionName']) ?></td>
+                                        <td><?= htmlspecialchars($mission['ecoPointsReward']) ?></td>
+                                        <td>
+                                            <span class="mission-status <?= strtolower($mission['status']) ?>">
+                                                <?= htmlspecialchars($mission['status']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="management-actions">
+                                                <a href="auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&<?= $filterQuery ?>" class="management-action-btn">
+                                                    <img src="../assets/icons/view.png" alt="View">
+                                                </a>
 
-                                    <?php $number = $offset + 1; while ($mission = mysqli_fetch_assoc($result)) {?>
-                                        <tr>
-                                            <td><?php echo $number; ?></td>
-                                            <td><?php echo htmlspecialchars($mission['missionID']); ?></td>
-                                            <td><?php echo htmlspecialchars($mission['missionName']); ?></td>
-                                            <td><?php echo htmlspecialchars($mission['ecoPointsReward']); ?></td>
-                                            <td><?php echo htmlspecialchars($mission['status']); ?></td>
-                                            <td>
-                                                <div class="management-actions">
-                                                    <a href="auditor_mission_view.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn"
-                                                    title="View">
-                                                        <img src="../assets/icons/view.png" alt="View">
-                                                    </a>
+                                                <a href="auditor_mission_edit.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&<?= $filterQuery ?>" class="management-action-btn" title="Edit">
+                                                    <img src="../assets/icons/edit.png" alt="Edit">
+                                                </a>
 
-                                                    <a href="auditor_mission_edit.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn"
-                                                    title="Edit">
-                                                        <img src="../assets/icons/edit.png" alt="Edit">
-                                                    </a>
+                                                <a href="auditor_mission_view.php?missionID=<?= urlencode($mission['missionID']) ?>&from=management&print=1&<?= $filterQuery ?>" class="management-action-btn" title="Print">
+                                                    <img src="../assets/icons/print.png" alt="Print">
+                                                </a>
 
-                                                    <a href="auditor_mission_print.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn"
-                                                    title="Print">
-                                                        <img src="../assets/icons/print.png" alt="Print">
-                                                    </a>
-
-                                                    <a href="auditor_mission_delete.php?id=<?php echo urlencode($mission['missionID']); ?>"
-                                                    class="management-action-btn delete"
-                                                    title="Delete">
-                                                        <img src="../assets/icons/delete.png" alt="Delete">
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-
-                                    <?php $number++; }?>
-
+                                                <button type="button" class="management-action-btn" title="Delete" onclick="openDeletePopout('<?= htmlspecialchars($mission['missionID']) ?>')">
+                                                    <img src="../assets/icons/delete.png" alt="Delete">
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php $number++; endwhile; ?>
                                 </tbody>
                             </table>
 
@@ -381,5 +448,39 @@
                 </main>
         </div>
     </div>
+
+    <script>
+        function openDeletePopout(id) {
+            document.getElementById('deleteID').value = id;
+            document.getElementById('deletePopout').style.display = 'flex';
+        }
+
+        function closeDeletePopout() {
+            document.getElementById('deletePopout').style.display = 'none';
+        }
+    </script>
+
+
+    <div id="deletePopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Delete Mission Confirmation</h2>
+            <p>Are you sure you want to delete this mission?</p>
+            <div class="auditor-popout-actions">
+                <button type="button" onclick="closeDeletePopout()">
+                    No
+                </button>
+
+                <form method="POST" action="auditor_missions_management.php">
+                    <input type="hidden" name="deleteID" id="deleteID">
+
+                    <button type="submit" class="auditor-popout-confirm">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

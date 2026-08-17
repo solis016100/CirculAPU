@@ -3,6 +3,8 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
 if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Manager'){header('Location: ../login.php');exit();}
 
+require_once '../db.php';
+
 function e($v):string{return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function d($v,bool $time=false):string{return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-';}
 function nextID(mysqli $c,string $t,string $col,string $p):string{
@@ -23,13 +25,13 @@ function logReminder(mysqli $c,string $uid,string $ref,string $text):void{
     $s->bind_param('ssss',$lid,$uid,$ref,$text);$s->execute();$s->close();
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');$backURL='manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=$back?'&back='.rawurlencode($back):'';
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
 $t=null;$b=null;$error='';$remindedToday=false;$reminderCount=0;$lastReminder=null;
 
 try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+    $c=$conn;$c->set_charset('utf8mb4');
 
     $s=$c->prepare("SELECT t.transactionID,t.requestStatus,a.assetID,a.assetName,a.assetCondition,a.availabilityStatus,
             u.userID borrowerID,u.name borrowerName,u.email borrowerEmail,u.ecopoint
@@ -71,25 +73,81 @@ try{
                 notify($c,$t['borrowerID'],'Overdue Asset Return Reminder',
                     "Transaction $id: Your borrowed asset {$t['assetName']} was due on $due. Please return the asset as soon as possible.");
                 logReminder($c,$manager,$id,"Return reminder sent to {$t['borrowerName']} for overdue asset {$t['assetName']}.");
-                header('Location: manager_borrowed_asset_view.php?transactionID='.rawurlencode($id).'&reminded=1');exit();
+                header('Location: manager_borrowed_asset_view.php?transactionID='.rawurlencode($id).$backParam.'&reminded=1');exit();
             }
         }
     }
-    $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to load the borrowing details. Please try again.';}
 
-$overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time();
+$overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Borrowed Asset Details - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .return-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:22px}
 .return-actions form{margin:0}
 </style>
+
+<style>
+.flow-dialog{
+    width:min(520px, calc(100vw - 32px));
+    border:none;
+    border-radius:16px;
+    padding:0;
+    box-shadow:0 18px 50px rgba(0,0,0,.22);
+}
+.flow-dialog::backdrop{background:rgba(15,23,42,.45);}
+.flow-dialog-inner{padding:24px 24px 20px;}
+.flow-dialog h2{
+    margin:0 0 10px;
+    font-size:18px;
+    font-weight:700;
+    color:#0f172a;
+}
+.flow-dialog p{
+    margin:0 0 16px;
+    color:#475569;
+    line-height:1.55;
+}
+.flow-dialog-summary{
+    display:grid;
+    grid-template-columns:140px 1fr;
+    gap:10px 14px;
+    margin-bottom:20px;
+    font-size:15px;
+}
+.flow-dialog-summary strong{color:#0f172a;}
+.flow-dialog-summary span{color:#334155;}
+.flow-dialog-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+}
+.dialog-btn{
+    min-width:110px;
+    border-radius:10px;
+    padding:10px 18px;
+    font-size:15px;
+    cursor:pointer;
+    border:1px solid #cbd5e1;
+    background:#fff;
+    color:#0f172a;
+}
+.dialog-btn-primary{
+    background:#0ea5e9;
+    border-color:#0ea5e9;
+    color:#fff;
+}
+.dialog-btn:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+</style>
+
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -97,7 +155,7 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="manager_borrowed_assets.php">Manage Returns</a><span>›</span><span class="breadcrumb-current">Borrowed Asset Details</span></div>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($backURL)?>">Manage Returns</a><span>›</span><span class="breadcrumb-current">Borrowed Asset Details</span></div>
 <h1>Borrowed Asset Details</h1><p>Review the active borrowing, send overdue reminders and process the returned asset.</p>
 </section>
 
@@ -138,19 +196,63 @@ $overdue=$b&&$b['expectedReturnDate']&&strtotime($b['expectedReturnDate'])<time(
 </div>
 
 <div class="return-actions">
-<a href="manager_borrowed_assets.php" class="category-form-back">Back</a>
+<a href="<?=e($backURL)?>" class="category-form-back">Back</a>
 <?php if($overdue):?>
-<form method="POST">
+<form method="POST" id="remindForm">
 <input type="hidden" name="action" value="remind">
-<button class="category-form-reset" <?=$remindedToday?'disabled':''?> onclick="return confirm('Send a return reminder to this borrower?')">
+<button type="button" class="category-form-reset" <?=$remindedToday?'disabled':''?> <?=$remindedToday?'':'onclick="openReminderDialog()"'?>>
 <?=$remindedToday?'Reminder Sent Today':'Send Return Reminder'?>
 </button>
 </form>
 <?php endif;?>
-<a href="inspect_asset_return.php?transactionID=<?=e($id)?>" class="category-form-submit">Process Return</a>
+<a href="inspect_asset_return.php?transactionID=<?=e($id)?><?=e($backParam)?>" class="category-form-submit">Process Return</a>
 </div>
 </section>
 <?php endif;?>
 
-</main></div></div>
+
+<?php if($overdue && !$remindedToday):?>
+<dialog id="reminderDialog" class="flow-dialog">
+    <div class="flow-dialog-inner">
+        <h2>Confirm Return Reminder</h2>
+        <p>Are you sure you want to send a return reminder to this borrower?</p>
+
+        <div class="flow-dialog-summary">
+            <strong>Transaction ID</strong><span><?=e($id)?></span>
+            <strong>Borrower</strong><span><?=e($t['borrowerName'])?> (<?=e($t['borrowerID'])?>)</span>
+            <strong>Asset</strong><span><?=e($t['assetName'])?> (<?=e($t['assetID'])?>)</span>
+            <strong>Expected Return</strong><span><?=e(d($b['expectedReturnDate']))?></span>
+        </div>
+
+        <div class="flow-dialog-actions">
+            <button type="button" class="dialog-btn" onclick="closeReminderDialog()">Cancel</button>
+            <button type="button" class="dialog-btn dialog-btn-primary" onclick="submitReminderForm()">Yes, Send</button>
+        </div>
+    </div>
+</dialog>
+
+<script>
+function openReminderDialog(){
+    const dlg = document.getElementById('reminderDialog');
+    if(dlg) dlg.showModal();
+}
+function closeReminderDialog(){
+    const dlg = document.getElementById('reminderDialog');
+    if(dlg) dlg.close();
+}
+function submitReminderForm(){
+    document.getElementById('remindForm').submit();
+}
+</script>
+<?php endif;?>
+
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
 </body></html>

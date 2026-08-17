@@ -3,19 +3,21 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') { header('Location: ../login.php'); exit(); }
 
+require_once '../db.php';
+
 function e($v): string { return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
 function nextID(mysqli $c,string $t,string $col,string $p): string {
     $n=(int)$c->query("SELECT COALESCE(MAX(CAST(SUBSTRING($col,4) AS UNSIGNED)),0)+1 n FROM $t")->fetch_assoc()['n'];
     return sprintf($p.'%03d',$n);
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if(!$id){header('Location: manager_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$asset=null;$categories=[];$error='';$dbError='';$newFile='';
 
 try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+    $c=$conn;$c->set_charset('utf8mb4');
 
     $s=$c->prepare("
         SELECT a.*,c.categoryName,u.name ownerName
@@ -24,17 +26,17 @@ try{
     $s->bind_param('s',$id);$s->execute();$asset=$s->get_result()->fetch_assoc();$s->close();
 
     if(!$asset)$dbError='The selected asset record could not be found.';
-    elseif($asset['listingStatus']==='Pending Review'){header('Location: review_asset_submission.php?assetID='.rawurlencode($id));exit();}
+    elseif($asset['listingStatus']==='Pending Review'){header('Location: review_asset_submission.php?assetID='.rawurlencode($id).$navParam);exit();}
     elseif($asset['listingStatus']==='Removed')$dbError='Removed assets cannot be edited.';
     else{
         $s=$c->prepare("SELECT categoryID,categoryName FROM categories WHERE status='Active' OR categoryID=? ORDER BY categoryName");
         $s->bind_param('s',$asset['categoryID']);$s->execute();$categories=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
 
-        $locked=in_array($asset['availabilityStatus'],['Reserved','Borrowed'],true);
+        $locked=true;
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $name=trim($_POST['assetName']??'');$category=trim($_POST['categoryID']??'');
-            $condition=$locked?$asset['assetCondition']:trim($_POST['assetCondition']??'');
+            $condition=$asset['assetCondition'];
             $description=trim($_POST['description']??'');
 
             if(!$name)$error='Asset Name is required.';
@@ -80,7 +82,7 @@ try{
                     $s->bind_param('ssss',$log,$manager,$id,$text);$s->execute();$s->close();
 
                     $c->commit();
-                    header('Location: manager_asset_view.php?assetID='.rawurlencode($id).'&updated=1');exit();
+                    header('Location: manager_asset_view.php?assetID='.rawurlencode($id).$navParam.'&updated=1');exit();
                 }catch(Throwable $z){
                     $c->rollback();if($newFile&&file_exists($newFile))unlink($newFile);throw $z;
                 }
@@ -90,10 +92,9 @@ try{
             if(!$locked)$asset['assetCondition']=$condition;
         }
     }
-    $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$dbError='Unable to process the asset information. Please try again.';}
 
-$locked=$asset&&in_array($asset['availabilityStatus'],['Reserved','Borrowed'],true);
+$locked=(bool)$asset;
 $imagePath='';
 if($asset&&!empty($asset['imageURL'])){
     $url=str_replace('\\','/',trim($asset['imageURL']));
@@ -105,7 +106,7 @@ if($asset&&!empty($asset['imageURL'])){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Edit Asset - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">
@@ -113,19 +114,19 @@ if($asset&&!empty($asset['imageURL'])){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_assets.php">Asset Management</a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>">Asset Management</a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
 <h1>Edit Asset Information</h1><p>Update listing information while preserving transaction, review and verification status.</p>
 </section>
 
 <?php if($dbError):?>
 <div class="dashboard-error-message"><?=e($dbError)?></div>
-<a href="manager_assets.php" class="management-create-btn">Back to Asset Management</a>
+<a href="<?=e($backURL)?>" class="management-create-btn">Back to Asset Management</a>
 <?php elseif($asset):?>
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
-<?php if($locked):?><div class="asset-form-note"><strong>Borrowing Protection</strong><p>Condition is locked while this asset is <?=e($asset['availabilityStatus'])?>. It will be updated through Return Inspection.</p></div><?php endif;?>
+<div class="asset-form-note"><strong>Condition Protection</strong><p>Asset condition is controlled through the review/verification workflow and Return Inspection. It cannot be changed from general Edit Asset.</p></div>
 
 <section class="content-card asset-form-card">
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data" id="editAssetForm">
 <div class="asset-form-layout">
 <div class="asset-form-fields">
 
@@ -137,14 +138,8 @@ if($asset&&!empty($asset['imageURL'])){
 <?php foreach($categories as $x):?><option value="<?=e($x['categoryID'])?>" <?=$asset['categoryID']===$x['categoryID']?'selected':''?>><?=e($x['categoryName'])?></option><?php endforeach;?>
 </select></div>
 
-<div class="asset-form-row"><label for="assetCondition">Condition *</label>
-<?php if($locked):?>
+<div class="asset-form-row"><label for="assetCondition">Condition</label>
 <input id="assetCondition" value="<?=e($asset['assetCondition'])?>" readonly>
-<?php else:?>
-<select id="assetCondition" name="assetCondition" required>
-<?php foreach($conditions as $x):?><option value="<?=e($x)?>" <?=$asset['assetCondition']===$x?'selected':''?>><?=e($x)?></option><?php endforeach;?>
-</select>
-<?php endif;?>
 </div>
 
 <div class="asset-form-row asset-form-textarea"><label for="description">Description</label><textarea id="description" name="description" maxlength="255" rows="4"><?=e($asset['description']??'')?></textarea></div>
@@ -166,16 +161,53 @@ if($asset&&!empty($asset['imageURL'])){
 <div class="asset-form-note"><strong>Important</strong><p>Availability, Listing Status and Verification Status are controlled by their proper workflows and cannot be changed here.</p></div>
 
 <div class="asset-form-actions">
-<button type="submit" class="asset-form-submit"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
+<button type="button" class="asset-form-submit" onclick="openEditAssetConfirm()"><img src="../assets/icons/edit.png" alt=""> Save Changes</button>
 <button type="reset" class="asset-form-reset"><img src="../assets/icons/reset.png" alt=""> Reset</button>
-<a href="manager_asset_view.php?assetID=<?=e($id)?>" class="asset-form-back">Back</a>
+<a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>" class="asset-form-back">Back</a>
 </div>
 </aside>
 
 </div>
 </form>
 </section>
+
+<dialog id="editAssetConfirm" class="flow-dialog">
+<h2>Confirm Asset Update</h2>
+<p>Save these changes to this asset listing?</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Asset ID</strong><span><?=e($asset['assetID'])?></span></div>
+<div><strong>Asset Name</strong><span id="confirmAssetName"></span></div>
+<div><strong>Category</strong><span id="confirmAssetCategory"></span></div>
+<div><strong>Condition</strong><span><?=e($asset['assetCondition'])?></span></div>
+<div><strong>Description</strong><span id="confirmAssetDescription"></span></div>
+</div>
+
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="editAssetConfirm.close()">No</button>
+<button type="button" class="category-form-submit" onclick="editAssetForm.submit()">Yes, Save Changes</button>
+</div>
+</dialog>
+
+<script>
+const editAssetForm=document.getElementById('editAssetForm');
+function openEditAssetConfirm(){
+    if(!editAssetForm.checkValidity()){editAssetForm.reportValidity();return}
+    confirmAssetName.textContent=editAssetForm.assetName.value.trim();
+    confirmAssetCategory.textContent=editAssetForm.categoryID.options[editAssetForm.categoryID.selectedIndex].text;
+    confirmAssetDescription.textContent=editAssetForm.description.value.trim()||'-';
+    editAssetConfirm.showModal();
+}
+</script>
 <?php endif;?>
 
-</main></div></div>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
 </body></html>

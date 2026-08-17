@@ -3,6 +3,8 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
 if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Manager'){header('Location: ../login.php');exit();}
 
+require_once '../db.php';
+
 function e($v):string{return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function d($v,bool $time=false):string{return $v&&strtotime($v)?date($time?'d M Y, h:i A':'d M Y',strtotime($v)):'-';}
 function nid(mysqli $c,string $t,string $col,string $p):string{
@@ -30,30 +32,201 @@ function assetStatus(mysqli $c,string $asset,string $manager,string $old,string 
     $s=$c->prepare("INSERT INTO assetstatushistory(historyID,assetID,updatedBy,oldAvailabilityStatus,newAvailabilityStatus,statusChangeReason) VALUES (?,?,?,?,?,?)");
     $s->bind_param('ssssss',$x,$asset,$manager,$old,$new,$why);$s->execute();$s->close();
 }
-function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $status):string{
-    if($status!=='Pending')return 'Only Pending requests can be approved and reserved.';
+function protectionDate(string $pickup):string{
+    return date('Y-m-d',strtotime($pickup.' -7 days'));
+}
+function scheduleCheck(mysqli $c,string $asset,string $currentTx,?array $b):array{
+    $result=['issue'=>'','detail'=>'No conflicting approved or active booking detected.','conflict'=>null];
+    if(!$b||empty($b['borrowDate'])||empty($b['expectedReturnDate']))return $result;
+
+    $pickup=date('Y-m-d',strtotime($b['borrowDate']));
+    $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
+    $protectedFrom=protectionDate($pickup);
+
+    $s=$c->prepare("
+        SELECT t.transactionID,t.requestStatus,b.borrowDate,b.expectedReturnDate,b.borrowingStatus,
+               u.name borrowerName
+        FROM borrowings b
+        JOIN transactionrequests t ON t.transactionID=b.transactionID
+        JOIN user u ON u.userID=b.borrowerID
+        WHERE b.assetID=? AND b.transactionID<>?
+          AND b.actualReturnDate IS NULL
+          AND t.requestStatus IN ('Approved','In Progress')
+          AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+        ORDER BY DATE(b.borrowDate) ASC");
+    $s->bind_param('ss',$asset,$currentTx);$s->execute();
+    $rows=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
+
+    foreach($rows as $x){
+        if(empty($x['borrowDate'])||empty($x['expectedReturnDate']))continue;
+        $existingPickup=date('Y-m-d',strtotime($x['borrowDate']));
+        $existingReturn=date('Y-m-d',strtotime($x['expectedReturnDate']));
+        $existingProtectedFrom=protectionDate($existingPickup);
+        $isActive=in_array($x['borrowingStatus'],['Borrowed','Active','Overdue'],true);
+        $isOverdue=$isActive&&$existingReturn<date('Y-m-d');
+
+        if($isOverdue){
+            $result['issue']="Approval blocked: this asset is still with an overdue borrower from transaction {$x['transactionID']}.";
+            $result['detail']="Transaction {$x['transactionID']} is overdue and the asset has not been returned.";
+            $result['conflict']=$x;
+            return $result;
+        }
+
+        if($protectedFrom<=$existingReturn&&$return>=$existingProtectedFrom){
+            $result['issue']="Approval blocked: requested dates conflict with transaction {$x['transactionID']} or its 7-day protection window.";
+            $result['detail']="Conflicts with {$x['transactionID']} ({$existingPickup} to {$existingReturn}); protection begins {$existingProtectedFrom}.";
+            $result['conflict']=$x;
+            return $result;
+        }
+    }
+    return $result;
+}
+function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $status,array $schedule):string{
+    if($status!=='Pending')return 'Only Pending requests can be approved.';
     if($blocked)return ($summary['overdue']??0)>0
-        ?'Approval blocked: borrower has an overdue unreturned asset.'
-        :'Approval blocked: borrower already has 5 active borrowings.';
+        ?'Approval blocked: requester has an overdue unreturned asset.'
+        :'Approval blocked: requester already has 5 active borrowings or reservations.';
     if(!$b||empty($b['borrowDate'])||empty($b['expectedReturnDate']))
         return 'Approval blocked: the member request is missing pickup or return date.';
     $pickup=date('Y-m-d',strtotime($b['borrowDate']));
     $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
     if($pickup<date('Y-m-d'))return 'Approval blocked: the requested pickup date has already passed.';
-    if($return<=$pickup)return 'Requested return date must be after the pickup date.';
-    if($t['listingStatus']!=='Published'||$t['verificationStatus']!=='Approved'||$t['availabilityStatus']!=='Available')
-        return 'Approval blocked: this asset is not currently available for borrowing.';
+    if($return<=$pickup)return 'Approval blocked: requested return date must be after the pickup date.';
+    if($t['listingStatus']!=='Published'||$t['verificationStatus']!=='Approved')
+        return 'Approval blocked: this asset is not Published and Auditor-approved.';
+    if($t['availabilityStatus']==='Unavailable')
+        return 'Approval blocked: this asset is operationally unavailable.';
+    if($schedule['issue'])return $schedule['issue'];
     return '';
 }
-function go(string $id):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).'&updated=1');exit();}
+function validationChecks(array $t,?array $b,array $summary,string $status,array $schedule):array{
+    $active=(int)($summary['active']??0);
+    $overdue=(int)($summary['overdue']??0);
+    $pickup=$b&&!empty($b['borrowDate'])?date('Y-m-d',strtotime($b['borrowDate'])):'';
+    $return=$b&&!empty($b['expectedReturnDate'])?date('Y-m-d',strtotime($b['expectedReturnDate'])):'';
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');
+    $dateOk=(bool)($pickup&&$return&&$pickup>=date('Y-m-d')&&$return>$pickup);
+    $dateDetail='Pickup and return dates are valid.';
+    $dateReason='';
+    if(!$pickup||!$return){
+        $dateDetail='Pickup or return date is missing.';
+        $dateReason='The borrowing request is missing a valid pickup or return date.';
+    }elseif($pickup<date('Y-m-d')){
+        $dateDetail='The requested pickup date has already passed.';
+        $dateReason='The requested pickup date has already passed. Please submit a new request with a valid pickup date.';
+    }elseif($return<=$pickup){
+        $dateDetail='The return date must be after the pickup date.';
+        $dateReason='The requested return date must be after the pickup date.';
+    }
+
+    $scheduleReason='';
+    if($schedule['issue']){
+        $scheduleReason=str_contains($schedule['issue'],'overdue borrower')
+            ?'This asset is still with an overdue borrower and cannot be safely reserved yet. Please choose another asset or submit a new request after it is returned.'
+            :'The requested borrowing period conflicts with an existing reservation or its 7-day protection window. Please submit a new request with different dates.';
+    }
+
+    return [
+        [
+            'label'=>'Current overdue borrowing',
+            'ok'=>$overdue===0,
+            'detail'=>$overdue===0?'Requester has no overdue unreturned asset.':"$overdue overdue unreturned borrowing(s) detected for this requester.",
+            'reason'=>$overdue===0?'':'You currently have an overdue borrowing that has not been returned. Please return the overdue asset before submitting another borrowing request.'
+        ],
+        [
+            'label'=>'Maximum active borrowings',
+            'ok'=>$active<5,
+            'detail'=>"$active / 5 active borrowings or reservations.",
+            'reason'=>$active<5?'':'You have reached the maximum limit of 5 active borrowings or reservations. Please complete an existing borrowing before submitting another request.'
+        ],
+        [
+            'label'=>'Requested borrowing dates',
+            'ok'=>$dateOk,
+            'detail'=>$dateDetail,
+            'reason'=>$dateReason
+        ],
+        [
+            'label'=>'Reservation schedule & 7-day protection',
+            'ok'=>!$schedule['issue'],
+            'detail'=>$schedule['detail'],
+            'reason'=>$scheduleReason
+        ],
+        [
+            'label'=>'Asset listing eligibility',
+            'ok'=>$t['listingStatus']==='Published'&&$t['verificationStatus']==='Approved',
+            'detail'=>($t['listingStatus']==='Published'&&$t['verificationStatus']==='Approved')
+                ?'Asset is Published and Auditor-approved.'
+                :'Asset is not currently Published and Auditor-approved.',
+            'reason'=>($t['listingStatus']==='Published'&&$t['verificationStatus']==='Approved')
+                ?'':'This asset is not currently eligible for borrowing.'
+        ],
+        [
+            'label'=>'Asset operational status',
+            'ok'=>$t['availabilityStatus']!=='Unavailable',
+            'detail'=>$t['availabilityStatus']==='Unavailable'
+                ?'Asset is currently Unavailable.'
+                :'Current status: '.$t['availabilityStatus'].'. Schedule validation determines whether the requested dates are safe.',
+            'reason'=>$t['availabilityStatus']==='Unavailable'
+                ?'This asset is currently unavailable for borrowing. Please select another asset or try again when it becomes available.'
+                :''
+        ]
+    ];
+}
+function autoRejectReason(array $checks):string{
+    $reasons=[];
+    foreach($checks as $check){
+        if(!$check['ok']&&!empty($check['reason']))$reasons[]=$check['reason'];
+    }
+    return implode(' ',$reasons);
+}
+function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):string{
+    if($status!=='Approved'||!$b)return 'Pickup can only be confirmed for an approved reservation.';
+    if(empty($b['borrowDate'])||empty($b['expectedReturnDate']))return 'Pickup cannot be confirmed because the reservation dates are incomplete.';
+
+    $pickup=date('Y-m-d',strtotime($b['borrowDate']));
+    $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
+    $earliest=protectionDate($pickup);
+    $today=date('Y-m-d');
+
+    if($today<$earliest)return 'Pickup is too early. Earliest allowed confirmation is '.date('d M Y',strtotime($earliest)).'.';
+    if($today>$return)return 'Pickup cannot be confirmed because the approved borrowing period has already ended.';
+    if($t['availabilityStatus']==='Unavailable')return 'Pickup cannot be confirmed because the asset is currently Unavailable.';
+
+    $s=$c->prepare("
+        SELECT b.transactionID,b.expectedReturnDate,u.name borrowerName
+        FROM borrowings b
+        JOIN transactionrequests tr ON tr.transactionID=b.transactionID
+        JOIN user u ON u.userID=b.borrowerID
+        WHERE b.assetID=? AND b.transactionID<>?
+          AND b.actualReturnDate IS NULL
+          AND b.borrowingStatus IN ('Borrowed','Active','Overdue')
+        ORDER BY DATE(b.expectedReturnDate) ASC LIMIT 1");
+    $s->bind_param('ss',$t['assetID'],$id);$s->execute();
+    $hold=$s->get_result()->fetch_assoc();$s->close();
+
+    if($hold){
+        $due=!empty($hold['expectedReturnDate'])?date('d M Y',strtotime($hold['expectedReturnDate'])):'unknown';
+        return "Pickup cannot be confirmed because the previous borrower has not returned this asset yet (transaction {$hold['transactionID']}, expected return $due).";
+    }
+    if($t['availabilityStatus']==='Borrowed')return 'Pickup cannot be confirmed because the asset is still marked Borrowed.';
+    return '';
+}
+
+function go(string $id,string $nav=''):never{header('Location: manager_transaction_view.php?transactionID='.rawurlencode($id).$nav.'&updated=1');exit();}
+function returnTo(string $url,array $q):never{
+    header('Location: '.$url.(str_contains($url,'?')?'&':'?').http_build_query($q));exit();
+}
+
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$back=trim($_GET['back']??'');$source=$_GET['source']??'transactions';
+$backStatus=in_array($from,['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'],true)?$from:($from==='pending'?'Pending':'');
+$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_transactions.php?'.$back:($from==='pickup'?'manager_transactions.php?pickup=1':($backStatus?'manager_transactions.php?requestStatus='.rawurlencode($backStatus):'manager_transactions.php')));
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'').($from?'&from='.rawurlencode($from):'');
 if(!$id){header('Location: manager_transactions.php');exit();}
 
-$t=$b=null;$summary=[];$past=$eco=$logs=[];$error='';
+$t=$b=null;$summary=[];$past=$eco=$logs=$validationChecks=[];$schedule=['issue'=>'','detail'=>'No conflicting approved or active booking detected.','conflict'=>null];$autoRejectReason=$pickupIssue='';$error='';
 
 try{
-    $c=new mysqli('127.0.0.1','root','','circulapu_db',3306);$c->set_charset('utf8mb4');
+    $c=$conn;$c->set_charset('utf8mb4');
 
     $s=$c->prepare("
         SELECT t.*,a.assetName,a.assetCondition,a.availabilityStatus,a.listingStatus,a.verificationStatus,
@@ -92,7 +265,17 @@ try{
         $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
         $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
         $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
-        $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
+        $schedule=scheduleCheck($c,$t['assetID'],$id,$b);
+        $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status,$schedule);
+        $validationChecks=validationChecks($t,$b,$summary,$status,$schedule);
+        $autoRejectReason=autoRejectReason($validationChecks);
+        $pickupIssue=pickupIssue($c,$t,$b,$status,$id);
+
+        if($_SERVER['REQUEST_METHOD']!=='POST'&&$status==='Approved'&&!$pickupIssue&&$t['availabilityStatus']==='Available'){
+            assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"7-day reservation protection activated for request $id");
+            logTx($c,$manager,'Update',$id,"Reservation protection activated for {$t['assetName']}");
+            $t['availabilityStatus']='Reserved';
+        }
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $action=$_POST['action']??'';$remark=trim($_POST['managerRemark']??'');
@@ -101,23 +284,42 @@ try{
                 $pickup=$b['borrowDate']??'';$return=$b['expectedReturnDate']??'';
                 if($approvalIssue)$error=$approvalIssue;
                 else{
+                    $pickupDate=date('Y-m-d',strtotime($pickup));
+                    $protectedFrom=protectionDate($pickupDate);
+                    $insideProtection=date('Y-m-d')>=$protectedFrom;
+                    $reserveNow=$insideProtection&&$t['availabilityStatus']==='Available';
+
                     $c->begin_transaction();
                     try{
                         $s=$c->prepare("UPDATE transactionrequests SET requestStatus='Approved',managerRemark=?,decisionDate=NOW() WHERE transactionID=?");
                         $s->bind_param('ss',$remark,$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Approved' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"Approved and reserved for request $id");
-                        logTx($c,$manager,'Approve',$id,"Approved borrowing request and reserved {$t['assetName']}");
-                        notify($c,$t['requesterID'],'Request Approved & Asset Reserved',"Your request $id for {$t['assetName']} was approved and the asset is reserved for you. Pickup: ".d($pickup).". Return by: ".d($return).'.');
-                        $c->commit();go($id);
+
+                        if($reserveNow){
+                            assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"7-day reservation protection activated for request $id");
+                        }
+
+                        $stateText=$reserveNow?'asset reserved inside the 7-day protection window':'future reservation confirmed; asset not locked early';
+                        logTx($c,$manager,'Approve',$id,"Approved borrowing request for {$t['assetName']}; $stateText");
+                        notify(
+                            $c,$t['requesterID'],'Reservation Confirmed',
+                            "Your request $id for {$t['assetName']} was approved. Pickup: ".d($pickup).
+                            ". Return by: ".d($return).
+                            ". Reservation protection begins ".d($protectedFrom)."."
+                        );
+                        $c->commit();returnTo($backURL,['reviewDone'=>'approve']);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
 
             if($action==='reject'){
+                $managerNote=trim($_POST['managerNote']??'');
+                $remark=trim($autoRejectReason.($managerNote?($autoRejectReason?' Manager note: ':'').$managerNote:''));
+                $remark=substr($remark,0,255);
+
                 if($status!=='Pending')$error='Only Pending requests can be rejected.';
-                elseif(!$remark)$error='Please enter a rejection reason.';
+                elseif(!$remark)$error='No automatic validation issue was detected. Please enter a Manager rejection reason.';
                 else{
                     $c->begin_transaction();
                     try{
@@ -126,13 +328,14 @@ try{
                         if($b){$s=$c->prepare("UPDATE borrowings SET borrowingStatus='Cancelled' WHERE borrowID=?");$s->bind_param('s',$b['borrowID']);$s->execute();$s->close();}
                         logTx($c,$manager,'Reject',$id,"Rejected borrowing request for {$t['assetName']}. Reason: $remark");
                         notify($c,$t['requesterID'],'Borrowing Request Rejected',"Your request $id for {$t['assetName']} was rejected. Reason: $remark");
-                        $c->commit();go($id);
+                        $c->commit();returnTo($backURL,['reviewDone'=>'reject']);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
 
             if($action==='start'){
-                if($status!=='Approved'||!$b||$t['availabilityStatus']!=='Reserved')$error='Pickup can only be confirmed for an approved request with a Reserved asset.';
+                $pickupIssue=pickupIssue($c,$t,$b,$status,$id);
+                if($pickupIssue)$error=$pickupIssue;
                 else{
                     $c->begin_transaction();
                     try{
@@ -140,10 +343,12 @@ try{
                         $s->bind_param('s',$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Borrowed' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,'Reserved','Borrowed',"Asset picked up for $id");
+                        assetStatus($c,$t['assetID'],$manager,$t['availabilityStatus'],'Borrowed',"Asset picked up for $id");
                         logTx($c,$manager,'Assign',$id,"Pickup confirmed; borrowing started for {$t['assetName']}");
                         notify($c,$t['requesterID'],'Pickup Confirmed',"Pickup for {$t['assetName']} was confirmed. Your borrowing has started. Return by: ".d($b['expectedReturnDate']).'.');
-                        $c->commit();go($id);
+                        $c->commit();
+                        returnTo($backURL,['pickupDone'=>$id]);
+                        exit();
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -158,10 +363,15 @@ try{
                         $s->bind_param('ss',$remark,$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Cancelled' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,'Reserved','Available',"Cancelled reservation $id");
+                        $currentProtected=$b&&!empty($b['borrowDate'])&&!empty($b['expectedReturnDate'])
+                            &&date('Y-m-d')>=protectionDate(date('Y-m-d',strtotime($b['borrowDate'])))
+                            &&date('Y-m-d')<=date('Y-m-d',strtotime($b['expectedReturnDate']));
+                        if($t['availabilityStatus']==='Reserved'&&$currentProtected){
+                            assetStatus($c,$t['assetID'],$manager,'Reserved','Available',"Cancelled protected reservation $id");
+                        }
                         logTx($c,$manager,'Update',$id,"Cancelled reservation before pickup. Reason: $remark");
                         notify($c,$t['requesterID'],'Reservation Cancelled',"The reservation for transaction $id was cancelled before pickup. Reason: $remark");
-                        $c->commit();go($id);
+                        $c->commit();go($id,$navParam);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -170,7 +380,6 @@ try{
         $s=$c->prepare("SELECT sl.actionType,sl.description,sl.timeLogged,u.name userName FROM systemlog sl LEFT JOIN user u ON sl.userID=u.userID WHERE sl.refType='Transaction' AND sl.refID=? ORDER BY sl.timeLogged DESC");
         $s->bind_param('s',$id);$s->execute();$logs=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
     }
-    $c->close();
 }catch(Throwable $z){error_log($z->getMessage());$error='Unable to process the transaction. Please try again.';}
 
 if($t){
@@ -178,8 +387,13 @@ if($t){
     $overdue=$borrowed&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturnDate']))<date('Y-m-d');
     $status=in_array($t['requestStatus'],['Completed','Rejected','Cancelled'],true)?$t['requestStatus']:($overdue?'Overdue':$t['requestStatus']);
     $blocked=($summary['active']??0)>=5||($summary['overdue']??0)>0;
-    $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status);
-    $personLabel=$status==='Pending'?'Requester':'Borrower';
+    $schedule=scheduleCheck($conn,$t['assetID'],$id,$b);
+    $approvalIssue=approvalIssue($t,$b,$blocked,$summary,$status,$schedule);
+    $validationChecks=validationChecks($t,$b,$summary,$status,$schedule);
+    $autoRejectReason=autoRejectReason($validationChecks);
+    $pickupIssue=pickupIssue($conn,$t,$b,$status,$id);
+    $pickupEarliest=$b&&!empty($b['borrowDate'])?protectionDate(date('Y-m-d',strtotime($b['borrowDate']))):'';
+    $personLabel=in_array($status,['Pending','Rejected','Cancelled'],true)?'Requester':'Borrower';
 }
 ?>
 <!DOCTYPE html>
@@ -187,13 +401,13 @@ if($t){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Details - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .tx-dialog{position:fixed;inset:0;margin:auto;width:min(760px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid #bfe4fb;border-radius:12px;padding:24px}
 .tx-dialog-small{width:min(520px,calc(100% - 32px))}
 .tx-dialog::backdrop{background:rgba(0,0,0,.55)}
 .tx-dialog h2{margin-top:0}
-#borrowerHistory h2{margin-bottom:18px}
+#borrowerHistory h2{margin-bottom:8px}\n#borrowerHistory>p{margin:0;color:#475569;line-height:1.5}
 .tx-side-actions button:disabled{
     background:#d9dee5;
     border-color:#c7cdd4;
@@ -205,12 +419,44 @@ if($t){
 .tx-dialog .category-form-actions{margin-top:18px}
 .tx-top{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:24px;align-items:start;margin-bottom:24px}
 .tx-support{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
-.tx-support .content-card{margin:0}
+.tx-top .content-card,.tx-support .content-card,.tx-activity{margin:0}
 .tx-profile .category-form-actions{justify-content:flex-start;margin-top:8px}
 .tx-profile .management-filter-btn{padding:7px 12px;font-size:13px}
+.tx-activity{padding:24px}
+.tx-activity .card-header{margin:0 0 12px}
+.tx-activity .table-wrapper{margin-top:0}
 .tx-side-actions{display:flex;flex-direction:column;gap:12px}
 .tx-side-actions form{margin:0}
 .tx-side-actions a,.tx-side-actions button{width:100%;justify-content:center}
+.tx-validation{margin:14px 0;padding:12px;border:1px solid #dbe7ef;border-radius:10px;background:#f8fbfd}
+.tx-validation h3{margin:0 0 9px;font-size:14px}
+.tx-validation-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:8px 0;border-top:1px solid #e8eef3}
+.tx-validation-row:first-of-type{border-top:0}
+.tx-validation-row strong{display:block;font-size:13px}
+.tx-validation-row small{display:block;margin-top:2px;color:#64748b;line-height:1.35}
+.tx-validation-state{align-self:start;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.tx-validation-state.ok{background:#dcfce7;color:#166534}
+.tx-validation-state.fail{background:#fee2e2;color:#991b1b}
+.tx-reject-reason{margin:12px 0;padding:12px 14px;border:1px solid #fecaca;border-radius:8px;background:#fff1f2;color:#991b1b;line-height:1.45}
+.tx-reject-pass{margin:12px 0;padding:10px 12px;border:1px solid #bbf7d0;border-radius:8px;background:#f0fdf4;color:#166534;font-size:13px}
+.tx-auto-note{margin:6px 0 0;color:#64748b;font-size:12px;line-height:1.4}
+@media print{
+@page{size:A4 landscape;margin:10mm}
+.sidebar,.app-header,.breadcrumb,.management-heading p,.tx-side-actions,.tx-dialog,.flow-dialog,.tx-profile .category-form-actions{display:none!important}
+.main-content{width:100%!important;margin-left:0!important}
+.page-body{padding:0!important}
+.management-heading{margin:0 0 10px!important}
+.management-heading h1{font-size:20px!important;margin:0!important}
+.alert,.asset-form-note{box-shadow:none!important}
+.tx-top{display:block!important;margin-bottom:10px!important}
+.tx-support{grid-template-columns:1fr 1fr!important;gap:10px!important;margin-bottom:10px!important}
+.tx-top .content-card,.tx-support .content-card,.tx-activity{padding:12px!important;box-shadow:none!important;border:1px solid #cbd5e1!important;break-inside:avoid}
+.category-info-card h2,.tx-activity h2{font-size:14px!important;margin:0 0 8px!important}
+.category-info-fields{gap:5px!important}
+.category-info-row{grid-template-columns:125px 1fr!important;gap:8px!important;font-size:10px!important}
+.tx-activity .data-table th,.tx-activity .data-table td{padding:5px 7px!important;font-size:9px!important}
+.tx-activity .table-wrapper{overflow:visible!important}
+}
 @media(max-width:850px){.tx-top,.tx-support{grid-template-columns:1fr}.tx-side-actions{flex-direction:row;flex-wrap:wrap}.tx-side-actions a,.tx-side-actions button{width:auto}}
 </style>
 </head>
@@ -220,7 +466,7 @@ if($t){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><span class="breadcrumb-current">Transaction Details</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>">Transaction Management</a><span>›</span><span class="breadcrumb-current">Transaction Details</span></div>
 <h1>Transaction Details</h1><p>Review the request, borrower background and borrowing progress.</p>
 </section>
 
@@ -234,6 +480,10 @@ if($t){
 <div class="alert alert-error"><strong>Approval Blocked</strong> · <?=e(preg_replace('/^Approval blocked:\s*/i','',$approvalIssue))?></div>
 <?php elseif($status==='Completed'):?>
 <div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
+<?php elseif($status==='Approved'&&$pickupIssue):?>
+<div class="asset-form-note"><strong>Reservation Confirmed</strong><p><?=e($pickupIssue)?></p></div>
+<?php elseif($status==='Approved'):?>
+<div class="asset-form-note"><strong>Pickup Window Open</strong><p>The reservation is protected and pickup may be confirmed when the member physically collects the asset.</p></div>
 <?php else:?>
 <div class="asset-form-note"><strong>Status: <?=e($status)?></strong></div>
 <?php endif;?>
@@ -250,13 +500,18 @@ if($t){
 ] as $k=>$v):?><div class="category-info-row"><strong><?=e($k)?></strong><span><?=e($v)?></span></div><?php endforeach;?>
 </div></article>
 <div class="tx-side-actions">
-<a href="manager_transactions.php" class="category-form-back">Back</a>
+<button type="button" class="category-form-back" onclick="window.print()">Print Details</button>
+<a href="<?=e($backURL)?>" class="category-form-back">Back</a>
 <?php if($status==='Pending'):?>
 <button type="button" class="category-form-reset" onclick="rejectBox.showModal()">Reject Request</button>
-<form method="POST"><input type="hidden" name="action" value="approve"><button class="category-form-submit" <?=$approvalIssue?'disabled title="'.e($approvalIssue).'"':''?> onclick="return confirm('Approve this request and reserve the asset for this member?')">Approve &amp; Reserve</button></form>
+<button type="button" class="category-form-submit"
+<?=$approvalIssue?'disabled title="'.e($approvalIssue).'"':''?>
+onclick="approveBox.showModal()">Approve Reservation</button>
 <?php elseif($status==='Approved'):?>
 <button type="button" class="category-form-reset" onclick="cancelBox.showModal()">Cancel Reservation</button>
-<form method="POST"><input type="hidden" name="action" value="start"><button class="category-form-submit" onclick="return confirm('Confirm that the member has picked up this asset? Borrowing will start immediately.')">Confirm Pickup</button></form>
+<button type="button" class="category-form-submit"
+<?=$pickupIssue?'disabled title="'.e($pickupIssue).'"':''?>
+onclick="pickupBox.showModal()">Confirm Pickup</button>
 <?php endif;?>
 </div>
 </div>
@@ -287,7 +542,7 @@ if($t){
 </div>
 
 
-<section class="content-card">
+<section class="content-card tx-activity">
 <div class="card-header"><h2>Transaction Activity<?= $logs?' ('.count($logs).')':''?></h2></div>
 <div class="table-wrapper"><table class="data-table">
 <thead><tr><th>Date & Time</th><th>Action</th><th>Done By</th><th>Activity</th></tr></thead><tbody>
@@ -298,16 +553,24 @@ if($t){
 
 <dialog id="borrowerHistory" class="content-card tx-dialog">
 <h2><?=e($personLabel)?> History</h2>
+<p>Review this member's borrowing background and recent activity.</p>
 
-<div class="asset-form-fields">
-<div class="asset-form-row"><label>Member</label><input value="<?=e($t['requesterName'].' ('.$t['requesterID'].')')?>" readonly></div>
-<div class="asset-form-row"><label>Email</label><input value="<?=e($t['requesterEmail'])?>" readonly></div>
-<div class="asset-form-row"><label>EcoPoints</label><input value="<?=e($summary['ecopoint']??$t['ecopoint'])?>" readonly></div>
-<div class="asset-form-row"><label>Active Borrowings</label><input value="<?=e(($summary['active']??0).' / 5')?>" readonly></div>
-<div class="asset-form-row"><label>Current Overdue</label><input value="<?=e($summary['overdue']??0)?>" readonly></div>
-<div class="asset-form-row"><label>Completed Borrowings</label><input value="<?=e($summary['completed']??0)?>" readonly></div>
-<div class="asset-form-row"><label>Previous Late Returns</label><input value="<?=e($summary['late']??0)?>" readonly></div>
-<div class="asset-form-row"><label>Total Requests</label><input value="<?=e($summary['requests']??0)?>" readonly></div>
+<div class="table-wrapper">
+<table class="data-table">
+<thead>
+<tr><th>Requester Detail</th><th>Information</th></tr>
+</thead>
+<tbody>
+<tr><th>Member</th><td><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></td></tr>
+<tr><th>Email</th><td><?=e($t['requesterEmail'])?></td></tr>
+<tr><th>EcoPoints</th><td><?=e($summary['ecopoint']??$t['ecopoint'])?></td></tr>
+<tr><th>Active Borrowings</th><td><?=e(($summary['active']??0).' / 5')?></td></tr>
+<tr><th>Current Overdue</th><td><?=e($summary['overdue']??0)?></td></tr>
+<tr><th>Completed Borrowings</th><td><?=e($summary['completed']??0)?></td></tr>
+<tr><th>Previous Late Returns</th><td><?=e($summary['late']??0)?></td></tr>
+<tr><th>Total Requests</th><td><?=e($summary['requests']??0)?></td></tr>
+</tbody>
+</table>
 </div>
 
 <div class="card-header"><h3>Recent Borrowings</h3></div>
@@ -328,41 +591,117 @@ if($t){
 </dialog>
 
 <?php if($status==='Pending'):?>
-<dialog id="rejectBox" class="content-card tx-dialog tx-dialog-small">
+<dialog id="approveBox" class="flow-dialog">
+<h2>Confirm Request Approval</h2>
+<p>Approve this request and confirm the requested borrowing period for this member?</p>
+<div class="flow-dialog-summary">
+<div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
+<div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
+<div><strong>Requester</strong><span><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></span></div>
+<div><strong>Pickup Date</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
+<div><strong>Return Date</strong><span><?=e(d($b['expectedReturnDate']??null))?></span></div>
+<div><strong>Protection Begins</strong><span><?=e($b&&!empty($b['borrowDate'])?d(protectionDate(date('Y-m-d',strtotime($b['borrowDate'])))):'-')?></span></div>
+</div>
+<form method="POST" class="flow-dialog-actions">
+<input type="hidden" name="action" value="approve">
+<button type="button" class="category-form-back" onclick="approveBox.close()">No</button>
+<button class="category-form-submit">Yes, Approve Reservation</button>
+</form>
+</dialog>
+
+<dialog id="rejectBox" class="flow-dialog">
 <h2>Reject Request</h2>
+<p>CirculAPU checks the current request automatically and prepares the rejection reason for the Manager.</p>
+
+<div class="tx-validation">
+<h3>System Validation</h3>
+<?php foreach($validationChecks as $check):?>
+<div class="tx-validation-row">
+<div>
+<strong><?=e($check['label'])?></strong>
+<small><?=e($check['detail'])?></small>
+</div>
+<span class="tx-validation-state <?=$check['ok']?'ok':'fail'?>"><?=$check['ok']?'Passed':'Issue'?></span>
+</div>
+<?php endforeach;?>
+</div>
+
 <form method="POST">
 <input type="hidden" name="action" value="reject">
-<div class="asset-form-fields">
-<div class="asset-form-row asset-form-textarea">
-<label for="rejectReason">Rejection Reason *</label>
-<textarea id="rejectReason" name="managerRemark" maxlength="255" rows="4" placeholder="Explain why this borrowing request is rejected" required></textarea>
+
+<?php if($autoRejectReason):?>
+<label>System-Generated Rejection Reason</label>
+<div class="tx-reject-reason"><?=e($autoRejectReason)?></div>
+<p class="tx-auto-note">This reason will be sent to the requester automatically.</p>
+<?php else:?>
+<div class="tx-reject-pass"><strong>All system validations passed.</strong> Enter a Manager rejection reason only if you still need to reject this request.</div>
+<?php endif;?>
+
+<div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
+<label for="managerNote"><?=$autoRejectReason?'Additional Manager Note (Optional)':'Manager Rejection Reason *'?></label>
+<textarea id="managerNote" name="managerNote" maxlength="<?=$autoRejectReason?'120':'255'?>" rows="3"
+          placeholder="<?=$autoRejectReason?'Add any extra explanation for the requester if needed.':'Enter the reason for rejecting this request.'?>"
+          <?=$autoRejectReason?'':'required'?>></textarea>
 </div>
-</div>
-<div class="category-form-actions">
+
+<div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="rejectBox.close()">Cancel</button>
-<button class="category-form-reset">Reject Request</button>
+<button class="category-form-submit">Yes, Reject</button>
 </div>
 </form>
 </dialog>
 <?php elseif($status==='Approved'):?>
-<dialog id="cancelBox" class="content-card tx-dialog tx-dialog-small">
+<dialog id="pickupBox" class="flow-dialog">
+<h2>Confirm Asset Pickup</h2>
+<p>Confirm only when the member physically collects the asset. Borrowing will start immediately.</p>
+
+<div class="flow-dialog-summary">
+<div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
+<div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
+<div><strong>Borrower</strong><span><?=e($t['requesterName'].' ('.$t['requesterID'].')')?></span></div>
+<div><strong>Requested Pickup</strong><span><?=e(d($b['borrowDate']??null))?></span></div>
+<div><strong>Earliest Confirmation</strong><span><?=e($pickupEarliest?d($pickupEarliest):'-')?></span></div>
+<div><strong>Return Date</strong><span><?=e(d($b['expectedReturnDate']??null))?></span></div>
+<div><strong>Current Asset Status</strong><span><?=e($t['availabilityStatus'])?></span></div>
+</div>
+
+<form method="POST" class="flow-dialog-actions">
+<input type="hidden" name="action" value="start">
+<button type="button" class="category-form-back" onclick="pickupBox.close()">No</button>
+<button class="category-form-submit">Yes, Confirm Pickup</button>
+</form>
+</dialog>
+
+<dialog id="cancelBox" class="flow-dialog">
 <h2>Cancel Reservation</h2>
+<p>Enter a clear reason explaining why this approved reservation needs to be cancelled before pickup.</p>
+
 <form method="POST">
 <input type="hidden" name="action" value="cancel">
-<div class="asset-form-fields">
-<div class="asset-form-row asset-form-textarea">
+
+<div class="asset-form-row asset-form-textarea" style="grid-template-columns:1fr">
 <label for="cancelReason">Cancellation Reason *</label>
-<textarea id="cancelReason" name="managerRemark" maxlength="255" rows="4" placeholder="Explain why this reservation is being cancelled before pickup" required></textarea>
+<textarea id="cancelReason" name="managerRemark" maxlength="255" rows="4"
+          placeholder="Example: The reservation needs to be cancelled because the asset is no longer available for pickup."
+          required></textarea>
 </div>
-</div>
-<div class="category-form-actions">
-<button type="button" class="category-form-back" onclick="cancelBox.close()">Back</button>
-<button class="category-form-reset">Cancel Reservation</button>
+
+<div class="flow-dialog-actions">
+<button type="button" class="category-form-back" onclick="cancelBox.close()">Cancel</button>
+<button class="category-form-submit">Yes, Cancel Reservation</button>
 </div>
 </form>
 </dialog>
 <?php endif;?>
 
 <?php endif;?>
-</main></div></div>
+</main>
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+</div></div>
 </body></html>

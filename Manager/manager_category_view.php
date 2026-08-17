@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
 }
 
 require_once '../print.php';
+require_once '../db.php';
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function iconPath($v): string {
@@ -15,7 +16,7 @@ function iconPath($v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$categoryID = trim($_GET['categoryID'] ?? '');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
@@ -25,7 +26,6 @@ $linkedAssets = 0;
 $error = '';
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     $stmt = $conn->prepare("
@@ -69,7 +69,6 @@ try {
         $stmt->close();
     }
 
-    $conn->close();
 } catch (Throwable $e) {
     error_log($e->getMessage());
     $error = 'Unable to load category details. Please try again.';
@@ -85,7 +84,8 @@ $icon = iconPath($category['categoryIcon'] ?? '');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Details - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
 <body class="role-manager">
@@ -100,7 +100,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <?php if ($error): ?>
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_categories.php">Category Management</a>
+        <a href="<?=e($backURL)?>">Category Management</a>
         <span>›</span><span class="breadcrumb-current">Category Details</span>
     </div>
     <h1>Category Details</h1>
@@ -113,7 +113,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <section class="management-heading category-heading">
     <div>
         <div class="breadcrumb">
-            <a href="manager_categories.php">Category Management</a>
+            <a href="<?=e($backURL)?>">Category Management</a>
             <span>›</span><span class="breadcrumb-current">Category Details</span>
         </div>
         <h1>Category Details</h1>
@@ -121,28 +121,19 @@ $icon = iconPath($category['categoryIcon'] ?? '');
     </div>
 
     <div class="category-page-actions">
-        <a href="manager_category_edit.php?categoryID=<?= e($categoryID) ?>">
+        <a href="manager_category_edit.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>">
             <img src="../assets/icons/edit.png" alt=""> Edit
         </a>
 
         <?php if ($category['status'] === 'Active'): ?>
-        <form method="POST" action="manager_categories.php"
-              onsubmit="return confirm('Deactivate this category? Existing assets will not be affected.');">
-            <input type="hidden" name="action" value="deactivate">
-            <input type="hidden" name="categoryID" value="<?= e($categoryID) ?>">
-            <button type="submit" class="deactivate">Deactivate</button>
-        </form>
+        <button type="button" class="deactivate"
+                onclick="openDetailCategoryAction('deactivate')">Deactivate</button>
         <?php endif; ?>
 
         <?php if ($linkedAssets === 0): ?>
-        <form method="POST" action="manager_categories.php"
-              onsubmit="return confirm('Permanently delete this unused category? This cannot be undone.');">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="categoryID" value="<?= e($categoryID) ?>">
-            <button type="submit" class="delete">
-                <img src="../assets/icons/delete.png" alt=""> Delete
-            </button>
-        </form>
+        <button type="button" class="delete" onclick="openDetailCategoryAction('delete')">
+            <img src="../assets/icons/delete.png" alt=""> Delete
+        </button>
         <?php else: ?>
         <button type="button" disabled title="Cannot delete because assets are linked to this category.">
             <img src="../assets/icons/delete.png" alt=""> Delete
@@ -185,7 +176,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
             ?>
             <div class="category-info-row">
                 <strong><?= e($label) ?></strong>
-                <span><?= e($value) ?></span>
+                <span><?php if($label==='Status'):?><span class="status-badge" data-status="<?=e($value)?>"><?=e($value)?></span><?php else:?><?=e($value)?><?php endif;?></span>
             </div>
             <?php endforeach; ?>
         </div>
@@ -205,7 +196,42 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 </section>
 
 <!-- Recent Assets -->
-<section class="management-list category-assets-list">
+
+<section class="mobile-category-assets">
+<div class="mobile-section-heading">
+<div>
+<h2>Recent Assets</h2>
+<p><?=count($assets)?> shown</p>
+</div>
+<a class="mobile-view-link" href="manager_assets.php?category=<?=e($categoryID)?>">View All</a>
+</div>
+
+<?php if(!$assets):?>
+<div class="mobile-empty-card">No assets found in this category.</div>
+<?php else:foreach($assets as $a):?>
+<article class="mobile-category-asset-card">
+<div class="mobile-category-asset-top">
+<div>
+<span class="mobile-record-id"><?=e($a['assetID'])?></span>
+<h3><?=e($a['assetName'])?></h3>
+</div>
+<span class="mobile-status-pill" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span>
+</div>
+
+<div class="mobile-category-asset-meta">
+<div><span>Condition</span><strong><?=e($a['assetCondition'])?></strong></div>
+<div><span>Availability</span><span class="status-badge" data-status="<?=e($a['availabilityStatus'])?>"><?=e($a['availabilityStatus'])?></span></div>
+<div><span>Listed</span><strong><?=date('d M Y',strtotime($a['createdDate']))?></strong></div>
+</div>
+
+<div class="mobile-card-actions">
+<a class="primary" href="manager_asset_view.php?assetID=<?=e($a['assetID'])?>">View Asset</a>
+</div>
+</article>
+<?php endforeach;endif;?>
+</section>
+
+<section class="management-list category-assets-list desktop-category-assets-list">
     <div class="management-list-header">
         <h2>Recent Assets in This Category</h2>
         <a href="manager_assets.php?category=<?= e($categoryID) ?>">View All</a>
@@ -229,8 +255,8 @@ $icon = iconPath($category['categoryIcon'] ?? '');
                 <td><strong><?= e($a['assetID']) ?></strong></td>
                 <td><?= e($a['assetName']) ?></td>
                 <td><?= e($a['assetCondition']) ?></td>
-                <td><?= e($a['availabilityStatus']) ?></td>
-                <td><?= e($a['listingStatus']) ?></td>
+                <td><span class="status-badge" data-status="<?=e($a['availabilityStatus'])?>"><?=e($a['availabilityStatus'])?></span></td>
+                <td><span class="status-badge" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span></td>
                 <td><?= date('d M Y', strtotime($a['createdDate'])) ?></td>
                 <td>
                     <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?>"
@@ -247,7 +273,49 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <?php endif; ?>
 
+<?php if($category):?>
+<dialog id="detailCategoryActionDialog" class="flow-dialog">
+<h2 id="detailActionTitle"></h2>
+<p id="detailActionMessage"></p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category ID</strong><span><?=e($categoryID)?></span></div>
+    <div><strong>Category Name</strong><span><?=e($category['categoryName'])?></span></div>
+    <div><strong>Current Status</strong><span><?=e($category['status'])?></span></div>
+</div>
+
+<form method="POST" action="manager_categories.php" class="flow-dialog-actions">
+    <input type="hidden" name="action" id="detailActionInput">
+    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>"><input type="hidden" name="returnQuery" value="<?=e($source==='categories'?$back:'')?>">
+    <button type="button" class="category-form-back" onclick="detailCategoryActionDialog.close()">No</button>
+    <button type="submit" class="category-form-submit" id="detailActionConfirm">Confirm</button>
+</form>
+</dialog>
+
+<script>
+function openDetailCategoryAction(action){
+    const deleting=action==='delete';
+    detailActionTitle.textContent=deleting?'Confirm Category Deletion':'Confirm Category Deactivation';
+    detailActionMessage.textContent=deleting
+        ?'Permanently delete this unused category? This action cannot be undone.'
+        :'Deactivate this category? Existing assets will remain unchanged.';
+    detailActionInput.value=action;
+    detailActionConfirm.textContent=deleting?'Yes, Delete':'Yes, Deactivate';
+    detailCategoryActionDialog.showModal();
+}
+</script>
+<?php endif;?>
+
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
 </body>

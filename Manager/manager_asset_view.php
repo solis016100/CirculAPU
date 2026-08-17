@@ -3,27 +3,45 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Manager') {
-    header('Location: ../login.php'); exit();
+    header('Location: ../login.php');
+    exit();
 }
 
 require_once '../print.php';
+require_once '../db.php';
 
-function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
-function assetDate($v): string { return $v && strtotime($v) ? date('d M Y, h:i A', strtotime($v)) : 'Not updated yet'; }
+function e($v): string {
+    return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+}
+
+function assetDate($v): string {
+    return $v && strtotime($v)
+        ? date('d M Y, h:i A', strtotime($v))
+        : 'Not updated yet';
+}
+
 function imagePath($v): string {
     if (!$v) return '';
     $v = str_replace('\\', '/', trim($v));
-    return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
+    return preg_match('/^https?:\/\//i', $v)
+        ? $v
+        : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$assetID = trim($_GET['assetID'] ?? '');
-if (!$assetID) { header('Location: manager_assets.php'); exit(); }
+$assetID=trim($_GET['assetID']??'');
+$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
+$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+
+if (!$assetID) {
+    header('Location: manager_assets.php');
+    exit();
+}
 
 $asset = null;
 $error = '';
 
 try {
-    $conn = new mysqli('127.0.0.1', 'root', '', 'circulapu_db', 3306);
     $conn->set_charset('utf8mb4');
 
     $stmt = $conn->prepare("
@@ -33,18 +51,23 @@ try {
         JOIN user u ON a.ownerID=u.userID
         WHERE a.assetID=? LIMIT 1
     ");
+
     $stmt->bind_param('s', $assetID);
     $stmt->execute();
     $asset = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-    $conn->close();
 
-    if (!$asset) $error = 'The selected asset record could not be found.';
+    if (!$asset) {
+        $error = 'The selected asset record could not be found.';
+    }
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
     $error = 'Unable to load the asset details. Please try again.';
 }
+
+if(!$back&&$source!=='reports'&&($asset['listingStatus']??'')==='Pending Review')
+    $backURL='manager_assets.php?listingStatus=Pending+Review';
 
 $image = imagePath($asset['imageURL'] ?? '');
 $categoryIcon = imagePath($asset['categoryIcon'] ?? '');
@@ -71,7 +94,8 @@ $details = $asset ? [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Details - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css">
+    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
 <body class="role-manager">
@@ -85,7 +109,7 @@ $details = $asset ? [
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="manager_assets.php">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
         <span class="breadcrumb-current">Asset Details</span>
     </div>
     <h1>Asset Details</h1>
@@ -139,11 +163,11 @@ $details = $asset ? [
                 <?php printButton('Print', '../assets/icons/print.png', 'asset-detail-action-btn'); ?>
 
                 <?php if ($asset['listingStatus'] === 'Pending Review'): ?>
-                    <a href="review_asset_submission.php?assetID=<?= e($assetID) ?>" class="asset-detail-action-btn">
+                    <a href="review_asset_submission.php?assetID=<?= e($assetID) ?><?=e($navParam)?>" class="asset-detail-action-btn">
                         <img src="../assets/icons/edit.png" alt=""><span>Review Submission</span>
                     </a>
                 <?php elseif ($asset['listingStatus'] !== 'Removed'): ?>
-                    <a href="manager_asset_edit.php?assetID=<?= e($assetID) ?>" class="asset-detail-action-btn">
+                    <a href="manager_asset_edit.php?assetID=<?= e($assetID) ?><?=e($navParam)?>" class="asset-detail-action-btn">
                         <img src="../assets/icons/edit.png" alt=""><span>Edit Asset</span>
                     </a>
                 <?php endif; ?>
@@ -152,26 +176,49 @@ $details = $asset ? [
                     $asset['listingStatus'] !== 'Removed' &&
                     !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true)
                 ): ?>
-                    <form method="POST" action="manager_assets.php"
-                          onsubmit="return confirm('Remove this asset listing? The record will be retained for auditing.');">
-                        <input type="hidden" name="action" value="remove">
-                        <input type="hidden" name="assetID" value="<?= e($assetID) ?>">
-                        <button type="submit" class="asset-detail-action-btn delete">
-                            <img src="../assets/icons/delete.png" alt=""><span>Remove Asset</span>
-                        </button>
-                    </form>
+                    <button type="button" class="asset-detail-action-btn delete" onclick="removeAssetDialog.showModal()">
+                        <img src="../assets/icons/delete.png" alt=""><span>Remove Asset</span>
+                    </button>
                 <?php endif; ?>
 
-                <a href="manager_assets.php" class="asset-detail-back-btn">Back</a>
+                <a href="<?=e($backURL)?>" class="asset-detail-back-btn">Back</a>
             </div>
         </aside>
 
     </div>
     </section>
 
+<?php if ($asset && $asset['listingStatus'] !== 'Removed' && !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true)): ?>
+<dialog id="removeAssetDialog" class="flow-dialog">
+<h2>Confirm Asset Removal</h2>
+<p>Remove this listing from normal use? The record will be retained for auditing.</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Asset ID</strong><span><?= e($assetID) ?></span></div>
+    <div><strong>Asset Name</strong><span><?= e($asset['assetName']) ?></span></div>
+</div>
+
+<form method="POST" action="manager_assets.php" class="flow-dialog-actions">
+    <input type="hidden" name="action" value="remove">
+    <input type="hidden" name="assetID" value="<?= e($assetID) ?>"><input type="hidden" name="returnQuery" value="<?=e($source==='assets'?$back:'')?>">
+    <button type="button" class="category-form-back" onclick="removeAssetDialog.close()">No</button>
+    <button type="submit" class="category-form-submit">Yes, Remove</button>
+</form>
+</dialog>
+<?php endif; ?>
+
 <?php endif; ?>
 
 </main>
+
+<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
+<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
+<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
+<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
+<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
+<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
+</nav>
+
 </div>
 </div>
 </body>
