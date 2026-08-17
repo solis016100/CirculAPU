@@ -1,19 +1,25 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Include db.php from parent directory
 require_once '../db.php';
+require_once 'admin_helpers.php';
 
 // Security: Restrict access strictly to System Administrators
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
 // Initialize Filter Variables
-$search = $_GET['search'] ?? '';
-$status_filter = $_GET['status'] ?? '';
-$role_filter = $_GET['role'] ?? '';
+$search = trim($_GET['search'] ?? '');
+$status_filter = trim($_GET['status'] ?? '');
+$role_filter = trim($_GET['role'] ?? '');
 $date_filter = $_GET['date_joined'] ?? '';
+$allowed_statuses = ['Active', 'Suspended'];
+$allowed_roles = ['Admin', 'Manager', 'Auditor', 'Member'];
+if (!in_array($status_filter, $allowed_statuses, true)) $status_filter = '';
+if (!in_array($role_filter, $allowed_roles, true)) $role_filter = '';
 
 // Pagination Setup
 $limit = 8;
@@ -35,13 +41,13 @@ if (!empty($search)) {
     array_push($params, $search_param, $search_param, $search_param);
     $types .= "sss";
 }
-if (!empty($status_filter) && $status_filter !== 'All Status') {
+if ($status_filter !== '') {
     $sql .= " AND status = ?";
     $count_sql .= " AND status = ?";
     $params[] = $status_filter;
     $types .= "s";
 }
-if (!empty($role_filter) && $role_filter !== 'All Roles') {
+if ($role_filter !== '') {
     $sql .= " AND role = ?";
     $count_sql .= " AND role = ?";
     $params[] = $role_filter;
@@ -63,6 +69,8 @@ $stmt_count->execute();
 $total_users = $stmt_count->get_result()->fetch_assoc()['total'];
 $total_pages = max(1, ceil($total_users / $limit));
 $stmt_count->close();
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $limit;
 
 // Append Ordering and Pagination Limits
 $sql .= " ORDER BY dateCreated DESC LIMIT ? OFFSET ?";
@@ -77,6 +85,27 @@ if (!empty($params)) {
 }
 $stmt->execute();
 $users_result = $stmt->get_result();
+
+function userManagementUrl(int $target_page): string {
+    global $search, $status_filter, $role_filter, $date_filter;
+    $query = array_filter([
+        'page' => $target_page,
+        'search' => $search,
+        'status' => $status_filter,
+        'role' => $role_filter,
+        'date_joined' => $date_filter
+    ], static fn($value) => $value !== '');
+    return '?' . http_build_query($query);
+}
+
+$return_query = http_build_query(array_filter([
+    'page' => $page,
+    'search' => $search,
+    'status' => $status_filter,
+    'role' => $role_filter,
+    'date_joined' => $date_filter
+], static fn($value) => $value !== ''));
+$notice = $_GET['notice'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -116,9 +145,17 @@ $users_result = $stmt->get_result();
                     </a>
                 </div>
 
+                <?php if ($notice === 'status-updated'): ?>
+                    <div class="alert alert-success" style="margin-bottom: 20px;">User status updated and recorded in the system log.</div>
+                <?php elseif ($notice === 'self-status-blocked'): ?>
+                    <div class="alert alert-error" style="margin-bottom: 20px;">You cannot suspend your own administrator account.</div>
+                <?php elseif ($notice === 'toggle-failed'): ?>
+                    <div class="alert alert-error" style="margin-bottom: 20px;">The user status could not be updated.</div>
+                <?php endif; ?>
+
                 <!-- Search and Filter Bar -->
                 <div class="content-card admin-filter-card">
-                    <form method="GET" action="admin_user_management.php" class="admin-filter-form">
+                    <form method="GET" action="user_management.php" class="admin-filter-form">
                         
                         <div class="field-box" style="flex: 2; min-width: 220px;">
                             <label>Search</label>
@@ -131,17 +168,16 @@ $users_result = $stmt->get_result();
                         <div class="field-box" style="flex: 1; min-width: 140px;">
                             <label>Status</label>
                             <select name="status" class="filter-select">
-                                <option>All Status</option>
+                                <option value="">All Status</option>
                                 <option value="Active" <?php echo $status_filter === 'Active' ? 'selected' : ''; ?>>Active</option>
                                 <option value="Suspended" <?php echo $status_filter === 'Suspended' ? 'selected' : ''; ?>>Suspended</option>
-                                <option value="Deactivated" <?php echo $status_filter === 'Deactivated' ? 'selected' : ''; ?>>Deactivated</option>
                             </select>
                         </div>
 
                         <div class="field-box" style="flex: 1; min-width: 140px;">
                             <label>Role</label>
                             <select name="role" class="filter-select">
-                                <option>All Roles</option>
+                                <option value="">All Roles</option>
                                 <option value="Admin" <?php echo $role_filter === 'Admin' ? 'selected' : ''; ?>>Admin</option>
                                 <option value="Manager" <?php echo $role_filter === 'Manager' ? 'selected' : ''; ?>>Manager</option>
                                 <option value="Auditor" <?php echo $role_filter === 'Auditor' ? 'selected' : ''; ?>>Auditor</option>
@@ -158,7 +194,7 @@ $users_result = $stmt->get_result();
                             <button type="submit" class="btn-filter-submit">
                                 <img src="../assets/icons/filter.png" alt="Filter"> Filter
                             </button>
-                            <a href="admin_user_management.php" class="btn-filter-reset">
+                            <a href="user_management.php" class="btn-filter-reset">
                                 <img src="../assets/icons/reset.png" alt="Reset"> Reset
                             </a>
                         </div>
@@ -180,7 +216,7 @@ $users_result = $stmt->get_result();
                                 <th>Role</th>
                                 <th>Eco Points</th>
                                 <th>Status</th>
-                                <th>Date Listed</th>
+                                <th>Date Joined</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -196,7 +232,7 @@ $users_result = $stmt->get_result();
                                                 echo $role_display;
                                             ?>
                                         </td>
-                                        <td><?php echo $user['ecopoint'] > 0 ? htmlspecialchars($user['ecopoint']) : '-'; ?></td>
+                                        <td><?php echo (int)$user['ecopoint']; ?></td>
                                         <td>
                                             <span class="status-badge <?php echo strtolower($user['status']); ?>">
                                                 <?php echo htmlspecialchars($user['status']); ?>
@@ -208,10 +244,16 @@ $users_result = $stmt->get_result();
                                             <a href="admin_edit_user.php?id=<?php echo urlencode($user['userID']); ?>" title="Edit User" class="action-icon edit-icon">
                                                 <img src="../assets/icons/edit.png" alt="Edit">
                                             </a>
-                                            <!-- Toggle Status Button -->
-                                            <a href="admin_toggle_status.php?id=<?php echo urlencode($user['userID']); ?>" title="Toggle Status" class="action-icon">
-                                                <img src="../assets/icons/ban.svg" alt="Toggle Status">
-                                            </a>
+                                            <?php if ($user['userID'] !== $_SESSION['user_id']): ?>
+                                                <form method="POST" action="admin_toggle_status.php" class="inline-action-form" onsubmit="return confirm('Change this user’s status to <?php echo $user['status'] === 'Active' ? 'Suspended' : 'Active'; ?>?');">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(adminCsrfToken()); ?>">
+                                                    <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user['userID']); ?>">
+                                                    <input type="hidden" name="return_query" value="<?php echo htmlspecialchars($return_query); ?>">
+                                                    <button type="submit" title="<?php echo $user['status'] === 'Active' ? 'Suspend User' : 'Activate User'; ?>" class="action-icon action-icon-button">
+                                                        <img src="../assets/icons/ban.svg" alt="Toggle Status">
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
@@ -231,20 +273,15 @@ $users_result = $stmt->get_result();
                         
                         <div class="pagination-controls">
                             <?php if ($page > 1): ?>
-                                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&role=<?php echo urlencode($role_filter); ?>" class="pagination-btn">&lt;</a>
+                                <a href="<?php echo htmlspecialchars(userManagementUrl($page - 1)); ?>" class="pagination-btn">&lt;</a>
                             <?php endif; ?>
 
-                            <?php for ($i = 1; $i <= min(3, $total_pages); $i++): ?>
-                                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&role=<?php echo urlencode($role_filter); ?>" class="pagination-btn <?php echo $page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                            <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
+                                <a href="<?php echo htmlspecialchars(userManagementUrl($i)); ?>" class="pagination-btn <?php echo $page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
                             <?php endfor; ?>
-                            
-                            <?php if ($total_pages > 4): ?>
-                                <span class="pagination-ellipsis">...</span>
-                                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&role=<?php echo urlencode($role_filter); ?>" class="pagination-btn <?php echo $page == $total_pages ? 'active' : ''; ?>"><?php echo $total_pages; ?></a>
-                            <?php endif; ?>
 
                             <?php if ($page < $total_pages): ?>
-                                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&role=<?php echo urlencode($role_filter); ?>" class="pagination-btn">&gt;</a>
+                                <a href="<?php echo htmlspecialchars(userManagementUrl($page + 1)); ?>" class="pagination-btn">&gt;</a>
                             <?php endif; ?>
                         </div>
                     </div>

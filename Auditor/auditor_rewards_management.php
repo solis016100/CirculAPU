@@ -313,7 +313,7 @@
 
                             <tbody>
                                 <?php $number = $offset + 1; while ($row = mysqli_fetch_assoc($result)) { ?>
-                                    <tr>
+                                    <tr ondblclick="window.location.href='auditor_reward_view.php?rewardID=<?= urlencode($row['rewardID']) ?>&from=management'">
                                         <td>
                                             <?php echo $number; ?>
                                         </td>

@@ -2,7 +2,7 @@
 session_start();
 
 // Ensure user is logged in
-if (!isset($_SESSION['user_email']) || !isset($_SESSION['user_role'])) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: /CirculAPU/login.php");
     exit();
 }

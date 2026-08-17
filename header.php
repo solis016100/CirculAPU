@@ -16,6 +16,17 @@ $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
 //
 
 $role = $_SESSION['user_role'] ?? '';
+$preview_routes = [
+    'Manager' => 'manager_dashboard.php',
+    'Auditor' => 'auditor_dashboard.php',
+    'Member' => 'member_dashboard.php',
+];
+$preview_role = $_GET['preview'] ?? '';
+if ($role === 'Admin'
+    && isset($preview_routes[$preview_role])
+    && $preview_routes[$preview_role] === basename($_SERVER['PHP_SELF'])) {
+    $role = $preview_role;
+}
 
 if ($role == 'Manager') {
     $notification_url = '/CirculAPU/Manager/manager_notifications.php';
@@ -28,10 +39,17 @@ if ($role == 'Manager') {
 ?>
 
 <header class="app-header">
-  <div class="header-search-container">
-    <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="Search" width="20" height="20">
-    <input type="text" placeholder="Search......" aria-label="Search">
-  </div>
+  <?php if ($role === 'Admin'): ?>
+    <form class="header-search-container" method="GET" action="/CirculAPU/Admin/admin_dashboard.php" role="search">
+      <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="" width="20" height="20">
+      <input type="search" name="search" value="<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search logs and reports..." aria-label="Search admin logs and reports">
+    </form>
+  <?php else: ?>
+    <div class="header-search-container">
+      <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="Search" width="20" height="20">
+      <input type="text" placeholder="Search......" aria-label="Search">
+    </div>
+  <?php endif; ?>
 
   <div class="header-right-actions">
     <a href="<?php echo htmlspecialchars($notification_url, ENT_QUOTES, 'UTF-8'); ?>" class="header-action-icon" title="Notifications">
@@ -53,6 +71,7 @@ if ($role == 'Manager') {
         <span class="user-email-subtitle"><?php echo htmlspecialchars($user_email); ?></span>
       </div>
     </div>
+
   </div>
 </header>
 
@@ -65,10 +84,8 @@ if ($role == 'Manager') {
     const rightBar = document.getElementById("right-sidebar");
     const closeRightBarBtn = document.getElementById("close-right-bar");
 
-    // Open Sidebar
-    profileBtn.addEventListener("click", function() {
-      rightBar.classList.add("active");
-    });
+    const openSettings = () => rightBar?.classList.add("active");
+    profileBtn?.addEventListener("click", openSettings);
 
     // Close Sidebar via Chevron Button
     if (closeRightBarBtn) {

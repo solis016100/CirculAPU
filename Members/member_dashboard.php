@@ -1,8 +1,18 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+<<<<<<< HEAD
 // Access Control Guard for Community Member Role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
+=======
+$is_admin=isset($_SESSION['user_role'])&&$_SESSION['user_role']==='Admin';
+$is_preview=($_GET['preview']??'')==='Member';
+
+require_once '../db.php';
+
+if(!isset($_SESSION['user_id'])||($_SESSION['user_role']!=='Member'&&!($is_admin&&$is_preview))){
+>>>>>>> 295dbcad99bee14a0659fe2c069b8b7163232cf0
     header("Location: ../login.php");
     exit();
 }
@@ -19,6 +29,13 @@ if ($conn->connect_error) {
 } else {
     // UTF-8 allows the database to handle different languages
     $conn->set_charset("utf8mb4");
+}
+
+if($is_admin&&$is_preview){
+    $previewUser=$conn->query("SELECT userID FROM user WHERE role='Member' AND status='Active' ORDER BY dateCreated ASC, userID ASC LIMIT 1")->fetch_assoc();
+    if($previewUser){
+        $userID=$previewUser['userID'];
+    }
 }
 
 /* User */
@@ -67,7 +84,7 @@ $missionResult=$conn->query("
 SELECT COUNT(*) AS total
 FROM missionsubmission
 WHERE userID='$userID'
-AND submissionStatus='Verified'
+AND submissionStatus='Approved'
 ");
 
 $totalMission=$missionResult->fetch_assoc()['total']??0;

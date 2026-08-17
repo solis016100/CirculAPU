@@ -803,34 +803,10 @@
     gap: 24px;
 }
 
-.donut-visual {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
+.donut-canvas {
+    width: 150px;
+    height: 150px;
     flex-shrink: 0;
-}
-
-.asset-donut {
-    background: conic-gradient(
-        #334155 0% 72%, 
-        #64748b 72% 86%, 
-        #cbd5e1 86% 95%, 
-        #f1f5f9 95% 100%
-    );
-    mask: radial-gradient(circle 32px, transparent 99%, #000 100%);
-    -webkit-mask: radial-gradient(circle 32px, transparent 99%, #000 100%);
-}
-
-.exchange-donut {
-    background: conic-gradient(
-        #334155 0% 62.1%, 
-        #64748b 62.1% 78.31%, 
-        #94a3b8 78.31% 89.11%, 
-        #cbd5e1 89.11% 97.22%, 
-        #f1f5f9 97.22% 100%
-    );
-    mask: radial-gradient(circle 32px, transparent 99%, #000 100%);
-    -webkit-mask: radial-gradient(circle 32px, transparent 99%, #000 100%);
 }
 
 .chart-legend-list {
@@ -876,48 +852,6 @@
     font-size: 0.95rem;
     color: #0f172a;
     padding-left: 20px;
-}
-
-/* Valuation Line Graph */
-.trend-chart-wrapper {
-    display: flex;
-    gap: 12px;
-    margin-top: 15px;
-}
-
-.trend-y-axis {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: #0f172a;
-    height: 120px;
-    text-align: right;
-}
-
-.trend-svg-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.trend-line-svg {
-    width: 100%;
-    height: 120px;
-    overflow: visible;
-}
-
-.grid-line {
-    stroke: #e2e8f0;
-    stroke-width: 1;
-}
-
-.trend-x-axis {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: #0f172a;
-    margin-top: 8px;
 }
 
 /* Role Productivity Bar Chart */
@@ -1021,6 +955,193 @@
 
 .person-role {
     font-size: 0.75rem;
+}
+
+/* Wireframe-aligned Admin analytics theme: flat role colors only. */
+.analytics-page .page-body {
+    background-color: var(--bg-color);
+}
+
+.analytics-page .admin-page-header {
+    margin-bottom: 28px;
+}
+
+.analytics-page .timeframe-wrapper {
+    width: 150px;
+}
+
+.analytics-page .timeframe-select {
+    color: var(--primary-color);
+    font-weight: 600;
+    border-color: var(--primary-color);
+    background-color: var(--card-bg);
+}
+
+.analytics-page .analytics-grid-container {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+.analytics-page .analytics-card {
+    min-width: 0;
+    min-height: 700px;
+    padding: 28px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--primary-color);
+    border-radius: 10px;
+}
+
+.analytics-page .analytics-card-title {
+    margin-bottom: 28px;
+    color: var(--primary-color);
+    font-size: 1.65rem;
+}
+
+.analytics-page .kpi-section {
+    margin-bottom: 34px;
+}
+
+.analytics-page .kpi-subtitle {
+    margin-bottom: 18px;
+    color: #1e293b;
+}
+
+.analytics-page .donut-chart-container {
+    gap: 28px;
+}
+
+.analytics-page .chart-legend-list {
+    flex: 1;
+    gap: 10px;
+    color: #334155;
+}
+
+.analytics-page .legend-item {
+    min-height: 18px;
+}
+
+.analytics-page .legend-value {
+    margin-left: auto;
+}
+
+.analytics-page .legend-color {
+    border: 0;
+}
+
+.chart-color-1,
+.action-color {
+    background-color: #6b21a8;
+}
+
+.chart-color-2 {
+    background-color: #8b5cf6;
+}
+
+.chart-color-3 {
+    background-color: #c4b5fd;
+}
+
+.chart-color-4 {
+    background-color: #ede9fe;
+    border: 1px solid #c4b5fd !important;
+}
+
+.analytics-page .kpi-total-summary {
+    padding-left: 15px;
+    color: var(--primary-color);
+}
+
+.line-chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 235px;
+}
+
+.line-chart-container canvas {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+}
+
+.analytics-page .productivity-card-header {
+    align-items: flex-start;
+    margin-bottom: 35px;
+}
+
+.analytics-page .productivity-legend {
+    color: #334155;
+}
+
+.analytics-page .bar-chart-container {
+    height: 545px;
+}
+
+.analytics-page .bar-y-axis,
+.analytics-page .bar-chart-plot {
+    height: 460px;
+}
+
+.analytics-page .bar-grid-line {
+    border-top: 1px dashed #e2e8f0;
+    opacity: 1;
+}
+
+.analytics-page .bar-chart-plot {
+    border-bottom-color: #94a3b8;
+}
+
+.analytics-page .bar-shape {
+    width: 30px;
+    background-color: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+}
+
+.analytics-page .bar-val-label {
+    color: var(--primary-color);
+}
+
+.chart-empty-state {
+    padding: 12px 14px;
+    color: #64748b;
+    background-color: var(--badge-bg);
+    border: 1px dashed #c4b5fd;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.line-chart-container .chart-empty-state {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.productivity-empty {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@media (max-width: 1100px) {
+    .analytics-page .analytics-grid-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .analytics-page .admin-page-header,
+    .analytics-page .donut-chart-container {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .analytics-page .analytics-card {
+        min-height: auto;
+        padding: 20px 16px;
+    }
 }
 
 /* ==========================================================================
@@ -1269,4 +1390,22 @@
 .mini-footer {
     justify-content: flex-end;
     margin-top: 15px;
+}
+
+.btn-status-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.inline-action-form {
+    display: inline-block;
+    margin: 0;
+}
+
+.action-icon-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    vertical-align: middle;
 }

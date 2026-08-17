@@ -1,16 +1,25 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Include central db.php from parent directory
 require_once '../db.php';
+require_once 'admin_helpers.php';
 
 // Security: Restrict access strictly to System Administrators
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
 $message = '';
 $message_type = '';
+$allowed_roles = ['Member', 'Auditor', 'Manager', 'Admin'];
+$allowed_statuses = ['Active', 'Suspended'];
+
+if (isset($_GET['created']) && preg_match('/^U\d+$/', $_GET['created'])) {
+    $message = "Dummy account {$_GET['created']} created successfully. Temporary password: password123";
+    $message_type = 'success';
+}
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
@@ -21,60 +30,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
     $email = trim($_POST['email'] ?? '');
 
     // Form Validation
-    if (empty($name) || empty($role) || empty($email) || $role === 'Select a role') {
+    if (!adminVerifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $message = 'Your session expired. Refresh the page and try again.';
+        $message_type = 'error';
+    } elseif ($name === '' || mb_strlen($name) > 100 || $role === '' || $email === '') {
         $message = "Please fill in all required fields marked with *.";
         $message_type = "error";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!in_array($role, $allowed_roles, true) || !in_array($status, $allowed_statuses, true)) {
+        $message = 'Select a valid role and account status.';
+        $message_type = 'error';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 100) {
         $message = "Invalid email format.";
         $message_type = "error";
+    } elseif ($ecopoint < 0) {
+        $message = 'EcoPoints cannot be negative.';
+        $message_type = 'error';
     } else {
-        // Auto-generate Next User ID (e.g., U007, U008)
-        $id_query = "SELECT userID FROM user WHERE userID LIKE 'U%' ORDER BY CAST(SUBSTRING(userID, 2) AS UNSIGNED) DESC LIMIT 1";
-        $id_result = $conn->query($id_query);
-        if ($id_result && $id_result->num_rows > 0) {
-            $last_id = $id_result->fetch_assoc()['userID'];
-            $num = (int)substr($last_id, 1) + 1;
-            $new_user_id = 'U' . str_pad($num, 3, '0', STR_PAD_LEFT);
-        } else {
-            $new_user_id = 'U001';
-        }
+        try {
+            $conn->begin_transaction();
 
-        // Set default password for dummy account ('password123')
-        $default_password = password_hash('password123', PASSWORD_DEFAULT);
-
-        // Check if email already exists
-        $check_stmt = $conn->prepare("SELECT userID FROM user WHERE email = ?");
-        $check_stmt->bind_param("s", $email);
-        $check_stmt->execute();
-        if ($check_stmt->get_result()->num_rows > 0) {
-            $message = "An account with this email already exists.";
-            $message_type = "error";
+            $check_stmt = $conn->prepare('SELECT userID FROM user WHERE email = ? LIMIT 1');
+            $check_stmt->bind_param('s', $email);
+            $check_stmt->execute();
+            $email_exists = $check_stmt->get_result()->num_rows > 0;
             $check_stmt->close();
-        } else {
-            $check_stmt->close();
-            // Insert New User into Database
-            $insert_sql = "INSERT INTO user (userID, name, email, password, role, status, ecopoint, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-            $stmt_insert = $conn->prepare($insert_sql);
-            $stmt_insert->bind_param("ssssssi", $new_user_id, $name, $email, $default_password, $role, $status, $ecopoint);
-
-            if ($stmt_insert->execute()) {
-                $message = "New dummy account ($new_user_id) created successfully!";
-                $message_type = "success";
-
-                // System Audit Log
-                $admin_id = $_SESSION['user_id'] ?? 'SYSTEM';
-                $log_desc = "Created new dummy account ID: " . $new_user_id . " ($role)";
-                $log_stmt = $conn->prepare("INSERT INTO systemlog (userID, actionType, refType, refID, description) VALUES (?, 'Create', 'User', ?, ?)");
-                if ($log_stmt) {
-                    $log_stmt->bind_param("sss", $admin_id, $new_user_id, $log_desc);
-                    $log_stmt->execute();
-                    $log_stmt->close();
-                }
-            } else {
-                $message = "Failed to create account. " . $conn->error;
-                $message_type = "error";
+            if ($email_exists) {
+                throw new DomainException('An account with this email already exists.');
             }
+
+            $new_user_id = adminNextIdentifier($conn, 'user');
+            $default_password = password_hash('password123', PASSWORD_DEFAULT);
+
+            $insert_sql = 'INSERT INTO user (userID, name, email, password, role, status, ecopoint, dateCreated)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, NOW())';
+            $stmt_insert = $conn->prepare($insert_sql);
+            $stmt_insert->bind_param('ssssssi', $new_user_id, $name, $email, $default_password, $role, $status, $ecopoint);
+            $stmt_insert->execute();
             $stmt_insert->close();
+
+            adminWriteEcoPointTransaction($conn, $new_user_id, $ecopoint, $_SESSION['user_id']);
+            adminWriteSystemLog(
+                $conn,
+                $_SESSION['user_id'],
+                'Create',
+                'User',
+                $new_user_id,
+                "Created dummy account $new_user_id with role $role"
+            );
+
+            $conn->commit();
+            $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+            header('Location: create_dummy_account.php?created=' . urlencode($new_user_id));
+            exit();
+        } catch (DomainException $exception) {
+            $conn->rollback();
+            $message = $exception->getMessage();
+            $message_type = 'error';
+        } catch (Throwable $exception) {
+            $conn->rollback();
+            error_log($exception->getMessage());
+            $message = 'Failed to create the dummy account. Please try again.';
+            $message_type = 'error';
         }
     }
 }
@@ -122,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                     <!-- User Details Form -->
                     <div class="content-card edit-user-card" style="margin: 0;">
                         <form method="POST" action="create_dummy_account.php" id="createDummyForm">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(adminCsrfToken()); ?>">
                             
                             <!-- User ID (Uneditable - Auto Generated) -->
                             <div class="edit-field-row">
@@ -144,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 <label class="edit-field-label">Role *</label>
                                 <div class="edit-field-input-box editable">
                                     <select name="role" class="edit-select" required>
-                                        <option value="" disabled selected>Select a role</option>
+                                        <option value="" disabled <?php echo empty($_POST['role']) ? 'selected' : ''; ?>>Select a role</option>
                                         <option value="Member" <?php echo (($_POST['role'] ?? '') === 'Member') ? 'selected' : ''; ?>>Communities</option>
                                         <option value="Auditor" <?php echo (($_POST['role'] ?? '') === 'Auditor') ? 'selected' : ''; ?>>Auditor</option>
                                         <option value="Manager" <?php echo (($_POST['role'] ?? '') === 'Manager') ? 'selected' : ''; ?>>Manager</option>
@@ -191,11 +208,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Listed Asset Field -->
+                            <!-- Listed assets are derived from the assets table -->
                             <div class="edit-field-row">
-                                <label class="edit-field-label">Listed Asset *</label>
-                                <div class="edit-field-input-box editable">
-                                    <input type="text" name="listed_asset" placeholder="Enter Dummy Amount..." value="<?php echo htmlspecialchars($_POST['listed_asset'] ?? ''); ?>">
+                                <label class="edit-field-label">Listed Asset</label>
+                                <div class="edit-field-input-box uneditable">
+                                    <input type="text" value="0 (create listings separately)" readonly>
                                 </div>
                             </div>
 
@@ -231,6 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                     <div class="note-box">
                         <strong class="note-title">Note:</strong>
                         <p class="note-text">Fields marked with * are required.</p>
+                        <p class="note-text">Asset totals come from actual asset records and are not stored as a dummy number.</p>
                     </div>
                 </div>
 
