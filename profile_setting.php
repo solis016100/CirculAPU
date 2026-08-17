@@ -1,29 +1,27 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Ensure user is logged in
-if (!isset($_SESSION['user_email']) || !isset($_SESSION['user_role'])) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
 }
 
-// 1. Connect to the database
-$conn = new mysqli("localhost", "root", "", "circulapu_db");
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
-}
+require_once 'db.php';
+require_once 'Admin/admin_helpers.php';
 
 // 2. Fetch the active user's actual data from the database
-$email = $_SESSION['user_email'];
+$user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare(
     "SELECT u.userID, u.name, u.email, u.role, u.status, u.dateCreated,
             (SELECT MAX(sl.timeLogged)
              FROM systemlog sl
              WHERE sl.userID = u.userID AND sl.actionType = 'Login') AS lastLogin
      FROM user u
-     WHERE u.email = ?"
+     WHERE u.userID = ?"
 );
-$stmt->bind_param("s", $email);
+$stmt->bind_param("s", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $user_data = $result->fetch_assoc();
@@ -36,7 +34,7 @@ if (!$user_data) {
     $user_data = [
         'userID' => 'N/A',
         'name' => 'Unknown',
-        'email' => $email,
+        'email' => $_SESSION['user_email'] ?? '',
         'role' => $_SESSION['user_role'],
         'status' => 'Unknown',
         'dateCreated' => null,
@@ -53,11 +51,11 @@ if (empty($_SESSION['profile_csrf_token'])) {
     $_SESSION['profile_csrf_token'] = bin2hex(random_bytes(32));
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['save_profile'])) {
     $is_editing = true;
-    $edit_name = trim($_POST['name'] ?? '');
-    $edit_email = strtolower(trim($_POST['email'] ?? ''));
-    $submitted_token = $_POST['csrf_token'] ?? '';
+    $edit_name = is_string($_POST['name'] ?? null) ? trim($_POST['name']) : '';
+    $edit_email = is_string($_POST['email'] ?? null) ? strtolower(trim($_POST['email'])) : '';
+    $submitted_token = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';
 
     if (!hash_equals($_SESSION['profile_csrf_token'], $submitted_token)) {
         $profile_error = 'Your session has expired. Please refresh the page and try again.';
@@ -77,29 +75,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
         if ($email_in_use) {
             $profile_error = 'That email address is already used by another account.';
         } else {
-            $update_stmt = $conn->prepare("UPDATE user SET name = ?, email = ? WHERE userID = ?");
-            $update_stmt->bind_param('sss', $edit_name, $edit_email, $user_data['userID']);
-            $update_stmt->execute();
-            $update_stmt->close();
+            $conn->begin_transaction();
+            try {
+                $update_stmt = $conn->prepare("UPDATE user SET name = ?, email = ? WHERE userID = ?");
+                $update_stmt->bind_param('sss', $edit_name, $edit_email, $user_data['userID']);
+                $update_stmt->execute();
+                $update_stmt->close();
 
-            $_SESSION['user_name'] = $edit_name;
-            $_SESSION['user_email'] = $edit_email;
-            $_SESSION['profile_csrf_token'] = bin2hex(random_bytes(32));
-
-            if (isset($_COOKIE['remember_user_name'])) {
-                setcookie('remember_user_name', $edit_name, time() + (86400 * 30), '/');
+                if ($user_data['role'] === 'Admin') {
+                    adminWriteSystemLog(
+                        $conn,
+                        $user_data['userID'],
+                        'Update',
+                        'User',
+                        $user_data['userID'],
+                        'Updated own profile name or email address'
+                    );
+                }
+                $conn->commit();
+            } catch (Throwable $exception) {
+                $conn->rollback();
+                error_log($exception->getMessage());
+                $profile_error = 'Unable to update your profile right now. Please try again.';
             }
-            if (isset($_COOKIE['remember_user_email'])) {
-                setcookie('remember_user_email', $edit_email, time() + (86400 * 30), '/');
-            }
 
-            $conn->close();
-            header('Location: profile_setting.php?updated=1');
-            exit();
+            if ($profile_error === '') {
+                $_SESSION['user_name'] = $edit_name;
+                $_SESSION['user_email'] = $edit_email;
+                $_SESSION['profile_csrf_token'] = bin2hex(random_bytes(32));
+
+                if (isset($_COOKIE['remember_user_name'])) {
+                    setcookie('remember_user_name', $edit_name, time() + (86400 * 30), '/');
+                }
+                if (isset($_COOKIE['remember_user_email'])) {
+                    setcookie('remember_user_email', $edit_email, time() + (86400 * 30), '/');
+                }
+
+                $conn->close();
+                header('Location: profile_setting.php?updated=1');
+                exit();
+            }
         }
     }
 }
 
+$activity_stmt = $conn->prepare(
+    "SELECT actionType, refType, description, timeLogged
+     FROM systemlog WHERE userID = ?
+     ORDER BY timeLogged DESC LIMIT 5"
+);
+$activity_stmt->bind_param('s', $user_id);
+$activity_stmt->execute();
+$recent_account_activity = $activity_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$activity_stmt->close();
+
+$last_password_change = null;
+$password_stmt = $conn->prepare(
+    "SELECT MAX(timeLogged) AS changedAt FROM systemlog
+     WHERE userID = ? AND actionType = 'Update' AND refType = 'User'
+       AND description = 'Changed own account password'"
+);
+$password_stmt->bind_param('s', $user_id);
+$password_stmt->execute();
+$last_password_change = $password_stmt->get_result()->fetch_assoc()['changedAt'] ?? null;
+$password_stmt->close();
 $conn->close();
 
 $last_login_at = $user_data['lastLogin'] ?: ($_SESSION['last_login_at'] ?? null);
@@ -125,11 +164,10 @@ $user_role_display = htmlspecialchars($user_data['role']);
 <body class="<?php echo htmlspecialchars($theme_class); ?>">
     <div class="dashboard-container">
         
-        <?php include 'sidebar.php'; ?>
+            <?php include 'sidebar.php'; ?>
 
         <div class="main-content">
             <?php include 'header.php'; ?>
-            <?php include 'right_bar.php'; ?>
 
             <main class="page-body">
                 <div class="breadcrumb">
@@ -250,7 +288,7 @@ $user_role_display = htmlspecialchars($user_data['role']);
                             <div class="info-row">
                                 <span class="info-label wide-label">Last Password Change</span>
                                 <span class="info-separator">:</span>
-                                <span class="info-value">N/A</span>
+                                <span class="info-value"><?php echo $last_password_change ? htmlspecialchars(date('d M Y, h:i A', strtotime($last_password_change))) : 'Not recorded'; ?></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label wide-label">Account Type</span>
@@ -268,16 +306,25 @@ $user_role_display = htmlspecialchars($user_data['role']);
                             <img src="/CirculAPU/assets/icons/users.svg" alt="Activity" width="20" height="20">
                             <h2>Recent Account Activity</h2>
                         </div>
-                        <a href="#" class="view-all-link">View All Activities &rarr;</a>
+                        <?php if ($user_data['role'] === 'Admin'): ?>
+                            <a href="/CirculAPU/Admin/system_logs.php?search=<?php echo urlencode($user_id); ?>" class="view-all-link">View All Activities &rarr;</a>
+                        <?php endif; ?>
                     </div>
                     <hr class="card-divider">
                     <div class="activity-list">
-                        <div class="activity-row">
-                            <span class="activity-date"><?php echo $last_login_at ? date("d M Y, h:i A", strtotime($last_login_at)) : 'Not recorded'; ?></span>
-                            <span class="activity-desc">Logged in to system</span>
-                            <span class="badge neutral-badge outline">Success</span>
-                        </div>
-                        <!-- Additional mock activity logs can be fetched here later -->
+                        <?php if (!$recent_account_activity): ?>
+                            <div class="activity-row">
+                                <span class="activity-desc">No account activity has been recorded.</span>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($recent_account_activity as $activity): ?>
+                                <div class="activity-row">
+                                    <span class="activity-date"><?php echo htmlspecialchars(date('d M Y, h:i A', strtotime($activity['timeLogged']))); ?></span>
+                                    <span class="activity-desc"><?php echo htmlspecialchars($activity['description']); ?></span>
+                                    <span class="badge neutral-badge outline"><?php echo htmlspecialchars($activity['actionType']); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
 

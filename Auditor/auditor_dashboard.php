@@ -2,7 +2,7 @@
     session_start();
     
     $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
-    $is_preview = isset($_GET['preview']);
+    $is_preview = ($_GET['preview'] ?? '') === 'Auditor';
     
     // Access Control Guard for Sustainability Auditor Role (Allows Admin Preview)
     if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Auditor' && !($is_admin && $is_preview))) {
@@ -42,6 +42,20 @@
     }else {
         // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
+
+        if ($is_admin && $is_preview) {
+            $previewUser = $conn->query(
+                "SELECT userID, name FROM user
+                 WHERE role = 'Auditor' AND status = 'Active'
+                 ORDER BY dateCreated ASC, userID ASC LIMIT 1"
+            )->fetch_assoc();
+            if ($previewUser) {
+                $auditorID = $previewUser['userID'];
+                $auditorName = $previewUser['name'];
+            } else {
+                $auditorName = 'Sustainability Auditor';
+            }
+        }
 
 
         // Count pending asset verification

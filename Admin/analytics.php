@@ -1,5 +1,6 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Include db.php from parent directory
 require_once '../db.php';
 
@@ -9,17 +10,38 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
     exit();
 }
 
-// Timeframe Filter Handling
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
+// Timeframe Filter Handling. A semester is treated as the current Jan-Jun/Jul-Dec half-year.
+$allowed_timeframes = ['All Time', 'This Month', 'This Semester', 'This Year'];
 $timeframe = $_GET['timeframe'] ?? 'All Time';
+if (!in_array($timeframe, $allowed_timeframes, true)) {
+    $timeframe = 'All Time';
+}
+
+$now = new DateTimeImmutable('now');
+$start_date = null;
+if ($timeframe === 'This Month') {
+    $start_date = $now->modify('first day of this month')->setTime(0, 0)->format('Y-m-d H:i:s');
+} elseif ($timeframe === 'This Semester') {
+    $semester_month = (int)$now->format('n') <= 6 ? 1 : 7;
+    $start_date = $now->setDate((int)$now->format('Y'), $semester_month, 1)->setTime(0, 0)->format('Y-m-d H:i:s');
+} elseif ($timeframe === 'This Year') {
+    $start_date = $now->setDate((int)$now->format('Y'), 1, 1)->setTime(0, 0)->format('Y-m-d H:i:s');
+}
+
+$date_sql = $start_date ? " >= '" . $conn->real_escape_string($start_date) . "'" : null;
 
 // 1. Fetch Total Assets Breakdown by Availability Status
-$asset_status_query = "SELECT availabilityStatus, COUNT(*) as count FROM assets GROUP BY availabilityStatus";
+$asset_status_query = "SELECT availabilityStatus, COUNT(*) AS count FROM assets"
+    . ($date_sql ? " WHERE createdDate$date_sql" : '')
+    . " GROUP BY availabilityStatus";
 $asset_status_res = $conn->query($asset_status_query);
 $asset_counts = [
     'Available' => 0,
+    'Reserved' => 0,
     'Borrowed' => 0,
-    'Unavailable' => 0,
-    'Inactive' => 0
+    'Unavailable' => 0
 ];
 $total_assets = 0;
 
@@ -29,24 +51,19 @@ if ($asset_status_res && $asset_status_res->num_rows > 0) {
         $count = (int)$row['count'];
         if (array_key_exists($status, $asset_counts)) {
             $asset_counts[$status] = $count;
-        } else {
-            $asset_counts['Available'] += $count;
         }
         $total_assets += $count;
     }
 }
-// Fallback default values for UI rendering if database is sparse
-if ($total_assets === 0) {
-    $asset_counts = ['Available' => 42, 'Borrowed' => 8, 'Unavailable' => 5, 'Inactive' => 3];
-    $total_assets = 58;
-}
 
 // 2. Fetch Completed Exchanges Breakdown by Category
-$exchange_query = "SELECT c.categoryName, COUNT(a.assetID) as count 
-                  FROM assets a 
-                  JOIN categories c ON a.categoryID = c.categoryID 
-                  WHERE a.availabilityStatus = 'Borrowed' OR a.listingStatus = 'Active' 
-                  GROUP BY c.categoryName";
+$exchange_query = "SELECT c.categoryName, COUNT(b.borrowID) AS count
+                  FROM borrowings b
+                  JOIN assets a ON a.assetID = b.assetID
+                  JOIN categories c ON a.categoryID = c.categoryID
+                  WHERE b.borrowingStatus = 'Completed'"
+                  . ($date_sql ? " AND COALESCE(b.actualReturnDate, b.borrowDate)$date_sql" : '')
+                  . " GROUP BY c.categoryID, c.categoryName ORDER BY count DESC";
 $exchange_res = $conn->query($exchange_query);
 $exchanges = [];
 $total_exchanges = 0;
@@ -59,24 +76,13 @@ if ($exchange_res && $exchange_res->num_rows > 0) {
         $total_exchanges += $cnt;
     }
 }
-// Fallback default values for UI rendering matching wireframe
-if ($total_exchanges === 0) {
-    $exchanges = [
-        'Electronics' => 23,
-        'Books' => 6,
-        'Furniture' => 4,
-        'Stationery' => 3,
-        'Others' => 1
-    ];
-    $total_exchanges = 28;
-}
-
 // 3. Fetch Role Productivity (Actions per Manager/Auditor)
-$productivity_query = "SELECT u.name, u.role, COUNT(l.logID) as actions 
-                      FROM user u 
-                      LEFT JOIN systemlog l ON u.userID = l.userID 
-                      WHERE u.role IN ('Manager', 'Auditor') 
-                      GROUP BY u.userID 
+$log_join_condition = $date_sql ? " AND l.timeLogged$date_sql" : '';
+$productivity_query = "SELECT u.name, u.role, COUNT(l.logID) AS actions
+                      FROM user u
+                      LEFT JOIN systemlog l ON u.userID = l.userID$log_join_condition
+                      WHERE u.role IN ('Manager', 'Auditor') AND u.status = 'Active'
+                      GROUP BY u.userID, u.name, u.role
                       ORDER BY actions DESC LIMIT 6";
 $productivity_res = $conn->query($productivity_query);
 $productivity_data = [];
@@ -86,21 +92,27 @@ if ($productivity_res && $productivity_res->num_rows > 0) {
         $productivity_data[] = [
             'name' => explode(' ', $row['name'])[0],
             'role' => $row['role'],
-            'actions' => (int)$row['actions'] > 0 ? (int)$row['actions'] : rand(100, 170)
+            'actions' => (int)$row['actions']
         ];
     }
 }
-// Fallback static data matching wireframe values exactly
-if (count($productivity_data) < 6) {
-    $productivity_data = [
-        ['name' => 'Lim', 'role' => 'Manager', 'actions' => 167],
-        ['name' => 'Ooi', 'role' => 'Auditor', 'actions' => 145],
-        ['name' => 'Lana', 'role' => 'Manager', 'actions' => 139],
-        ['name' => 'Solis', 'role' => 'Manager', 'actions' => 137],
-        ['name' => 'Rebecca', 'role' => 'Auditor', 'actions' => 122],
-        ['name' => 'Linda', 'role' => 'Auditor', 'actions' => 113]
-    ];
+
+// 4. Fetch real EcoPoint activity for the trend chart (latest six active dates).
+$ecopoint_query = "SELECT DATE(transactionDate) AS activityDate, SUM(ABS(points)) AS points
+                   FROM ecopointstransaction"
+                   . ($date_sql ? " WHERE transactionDate$date_sql" : '')
+                   . " GROUP BY DATE(transactionDate) ORDER BY activityDate DESC LIMIT 6";
+$ecopoint_result = $conn->query($ecopoint_query);
+$ecopoint_data = [];
+while ($row = $ecopoint_result->fetch_assoc()) {
+    $ecopoint_data[] = ['date' => $row['activityDate'], 'points' => (int)$row['points']];
 }
+$ecopoint_data = array_reverse($ecopoint_data);
+$ecopoint_total_query = "SELECT COALESCE(SUM(ABS(points)), 0) AS total FROM ecopointstransaction"
+    . ($date_sql ? " WHERE transactionDate$date_sql" : '');
+$total_ecopoints = (int)$conn->query($ecopoint_total_query)->fetch_assoc()['total'];
+$productivity_max = max(5, ...array_column($productivity_data ?: [['actions' => 0]], 'actions'));
+$productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
 ?>
 
 <!DOCTYPE html>
@@ -114,7 +126,7 @@ if (count($productivity_data) < 6) {
     <!-- Secondary Admin Stylesheet -->
     <link rel="stylesheet" href="admin_style.css">
 </head>
-<body class="role-admin">
+<body class="role-admin analytics-page">
     <div class="dashboard-container">
         
         <!-- Reusable Sidebar Component from parent directory -->
@@ -159,12 +171,14 @@ if (count($productivity_data) < 6) {
                         <div class="kpi-section">
                             <h3 class="kpi-subtitle">Total Assets</h3>
                             <div class="donut-chart-container">
-                                <div class="donut-visual asset-donut"></div>
+                                <canvas class="donut-canvas" width="150" height="150"
+                                    data-values="<?php echo htmlspecialchars(json_encode(array_values($asset_counts)), ENT_QUOTES); ?>"
+                                    aria-label="Asset availability chart"></canvas>
                                 <div class="chart-legend-list">
-                                    <div class="legend-item"><span class="legend-color color-dark-gray"></span> Available (<?php echo $asset_counts['Available']; ?>)</div>
-                                    <div class="legend-item"><span class="legend-color color-mid-gray"></span> Borrowed (<?php echo $asset_counts['Borrowed']; ?>)</div>
-                                    <div class="legend-item"><span class="legend-color color-light-gray"></span> Unavailable (<?php echo $asset_counts['Unavailable']; ?>)</div>
-                                    <div class="legend-item"><span class="legend-color color-extra-light"></span> Inactive (<?php echo $asset_counts['Inactive']; ?>)</div>
+                                    <div class="legend-item"><span class="legend-color chart-color-1"></span> Available (<?php echo $asset_counts['Available']; ?>)</div>
+                                    <div class="legend-item"><span class="legend-color chart-color-2"></span> Reserved (<?php echo $asset_counts['Reserved']; ?>)</div>
+                                    <div class="legend-item"><span class="legend-color chart-color-3"></span> Borrowed (<?php echo $asset_counts['Borrowed']; ?>)</div>
+                                    <div class="legend-item"><span class="legend-color chart-color-4"></span> Unavailable (<?php echo $asset_counts['Unavailable']; ?>)</div>
                                 </div>
                             </div>
                             <div class="kpi-total-summary">Total: <?php echo $total_assets; ?></div>
@@ -174,22 +188,25 @@ if (count($productivity_data) < 6) {
                         <div class="kpi-section">
                             <h3 class="kpi-subtitle">Completed Exchange</h3>
                             <div class="donut-chart-container">
-                                <div class="donut-visual exchange-donut"></div>
+                                <canvas class="donut-canvas" width="150" height="150"
+                                    data-values="<?php echo htmlspecialchars(json_encode(array_values($exchanges)), ENT_QUOTES); ?>"
+                                    aria-label="Completed exchanges chart"></canvas>
                                 <div class="chart-legend-list">
                                     <?php 
-                                        $colors = ['color-dark-gray', 'color-mid-gray', 'color-light-gray', 'color-extra-light', 'color-subtle-white'];
                                         $color_idx = 0;
                                         foreach ($exchanges as $cat_name => $count):
                                             $pct = round(($count / $total_exchanges) * 100, 2);
-                                            $c_class = $colors[$color_idx % count($colors)];
                                             $color_idx++;
                                     ?>
                                         <div class="legend-item">
-                                            <span class="legend-color <?php echo $c_class; ?>"></span> 
+                                            <span class="legend-color chart-color-<?php echo (($color_idx - 1) % 4) + 1; ?>"></span>
                                             <span class="legend-label"><?php echo htmlspecialchars($cat_name); ?></span>
                                             <span class="legend-value"><?php echo $count; ?> (<?php echo $pct; ?>%)</span>
                                         </div>
                                     <?php endforeach; ?>
+                                    <?php if (!$exchanges): ?>
+                                        <div class="chart-empty-state">No completed exchanges in this timeframe.</div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="kpi-total-summary">Total: <?php echo $total_exchanges; ?></div>
@@ -198,34 +215,12 @@ if (count($productivity_data) < 6) {
                         <!-- Trend Graph: EcoPoint Valuation -->
                         <div class="kpi-section trend-section">
                             <h3 class="kpi-subtitle">EcoPoint Valuation</h3>
-                            <div class="trend-chart-wrapper">
-                                <div class="trend-y-axis">
-                                    <span>750</span>
-                                    <span>600</span>
-                                    <span>450</span>
-                                    <span>300</span>
-                                    <span>150</span>
-                                    <span>100</span>
-                                </div>
-                                <div class="trend-svg-container">
-                                    <svg viewBox="0 0 500 150" class="trend-line-svg">
-                                        <line x1="0" y1="20" x2="500" y2="20" class="grid-line" />
-                                        <line x1="0" y1="50" x2="500" y2="50" class="grid-line" />
-                                        <line x1="0" y1="80" x2="500" y2="80" class="grid-line" />
-                                        <line x1="0" y1="110" x2="500" y2="110" class="grid-line" />
-                                        <line x1="0" y1="140" x2="500" y2="140" class="grid-line" />
-                                        
-                                        <path d="M 10 130 Q 90 120, 170 100 T 330 50 T 490 20" fill="none" stroke="#000000" stroke-width="3" />
-                                    </svg>
-                                    <div class="trend-x-axis">
-                                        <span>1 May</span>
-                                        <span>16 May</span>
-                                        <span>31 May</span>
-                                        <span>15 Jun</span>
-                                        <span>30 Jun</span>
-                                        <span>16 Jul</span>
-                                    </div>
-                                </div>
+                            <div class="line-chart-container">
+                                <canvas id="ecopointChart" width="600" height="235"
+                                    data-values="<?php echo htmlspecialchars(json_encode(array_column($ecopoint_data, 'points')), ENT_QUOTES); ?>"
+                                    data-labels="<?php echo htmlspecialchars(json_encode(array_map(fn($item) => date('j M', strtotime($item['date'])), $ecopoint_data)), ENT_QUOTES); ?>"
+                                    aria-label="EcoPoint activity line chart"></canvas>
+                                <?php if (!$ecopoint_data): ?><div class="chart-empty-state">No EcoPoint activity in this timeframe.</div><?php endif; ?>
                             </div>
                         </div>
 
@@ -236,45 +231,27 @@ if (count($productivity_data) < 6) {
                         <div class="productivity-card-header">
                             <h2 class="analytics-card-title">Role Productivity</h2>
                             <div class="productivity-legend">
-                                <span class="legend-color color-bar-gray"></span> Actions
+                                <span class="legend-color action-color"></span> Actions
                             </div>
                         </div>
 
                         <div class="bar-chart-container">
                             <div class="bar-y-axis">
-                                <span>220</span>
-                                <span>200</span>
-                                <span>180</span>
-                                <span>160</span>
-                                <span>140</span>
-                                <span>120</span>
-                                <span>100</span>
-                                <span>80</span>
-                                <span>60</span>
-                                <span>40</span>
-                                <span>20</span>
-                                <span>0</span>
+                                <?php for ($tick = 5; $tick >= 0; $tick--): ?>
+                                    <span><?php echo (int)round($productivity_chart_max * ($tick / 5)); ?></span>
+                                <?php endfor; ?>
                             </div>
 
                             <div class="bar-chart-plot">
                                 <!-- Background Horizontal Grid Lines -->
-                                <div class="bar-grid-line" style="bottom: 100%;"></div>
-                                <div class="bar-grid-line" style="bottom: 90.9%;"></div>
-                                <div class="bar-grid-line" style="bottom: 81.8%;"></div>
-                                <div class="bar-grid-line" style="bottom: 72.7%;"></div>
-                                <div class="bar-grid-line" style="bottom: 63.6%;"></div>
-                                <div class="bar-grid-line" style="bottom: 54.5%;"></div>
-                                <div class="bar-grid-line" style="bottom: 45.4%;"></div>
-                                <div class="bar-grid-line" style="bottom: 36.3%;"></div>
-                                <div class="bar-grid-line" style="bottom: 27.2%;"></div>
-                                <div class="bar-grid-line" style="bottom: 18.1%;"></div>
-                                <div class="bar-grid-line" style="bottom: 9%;"></div>
-                                <div class="bar-grid-line" style="bottom: 0%;"></div>
+                                <?php for ($line = 0; $line <= 5; $line++): ?>
+                                    <div class="bar-grid-line" style="bottom: <?php echo $line * 20; ?>%;"></div>
+                                <?php endfor; ?>
 
                                 <!-- Bars Group -->
                                 <div class="bars-flex-wrapper">
                                     <?php foreach ($productivity_data as $item): 
-                                        $height_pct = min(100, max(10, ($item['actions'] / 220) * 100));
+                                        $height_pct = min(100, ($item['actions'] / $productivity_chart_max) * 100);
                                     ?>
                                         <div class="bar-column">
                                             <span class="bar-val-label"><?php echo $item['actions']; ?></span>
@@ -286,6 +263,7 @@ if (count($productivity_data) < 6) {
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
+                                <?php if (!$productivity_data): ?><div class="chart-empty-state productivity-empty">No staff activity in this timeframe.</div><?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -295,5 +273,82 @@ if (count($productivity_data) < 6) {
             </main>
         </div>
     </div>
+    <script>
+        (() => {
+            const chartColors = ['#6b21a8', '#8b5cf6', '#c4b5fd', '#ede9fe'];
+
+            document.querySelectorAll('.donut-canvas').forEach((canvas) => {
+                const values = JSON.parse(canvas.dataset.values || '[]').map(Number);
+                const total = values.reduce((sum, value) => sum + value, 0);
+                const context = canvas.getContext('2d');
+                const center = canvas.width / 2;
+                const radius = 58;
+                let startAngle = -Math.PI / 2;
+
+                context.lineWidth = 28;
+                context.lineCap = 'butt';
+                if (total === 0) {
+                    context.strokeStyle = '#ede9fe';
+                    context.beginPath();
+                    context.arc(center, center, radius, 0, Math.PI * 2);
+                    context.stroke();
+                    return;
+                }
+
+                values.forEach((value, index) => {
+                    if (value <= 0) return;
+                    const endAngle = startAngle + (value / total) * Math.PI * 2;
+                    context.strokeStyle = chartColors[index % chartColors.length];
+                    context.beginPath();
+                    context.arc(center, center, radius, startAngle, endAngle);
+                    context.stroke();
+                    startAngle = endAngle;
+                });
+            });
+
+            const lineCanvas = document.getElementById('ecopointChart');
+            if (!lineCanvas) return;
+            const values = JSON.parse(lineCanvas.dataset.values || '[]').map(Number);
+            const labels = JSON.parse(lineCanvas.dataset.labels || '[]');
+            const context = lineCanvas.getContext('2d');
+            const width = lineCanvas.width;
+            const height = lineCanvas.height;
+            const padding = { top: 18, right: 20, bottom: 36, left: 48 };
+            const plotWidth = width - padding.left - padding.right;
+            const plotHeight = height - padding.top - padding.bottom;
+            const maxValue = Math.max(1, ...values);
+
+            context.font = '12px Arial';
+            context.fillStyle = '#64748b';
+            context.strokeStyle = '#e2e8f0';
+            context.lineWidth = 1;
+            for (let tick = 0; tick <= 4; tick++) {
+                const y = padding.top + (plotHeight * tick / 4);
+                const label = Math.round(maxValue * (1 - tick / 4));
+                context.beginPath();
+                context.moveTo(padding.left, y);
+                context.lineTo(width - padding.right, y);
+                context.stroke();
+                context.fillText(String(label), 4, y + 4);
+            }
+
+            if (!values.length) return;
+            context.strokeStyle = '#6b21a8';
+            context.lineWidth = 3;
+            context.beginPath();
+            values.forEach((value, index) => {
+                const x = values.length === 1 ? padding.left + plotWidth / 2 : padding.left + index * plotWidth / (values.length - 1);
+                const y = padding.top + plotHeight - (value / maxValue * plotHeight);
+                index === 0 ? context.moveTo(x, y) : context.lineTo(x, y);
+            });
+            context.stroke();
+
+            context.fillStyle = '#475569';
+            labels.forEach((label, index) => {
+                const x = labels.length === 1 ? padding.left + plotWidth / 2 : padding.left + index * plotWidth / (labels.length - 1);
+                context.fillText(label, Math.max(padding.left, x - 14), height - 10);
+            });
+        })();
+    </script>
 </body>
 </html>

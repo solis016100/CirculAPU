@@ -1,80 +1,157 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Include db.php from parent directory
 require_once '../db.php';
+require_once 'admin_helpers.php';
 
 // Security: Restrict access strictly to System Administrators
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
 // Get Report ID from GET parameter
-$report_id = $_GET['id'] ?? '';
+$report_id = trim($_GET['id'] ?? '');
 
 if (empty($report_id)) {
-    header("Location: report_queue.php");
+    header("Location: reports_queue.php");
     exit();
 }
 
 $message = '';
 $message_type = '';
 
-// Handle Moderation Actions (Approve / Reject)
+// Handle the two requested resolution paths. Under Investigation is intentionally omitted.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $admin_id = $_SESSION['user_id'] ?? 'U001';
+    $resolution = $_POST['resolution'] ?? '';
 
-    if (isset($_POST['action_approve'])) {
-        // Mark Report as Resolved (Overruled & Approved)
-        $update_report = $conn->prepare("UPDATE report SET status = 'Resolved' WHERE reportID = ?");
-        $update_report->bind_param("s", $report_id);
-        
-        if ($update_report->execute()) {
-            $message = "Report $report_id approved and marked as Resolved.";
-            $message_type = "success";
+    if (!adminVerifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $message = 'Your session expired. Refresh the page and try again.';
+        $message_type = 'error';
+    } elseif (!in_array($resolution, ['approve', 'reject'], true)) {
+        $message = 'Select a valid report resolution.';
+        $message_type = 'error';
+    } else {
+        try {
+            $conn->begin_transaction();
 
-            // Log Admin Action
-            $log_desc = "Overruled decision and approved report ID: " . $report_id;
-            $log_stmt = $conn->prepare("INSERT INTO systemlog (userID, actionType, refType, refID, description) VALUES (?, 'Approve', 'Verification', ?, ?)");
-            if ($log_stmt) {
-                $log_stmt->bind_param("sss", $admin_id, $report_id, $log_desc);
-                $log_stmt->execute();
-                $log_stmt->close();
+            $lock_sql = "SELECT r.status AS reportStatus, r.verificationID,
+                                v.targetID, v.targetType, v.status AS verificationStatus, v.remarks
+                         FROM report r
+                         LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID
+                         WHERE r.reportID = ? FOR UPDATE";
+            $lock_stmt = $conn->prepare($lock_sql);
+            $lock_stmt->bind_param('s', $report_id);
+            $lock_stmt->execute();
+            $resolution_data = $lock_stmt->get_result()->fetch_assoc();
+            $lock_stmt->close();
+
+            if (!$resolution_data) {
+                throw new DomainException('Report not found.');
             }
-        } else {
-            $message = "Failed to update report status.";
-            $message_type = "error";
-        }
-        $update_report->close();
-
-    } elseif (isset($_POST['action_reject'])) {
-        // Mark Report as Disputed / Rejected
-        $update_report = $conn->prepare("UPDATE report SET status = 'Disputed' WHERE reportID = ?");
-        $update_report->bind_param("s", $report_id);
-        
-        if ($update_report->execute()) {
-            $message = "Report $report_id rejected and marked as Disputed.";
-            $message_type = "success";
-
-            // Log Admin Action
-            $log_desc = "Rejected appeal for report ID: " . $report_id;
-            $log_stmt = $conn->prepare("INSERT INTO systemlog (userID, actionType, refType, refID, description) VALUES (?, 'Reject', 'Verification', ?, ?)");
-            if ($log_stmt) {
-                $log_stmt->bind_param("sss", $admin_id, $report_id, $log_desc);
-                $log_stmt->execute();
-                $log_stmt->close();
+            if ($resolution_data['reportStatus'] !== 'Pending') {
+                throw new DomainException('Only pending reports can be resolved.');
             }
-        } else {
-            $message = "Failed to update report status.";
-            $message_type = "error";
+
+            $verification_status = $resolution === 'approve' ? 'Approved' : 'Rejected';
+            $target_type_key = strtolower(str_replace([' ', '_', '-'], '', (string)$resolution_data['targetType']));
+            $target_id = $resolution_data['targetID'];
+
+            if ($resolution_data['verificationID']) {
+                $decision_note = ($resolution === 'approve' ? 'Admin overrule approved' : 'Admin escalation rejected')
+                    . " through report $report_id";
+                $remarks = trim(implode(' | ', array_filter([$resolution_data['remarks'], $decision_note])));
+                $remarks = mb_substr($remarks, 0, 255);
+
+                $verification_stmt = $conn->prepare(
+                    'UPDATE verificationrecords
+                     SET status = ?, remarks = ?, verifiedDate = NOW()
+                     WHERE verificationID = ?'
+                );
+                $verification_stmt->bind_param(
+                    'sss',
+                    $verification_status,
+                    $remarks,
+                    $resolution_data['verificationID']
+                );
+                $verification_stmt->execute();
+                $verification_stmt->close();
+            }
+
+            if ($target_type_key === 'asset' && $target_id) {
+                if ($resolution === 'approve') {
+                    $target_stmt = $conn->prepare(
+                        "UPDATE assets
+                         SET verificationStatus = 'Approved',
+                             listingStatus = CASE
+                                 WHEN listingStatus IN ('Ready for Verification', 'Rejected') THEN 'Published'
+                                 ELSE listingStatus
+                             END,
+                             updatedDate = NOW()
+                         WHERE assetID = ? AND listingStatus != 'Removed'"
+                    );
+                } else {
+                    // Soft purge keeps transaction history intact while removing the asset from active listings.
+                    $target_stmt = $conn->prepare(
+                        "UPDATE assets
+                         SET verificationStatus = 'Rejected', listingStatus = 'Removed',
+                             availabilityStatus = 'Unavailable', updatedDate = NOW()
+                         WHERE assetID = ?"
+                    );
+                }
+                $target_stmt->bind_param('s', $target_id);
+                $target_stmt->execute();
+                $target_stmt->close();
+            } elseif ($target_type_key === 'missionsubmission' && $target_id) {
+                $target_stmt = $conn->prepare('UPDATE missionsubmission SET submissionStatus = ? WHERE submissionID = ?');
+                $target_stmt->bind_param('ss', $verification_status, $target_id);
+                $target_stmt->execute();
+                $target_stmt->close();
+            }
+
+            $report_stmt = $conn->prepare("UPDATE report SET status = 'Resolved' WHERE reportID = ? AND status = 'Pending'");
+            $report_stmt->bind_param('s', $report_id);
+            $report_stmt->execute();
+            if ($report_stmt->affected_rows !== 1) {
+                throw new RuntimeException('Report status changed before it could be resolved.');
+            }
+            $report_stmt->close();
+
+            $action_type = $resolution === 'approve' ? 'Approve' : 'Reject';
+            $description = $resolution === 'approve'
+                ? "Overruled escalation $report_id and approved verification {$resolution_data['verificationID']}"
+                : "Rejected escalation $report_id and removed target {$resolution_data['targetType']} $target_id from active content";
+            adminWriteSystemLog(
+                $conn,
+                $_SESSION['user_id'],
+                $action_type,
+                'Verification',
+                $resolution_data['verificationID'] ?: $report_id,
+                mb_substr($description, 0, 255)
+            );
+
+            $conn->commit();
+            $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+            header('Location: admin_report_details.php?id=' . urlencode($report_id) . '&resolved=' . $resolution);
+            exit();
+        } catch (DomainException $exception) {
+            $conn->rollback();
+            $message = $exception->getMessage();
+            $message_type = 'error';
+        } catch (Throwable $exception) {
+            $conn->rollback();
+            error_log($exception->getMessage());
+            $message = 'The report could not be resolved. Please try again.';
+            $message_type = 'error';
         }
-        $update_report->close();
     }
 }
 
 // Fetch Report Metadata and Details
-$sql = "SELECT r.*, u.name AS reporterName, u.userID AS reporterUID, 
-               v.verifiedBy, v.targetType, v.targetID, auditor.name AS auditorName
+$sql = "SELECT r.*, u.name AS reporterName, u.userID AS reporterUID,
+               v.verifiedBy, v.targetType, v.targetID, v.status AS verificationStatus,
+               v.remarks AS verificationRemarks, auditor.name AS auditorName
         FROM report r
         LEFT JOIN user u ON r.reporterID = u.userID
         LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID
@@ -87,12 +164,29 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    header("Location: report_queue.php");
+    header("Location: reports_queue.php");
     exit();
 }
 
 $report = $result->fetch_assoc();
 $stmt->close();
+
+if (($_GET['resolved'] ?? '') === 'approve') {
+    $message = 'The escalation was overruled, its verification was approved, and the report was resolved.';
+    $message_type = 'success';
+} elseif (($_GET['resolved'] ?? '') === 'reject') {
+    $message = 'The escalation was rejected, related content was removed from active listings, and the report was resolved.';
+    $message_type = 'success';
+}
+
+$evidence_path = trim((string)($report['evidenceImage'] ?? ''));
+$evidence_url = null;
+if ($evidence_path !== '') {
+    $normalised_evidence = ltrim(str_replace('\\', '/', $evidence_path), '/');
+    if (!str_contains($normalised_evidence, '..')) {
+        $evidence_url = '../' . $normalised_evidence;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -142,13 +236,21 @@ $stmt->close();
                         <div class="metadata-grid">
                             <div class="metadata-column">
                                 <p><strong>Report ID:</strong> <?php echo htmlspecialchars($report['reportID']); ?></p>
-                                <p><strong>Reporter:</strong> <?php echo htmlspecialchars($report['reporterName'] ?? 'Odin Dun'); ?> (<?php echo htmlspecialchars($report['reporterID']); ?>)</p>
+                                <p><strong>Reporter:</strong> <?php echo htmlspecialchars($report['reporterName'] ?: 'Unknown User'); ?> (<?php echo htmlspecialchars($report['reporterID']); ?>)</p>
                                 <p><strong>Date Reported:</strong> <?php echo date('j M Y', strtotime($report['timeCreated'])); ?></p>
+                                <p><strong>Report Status:</strong> <?php echo htmlspecialchars($report['status']); ?></p>
                             </div>
                             <div class="metadata-column">
-                                <p><strong>Target Type:</strong> <?php echo htmlspecialchars($report['targetType'] ?? 'Borrow'); ?></p>
-                                <p><strong>Target ID:</strong> <?php echo htmlspecialchars($report['targetID'] ?? 'B076'); ?></p>
-                                <p><strong>Assigned To:</strong> <?php echo htmlspecialchars($report['auditorName'] ?? 'Exchange Manager'); ?> (<?php echo htmlspecialchars($report['verifiedBy'] ?? 'U002'); ?>)</p>
+                                <p><strong>Target Type:</strong> <?php echo htmlspecialchars($report['targetType'] ?: '-'); ?></p>
+                                <p><strong>Target ID:</strong> <?php echo htmlspecialchars($report['targetID'] ?: '-'); ?></p>
+                                <p><strong>Assigned To:</strong>
+                                    <?php if ($report['verifiedBy']): ?>
+                                        <?php echo htmlspecialchars($report['auditorName'] ?: 'Unknown User'); ?> (<?php echo htmlspecialchars($report['verifiedBy']); ?>)
+                                    <?php else: ?>
+                                        Unassigned
+                                    <?php endif; ?>
+                                </p>
+                                <p><strong>Verification Status:</strong> <?php echo htmlspecialchars($report['verificationStatus'] ?: '-'); ?></p>
                             </div>
                         </div>
                     </div>
@@ -159,24 +261,33 @@ $stmt->close();
                         <div class="evidence-statement-box">
                             <p><?php echo nl2br(htmlspecialchars($report['reason'])); ?></p>
                         </div>
-                        <?php if (!empty($report['evidencePath'])): ?>
+                        <?php if ($evidence_url): ?>
                             <div class="evidence-image-preview">
-                                <img src="../<?php echo htmlspecialchars($report['evidencePath']); ?>" alt="Evidence Upload">
+                                <img src="<?php echo htmlspecialchars($evidence_url); ?>" alt="Evidence submitted with report <?php echo htmlspecialchars($report_id); ?>">
                             </div>
+                        <?php elseif ($evidence_path !== ''): ?>
+                            <p class="table-empty-msg">The stored evidence path is invalid.</p>
+                        <?php else: ?>
+                            <p class="table-empty-msg">No evidence image was submitted.</p>
                         <?php endif; ?>
                     </div>
 
                     <!-- Moderation Actions Footer -->
                     <form method="POST" action="admin_report_details.php?id=<?php echo urlencode($report_id); ?>" class="report-actions-footer">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(adminCsrfToken()); ?>">
                         <div class="action-btn-group">
-                            <button type="submit" name="action_approve" class="btn-report-action btn-approve">
-                                Approve
-                            </button>
-                            <button type="submit" name="action_reject" class="btn-report-action btn-reject">
-                                Reject
-                            </button>
+                            <?php if ($report['status'] === 'Pending'): ?>
+                                <button type="submit" name="resolution" value="approve" class="btn-report-action btn-approve" onclick="return confirm('Overrule this escalation and approve the related verification?');">
+                                    Overrule &amp; Approve
+                                </button>
+                                <button type="submit" name="resolution" value="reject" class="btn-report-action btn-reject" onclick="return confirm('Reject this escalation and remove its related content from active listings?');">
+                                    Reject<?php echo strtolower((string)$report['targetType']) === 'asset' ? ' & Remove Asset' : ''; ?>
+                                </button>
+                            <?php else: ?>
+                                <span class="status-badge <?php echo strtolower(str_replace(' ', '-', $report['status'])); ?>">This report is <?php echo htmlspecialchars($report['status']); ?></span>
+                            <?php endif; ?>
                         </div>
-                        <a href="report_queue.php" class="btn-back">
+                        <a href="reports_queue.php" class="btn-back">
                             Back
                         </a>
                     </form>

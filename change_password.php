@@ -1,9 +1,11 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once 'db.php'; // Centralized database connection
+require_once 'Admin/admin_helpers.php';
 
 // Ensure user is logged in
-if (!isset($_SESSION['user_email']) || !isset($_SESSION['user_role'])) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
 }
@@ -13,22 +15,31 @@ $theme_class = 'role-' . strtolower($_SESSION['user_role']);
 $user_role_display = htmlspecialchars($_SESSION['user_role']);
 
 $error = '';
-$success = '';
+$success = isset($_GET['updated']) && $_GET['updated'] === '1'
+    ? 'Your password has been successfully updated.'
+    : '';
+
+if (empty($_SESSION['password_csrf_token'])) {
+    $_SESSION['password_csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Handle Password Update Form Submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
-    $current_password = $_POST['current_password'] ?? '';
-    $new_password = $_POST['new_password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    $email = $_SESSION['user_email'];
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['update_password'])) {
+    $current_password = is_string($_POST['current_password'] ?? null) ? $_POST['current_password'] : '';
+    $new_password = is_string($_POST['new_password'] ?? null) ? $_POST['new_password'] : '';
+    $confirm_password = is_string($_POST['confirm_password'] ?? null) ? $_POST['confirm_password'] : '';
+    $submitted_token = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';
+    $user_id = $_SESSION['user_id'];
 
     // 1. Fetch current user data to verify old password
-    $stmt = $conn->prepare("SELECT password FROM user WHERE email = ?");
-    $stmt->bind_param("s", $email);
+    $stmt = $conn->prepare("SELECT password, role FROM user WHERE userID = ? AND status = 'Active'");
+    $stmt->bind_param("s", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    if ($row = $result->fetch_assoc()) {
+
+    if (!hash_equals($_SESSION['password_csrf_token'], $submitted_token)) {
+        $error = 'Your session has expired. Refresh the page and try again.';
+    } elseif ($row = $result->fetch_assoc()) {
         // Verify current password (supports both plain text fallback and hashes)
         if (!password_verify($current_password, $row['password']) && $current_password !== $row['password']) {
             $error = "The current password you entered is incorrect.";
@@ -39,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             $number    = preg_match('@[0-9]@', $new_password);
             $specialChars = preg_match('@[^\w]@', $new_password);
 
-            if (!$uppercase || !$lowercase || (!$number && !$specialChars) || strlen($new_password) < 8) {
+            if (!$uppercase || !$lowercase || (!$number && !$specialChars) || strlen($new_password) < 8 || strlen($new_password) > 128) {
                 $error = "New password does not meet the minimum security requirements.";
             } elseif ($new_password !== $confirm_password) {
                 $error = "New passwords do not match.";
@@ -48,15 +59,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             } else {
                 // 3. Hash and Update Password
                 $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
-                $update_stmt = $conn->prepare("UPDATE user SET password = ? WHERE email = ?");
-                $update_stmt->bind_param("ss", $hashed_password, $email);
-                
-                if ($update_stmt->execute()) {
-                    $success = "Your password has been successfully updated!";
-                } else {
-                    $error = "Failed to update password. Please try again.";
+                $conn->begin_transaction();
+                try {
+                    $update_stmt = $conn->prepare("UPDATE user SET password = ? WHERE userID = ?");
+                    $update_stmt->bind_param("ss", $hashed_password, $user_id);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+
+                    if ($row['role'] === 'Admin') {
+                        adminWriteSystemLog(
+                            $conn,
+                            $user_id,
+                            'Update',
+                            'User',
+                            $user_id,
+                            'Changed own account password'
+                        );
+                    }
+                    $conn->commit();
+                    $_SESSION['password_csrf_token'] = bin2hex(random_bytes(32));
+                    header('Location: change_password.php?updated=1');
+                    exit();
+                } catch (Throwable $exception) {
+                    $conn->rollback();
+                    error_log($exception->getMessage());
+                    $error = 'Unable to update your password right now. Please try again.';
                 }
-                $update_stmt->close();
             }
         }
     } else {
@@ -64,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     }
     $stmt->close();
 }
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -76,11 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
 <body class="<?php echo htmlspecialchars($theme_class); ?>">
     <div class="dashboard-container">
         
-        <?php include 'sidebar.php'; ?>
+            <?php include 'sidebar.php'; ?>
 
         <div class="main-content">
             <?php include 'header.php'; ?>
-            <?php include 'right_bar.php'; ?>
 
             <main class="page-body">
                 <div class="breadcrumb">
@@ -101,7 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                     <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
                 <?php endif; ?>
 
-                <form method="POST" action="">
+                <form method="POST" action="change_password.php">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['password_csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="content-card settings-card">
                         <div class="card-header">
                             <img src="/CirculAPU/assets/icons/password.svg" alt="Lock" width="20" height="20">
@@ -117,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                                     <p>Enter your current password.</p>
                                 </div>
                                 <div class="row-input-box">
-                                    <input type="password" name="current_password" id="current_password" placeholder="••••••••" required>
+                                    <input type="password" name="current_password" id="current_password" placeholder="••••••••" autocomplete="current-password" maxlength="128" required>
                                     <img src="/CirculAPU/assets/icons/view.png" alt="Toggle" class="toggle-icon-img" onclick="togglePassword('current_password', this)">
                                 </div>
                             </div>
@@ -129,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                                     <p>Enter your new password.</p>
                                 </div>
                                 <div class="row-input-box">
-                                    <input type="password" name="new_password" id="new_password" placeholder="••••••••" required>
+                                    <input type="password" name="new_password" id="new_password" placeholder="••••••••" autocomplete="new-password" minlength="8" maxlength="128" required>
                                     <img src="/CirculAPU/assets/icons/view.png" alt="Toggle" class="toggle-icon-img" onclick="togglePassword('new_password', this)">
                                 </div>
                             </div>
@@ -141,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                                     <p>Re-enter your new password.</p>
                                 </div>
                                 <div class="row-input-box">
-                                    <input type="password" name="confirm_password" id="confirm_password" placeholder="••••••••" required>
+                                    <input type="password" name="confirm_password" id="confirm_password" placeholder="••••••••" autocomplete="new-password" minlength="8" maxlength="128" required>
                                     <img src="/CirculAPU/assets/icons/view.png" alt="Toggle" class="toggle-icon-img" onclick="togglePassword('confirm_password', this)">
                                 </div>
                             </div>
@@ -180,7 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     <script>
         function togglePassword(inputId, iconElement) {
             const input = document.getElementById(inputId);
-            const pathPrefix = "<?php echo $path_prefix; ?>";
             if (input.type === 'password') {
                 input.type = 'text';
                 iconElement.src = "/CirculAPU/assets/icons/eye-off.svg";

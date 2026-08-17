@@ -1,18 +1,20 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Include db.php from parent directory
 require_once '../db.php';
 
 // Security: Restrict access strictly to System Administrators
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
 // Initialize Filter Variables
-$search = $_GET['search'] ?? '';
-$status_filter = $_GET['status'] ?? '';
+$search = trim($_GET['search'] ?? '');
+$status_filter = trim($_GET['status'] ?? '');
 $date_filter = $_GET['date_reported'] ?? '';
+if (!in_array($status_filter, ['Pending', 'Resolved'], true)) $status_filter = '';
 
 // Pagination Setup
 $limit = 8;
@@ -21,14 +23,16 @@ if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
 // Base SQL Query joining report and user tables
-$sql = "SELECT r.*, u.name as reporterName 
+$sql = "SELECT r.*, u.name AS reporterName, v.targetType, v.targetID
         FROM report r 
-        LEFT JOIN user u ON r.reporterID = u.userID 
+        LEFT JOIN user u ON r.reporterID = u.userID
+        LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID
         WHERE 1=1";
 
 $count_sql = "SELECT COUNT(*) as total 
               FROM report r 
-              LEFT JOIN user u ON r.reporterID = u.userID 
+              LEFT JOIN user u ON r.reporterID = u.userID
+              LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID
               WHERE 1=1";
 
 $params = [];
@@ -36,14 +40,16 @@ $types = "";
 
 // Apply Dynamic Filters
 if (!empty($search)) {
-    $sql .= " AND (r.reportID LIKE ? OR u.name LIKE ? OR r.verificationID LIKE ?)";
-    $count_sql .= " AND (r.reportID LIKE ? OR u.name LIKE ? OR r.verificationID LIKE ?)";
+    $sql .= " AND (r.reportID LIKE ? OR r.reporterID LIKE ? OR u.name LIKE ? OR r.verificationID LIKE ?
+                    OR v.targetType LIKE ? OR v.targetID LIKE ? OR r.reason LIKE ?)";
+    $count_sql .= " AND (r.reportID LIKE ? OR r.reporterID LIKE ? OR u.name LIKE ? OR r.verificationID LIKE ?
+                          OR v.targetType LIKE ? OR v.targetID LIKE ? OR r.reason LIKE ?)";
     $search_param = "%$search%";
-    array_push($params, $search_param, $search_param, $search_param);
-    $types .= "sss";
+    array_push($params, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
+    $types .= "sssssss";
 }
 
-if (!empty($status_filter) && $status_filter !== 'All Status') {
+if ($status_filter !== '') {
     $sql .= " AND r.status = ?";
     $count_sql .= " AND r.status = ?";
     $params[] = $status_filter;
@@ -66,6 +72,8 @@ $stmt_count->execute();
 $total_reports = $stmt_count->get_result()->fetch_assoc()['total'];
 $total_pages = max(1, ceil($total_reports / $limit));
 $stmt_count->close();
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $limit;
 
 // Append Ordering and Pagination Limits
 $sql .= " ORDER BY r.timeCreated DESC LIMIT ? OFFSET ?";
@@ -80,6 +88,17 @@ if (!empty($params)) {
 }
 $stmt->execute();
 $reports_result = $stmt->get_result();
+
+function reportQueueUrl(int $target_page): string {
+    global $search, $status_filter, $date_filter;
+    $query = array_filter([
+        'page' => $target_page,
+        'search' => $search,
+        'status' => $status_filter,
+        'date_reported' => $date_filter
+    ], static fn($value) => $value !== '');
+    return '?' . http_build_query($query);
+}
 ?>
 
 <!DOCTYPE html>
@@ -116,7 +135,7 @@ $reports_result = $stmt->get_result();
 
                 <!-- Search and Filter Bar -->
                 <div class="content-card admin-filter-card">
-                    <form method="GET" action="report_queue.php" class="admin-filter-form">
+                    <form method="GET" action="reports_queue.php" class="admin-filter-form">
                         
                         <div class="field-box field-box-search">
                             <label>Search</label>
@@ -129,11 +148,9 @@ $reports_result = $stmt->get_result();
                         <div class="field-box field-box-select">
                             <label>Status</label>
                             <select name="status" class="filter-select">
-                                <option>All Status</option>
+                                <option value="">All Status</option>
                                 <option value="Pending" <?php echo $status_filter === 'Pending' ? 'selected' : ''; ?>>Pending</option>
                                 <option value="Resolved" <?php echo $status_filter === 'Resolved' ? 'selected' : ''; ?>>Resolved</option>
-                                <option value="Disputed" <?php echo $status_filter === 'Disputed' ? 'selected' : ''; ?>>Disputed</option>
-                                <option value="Under Investigation" <?php echo $status_filter === 'Under Investigation' ? 'selected' : ''; ?>>Under Investigation</option>
                             </select>
                         </div>
 
@@ -146,7 +163,7 @@ $reports_result = $stmt->get_result();
                             <button type="submit" class="btn-filter-submit">
                                 <img src="../assets/icons/filter.png" alt="Filter"> Filter
                             </button>
-                            <a href="report_queue.php" class="btn-filter-reset">
+                            <a href="reports_queue.php" class="btn-filter-reset">
                                 <img src="../assets/icons/reset.png" alt="Reset"> Reset
                             </a>
                         </div>
@@ -177,9 +194,9 @@ $reports_result = $stmt->get_result();
                                 <?php while ($report = $reports_result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="col-userid"><?php echo htmlspecialchars($report['reportID']); ?></td>
-                                        <td><?php echo htmlspecialchars($report['reporterName'] ?? 'Unknown'); ?></td>
-                                        <td>Asset Verification</td>
-                                        <td><?php echo htmlspecialchars($report['verificationID'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($report['reporterName'] ?: 'Unknown User'); ?></td>
+                                        <td><?php echo htmlspecialchars($report['targetType'] ?: '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($report['targetID'] ?: '-'); ?></td>
                                         <td>
                                             <span class="status-badge <?php echo strtolower(str_replace(' ', '-', $report['status'])); ?>">
                                                 <?php echo htmlspecialchars($report['status']); ?>
@@ -209,20 +226,15 @@ $reports_result = $stmt->get_result();
                         
                         <div class="pagination-controls">
                             <?php if ($page > 1): ?>
-                                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&date_reported=<?php echo urlencode($date_filter); ?>" class="pagination-btn">&lt;</a>
+                                <a href="<?php echo htmlspecialchars(reportQueueUrl($page - 1)); ?>" class="pagination-btn">&lt;</a>
                             <?php endif; ?>
 
-                            <?php for ($i = 1; $i <= min(3, $total_pages); $i++): ?>
-                                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&date_reported=<?php echo urlencode($date_filter); ?>" class="pagination-btn <?php echo $page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                            <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
+                                <a href="<?php echo htmlspecialchars(reportQueueUrl($i)); ?>" class="pagination-btn <?php echo $page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
                             <?php endfor; ?>
-                            
-                            <?php if ($total_pages > 4): ?>
-                                <span class="pagination-ellipsis">...</span>
-                                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&date_reported=<?php echo urlencode($date_filter); ?>" class="pagination-btn <?php echo $page == $total_pages ? 'active' : ''; ?>"><?php echo $total_pages; ?></a>
-                            <?php endif; ?>
 
                             <?php if ($page < $total_pages): ?>
-                                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&date_reported=<?php echo urlencode($date_filter); ?>" class="pagination-btn">&gt;</a>
+                                <a href="<?php echo htmlspecialchars(reportQueueUrl($page + 1)); ?>" class="pagination-btn">&gt;</a>
                             <?php endif; ?>
                         </div>
                     </div>

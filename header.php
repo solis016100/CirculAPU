@@ -16,6 +16,17 @@ $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
 //
 
 $role = $_SESSION['user_role'] ?? '';
+$preview_routes = [
+    'Manager' => 'manager_dashboard.php',
+    'Auditor' => 'auditor_dashboard.php',
+    'Member' => 'member_dashboard.php',
+];
+$preview_role = $_GET['preview'] ?? '';
+if ($role === 'Admin'
+    && isset($preview_routes[$preview_role])
+    && $preview_routes[$preview_role] === basename($_SERVER['PHP_SELF'])) {
+    $role = $preview_role;
+}
 
 if ($role == 'Manager') {
     $notification_url = '/CirculAPU/Manager/manager_notifications.php';
@@ -60,6 +71,7 @@ if ($role == 'Manager') {
         <span class="user-email-subtitle"><?php echo htmlspecialchars($user_email); ?></span>
       </div>
     </div>
+
   </div>
 </header>
 
@@ -72,10 +84,8 @@ if ($role == 'Manager') {
     const rightBar = document.getElementById("right-sidebar");
     const closeRightBarBtn = document.getElementById("close-right-bar");
 
-    // Open Sidebar
-    profileBtn.addEventListener("click", function() {
-      rightBar.classList.add("active");
-    });
+    const openSettings = () => rightBar?.classList.add("active");
+    profileBtn?.addEventListener("click", openSettings);
 
     // Close Sidebar via Chevron Button
     if (closeRightBarBtn) {

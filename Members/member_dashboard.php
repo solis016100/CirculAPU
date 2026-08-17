@@ -1,14 +1,11 @@
 <?php
 session_start();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 $is_admin=isset($_SESSION['user_role'])&&$_SESSION['user_role']==='Admin';
-$is_preview=isset($_GET['preview']);
+$is_preview=($_GET['preview']??'')==='Member';
 
-$conn=new mysqli("localhost","root","","circulapu_db");
-
-if($conn->connect_error){
-    die("Database Connection Failed: ".$conn->connect_error);
-}
+require_once '../db.php';
 
 if(!isset($_SESSION['user_id'])||($_SESSION['user_role']!=='Member'&&!($is_admin&&$is_preview))){
     header("Location: ../login.php");
@@ -16,6 +13,13 @@ if(!isset($_SESSION['user_id'])||($_SESSION['user_role']!=='Member'&&!($is_admin
 }
 
 $userID=$_SESSION['user_id'];
+
+if($is_admin&&$is_preview){
+    $previewUser=$conn->query("SELECT userID FROM user WHERE role='Member' AND status='Active' ORDER BY dateCreated ASC, userID ASC LIMIT 1")->fetch_assoc();
+    if($previewUser){
+        $userID=$previewUser['userID'];
+    }
+}
 
 /* User */
 $userResult=$conn->query("
@@ -63,7 +67,7 @@ $missionResult=$conn->query("
 SELECT COUNT(*) AS total
 FROM missionsubmission
 WHERE userID='$userID'
-AND submissionStatus='Verified'
+AND submissionStatus='Approved'
 ");
 
 $totalMission=$missionResult->fetch_assoc()['total']??0;

@@ -281,7 +281,7 @@ $admin_name = trim($_SESSION['user_name'] ?? '') ?: 'System Admin';
                                                     <a href="admin_report_details.php?id=<?php echo urlencode($report['reportID']); ?>" class="col-userid"><?php echo htmlspecialchars($report['reportID']); ?></a>
                                                 </div>
                                             </td>
-                                            <td><?php echo htmlspecialchars($report['targetType'] ?? 'Asset Verification'); ?></td>
+                                            <td><?php echo htmlspecialchars($report['targetType'] ?: '-'); ?></td>
                                             <td class="col-time"><?php echo formatDashboardTime($report['timeCreated']); ?></td>
                                         </tr>
                                     <?php endwhile; ?>
