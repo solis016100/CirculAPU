@@ -28,10 +28,17 @@ if ($role == 'Manager') {
 ?>
 
 <header class="app-header">
-  <div class="header-search-container">
-    <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="Search" width="20" height="20">
-    <input type="text" placeholder="Search......" aria-label="Search">
-  </div>
+  <?php if ($role === 'Admin'): ?>
+    <form class="header-search-container" method="GET" action="/CirculAPU/Admin/admin_dashboard.php" role="search">
+      <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="" width="20" height="20">
+      <input type="search" name="search" value="<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search logs and reports..." aria-label="Search admin logs and reports">
+    </form>
+  <?php else: ?>
+    <div class="header-search-container">
+      <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="Search" width="20" height="20">
+      <input type="text" placeholder="Search......" aria-label="Search">
+    </div>
+  <?php endif; ?>
 
   <div class="header-right-actions">
     <a href="<?php echo htmlspecialchars($notification_url, ENT_QUOTES, 'UTF-8'); ?>" class="header-action-icon" title="Notifications">

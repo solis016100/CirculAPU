@@ -4,10 +4,14 @@ session_start();
 require_once '../db.php';
 
 // Security: Restrict access strictly to System Administrators
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
+
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
+$search = trim($_GET['search'] ?? '');
 
 // 1. Fetch Key Statistic Counts
 $total_users_query = "SELECT COUNT(*) as total FROM user WHERE status != 'Deleted'";
@@ -24,13 +28,38 @@ $logs_page = isset($_GET['logs_page']) ? (int)$_GET['logs_page'] : 1;
 if ($logs_page < 1) $logs_page = 1;
 $logs_offset = ($logs_page - 1) * $logs_limit;
 
-$total_logs_res = $conn->query("SELECT COUNT(*) as total FROM systemlog");
-$total_logs = ($total_logs_res && $row = $total_logs_res->fetch_assoc()) ? $row['total'] : 0;
-$total_logs_pages = max(1, ceil($total_logs / $logs_limit));
+$logs_where = '';
+$logs_search_params = [];
+$logs_search_types = '';
+if ($search !== '') {
+    $logs_where = " WHERE sl.logID LIKE ? OR sl.userID LIKE ? OR u.name LIKE ?
+                    OR sl.actionType LIKE ? OR sl.refType LIKE ? OR sl.refID LIKE ?
+                    OR sl.description LIKE ?";
+    $like = "%{$search}%";
+    $logs_search_params = array_fill(0, 7, $like);
+    $logs_search_types = 'sssssss';
+}
 
-$logs_query = "SELECT * FROM systemlog ORDER BY timeLogged DESC LIMIT ? OFFSET ?";
+$stmt_total_logs = $conn->prepare(
+    "SELECT COUNT(*) AS total FROM systemlog sl LEFT JOIN user u ON sl.userID = u.userID" . $logs_where
+);
+if ($logs_search_types !== '') {
+    $stmt_total_logs->bind_param($logs_search_types, ...$logs_search_params);
+}
+$stmt_total_logs->execute();
+$total_logs = (int)($stmt_total_logs->get_result()->fetch_assoc()['total'] ?? 0);
+$stmt_total_logs->close();
+$total_logs_pages = max(1, ceil($total_logs / $logs_limit));
+$logs_page = min($logs_page, $total_logs_pages);
+$logs_offset = ($logs_page - 1) * $logs_limit;
+
+$logs_query = "SELECT sl.* FROM systemlog sl
+               LEFT JOIN user u ON sl.userID = u.userID" . $logs_where .
+              " ORDER BY sl.timeLogged DESC LIMIT ? OFFSET ?";
 $stmt_logs = $conn->prepare($logs_query);
-$stmt_logs->bind_param("ii", $logs_limit, $logs_offset);
+$logs_params = array_merge($logs_search_params, [$logs_limit, $logs_offset]);
+$logs_types = $logs_search_types . 'ii';
+$stmt_logs->bind_param($logs_types, ...$logs_params);
 $stmt_logs->execute();
 $logs_result = $stmt_logs->get_result();
 
@@ -40,16 +69,42 @@ $reports_page = isset($_GET['reports_page']) ? (int)$_GET['reports_page'] : 1;
 if ($reports_page < 1) $reports_page = 1;
 $reports_offset = ($reports_page - 1) * $reports_limit;
 
-$total_rep_res = $conn->query("SELECT COUNT(*) as total FROM report");
-$total_rep_count = ($total_rep_res && $row = $total_rep_res->fetch_assoc()) ? $row['total'] : 0;
-$total_reports_pages = max(1, ceil($total_rep_count / $reports_limit));
+$reports_where = '';
+$reports_search_params = [];
+$reports_search_types = '';
+if ($search !== '') {
+    $reports_where = " WHERE r.reportID LIKE ? OR r.reporterID LIKE ? OR reporter.name LIKE ?
+                       OR r.verificationID LIKE ? OR r.reason LIKE ? OR r.status LIKE ?
+                       OR v.targetType LIKE ? OR v.targetID LIKE ?";
+    $like = "%{$search}%";
+    $reports_search_params = array_fill(0, 8, $like);
+    $reports_search_types = 'ssssssss';
+}
 
-$reports_query = "SELECT r.*, v.targetType 
+$stmt_total_reports = $conn->prepare(
+    "SELECT COUNT(*) AS total FROM report r
+     LEFT JOIN user reporter ON r.reporterID = reporter.userID
+     LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID" . $reports_where
+);
+if ($reports_search_types !== '') {
+    $stmt_total_reports->bind_param($reports_search_types, ...$reports_search_params);
+}
+$stmt_total_reports->execute();
+$total_rep_count = (int)($stmt_total_reports->get_result()->fetch_assoc()['total'] ?? 0);
+$stmt_total_reports->close();
+$total_reports_pages = max(1, ceil($total_rep_count / $reports_limit));
+$reports_page = min($reports_page, $total_reports_pages);
+$reports_offset = ($reports_page - 1) * $reports_limit;
+
+$reports_query = "SELECT r.*, v.targetType, v.targetID
                  FROM report r 
-                 LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID 
-                 ORDER BY r.timeCreated DESC LIMIT ? OFFSET ?";
+                 LEFT JOIN user reporter ON r.reporterID = reporter.userID
+                 LEFT JOIN verificationrecords v ON r.verificationID = v.verificationID" . $reports_where .
+                 " ORDER BY r.timeCreated DESC LIMIT ? OFFSET ?";
 $stmt_reports = $conn->prepare($reports_query);
-$stmt_reports->bind_param("ii", $reports_limit, $reports_offset);
+$reports_params = array_merge($reports_search_params, [$reports_limit, $reports_offset]);
+$reports_types = $reports_search_types . 'ii';
+$stmt_reports->bind_param($reports_types, ...$reports_params);
 $stmt_reports->execute();
 $reports_result = $stmt_reports->get_result();
 
@@ -64,6 +119,23 @@ function formatDashboardTime($datetime_str) {
     }
     return date('j M Y, h:i A', $time);
 }
+
+function dashboardPageUrl(array $overrides = []): string {
+    global $search, $logs_page, $reports_page;
+    $query = array_merge([
+        'search' => $search,
+        'logs_page' => $logs_page,
+        'reports_page' => $reports_page
+    ], $overrides);
+    if ($query['search'] === '') {
+        unset($query['search']);
+    }
+    return '?' . http_build_query($query);
+}
+
+$hour = (int)date('G');
+$day_period = $hour < 12 ? 'morning' : ($hour < 18 ? 'afternoon' : 'evening');
+$admin_name = trim($_SESSION['user_name'] ?? '') ?: 'System Admin';
 ?>
 
 <!DOCTYPE html>
@@ -92,9 +164,16 @@ function formatDashboardTime($datetime_str) {
                 
                 <!-- Welcome Banner -->
                 <div class="admin-welcome-banner">
-                    <h1 class="welcome-title">Welcome back, System Admin!</h1>
-                    <p class="welcome-subtitle">Good afternoon! Here's today's overview</p>
+                    <h1 class="welcome-title">Welcome back, <?php echo htmlspecialchars($admin_name); ?>!</h1>
+                    <p class="welcome-subtitle">Good <?php echo $day_period; ?>! Here's today's overview</p>
                 </div>
+
+                <?php if ($search !== ''): ?>
+                    <div class="alert alert-success" style="margin-bottom: 20px;">
+                        Showing dashboard results matching “<?php echo htmlspecialchars($search); ?>”.
+                        <a href="admin_dashboard.php">Clear search</a>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Top KPI Stat Cards -->
                 <div class="admin-stats-grid">
@@ -163,15 +242,15 @@ function formatDashboardTime($datetime_str) {
                         <div class="admin-pagination-footer mini-footer">
                             <div class="pagination-controls">
                                 <?php if ($logs_page > 1): ?>
-                                    <a href="?logs_page=<?php echo $logs_page - 1; ?>&reports_page=<?php echo $reports_page; ?>" class="pagination-btn">&lt;</a>
+                                    <a href="<?php echo htmlspecialchars(dashboardPageUrl(['logs_page' => $logs_page - 1])); ?>" class="pagination-btn">&lt;</a>
                                 <?php endif; ?>
 
                                 <?php for ($i = 1; $i <= min(3, $total_logs_pages); $i++): ?>
-                                    <a href="?logs_page=<?php echo $i; ?>&reports_page=<?php echo $reports_page; ?>" class="pagination-btn <?php echo $logs_page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                                    <a href="<?php echo htmlspecialchars(dashboardPageUrl(['logs_page' => $i])); ?>" class="pagination-btn <?php echo $logs_page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
                                 <?php endfor; ?>
 
                                 <?php if ($logs_page < $total_logs_pages): ?>
-                                    <a href="?logs_page=<?php echo $logs_page + 1; ?>&reports_page=<?php echo $reports_page; ?>" class="pagination-btn">&gt;</a>
+                                    <a href="<?php echo htmlspecialchars(dashboardPageUrl(['logs_page' => $logs_page + 1])); ?>" class="pagination-btn">&gt;</a>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -181,7 +260,7 @@ function formatDashboardTime($datetime_str) {
                     <div class="content-card admin-dashboard-table-card">
                         <div class="table-card-header">
                             <h2>Reports Queue</h2>
-                            <a href="report_queue.php" class="view-all-link">View All</a>
+                            <a href="reports_queue.php" class="view-all-link">View All</a>
                         </div>
 
                         <table class="admin-user-table dashboard-mini-table">
@@ -198,8 +277,8 @@ function formatDashboardTime($datetime_str) {
                                         <tr>
                                             <td class="col-reportid">
                                                 <div class="activity-cell activity-flex">
-                                                    <img src="../assets/icons/file-text.svg" alt="Report" class="cell-icon">
-                                                    <span class="col-userid"><?php echo htmlspecialchars($report['reportID']); ?></span>
+                                                    <img src="../assets/icons/report.png" alt="Report" class="cell-icon">
+                                                    <a href="admin_report_details.php?id=<?php echo urlencode($report['reportID']); ?>" class="col-userid"><?php echo htmlspecialchars($report['reportID']); ?></a>
                                                 </div>
                                             </td>
                                             <td><?php echo htmlspecialchars($report['targetType'] ?? 'Asset Verification'); ?></td>
@@ -218,15 +297,15 @@ function formatDashboardTime($datetime_str) {
                         <div class="admin-pagination-footer mini-footer">
                             <div class="pagination-controls">
                                 <?php if ($reports_page > 1): ?>
-                                    <a href="?reports_page=<?php echo $reports_page - 1; ?>&logs_page=<?php echo $logs_page; ?>" class="pagination-btn">&lt;</a>
+                                    <a href="<?php echo htmlspecialchars(dashboardPageUrl(['reports_page' => $reports_page - 1])); ?>" class="pagination-btn">&lt;</a>
                                 <?php endif; ?>
 
                                 <?php for ($i = 1; $i <= min(3, $total_reports_pages); $i++): ?>
-                                    <a href="?reports_page=<?php echo $i; ?>&logs_page=<?php echo $logs_page; ?>" class="pagination-btn <?php echo $reports_page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                                    <a href="<?php echo htmlspecialchars(dashboardPageUrl(['reports_page' => $i])); ?>" class="pagination-btn <?php echo $reports_page == $i ? 'active' : ''; ?>"><?php echo $i; ?></a>
                                 <?php endfor; ?>
 
                                 <?php if ($reports_page < $total_reports_pages): ?>
-                                    <a href="?reports_page=<?php echo $reports_page + 1; ?>&logs_page=<?php echo $logs_page; ?>" class="pagination-btn">&gt;</a>
+                                    <a href="<?php echo htmlspecialchars(dashboardPageUrl(['reports_page' => $reports_page + 1])); ?>" class="pagination-btn">&gt;</a>
                                 <?php endif; ?>
                             </div>
                         </div>

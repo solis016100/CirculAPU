@@ -1270,3 +1270,21 @@
     justify-content: flex-end;
     margin-top: 15px;
 }
+
+.btn-status-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.inline-action-form {
+    display: inline-block;
+    margin: 0;
+}
+
+.action-icon-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    vertical-align: middle;
+}

@@ -1,6 +1,48 @@
 <?php
 session_start();
 require_once 'db.php';
+
+/**
+ * Record a successful authentication and return the database timestamp used.
+ * Logging failures must not prevent an otherwise valid login.
+ */
+function recordSuccessfulLogin(mysqli $conn, string $userID): ?string
+{
+    for ($attempt = 0; $attempt < 3; $attempt++) {
+        try {
+            $idResult = $conn->query(
+                "SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog"
+            );
+            $nextID = (int) $idResult->fetch_assoc()['nextID'];
+            $logID = 'LOG' . str_pad((string) $nextID, 3, '0', STR_PAD_LEFT);
+
+            $description = 'Logged in to system';
+            $logStmt = $conn->prepare(
+                "INSERT INTO systemlog (logID, userID, actionType, refType, refID, description)
+                 VALUES (?, ?, 'Login', 'User', ?, ?)"
+            );
+            $logStmt->bind_param('ssss', $logID, $userID, $userID, $description);
+            $logStmt->execute();
+            $logStmt->close();
+
+            $timeStmt = $conn->prepare("SELECT timeLogged FROM systemlog WHERE logID = ?");
+            $timeStmt->bind_param('s', $logID);
+            $timeStmt->execute();
+            $loginTime = $timeStmt->get_result()->fetch_assoc()['timeLogged'] ?? null;
+            $timeStmt->close();
+
+            return $loginTime;
+        } catch (Throwable $exception) {
+            // A simultaneous login can claim the same generated ID; retry it.
+            if ($attempt === 2) {
+                error_log('Unable to record login activity: ' . $exception->getMessage());
+            }
+        }
+    }
+
+    return null;
+}
+
 // 1. AUTO-LOGIN CHECK VIA "REMEMBER ME" COOKIES
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
     $_SESSION['user_id']    = $_COOKIE['remember_user_id'];
@@ -8,11 +50,11 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
     $_SESSION['user_role']  = $_COOKIE['remember_user_role']  ?? 'Member';
     $_SESSION['user_email'] = $_COOKIE['remember_user_email'] ?? '';
 
-    // Fallback: If email cookie was missing, query database using stored user ID
-    if (empty($_SESSION['user_email'])) {
-        $conn = new mysqli("localhost", "root", "", "circulapu_db");
-        if (!$conn->connect_error) {
-            $stmt = $conn->prepare("SELECT email FROM User WHERE userID = ?");
+    $rememberConn = new mysqli("localhost", "root", "", "circulapu_db");
+    if (!$rememberConn->connect_error) {
+        // Fallback: If email cookie was missing, query database using stored user ID
+        if (empty($_SESSION['user_email'])) {
+            $stmt = $rememberConn->prepare("SELECT email FROM User WHERE userID = ?");
             $stmt->bind_param("s", $_SESSION['user_id']);
             $stmt->execute();
             $res = $stmt->get_result();
@@ -22,8 +64,11 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
                 setcookie('remember_user_email', $row['email'], time() + (86400 * 30), "/");
             }
             $stmt->close();
-            $conn->close();
         }
+
+        $_SESSION['last_login_at'] = recordSuccessfulLogin($rememberConn, $_SESSION['user_id'])
+            ?? date('Y-m-d H:i:s');
+        $rememberConn->close();
     }
 }
 
@@ -65,6 +110,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['user_name']  = $user['name'];
                 $_SESSION['user_role']  = $user['role'];
                 $_SESSION['user_email'] = $user['email']; // Saved directly to active session
+                $_SESSION['last_login_at'] = recordSuccessfulLogin($conn, $user['userID'])
+                    ?? date('Y-m-d H:i:s');
 
                 // Set 30-day "Remember Me" cookies if box was checked
                 if (isset($_POST['remember_me'])) {

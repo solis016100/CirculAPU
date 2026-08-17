@@ -1838,7 +1838,7 @@ body.auth-page {
     padding: 24px 28px;
     border-bottom: 1px solid #e2e8f0;
     font-size: 1.4rem;
-    font-family: serif;
+    font-family: inherit;
     font-weight: bold;
     color: #0f172a;
 }
@@ -1863,7 +1863,7 @@ body.auth-page {
     text-decoration: none;
     color: #1e293b;
     font-size: 1.1rem;
-    font-family: serif;
+    font-family: inherit;
     font-weight: 600;
     border-bottom: 1px solid #f1f5f9;
     transition: all 0.2s ease;
@@ -1950,46 +1950,9 @@ body.auth-page {
     margin: 0 1.5rem;
 }
 
-/* Avatar Section */
 .profile-details-wrapper {
     display: flex;
     padding: 1.5rem;
-    gap: 2.5rem;
-}
-
-.profile-avatar-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    width: 140px;
-}
-
-.avatar-placeholder {
-    width: 120px;
-    height: 120px;
-    border: 1px solid var(--text-primary, #0f172a);
-    position: relative;
-    overflow: hidden;
-    background-color: transparent;
-}
-
-.avatar-x-line-1, .avatar-x-line-2 {
-    position: absolute;
-    width: 150%;
-    height: 1px;
-    background-color: var(--text-primary, #0f172a);
-    top: 50%;
-    left: -25%;
-}
-
-.avatar-x-line-1 { transform: rotate(45deg); }
-.avatar-x-line-2 { transform: rotate(-45deg); }
-
-.file-limits {
-    font-size: 0.7rem;
-    color: var(--text-secondary, #64748b);
-    text-align: center;
 }
 
 /* Information Lists */
@@ -2127,6 +2090,40 @@ body.auth-page {
     border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
+}
+
+.action-btn.outline-btn:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: #ffffff;
+}
+
+.action-btn.outline-btn:hover img {
+    filter: brightness(0) invert(1);
+}
+
+.profile-page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.profile-edit-input {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    padding: 0 0.75rem;
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 5px;
+    background: #ffffff;
+    color: var(--text-primary, #0f172a);
+    font: inherit;
+    outline: none;
+}
+
+.profile-edit-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 15%, transparent);
 }
 
 .full-width {

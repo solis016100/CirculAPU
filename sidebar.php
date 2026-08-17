@@ -23,7 +23,7 @@ $user_role    = $_SESSION['user_role'] ?? 'Member';
   <nav class="sidebar-nav">
     <?php switch ($user_role): 
       case 'Admin': ?>
-        <a href="/CirculAPU/Admin/admin_dashboard.php" class="nav-item <?php echo ($current_page == 'admin_dashboard.php') ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Admin/admin_dashboard.php" class="nav-item <?php echo in_array($current_page, ['admin_dashboard.php', 'system_logs.php'], true) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span class="nav-text">Dashboard</span>
         </a>
