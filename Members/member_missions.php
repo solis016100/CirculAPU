@@ -276,10 +276,6 @@ if(!$myMissionResult){
 
     <div class="mission-detail-header">
 
-        <div class="mission-detail-icon">
-            <img src="../assets/icons/mission.png" alt="Mission">
-        </div>
-
         <div class="mission-detail-title">
             <h2><?php echo htmlspecialchars($selectedMission['missionName']); ?></h2>
 
@@ -453,10 +449,6 @@ if(!$myMissionResult){
 
         <div class="mission-card">
 
-            <div class="mission-card-icon">
-                <img src="../assets/icons/mission.png" alt="Mission">
-            </div>
-
             <div class="mission-card-info">
                 <h2><?php echo htmlspecialchars($mission['missionName']); ?></h2>
                 <strong>Description:</strong>
@@ -512,10 +504,6 @@ if(!$myMissionResult){
         ?>
 
         <div class="mission-card">
-
-            <div class="mission-card-icon">
-                <img src="../assets/icons/mission.png" alt="Mission">
-            </div>
 
             <div class="mission-card-info">
                 <h2><?php echo htmlspecialchars($mission['missionName']); ?></h2>
