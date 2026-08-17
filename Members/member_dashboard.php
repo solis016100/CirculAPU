@@ -2,17 +2,34 @@
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+<<<<<<< HEAD
+// Access Control Guard for Community Member Role
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
+=======
 $is_admin=isset($_SESSION['user_role'])&&$_SESSION['user_role']==='Admin';
 $is_preview=($_GET['preview']??'')==='Member';
 
 require_once '../db.php';
 
 if(!isset($_SESSION['user_id'])||($_SESSION['user_role']!=='Member'&&!($is_admin&&$is_preview))){
+>>>>>>> 295dbcad99bee14a0659fe2c069b8b7163232cf0
     header("Location: ../login.php");
     exit();
 }
 
-$userID=$_SESSION['user_id'];
+// Get Member's information from login
+$userID = $_SESSION['user_id'];
+$memberName = $_SESSION['user_name'] ?? 'Member';
+
+// Connect to Database
+require_once '../db.php';
+
+if ($conn->connect_error) {
+    $databaseError = "Unable to connect to the database.";
+} else {
+    // UTF-8 allows the database to handle different languages
+    $conn->set_charset("utf8mb4");
+}
 
 if($is_admin&&$is_preview){
     $previewUser=$conn->query("SELECT userID FROM user WHERE role='Member' AND status='Active' ORDER BY dateCreated ASC, userID ASC LIMIT 1")->fetch_assoc();
@@ -153,7 +170,7 @@ if($currentTier){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Member Portal - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_style.css">
+<link rel="stylesheet" href="member_new_style.css">
 </head>
 
 <body class="role-member">
@@ -306,10 +323,6 @@ if($currentTier){
             <?php if($missionListResult&&$missionListResult->num_rows>0): ?>
                 <?php while($mission=$missionListResult->fetch_assoc()): ?>
                     <div class="mission-preview-item">
-                        <div class="mission-preview-icon">
-                            <img src="../assets/icons/mission.png" alt="Mission">
-                        </div>
-
                         <div class="mission-preview-info">
                             <h3>
                                 <?php echo htmlspecialchars($mission['missionName']); ?>
