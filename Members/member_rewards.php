@@ -1,22 +1,31 @@
 <?php
 session_start();
 
-$conn=new mysqli("localhost","root","","circulapu_db");
-
-if($conn->connect_error){
-    die("Database Connection Failed: ".$conn->connect_error);
-}
-
-if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Member'){
+// Access Control Guard for Community Member Role
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-$userID=$_SESSION['user_id'];
-$message="";
-$messageType="";
+// Get Member's information from login
+$memberID = $_SESSION['user_id'];
+$memberName = $_SESSION['user_name'] ?? 'Member';
+$userID = $memberID;
 
-/* Get User EcoPoints */
+// Connect to Database
+require_once '../db.php';
+
+if ($conn->connect_error) {
+    $databaseError = "Unable to connect to the database.";
+} else {
+    // UTF-8 allows the database to handle different languages
+    $conn->set_charset("utf8mb4");
+}
+
+$message = "";
+$messageType = "";
+
+/* Get Current EcoPoints */
 $pointQuery="
 SELECT ecopoint
 FROM user
@@ -24,7 +33,21 @@ WHERE userID='$userID'
 ";
 $pointResult=$conn->query($pointQuery);
 $pointData=$pointResult->fetch_assoc();
-$totalPoints=$pointData['ecopoint']??0;
+$currentPoints=$pointData['ecopoint']??0;
+
+
+
+/* Get Total Earned EcoPoints */
+$earnedPointQuery = "
+SELECT COALESCE(SUM(points),0) AS totalEarned
+FROM ecopointstransaction
+WHERE userID='$userID'
+AND transactionType='Earned'
+";
+
+$earnedPointResult = $conn->query($earnedPointQuery);
+$earnedPointData = $earnedPointResult->fetch_assoc();
+$totalEarnedPoints = $earnedPointData['totalEarned'] ?? 0;
 
 /* Count Completed Exchanges */
 $exchangeQuery="
@@ -41,7 +64,7 @@ $totalExchange=$exchangeData['totalExchange']??0;
 $tierQuery="
 SELECT *
 FROM tiers
-WHERE minimumEcoPoints<=$totalPoints
+WHERE minimumEcoPoints<=$totalEarnedPoints
 AND minimumExchanges<=$totalExchange
 ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
 LIMIT 1
@@ -78,6 +101,26 @@ $redeemCountResult=$conn->query($redeemCountQuery);
 $redeemCountData=$redeemCountResult->fetch_assoc();
 $totalRedeemed=$redeemCountData['totalRedeemed']??0;
 
+/* Generate EcoPoint Transaction ID */
+function generateEcoPointTransactionID($conn){
+    $result=$conn->query("
+    SELECT transactionID
+    FROM ecopointstransaction
+    WHERE transactionID LIKE 'ET%'
+    ORDER BY CAST(SUBSTRING(transactionID,3) AS UNSIGNED) DESC
+    LIMIT 1
+    ");
+
+    if($result&&$result->num_rows>0){
+        $row=$result->fetch_assoc();
+        $number=(int)substr($row['transactionID'],2)+1;
+    }else{
+        $number=1;
+    }
+
+    return "ET".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
 /* Redeem Reward */
 if(isset($_POST['redeem'])){
     $rewardID=$conn->real_escape_string($_POST['rewardID']);
@@ -95,7 +138,7 @@ if(isset($_POST['redeem'])){
         if($reward['quantity']<=0||$reward['availability']!='Available'){
             $message="This reward is currently not available.";
             $messageType="error";
-        }elseif($totalPoints<$reward['ecoPointsCost']){
+        }elseif($currentPoints<$reward['ecoPointsCost']){
             $message="You do not have enough EcoPoints.";
             $messageType="error";
         }elseif($totalRedeemed>=$maxRedeem){
@@ -147,6 +190,16 @@ if(isset($_POST['redeem'])){
                 ('$redemptionID','$userID','$rewardID',NOW())
                 ");
 
+                /* Save EcoPoint Transaction */
+                $transactionID=generateEcoPointTransactionID($conn);
+
+                $conn->query("
+                INSERT INTO ecopointstransaction
+                (transactionID,userID,points,transactionType,sourceType,referenceID,transactionDate)
+                VALUES
+                ('$transactionID','$userID',-$cost,'Spent','RewardRedemption','$redemptionID',NOW())
+                ");
+
                 /* Set Unavailable When Stock Is Empty */
                 $conn->query("
                 UPDATE rewards
@@ -157,7 +210,7 @@ if(isset($_POST['redeem'])){
 
                 $conn->commit();
 
-                $totalPoints-=$cost;
+                $currentPoints-=$cost;
                 $totalRedeemed++;
 
                 $message="Reward redeemed successfully!";
@@ -176,7 +229,7 @@ if(isset($_POST['redeem'])){
 $tierQuery="
 SELECT *
 FROM tiers
-WHERE minimumEcoPoints<=$totalPoints
+WHERE minimumEcoPoints<=$totalEarnedPoints
 AND minimumExchanges<=$totalExchange
 ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
 LIMIT 1
@@ -273,7 +326,7 @@ if($redeemProgress>100){
 
             <?php
             $inStock=$reward['quantity']>0&&$reward['availability']=='Available';
-            $enoughPoints=$totalPoints>=$reward['ecoPointsCost'];
+            $enoughPoints=$currentPoints>=$reward['ecoPointsCost'];
             $withinLimit=$totalRedeemed<$maxRedeem;
             $canRedeem=$inStock&&$enoughPoints&&$withinLimit;
             ?>
@@ -406,8 +459,14 @@ if($redeemProgress>100){
         <!-- EcoPoints -->
         <div class="reward-point-box">
             <h3>My EcoPoints</h3>
-            <strong><?php echo $totalPoints; ?></strong>
-            <span>Available EcoPoints</span>
+
+            <strong><?php echo $currentPoints; ?></strong>
+            <span>Current EcoPoints</span>
+
+            <p>
+                Total Earned:
+                <strong><?php echo $totalEarnedPoints; ?></strong>
+            </p>
         </div>
 
         <!-- User Tier -->
@@ -429,8 +488,8 @@ if($redeemProgress>100){
 
             <div class="reward-tier-info">
                 <div>
-                    <span>EcoPoints</span>
-                    <strong><?php echo $totalPoints; ?></strong>
+                    <span>Total Earned EcoPoints</span>
+                    <strong><?php echo $totalEarnedPoints; ?></strong>
                 </div>
 
                 <div>

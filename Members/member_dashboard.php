@@ -1,25 +1,16 @@
 <?php
 session_start();
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-<<<<<<< HEAD
 // Access Control Guard for Community Member Role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
-=======
-$is_admin=isset($_SESSION['user_role'])&&$_SESSION['user_role']==='Admin';
-$is_preview=($_GET['preview']??'')==='Member';
-
-require_once '../db.php';
-
-if(!isset($_SESSION['user_id'])||($_SESSION['user_role']!=='Member'&&!($is_admin&&$is_preview))){
->>>>>>> 295dbcad99bee14a0659fe2c069b8b7163232cf0
     header("Location: ../login.php");
     exit();
 }
 
 // Get Member's information from login
-$userID = $_SESSION['user_id'];
+$memberID = $_SESSION['user_id'];
 $memberName = $_SESSION['user_name'] ?? 'Member';
+$userID = $memberID;
 
 // Connect to Database
 require_once '../db.php';
@@ -29,13 +20,6 @@ if ($conn->connect_error) {
 } else {
     // UTF-8 allows the database to handle different languages
     $conn->set_charset("utf8mb4");
-}
-
-if($is_admin&&$is_preview){
-    $previewUser=$conn->query("SELECT userID FROM user WHERE role='Member' AND status='Active' ORDER BY dateCreated ASC, userID ASC LIMIT 1")->fetch_assoc();
-    if($previewUser){
-        $userID=$previewUser['userID'];
-    }
 }
 
 /* User */
@@ -80,14 +64,14 @@ LIMIT 4
 ");
 
 /* Completed Missions */
-$missionResult=$conn->query("
+/* My Missions */
+$missionResult = $conn->query("
 SELECT COUNT(*) AS total
 FROM missionsubmission
 WHERE userID='$userID'
-AND submissionStatus='Approved'
 ");
 
-$totalMission=$missionResult->fetch_assoc()['total']??0;
+$totalMission = $missionResult->fetch_assoc()['total'] ?? 0;
 
 /* Badges */
 $badgeResult=$conn->query("
@@ -351,15 +335,13 @@ if($currentTier){
     <div class="dashboard-card main-notification-quick">
         <div class="dashboard-card-header">
             <h2>Notifications</h2>
-            <a href="member_notifications.php">View All</a>
+            <a href="/CirculAPU/notifications.php">View All</a>
         </div>
 
         <div class="notification-preview">
             <?php if($notificationResult&&$notificationResult->num_rows>0): ?>
                 <?php while($notification=$notificationResult->fetch_assoc()): ?>
                     <div class="notification-preview-item <?php echo strtolower($notification['status']); ?>">
-                        <div class="notification-small-icon">🔔</div>
-
                         <div class="notification-preview-info">
                             <h3>
                                 <?php echo htmlspecialchars($notification['title']); ?>
