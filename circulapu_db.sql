@@ -85,6 +85,7 @@ INSERT INTO `assets` (`assetID`, `ownerID`, `categoryID`, `assetName`, `descript
 
 --
 -- Table structure for table `assetstatushistory`
+
 --
 
 CREATE TABLE `assetstatushistory` (

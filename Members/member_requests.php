@@ -1,22 +1,26 @@
 <?php
 session_start();
 
-$is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
-$is_preview = isset($_GET['preview']);
-
-$conn = new mysqli("localhost", "root", "", "circulapu_db");
-
-if ($conn->connect_error) {
-    die("Database Connection Failed: " . $conn->connect_error);
-}
-
-if (!isset($_SESSION['user_id']) ||
-    ($_SESSION['user_role'] !== 'Member' && !($is_admin && $is_preview))) {
+// Access Control Guard for Community Member Role
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-$userID = $_SESSION['user_id'];
+// Get Member's information from login
+$memberID = $_SESSION['user_id'];
+$memberName = $_SESSION['user_name'] ?? 'Member';
+$userID = $memberID;
+
+// Connect to Database
+require_once '../db.php';
+
+if ($conn->connect_error) {
+    $databaseError = "Unable to connect to the database.";
+} else {
+    // UTF-8 allows the database to handle different languages
+    $conn->set_charset("utf8mb4");
+}
 
 /* Borrow Request */
 $borrowQuery = "
@@ -35,15 +39,20 @@ if (!$borrowResult) {
 
 /* Asset Update */
 $assetQuery = "
-    SELECT a.assetID, a.assetName AS requestName, a.description,
-           a.assetCondition, a.imageURL, a.updatedDate,
-           vr.status AS requestStatus
-    FROM verificationrecords vr
-    INNER JOIN assets a ON vr.targetID = a.assetID
-    WHERE vr.userID = '$userID'
-    AND vr.targetType = 'Asset'
-    ORDER BY a.updatedDate DESC
+SELECT
+    assetID,
+    assetName AS requestName,
+    description,
+    assetCondition,
+    imageURL,
+    updatedDate,
+    listingStatus,
+    verificationStatus
+FROM assets
+WHERE ownerID = '$userID'
+ORDER BY updatedDate DESC
 ";
+
 $assetResult = $conn->query($assetQuery);
 
 if (!$assetResult) {
@@ -160,92 +169,213 @@ if (!$assetResult) {
                     <!-- Asset Update -->
                     <div id="asset" class="request-content">
                         <?php if ($assetResult->num_rows > 0): ?>
-                            <?php while ($request = $assetResult->fetch_assoc()): ?>
-                                <?php
-                                $assetStatus = $request['requestStatus'];
 
-                                if (strtolower($assetStatus) === 'pending') {
-                                    $assetStatus = 'Published';
+                            <?php while ($request = $assetResult->fetch_assoc()): ?>
+
+                                <?php
+                                $listingStatus = $request['listingStatus'];
+                                $verificationStatus = $request['verificationStatus'];
+
+                                // Listing Status Colour
+                                if ($listingStatus == 'Published') {
+                                    $listingClass = 'approved';
+
+                                } elseif ($listingStatus == 'Draft' || $listingStatus == 'Removed') {
+                                    $listingClass = 'rejected';
+
+                                } else {
+                                    $listingClass = 'pending';
                                 }
 
-                                $assetStatusClass = strtolower($assetStatus);
+                                // Verification Status Colour
+                                $verificationClass = strtolower($verificationStatus);
                                 ?>
 
                                 <div class="request-item"
                                      data-name="<?php echo strtolower(htmlspecialchars($request['requestName'])); ?>"
-                                     data-status="<?php echo htmlspecialchars($assetStatusClass); ?>">
+                                     data-status="<?php echo htmlspecialchars(strtolower($listingStatus . ' ' . $verificationStatus)); ?>">
 
                                     <div class="request-image">
+
                                         <?php if (!empty($request['imageURL'])): ?>
+
                                             <img src="../<?php echo htmlspecialchars($request['imageURL']); ?>"
                                                  alt="<?php echo htmlspecialchars($request['requestName']); ?>">
+
                                         <?php else: ?>
-                                            <img src="../assets/icons/myrequest.png" alt="Asset Update">
+
+                                            <img src="../assets/icons/myrequest.png"
+                                                 alt="Asset Update">
+
                                         <?php endif; ?>
+
                                     </div>
+
 
                                     <div class="request-item-info">
-                                        <h3><?php echo htmlspecialchars($request['requestName']); ?></h3>
+
+                                        <h3>
+                                            <?php echo htmlspecialchars($request['requestName']); ?>
+                                        </h3>
+
                                         <p>Asset Update</p>
-                                        <span class="request-status <?php echo $assetStatusClass; ?>">
-                                            <?php echo htmlspecialchars($assetStatus); ?>
-                                        </span>
+
+                                        <div class="asset-status-group">
+
+                                            <span class="request-status <?php echo $listingClass; ?>">
+                                                Listing: <?php echo htmlspecialchars($listingStatus); ?>
+                                            </span>
+
+                                            <span class="request-status <?php echo $verificationClass; ?>">
+                                                Verification: <?php echo htmlspecialchars($verificationStatus); ?>
+                                            </span>
+
+                                        </div>
+
                                     </div>
+
 
                                     <div class="request-item-date">
+
                                         <p>Updated on</p>
+
                                         <strong>
-                                            <?php echo date("d M Y, h:i A", strtotime($request['updatedDate'])); ?>
+                                            <?php
+                                            echo date(
+                                                "d M Y, h:i A",
+                                                strtotime($request['updatedDate'])
+                                            );
+                                            ?>
                                         </strong>
+
                                     </div>
 
+
                                     <div class="request-item-action">
-                                        <button type="button"
-                                                class="view-details-btn"
-                                                onclick="openAssetModal(this)"
-                                                data-name="<?php echo htmlspecialchars($request['requestName']); ?>"
-                                                data-description="<?php echo htmlspecialchars($request['description'] ?? ''); ?>"
-                                                data-condition="<?php echo htmlspecialchars($request['assetCondition'] ?? ''); ?>"
-                                                data-status="<?php echo htmlspecialchars($assetStatus); ?>"
-                                                data-date="<?php echo date("d M Y, h:i A", strtotime($request['updatedDate'])); ?>">
-                                            View Details
-                                        </button>
+
+                                        <!-- Draft Asset Can Be Modified -->
+                                        <?php if ($listingStatus == 'Draft'): ?>
+
+                                            <a href="member_edit_asset.php?id=<?php echo urlencode($request['assetID']); ?>"
+                                               class="view-details-btn">
+                                                Modify
+                                            </a>
+
+                                        <?php else: ?>
+
+                                            <button type="button"
+                                                    class="view-details-btn"
+                                                    onclick="openAssetModal(this)"
+                                                    data-name="<?php echo htmlspecialchars($request['requestName']); ?>"
+                                                    data-description="<?php echo htmlspecialchars($request['description'] ?? ''); ?>"
+                                                    data-condition="<?php echo htmlspecialchars($request['assetCondition'] ?? ''); ?>"
+                                                    data-listing="<?php echo htmlspecialchars($listingStatus); ?>"
+                                                    data-verification="<?php echo htmlspecialchars($verificationStatus); ?>"
+                                                    data-date="<?php echo date("d M Y, h:i A", strtotime($request['updatedDate'])); ?>">
+                                                View Details
+                                            </button>
+
+                                        <?php endif; ?>
+
                                     </div>
+
                                 </div>
+
                             <?php endwhile; ?>
+
                         <?php else: ?>
-                            <div class="empty-request">No asset update requests found.</div>
+
+                            <div class="empty-request">
+                                No asset update requests found.
+                            </div>
+
                         <?php endif; ?>
+
                     </div>
                 </div>
 
                 <aside class="request-guide">
+
                     <h3>Request Guide</h3>
 
-                    <div class="guide-item">
-                        <strong>Take Care of Items</strong>
-                        <p>Keep borrowed items in good condition and return them on time.</p>
+
+                    <!-- Borrow Request Guide -->
+                    <div id="borrowGuide">
+
+                        <div class="guide-item">
+                            <strong>Take Care of Items</strong>
+                            <p>
+                                Keep borrowed items in good condition and return them on time.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Pending</strong>
+                            <p>
+                                Your borrow request is waiting for approval.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Approved</strong>
+                            <p>
+                                Your borrow request has been approved.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Rejected</strong>
+                            <p>
+                                Your borrow request was not approved.
+                            </p>
+                        </div>
+
                     </div>
 
-                    <div class="guide-item" id="guidePending">
-                        <strong>Pending</strong>
-                        <p>Your borrow request is waiting for approval.</p>
+
+                    <!-- Asset Update Guide -->
+                    <div id="assetGuide" style="display:none;">
+
+                        <div class="guide-item">
+                            <strong>Draft</strong>
+                            <p>
+                                Your asset information needs changes. Click Modify,
+                                update the information and resubmit the asset.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Pending</strong>
+                            <p>
+                                Your asset verification is still pending.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Pending Review</strong>
+                            <p>
+                                Your modified asset has been resubmitted and is waiting
+                                to be reviewed again.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Published</strong>
+                            <p>
+                                Your asset has been approved and is ready to be shared
+                                with everyone in the marketplace.
+                            </p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Rejected</strong>
+                            <p>
+                                Your asset did not pass the verification process.
+                            </p>
+                        </div>
+
                     </div>
 
-                    <div class="guide-item" id="guidePublished" style="display:none;">
-                        <strong>Published</strong>
-                        <p>Your asset has been published and is waiting for approval.</p>
-                    </div>
-
-                    <div class="guide-item">
-                        <strong>Approved</strong>
-                        <p>Your request has been approved.</p>
-                    </div>
-
-                    <div class="guide-item">
-                        <strong>Rejected</strong>
-                        <p>Your request was not approved.</p>
-                    </div>
                 </aside>
             </div>
         </main>
@@ -321,8 +451,13 @@ if (!$assetResult) {
             </div>
 
             <div class="modal-detail-row">
-                <span>Status</span>
-                <strong id="assetStatus"></strong>
+                <span>Listing Status</span>
+                <strong id="assetListingStatus"></strong>
+            </div>
+
+            <div class="modal-detail-row">
+                <span>Verification Status</span>
+                <strong id="assetVerificationStatus"></strong>
             </div>
 
             <div class="modal-detail-row">
@@ -353,18 +488,22 @@ function showRequest(type, button) {
             <option value="rejected">Rejected</option>
         `;
 
-        document.getElementById('guidePending').style.display = 'block';
-        document.getElementById('guidePublished').style.display = 'none';
+        document.getElementById('borrowGuide').style.display = 'block';
+        document.getElementById('assetGuide').style.display = 'none';
     } else {
         statusFilter.innerHTML = `
             <option value="">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="ready for verification">Ready for Verification</option>
+            <option value="pending review">Pending Review</option>
             <option value="published">Published</option>
+            <option value="pending">Verification Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
         `;
 
-        document.getElementById('guidePending').style.display = 'none';
-        document.getElementById('guidePublished').style.display = 'block';
+        document.getElementById('borrowGuide').style.display = 'none';
+        document.getElementById('assetGuide').style.display = 'block';
     }
 
     filterRequests();
@@ -379,7 +518,7 @@ function filterRequests() {
 
     activeContent.querySelectorAll('.request-item').forEach(request => {
         const nameMatch = request.dataset.name.includes(search);
-        const statusMatch = status === '' || request.dataset.status === status;
+        const statusMatch = status === '' || request.dataset.status.includes(status);
 
         request.style.display = nameMatch && statusMatch ? 'grid' : 'none';
     });
@@ -405,7 +544,13 @@ function openAssetModal(button) {
         button.dataset.description || '-';
     document.getElementById('assetCondition').textContent =
         button.dataset.condition || '-';
-    document.getElementById('assetStatus').textContent = button.dataset.status;
+
+    document.getElementById('assetListingStatus').textContent =
+        button.dataset.listing || '-';
+
+    document.getElementById('assetVerificationStatus').textContent =
+        button.dataset.verification || '-';
+
     document.getElementById('assetDate').textContent = button.dataset.date;
 
     document.getElementById('assetModal').classList.add('show');

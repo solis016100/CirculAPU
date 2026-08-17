@@ -3,18 +3,15 @@
     margin:0 0 4px;
     font-size:28px;
     color:#222;}
-
 .page-body>p {
     margin:0;
     font-size:14px;
     color:#777;}
-
 .stats-grid {
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:18px;
     margin-top:20px;}
-
 .stat-card {
     min-height:125px;
     display:flex;
@@ -25,7 +22,6 @@
     border:1px solid #a7e3ba;
     border-radius:12px;
     box-sizing:border-box;}
-
 .stat-icon {
     width:58px;
     height:58px;
@@ -35,22 +31,18 @@
     flex-shrink:0;
     background:#dff8e8;
     border-radius:12px;}
-
 .stat-icon img {
     width:36px;
     height:36px;
     object-fit:contain;}
-
 .stat-card h2 {
     margin:0;
     font-size:24px;
     color:#159447;}
-
 .stat-card p {
     margin:0;
     font-size:14px;
     color:#333;}
-
     /* Main Dashboard Quick Access */
 .recent-request-card,.available-mission-card {
     width:55%;
@@ -59,46 +51,36 @@
     border:1px solid #7fd09b;
     border-radius:12px;
     box-sizing:border-box;}
-
 .recent-request-card {
     padding:18px;}
-
 .available-mission-card {
     overflow:hidden;}
-
 .recent-request-header,.available-mission-header {
     display:flex;
     justify-content:space-between;
     align-items:center;}
-
 .recent-request-header {
     margin-bottom:15px;}
-
 .available-mission-header {
     padding:16px 18px;
     border-bottom:1px solid #b7dfc5;}
-
 .recent-request-header h2,.available-mission-header h2 {
     margin:0;
     font-size:20px;
     color:#222;}
-
 .view-all,.explore-all {
     font-size:12px;
     font-weight:600;
     color:#333;
     text-decoration:underline;}
-
 .view-all:hover,.explore-all:hover {
     color:#159447;}
-
     /* Recent Request */
 .recent-request-table {
     width:100%;
     border:1px solid #b7dfc5;
     border-radius:8px;
     overflow:hidden;}
-
 .recent-request-row {
     display:grid;
     grid-template-columns:1.7fr 1fr 1fr 1.2fr;
@@ -108,23 +90,18 @@
     border-bottom:1px solid #e5e5e5;
     font-size:12px;
     color:#333;}
-
 .recent-request-row:last-child {
     border-bottom:none;}
-
 .recent-request-title {
     background:#f7fcf9;
     font-weight:600;}
-
 .request-name {
     font-weight:600;}
-
 .no-request,.no-mission {
     padding:25px;
     text-align:center;
     font-size:12px;
     color:#777;}
-
     /* Request Status */
 .request-status {
     display:inline-block;
@@ -133,27 +110,21 @@
     border-radius:6px;
     font-size:10px;
     font-weight:700;}
-
 .request-status.pending {
     background:#fff3d6;
     color:#8a6813;}
-
 .request-status.published {
     background:#e7efff;
     color:#3f5f91;}
-
 .request-status.approved {
     background:#e2f5e8;
     color:#247a40;}
-
 .request-status.rejected {
     background:#fde7e7;
     color:#a52a2a;}
-
     /* Mission Quick Access */
 .available-mission-list {
     width:100%;}
-
 .mission-preview-item {
     display:grid;
     grid-template-columns:minmax(0,1fr) 70px;
@@ -161,66 +132,52 @@
     align-items:center;
     padding:10px 18px;
     border-bottom:1px solid #dceee2;}
-
 .mission-preview-item:last-child {
     border-bottom:none;}
-
 .mission-preview-info h3 {
     margin:0 0 3px;
     font-size:13px;
     color:#222;}
-
 .mission-preview-info p {
     margin:0;
     font-size:10px;
     color:#777;}
-
 .mission-preview-point {
     text-align:center;}
-
 .mission-preview-point strong {
     display:block;
     font-size:15px;
     color:#159447;}
-
 .mission-preview-point span {
     font-size:9px;
     color:#777;}
-
     /* My Request */
 .my-request-header,.mission-page-header,.badge-page-header {
     margin-bottom:22px;}
-
 .my-request-header h1,.mission-page-header h1,.badge-page-header h1 {
     margin:0 0 5px;
     font-size:28px;
     color:#222;}
-
 .my-request-header p,.mission-page-header p,.badge-page-header p {
     margin:0;
     font-size:14px;
     color:#777;}
-
 .my-request-layout {
     display:grid;
     grid-template-columns:minmax(0,1fr) 260px;
     gap:20px;
     align-items:start;}
-
 .request-main-panel,.request-guide {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:10px;}
-
 .request-main-panel {
     overflow:hidden;}
-
     /* Request Tabs */
 .request-tabs,.mission-tabs {
     display:flex;
     background:#f7fbf8;
     border-bottom:1px solid #b7dfc5;}
-
 .request-tab,.mission-tab {
     padding:13px 18px;
     background:transparent;
@@ -232,21 +189,16 @@
     font-weight:600;
     color:#555;
     cursor:pointer;}
-
 .request-tab {
     min-width:190px;}
-
 .mission-tab {
     min-width:170px;}
-
 .request-tab:hover,.mission-tab:hover {
     background:#f4fbf6;}
-
 .request-tab.active,.mission-tab.active {
     background:#fff;
     color:#159447;
     border-bottom-color:#159447;}
-
 .tab-count {
     margin-left:6px;
     padding:2px 7px;
@@ -254,7 +206,6 @@
     border-radius:10px;
     font-size:10px;
     color:#247a40;}
-
     /* Request Search */
 .request-tools {
     display:grid;
@@ -262,7 +213,6 @@
     gap:12px;
     padding:16px;
     border-bottom:1px solid #eee;}
-
 .request-tools input,.request-tools select {
     width:100%;
     height:40px;
@@ -274,19 +224,15 @@
     font-family:inherit;
     font-size:12px;
     color:#333;}
-
 .request-tools input:focus,.request-tools select:focus {
     outline:none;
     border-color:#159447;}
-
     /* Request List */
 .request-content {
     display:none;
     padding:0 18px;}
-
 .request-content.active {
     display:block;}
-
 .request-item {
     display:grid;
     grid-template-columns:80px minmax(180px,1fr) 190px 110px;
@@ -294,10 +240,8 @@
     align-items:center;
     padding:20px 4px;
     border-bottom:1px solid #ddd;}
-
 .request-item:last-child {
     border-bottom:none;}
-
 .request-image {
     width:70px;
     height:70px;
@@ -308,35 +252,28 @@
     border:1px solid #ddd;
     border-radius:9px;
     overflow:hidden;}
-
 .request-image img {
     width:100%!important;
     height:100%!important;
     object-fit:cover;}
-
 .request-item-info h3 {
     margin:0 0 5px;
     font-size:15px;
     color:#222;}
-
 .request-item-info p {
     margin:0 0 7px;
     font-size:11px;
     color:#777;}
-
 .request-item-date p {
     margin:0 0 5px;
     font-size:11px;
     color:#888;}
-
 .request-item-date strong {
     font-size:11px;
     font-weight:500;
     color:#333;}
-
 .request-item-action {
     text-align:right;}
-
 body.role-member .view-details-btn {
     padding:0;
     background:none;
@@ -347,42 +284,33 @@ body.role-member .view-details-btn {
     color:#159447!important;
     text-decoration:underline;
     cursor:pointer;}
-
 body.role-member .view-details-btn:hover {
     color:#117a3a!important;}
-
 .empty-request {
     padding:35px;
     text-align:center;
     font-size:12px;
     color:#888;}
-
     /* Request Guide */
 .request-guide {
     padding:20px;}
-
 .request-guide h3 {
     margin:0 0 20px;
     font-size:16px;
     color:#222;}
-
 .guide-item {
     margin-bottom:18px;}
-
 .guide-item:last-child {
     margin-bottom:0;}
-
 .guide-item strong {
     display:block;
     margin-bottom:4px;
     font-size:12px;}
-
 .guide-item p {
     margin:0;
     font-size:11px;
     line-height:1.5;
     color:#777;}
-
     /* Request Popup */
 .request-modal {
     display:none;
@@ -393,10 +321,8 @@ body.role-member .view-details-btn:hover {
     align-items:center;
     justify-content:center;
     z-index:99999;}
-
 .request-modal.show {
     display:flex;}
-
 .request-modal-box {
     width:480px;
     max-width:90%;
@@ -406,7 +332,6 @@ body.role-member .view-details-btn:hover {
     border-radius:14px;
     box-shadow:0 12px 35px rgba(0,0,0,.2);
     overflow-y:auto;}
-
 .request-modal-header {
     display:flex;
     justify-content:space-between;
@@ -414,17 +339,14 @@ body.role-member .view-details-btn:hover {
     padding:18px 22px;
     background:#f7fcf9;
     border-bottom:1px solid #b7dfc5;}
-
 .modal-small-title {
     margin:0 0 4px;
     font-size:9px;
     font-weight:700;
     color:#159447;}
-
 .request-modal-header h2 {
     margin:0;
     font-size:19px;}
-
 .request-modal-close {
     width:32px;
     height:32px;
@@ -437,42 +359,33 @@ body.role-member .view-details-btn:hover {
     font-size:22px;
     color:#666;
     cursor:pointer;}
-
 .request-modal-body {
     padding:8px 22px 18px;}
-
 .modal-detail-row {
     display:grid;
     grid-template-columns:130px 1fr;
     gap:15px;
     padding:13px 0;
     border-bottom:1px solid #eee;}
-
 .modal-detail-row:last-child {
     border-bottom:none;}
-
 .modal-detail-row span {
     font-size:11px;
     color:#888;}
-
 .modal-detail-row strong {
     font-size:12px;
     color:#222;}
-
     /* Mission Dashboard */
 .mission-dashboard {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:12px;
     overflow:hidden;}
-
 .mission-tab-content {
     display:none;
     padding:18px;}
-
 .mission-tab-content.active {
     display:block;}
-
 .mission-card {
     display:grid;
     grid-template-columns:1fr 165px 35px;
@@ -483,45 +396,34 @@ body.role-member .view-details-btn:hover {
     background:#fff;
     border:1px solid #9bd8b0;
     border-radius:10px;}
-
 .mission-card:last-child {
     margin-bottom:0;}
-
 .mission-card-info h2 {
     margin:0 0 10px;
     font-size:17px;
     color:#222;}
-
 .mission-card-info strong,.mission-card-info p {
     font-size:11px;}
-
 .mission-card-info p {
     margin:6px 0 0;
     color:#666;}
-
 .mission-card-right {
     text-align:center;}
-
 .mission-points,.mission-small-points {
     padding:9px 10px;
     background:#f3fbf6;
     border:1px solid #acdcbc;
     border-radius:7px;
     color:#159447;}
-
 .mission-points {
     margin-bottom:8px;}
-
 .mission-points strong {
     display:block;
     font-size:15px;}
-
 .mission-points span {
     font-size:9px;}
-
 .mission-small-points {
     font-size:10px;}
-
 .join-mission-btn {
     width:100%;
     padding:8px 10px;
@@ -533,19 +435,15 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#fff;
     cursor:pointer;}
-
 .join-mission-btn:hover {
     background:#117a3a;}
-
 .mission-card-action {
     text-align:center;}
-
 .mission-card-action a {
     font-size:21px;
     font-weight:700;
     color:#159447;
     text-decoration:none;}
-
     /* Mission Status */
 .my-mission-status {
     display:flex;
@@ -557,63 +455,51 @@ body.role-member .view-details-btn:hover {
     border-radius:8px;
     font-size:12px;
     font-weight:700;}
-
 .my-mission-status.in-progress,.mission-detail-status.in-progress {
     background:#e7efff;
     border:1px solid #a8c5ed;
     color:#315f9f;}
-
 .my-mission-status.verified,.mission-detail-status.verified {
     background:#d8f2e1;
     border:1px solid #79ca95;
     color:#0f6f34;}
-
 .my-mission-status.pending,.mission-detail-status.pending {
     background:#fff3d6;
     border:1px solid #e8cd7e;
     color:#8a6813;}
-
 .my-mission-status.rejected,.mission-detail-status.rejected {
     background:#fde7e7;
     border:1px solid #e6a2a2;
     color:#a33434;}
-
 .mission-detail-status.available {
     background:#e5f6eb;
     border:1px solid #91d4a8;
     color:#157a3c;}
-
 .proof-small {
     display:block;
     width:fit-content;
     margin-top:5px;
     font-size:9px!important;
     font-weight:400;}
-
 .proof-small.not-uploaded {
     color:#999;}
-
 .proof-small.uploaded {
     color:#159447;
     font-weight:600;}
-
     /* Mission Details */
 .mission-detail-top,.badge-detail-top {
     display:flex;
     justify-content:space-between;
     align-items:center;
     margin-bottom:22px;}
-
 .mission-detail-top h1,.badge-detail-top h1 {
     margin:0 0 5px;
     font-size:28px;
     color:#222;}
-
 .mission-detail-top p,.badge-detail-top p {
     margin:0;
     font-size:14px;
     color:#777;}
-
 .mission-back-btn,.badge-back-btn {
     padding:8px 13px;
     background:#fff;
@@ -623,17 +509,14 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#333;
     text-decoration:none;}
-
 .mission-back-btn:hover,.badge-back-btn:hover {
     background:#f4fbf6;
     color:#159447;}
-
 .mission-detail-card {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:12px;
     overflow:hidden;}
-
 .mission-detail-header {
     display:grid;
     grid-template-columns:1fr 120px;
@@ -642,12 +525,10 @@ body.role-member .view-details-btn:hover {
     padding:22px;
     background:#f4fbf6;
     border-bottom:1px solid #b7dfc5;}
-
 .mission-detail-title h2 {
     margin:0 0 8px;
     font-size:20px;
     color:#222;}
-
 .mission-detail-status {
     display:inline-flex;
     align-items:center;
@@ -656,61 +537,49 @@ body.role-member .view-details-btn:hover {
     border-radius:6px;
     font-size:10px;
     font-weight:700;}
-
 .mission-detail-points {
     padding:10px;
     text-align:center;
     background:#f3fbf6;
     border:1px solid #acdcbc;
     border-radius:8px;}
-
 .mission-detail-points strong {
     display:block;
     font-size:18px;
     color:#159447;}
-
 .mission-detail-points span {
     font-size:10px;
     color:#247a40;}
-
 .mission-detail-body {
     padding:22px;}
-
 .mission-detail-section {
     margin-bottom:20px;}
-
 .mission-detail-section h3 {
     margin:0 0 7px;
     font-size:13px;
     color:#222;}
-
 .mission-detail-section p {
     margin:0;
     font-size:12px;
     line-height:1.6;
     color:#666;}
-
 .mission-detail-info-grid {
     display:grid;
     grid-template-columns:repeat(2,1fr);
     gap:12px;}
-
 .mission-detail-info {
     padding:13px;
     background:#f8fcf9;
     border:1px solid #c5e5d0;
     border-radius:7px;}
-
 .mission-detail-info span {
     display:block;
     margin-bottom:5px;
     font-size:10px;
     color:#888;}
-
 .mission-detail-info strong {
     font-size:12px;
     color:#222;}
-
     /* Proof Submission */
 .mission-proof-section {
     margin-top:20px;
@@ -718,34 +587,27 @@ body.role-member .view-details-btn:hover {
     background:#f8fcf9;
     border:1px solid #b7dfc5;
     border-radius:9px;}
-
 .proof-heading {
     display:flex;
     justify-content:space-between;
     align-items:center;
     margin-bottom:6px;}
-
 .proof-heading h3 {
     margin:0;
     font-size:13px;
     color:#222;}
-
 .proof-label {
     font-size:9px;
     font-weight:500;}
-
 .proof-label.uploaded {
     color:#159447;}
-
 .proof-label.not-uploaded {
     color:#999;}
-
 .proof-requirement {
     margin:0 0 12px;
     font-size:11px;
     line-height:1.5;
     color:#666;}
-
 .mission-proof-preview {
     display:flex;
     align-items:center;
@@ -755,51 +617,42 @@ body.role-member .view-details-btn:hover {
     background:#fff;
     border:1px solid #d2e7d9;
     border-radius:7px;}
-
 .mission-proof-preview img {
     width:60px;
     height:60px;
     object-fit:cover;
     border-radius:6px;}
-
 .proof-preview-info {
     display:flex;
     flex-direction:column;
     gap:3px;}
-
 .proof-preview-info strong {
     font-size:11px;
     color:#333;}
-
 .proof-preview-info span {
     font-size:9px;
     color:#888;}
-
 .proof-upload-form {
     display:flex;
     align-items:flex-end;
     gap:12px;}
-
 .proof-file-area {
     flex:1;
     padding:11px 13px;
     background:#fff;
     border:1px solid #c5dfce;
     border-radius:7px;}
-
 .proof-file-area label {
     display:block;
     margin-bottom:6px;
     font-size:11px;
     font-weight:600;
     color:#333;}
-
 .proof-file-area input[type="file"] {
     width:100%;
     font-family:inherit;
     font-size:10px;
     color:#555;}
-
 .proof-file-area input[type="file"]::file-selector-button {
     margin-right:9px;
     padding:6px 11px;
@@ -811,13 +664,11 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#247a40;
     cursor:pointer;}
-
 .proof-file-area small {
     display:block;
     margin-top:6px;
     font-size:9px;
     color:#999;}
-
 .upload-proof-btn {
     height:38px;
     padding:0 15px;
@@ -829,16 +680,13 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#fff;
     cursor:pointer;}
-
 .upload-proof-btn:hover {
     background:#117a3a;}
-
 .mission-detail-footer {
     display:flex;
     justify-content:flex-end;
     padding:16px 22px;
     border-top:1px solid #cce5d5;}
-
 .mission-detail-join-btn,.mission-my-btn {
     padding:8px 17px;
     background:#159447;
@@ -848,41 +696,33 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#fff;
     text-decoration:none;}
-
     /* Achievement Badges */
 .badge-page-layout {
     display:grid;
     grid-template-columns:minmax(0,1fr) 240px;
     gap:20px;
     align-items:start;}
-
 .badge-main-area {
     min-width:0;}
-
 .badge-side-area {
     display:flex;
     flex-direction:column;
     gap:15px;}
-
 .badge-summary-card,.badge-progress-box,.badge-guide-box,.badge-detail-card,.badge-info-box {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:10px;}
-
 .badge-summary-card,.badge-progress-box,.badge-guide-box,.badge-info-box {
     padding:18px;}
-
 .badge-summary-card h3,.badge-progress-box h3,.badge-guide-box h3 {
     margin:0 0 15px;
     font-size:14px;
     color:#222;}
-
     /* Badge Summary */
 .badge-summary-grid {
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:10px;}
-
 .badge-summary-item {
     min-height:82px;
     display:flex;
@@ -894,22 +734,18 @@ body.role-member .view-details-btn:hover {
     border:1px solid #b7dfc5;
     border-radius:8px;
     text-align:center;}
-
 .badge-summary-item img {
     width:28px!important;
     height:28px!important;
     margin-bottom:5px;
     object-fit:contain;}
-
 .badge-summary-item strong {
     font-size:19px;
     color:#222;}
-
 .badge-summary-item span {
     margin-top:3px;
     font-size:9px;
     color:#777;}
-
     /* Badge Tabs */
 .badge-tabs {
     display:flex;
@@ -919,7 +755,6 @@ body.role-member .view-details-btn:hover {
     border-bottom:none;
     border-radius:9px 9px 0 0;
     overflow:hidden;}
-
 .badge-tab {
     padding:10px 17px;
     background:transparent;
@@ -931,22 +766,17 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#555;
     cursor:pointer;}
-
 .badge-tab:hover {
     background:#f0faf4;
     color:#159447;}
-
 .badge-tab.active {
     background:#fff;
     color:#159447;
     border-bottom-color:#159447;}
-
 .badge-tab-content {
     display:none;}
-
 .badge-tab-content.active {
     display:block;}
-
     /* Badge Cards */
 .badge-grid {
     display:grid;
@@ -956,7 +786,6 @@ body.role-member .view-details-btn:hover {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:0 0 9px 9px;}
-
 .badge-card {
     min-height:165px;
     display:flex;
@@ -970,11 +799,9 @@ body.role-member .view-details-btn:hover {
     text-align:center;
     text-decoration:none;
     color:#222;}
-
 .badge-card:hover {
     background:#f7fcf9;
     border-color:#159447;}
-
 .badge-card-icon {
     width:58px;
     height:58px;
@@ -985,24 +812,20 @@ body.role-member .view-details-btn:hover {
     background:#f4fbf6;
     border:1px solid #b7dfc5;
     border-radius:8px;}
-
 .badge-card-icon img {
     width:38px!important;
     height:38px!important;
     object-fit:contain;}
-
 .badge-card h3 {
     margin:0 0 5px;
     font-size:12px;
     color:#222;}
-
 .badge-card p {
     min-height:28px;
     margin:0 0 9px;
     font-size:9px;
     line-height:1.4;
     color:#777;}
-
     /* Badge Status */
 .badge-status {
     display:inline-flex;
@@ -1013,30 +836,24 @@ body.role-member .view-details-btn:hover {
     border-radius:5px;
     font-size:9px;
     font-weight:700;}
-
 .badge-status.earned {
     background:#d8f2e1;
     border:1px solid #79ca95;
     color:#0f6f34;}
-
 .badge-status.locked {
     background:#f1f1f1;
     border:1px solid #ccc;
     color:#777;}
-
 .badge-earned-date {
     display:block;
     margin-top:6px;
     font-size:9px;
     color:#777;}
-
     /* Badge Side */
 .badge-progress-box {
     text-align:center;}
-
 .badge-progress-box h3 {
     text-align:left;}
-
 .tier-icon {
     width:62px;
     height:62px;
@@ -1047,23 +864,19 @@ body.role-member .view-details-btn:hover {
     background:#f4fbf6;
     border:1px solid #b7dfc5;
     border-radius:8px;}
-
 .tier-icon img {
     width:40px!important;
     height:40px!important;
     object-fit:contain;}
-
 .badge-progress-box strong {
     display:block;
     font-size:12px;
     color:#222;}
-
 .badge-progress-box span {
     display:block;
     margin-top:3px;
     font-size:9px;
     color:#777;}
-
 .badge-progress-box p {
     margin:12px 0 0;
     padding:8px;
@@ -1073,16 +886,13 @@ body.role-member .view-details-btn:hover {
     font-size:10px;
     font-weight:600;
     color:#159447;}
-
 .badge-guide-item {
     display:flex;
     align-items:flex-start;
     gap:9px;
     margin-bottom:12px;}
-
 .badge-guide-item:last-child {
     margin-bottom:0;}
-
 .badge-guide-item span {
     width:21px;
     height:21px;
@@ -1096,20 +906,17 @@ body.role-member .view-details-btn:hover {
     font-size:10px;
     font-weight:700;
     color:#159447;}
-
 .badge-guide-item p {
     margin:2px 0 0;
     font-size:10px;
     line-height:1.4;
     color:#444;}
-
 .badge-empty {
     grid-column:1/-1;
     padding:30px;
     text-align:center;
     font-size:11px;
     color:#888;}
-
     /* Badge Details */
 .badge-detail-card {
     display:grid;
@@ -1117,7 +924,6 @@ body.role-member .view-details-btn:hover {
     gap:20px;
     align-items:center;
     padding:20px;}
-
 .badge-detail-icon {
     width:100px;
     height:100px;
@@ -1127,174 +933,130 @@ body.role-member .view-details-btn:hover {
     background:#f4fbf6;
     border:1px solid #b7dfc5;
     border-radius:9px;}
-
 .badge-detail-icon img {
     width:65px!important;
     height:65px!important;
     object-fit:contain;}
-
 .badge-detail-title h2 {
     margin:0 0 8px;
     font-size:20px;
     color:#222;}
-
 .badge-detail-title p {
     margin:0 0 10px;
     font-size:11px;
     color:#666;}
-
 .badge-info-box {
     margin-top:14px;}
-
 .badge-info-box h3 {
     margin:0 0 10px;
     font-size:13px;
     color:#222;}
-
 .badge-info-box p {
     margin:0;
     font-size:11px;
     line-height:1.6;
     color:#666;}
-
     /* Responsive */
 @media(max-width:1100px) {
 .stats-grid {
     grid-template-columns:repeat(2,1fr);}
-
 .badge-grid {
     grid-template-columns:repeat(2,1fr);}
-
 }
-
 @media(max-width:1000px) {
 .my-request-layout,.badge-page-layout {
     grid-template-columns:1fr;}
-
 .badge-side-area {
     display:grid;
     grid-template-columns:1fr 1fr;}
-
 }
-
 @media(max-width:900px) {
 .recent-request-card,.available-mission-card {
     width:100%;}
-
 }
-
 @media(max-width:850px) {
 .mission-card {
     grid-template-columns:70px 1fr;}
-
 .mission-card-right,.mission-card-action {
     grid-column:2;
     text-align:left;}
-
 }
-
 @media(max-width:750px) {
 .request-tools,.mission-detail-info-grid {
     grid-template-columns:1fr;}
-
 .request-item {
     grid-template-columns:70px 1fr;}
-
 .request-item-date,.request-item-action {
     grid-column:2;
     text-align:left;}
-
 .badge-summary-grid {
     grid-template-columns:repeat(2,1fr);}
-
 .badge-side-area {
     grid-template-columns:1fr;}
-
 }
-
 @media(max-width:700px) {
 .stats-grid {
     grid-template-columns:1fr;}
-
 .mission-detail-header {
     grid-template-columns:70px 1fr;}
-
 .mission-detail-points {
     grid-column:2;}
-
 .proof-upload-form {
     flex-direction:column;
     align-items:stretch;}
-
 .upload-proof-btn {
     width:100%;}
-
 .badge-detail-card {
     grid-template-columns:1fr;}
-
 }
-
 @media(max-width:500px) {
 .badge-grid {
     grid-template-columns:1fr;}
-
 .badge-tabs,.request-tabs {
     overflow-x:auto;}
-
 }
-
 /* Rewards & Redemption */
 .reward-page-header {
     margin-bottom:22px;}
-
 .reward-page-header h1 {
     margin:0 0 5px;
     font-size:28px;
     color:#222;}
-
 .reward-page-header p {
     margin:0;
     font-size:14px;
     color:#777;}
-
 .reward-page-layout {
     display:grid;
     grid-template-columns:minmax(0,1fr) 240px;
     gap:20px;
     align-items:start;}
-
 .reward-main-area {
     min-width:0;}
-
 .reward-side-area {
     display:flex;
     flex-direction:column;
     gap:15px;}
-
 .reward-point-box,.reward-tier-box,.reward-limit-box {
     padding:18px;
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:10px;
     text-align:center;}
-
 .reward-point-box h3,.reward-tier-box h3,.reward-limit-box h3 {
     margin:0 0 15px;
     font-size:14px;
     text-align:left;
     color:#222;}
-
 .reward-point-box>strong {
     display:block;
     font-size:32px;
     color:#159447;}
-
 .reward-point-box>span {
     display:block;
     margin-top:3px;
     font-size:10px;
     color:#777;}
-
 .reward-tier-icon {
     width:70px;
     height:70px;
@@ -1305,82 +1067,67 @@ body.role-member .view-details-btn:hover {
     background:#f4fbf6;
     border:1px solid #b7dfc5;
     border-radius:9px;}
-
 .reward-tier-icon img {
     width:50px!important;
     height:50px!important;
     object-fit:contain;}
-
 .reward-tier-name {
     display:block;
     font-size:13px;
     color:#222;}
-
 .reward-tier-description {
     display:block;
     margin:5px 0 12px;
     font-size:9px;
     line-height:1.4;
     color:#777;}
-
 .reward-tier-info {
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:7px;}
-
 .reward-tier-info div {
     padding:7px;
     background:#f4fbf6;
     border:1px solid #c5e5d0;
     border-radius:6px;}
-
 .reward-tier-info span {
     display:block;
     font-size:8px;
     color:#777;}
-
 .reward-tier-info strong {
     display:block;
     margin-top:2px;
     font-size:11px;
     color:#159447;}
-
 .reward-limit-number {
     display:flex;
     justify-content:center;
     align-items:baseline;
     gap:3px;}
-
 .reward-limit-number strong {
     font-size:25px;
     color:#159447;}
-
 .reward-limit-number span {
     font-size:14px;
     color:#777;}
-
 .reward-limit-box p {
     margin:3px 0 12px;
     font-size:9px;
     color:#777;}
-
 .reward-progress {
     height:7px;
     background:#e5eee8;
     border-radius:10px;
     overflow:hidden;}
-
 .reward-progress-bar {
     height:100%;
     background:#159447;
     border-radius:10px;}
-
 .reward-limit-message {
     display:block;
     margin-top:8px;
     font-size:9px;
     color:#666;}
-
     /* Reward Tabs */
 .reward-tabs {
     display:flex;
@@ -1390,7 +1137,6 @@ body.role-member .view-details-btn:hover {
     border-bottom:none;
     border-radius:9px 9px 0 0;
     overflow:hidden;}
-
 .reward-tab {
     padding:11px 18px;
     background:transparent;
@@ -1402,22 +1148,17 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#555;
     cursor:pointer;}
-
 .reward-tab:hover {
     background:#f0faf4;
     color:#159447;}
-
 .reward-tab.active {
     background:#fff;
     color:#159447;
     border-bottom-color:#159447;}
-
 .reward-tab-content {
     display:none;}
-
 .reward-tab-content.active {
     display:block;}
-
     /* Reward Cards */
 .reward-grid {
     display:grid;
@@ -1427,7 +1168,6 @@ body.role-member .view-details-btn:hover {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:0 0 10px 10px;}
-
 .reward-card {
     display:grid;
     grid-template-columns:100px 1fr;
@@ -1438,7 +1178,6 @@ body.role-member .view-details-btn:hover {
     background:#fff;
     border:1px solid #a9dcbc;
     border-radius:9px;}
-
 .reward-icon {
     width:80px;
     height:80px;
@@ -1449,45 +1188,36 @@ body.role-member .view-details-btn:hover {
     background:#f4fbf6;
     border:1px solid #b7dfc5;
     border-radius:9px;}
-
 .reward-icon span {
     font-size:34px;}
-
 .reward-card-info {
     min-width:0;}
-
 .reward-card-info h3 {
     margin:0 0 6px;
     font-size:14px;
     color:#222;}
-
 .reward-description {
     margin:0 0 10px;
     font-size:10px;
     line-height:1.4;
     color:#777;}
-
 .reward-card-details {
     width:145px;
     margin-bottom:9px;}
-
 .reward-card-details div {
     padding:8px 10px;
     background:#f4fbf6;
     border:1px solid #c5e5d0;
     border-radius:6px;}
-
 .reward-card-details span {
     display:block;
     font-size:8px;
     color:#777;}
-
 .reward-card-details strong {
     display:block;
     margin-top:2px;
     font-size:12px;
     color:#159447;}
-
 .reward-status {
     display:inline-block;
     margin-bottom:9px;
@@ -1495,23 +1225,18 @@ body.role-member .view-details-btn:hover {
     border-radius:5px;
     font-size:9px;
     font-weight:700;}
-
 .reward-status.available {
     background:#d8f2e1;
     color:#0f6f34;}
-
 .reward-status.unavailable {
     background:#fde7e7;
     color:#a33434;}
-
 .reward-status.points {
     background:#e7efff;
     color:#315f9f;}
-
 .reward-status.limit {
     background:#fff3d6;
     color:#8a6813;}
-
 .redeem-btn {
     display:block;
     padding:7px 12px;
@@ -1523,16 +1248,13 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#fff;
     cursor:pointer;}
-
 .redeem-btn:hover {
     background:#117a3a;}
-
 .redeem-btn:disabled {
     background:#eee;
     border-color:#ccc;
     color:#999;
     cursor:not-allowed;}
-
     /* Redemption History */
 .reward-history-box {
     min-height:300px;
@@ -1540,50 +1262,41 @@ body.role-member .view-details-btn:hover {
     background:#fff;
     border:1px solid #7fd09b;
     border-radius:0 0 10px 10px;}
-
 .reward-history-table {
     width:100%;
     border-collapse:collapse;
     border:1px solid #b7dfc5;}
-
 .reward-history-table th {
     padding:11px;
     background:#f4fbf6;
     border-bottom:1px solid #b7dfc5;
     font-size:11px;
     text-align:left;}
-
 .reward-history-table td {
     padding:11px;
     border-bottom:1px solid #e2e2e2;
     font-size:10px;
     color:#555;}
-
 .reward-history-table tr:last-child td {
     border-bottom:none;}
-
 .reward-empty {
     padding:35px;
     text-align:center;
     font-size:11px;
     color:#888;}
-
 .reward-alert {
     padding:10px 14px;
     margin-bottom:15px;
     border-radius:7px;
     font-size:11px;}
-
 .reward-alert.success {
     background:#e2f5e8;
     border:1px solid #a9dbba;
     color:#247a40;}
-
 .reward-alert.error {
     background:#fde7e7;
     border:1px solid #e6a2a2;
     color:#a33434;}
-
     /* Main Dashboard Quick Access Only */
 .main-quick-grid {
     display:grid;
@@ -1591,7 +1304,6 @@ body.role-member .view-details-btn:hover {
     gap:18px;
     margin-top:20px;
     align-items:start;}
-
 .main-quick-grid .dashboard-card {
     width:100%;
     margin:0;
@@ -1600,23 +1312,18 @@ body.role-member .view-details-btn:hover {
     border-radius:12px;
     overflow:hidden;
     box-sizing:border-box;}
-
 .main-request-quick {
     grid-column:span 7;}
-
 .main-reward-quick {
     grid-column:span 5;}
-
     .main-mission-quick,
 .main-notification-quick {
     grid-column:span 6;}
-
     /* Same height */
     .main-request-quick,
     .main-mission-quick,
 .main-notification-quick {
     height:300px;}
-
     /* Header */
 .main-quick-grid .dashboard-card-header {
     height:55px;
@@ -1626,71 +1333,58 @@ body.role-member .view-details-btn:hover {
     padding:0 18px;
     border-bottom:1px solid #b7dfc5;
     box-sizing:border-box;}
-
 .main-quick-grid .dashboard-card-header h2 {
     margin:0;
     font-size:20px;
     color:#222;}
-
 .main-quick-grid .dashboard-card-header a {
     font-size:12px;
     font-weight:600;
     color:#333;
     text-decoration:underline;}
-
 .main-quick-grid .dashboard-card-header a:hover {
     color:#159447;}
-
     /* Request Quick Access */
 .main-request-quick .recent-request-table {
     margin:14px;
     width:auto;}
-
     /* Reward Quick Access */
 .main-reward-quick .ecopoint-progress {
     padding:28px;}
-
 .main-reward-quick .point-top {
     display:flex;
     justify-content:space-between;
     gap:12px;}
-
 .main-reward-quick .point-top>div:first-child strong {
     display:block;
     font-size:38px;
     color:#159447;}
-
 .main-reward-quick .point-top>div:first-child span {
     display:block;
     margin-top:6px;
     font-size:14px;
     color:#777;}
-
 .main-reward-quick .point-top p {
     margin:3px 0 0;
     font-size:13px;
     line-height:1.6;
     text-align:right;
     color:#666;}
-
 .main-reward-quick .dashboard-progress {
     height:13px;
     margin-top:24px;
     background:#e5e5e5;
     border-radius:10px;
     overflow:hidden;}
-
 .main-reward-quick .dashboard-progress-bar {
     height:100%;
     background:#159447;}
-
 .main-reward-quick .progress-number {
     display:block;
     margin-top:6px;
     font-size:12px;
     text-align:right;
     color:#777;}
-
 .main-reward-quick .dashboard-button {
     display:block;
     margin-top:22px;
@@ -1703,23 +1397,18 @@ body.role-member .view-details-btn:hover {
     font-weight:600;
     color:#159447;
     text-decoration:none;}
-
 .main-reward-quick .dashboard-button:hover {
     background:#e8f7ed;}
-
 .main-reward-quick .dashboard-card-header h2 {
     font-size:24px;}
-
     /* Mission Quick Access */
 .main-mission-quick {
     display:flex;
     flex-direction:column;}
-
 .main-mission-quick .available-mission-list {
     flex:1;
     display:flex;
     flex-direction:column;}
-
 .main-mission-quick .mission-preview-item {
     flex:1;
     display:grid;
@@ -1729,49 +1418,39 @@ body.role-member .view-details-btn:hover {
     padding:10px 18px;
     border-bottom:1px solid #dceee2;
     box-sizing:border-box;}
-
 .main-mission-quick .mission-preview-item:last-child {
     border-bottom:none;}
-
 .main-mission-quick .mission-preview-info {
     min-width:0;}
-
 .main-mission-quick .mission-preview-info h3 {
     margin:0 0 4px;
     font-size:13px;
     line-height:1.3;
     color:#222;}
-
 .main-mission-quick .mission-preview-info p {
     margin:0;
     font-size:10px;
     line-height:1.4;
     color:#777;}
-
 .main-mission-quick .mission-preview-point {
     width:70px;
     text-align:center;}
-
 .main-mission-quick .mission-preview-point strong {
     display:block;
     font-size:16px;
     color:#159447;}
-
 .main-mission-quick .mission-preview-point span {
     font-size:9px;
     color:#777;}
-
     /* Notification Quick Access */
 .main-notification-quick {
     display:flex;
     flex-direction:column;}
-
 .main-notification-quick .notification-preview {
     flex:1;
     display:flex;
     flex-direction:column;
     padding:0 18px;}
-
 .main-notification-quick .notification-preview-item {
     flex:1;
     display:grid;
@@ -1781,17 +1460,13 @@ body.role-member .view-details-btn:hover {
     padding:8px 0;
     border-bottom:1px solid #ddd;
     box-sizing:border-box;}
-
 .main-notification-quick .notification-preview-item:last-child {
     border-bottom:none;}
-
     /* Hide notification icon on dashboard */
 .main-notification-quick .notification-small-icon {
     display:none;}
-
 .main-notification-quick .notification-preview-info {
     min-width:0;}
-
 .main-notification-quick .notification-preview-info h3 {
     margin:0 0 3px;
     font-size:11px;
@@ -1799,7 +1474,6 @@ body.role-member .view-details-btn:hover {
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;}
-
 .main-notification-quick .notification-preview-info p {
     margin:0;
     font-size:9px;
@@ -1808,12 +1482,10 @@ body.role-member .view-details-btn:hover {
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;}
-
 .main-notification-quick .notification-date {
     font-size:9px;
     color:#666;
     text-align:right;}
-
     /* Responsive */
 @media(max-width:900px) {
     .main-request-quick,
@@ -1822,5 +1494,487 @@ body.role-member .view-details-btn:hover {
 .main-notification-quick {
     grid-column:1/-1;
     height:auto;}
+}
+/* Assets Marketplace */
+.marketplace-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:22px;
+}
+.marketplace-header h1 {
+    margin:0 0 5px;
+    font-size:28px;
+    color:#222;
+}
+.marketplace-header p {
+    margin:0;
+    font-size:14px;
+    color:#777;
+}
+.marketplace-add-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:11px 18px;
+    background:#159447;
+    border:1px solid #159447;
+    border-radius:7px;
+    font-size:12px;
+    font-weight:600;
+    color:#fff;
+    text-decoration:none;
+}
+.marketplace-add-btn:hover {
+    background:#117a3a;
+}
+/* Marketplace Search and Filter */
+.marketplace-filter-box {
+    padding:18px;
+    margin-bottom:22px;
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:10px;
+}
+.marketplace-filter-form {
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1fr auto;
+    gap:12px;
+    align-items:end;
+}
+.marketplace-filter-group {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.marketplace-filter-group label {
+    font-size:11px;
+    font-weight:600;
+    color:#444;
+}
+.marketplace-filter-group input,
+.marketplace-filter-group select {
+    width:100%;
+    height:40px;
+    padding:0 12px;
+    background:#fff;
+    border:1px solid #cfded4;
+    border-radius:6px;
+    box-sizing:border-box;
+    font-family:inherit;
+    font-size:12px;
+    color:#333;
+}
+.marketplace-filter-group input:focus,
+.marketplace-filter-group select:focus {
+    outline:none;
+    border-color:#159447;
+}
+.marketplace-filter-buttons {
+    display:flex;
+    gap:8px;
+}
+.marketplace-filter-btn,
+.marketplace-reset-btn {
+    height:40px;
+    padding:0 14px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:11px;
+    font-weight:600;
+    cursor:pointer;
+}
+.marketplace-filter-btn {
+    background:#159447;
+    border:1px solid #159447;
+    color:#fff;
+}
+.marketplace-filter-btn:hover {
+    background:#117a3a;
+}
+.marketplace-reset-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    border:1px solid #159447;
+    color:#159447;
+    text-decoration:none;
+}
+.marketplace-reset-btn:hover {
+    background:#f2fbf5;
+}
+/* Marketplace Result */
+.marketplace-result-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+}
+.marketplace-result-header h2 {
+    margin:0;
+    font-size:20px;
+    color:#222;
+}
+.marketplace-result-header span {
+    font-size:11px;
+    color:#777;
+}
+/* Marketplace Asset Cards */
+.marketplace-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:18px;
+}
+.marketplace-card {
+    display:flex;
+    flex-direction:column;
+    min-height:360px;
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:10px;
+    overflow:hidden;
+    box-sizing:border-box;
+}
+.marketplace-card:hover {
+    border-color:#159447;
+    box-shadow:0 4px 12px rgba(0,0,0,0.06);
+}
+.marketplace-card-image {
+    width:100%;
+    height:170px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f4fbf6;
+    border-bottom:1px solid #d8eadf;
+    overflow:hidden;
+}
+.marketplace-card-image img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+.marketplace-no-image {
+    font-size:11px;
+    color:#888;
+}
+.marketplace-card-body {
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    padding:16px;
+}
+.marketplace-category {
+    display:inline-block;
+    width:fit-content;
+    padding:4px 9px;
+    margin-bottom:8px;
+    background:#eaf8ef;
+    border:1px solid #b7dfc5;
+    border-radius:12px;
+    font-size:9px;
+    font-weight:700;
+    color:#159447;
+}
+.marketplace-card-body h3 {
+    margin:0 0 6px;
+    font-size:16px;
+    color:#222;
+}
+.marketplace-owner {
+    margin:0 0 8px;
+    font-size:10px;
+    color:#666;
+}
+.marketplace-description {
+    min-height:42px;
+    margin:0 0 14px;
+    font-size:10px;
+    line-height:1.5;
+    color:#777;
+}
+.marketplace-card-info {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
+}
+.marketplace-card-info div {
+    padding:9px 10px;
+    background:#f7fcf9;
+    border:1px solid #d6eadc;
+    border-radius:6px;
+}
+.marketplace-card-info span {
+    display:block;
+    margin-bottom:3px;
+    font-size:8px;
+    color:#888;
+}
+.marketplace-card-info strong {
+    display:block;
+    font-size:10px;
+    color:#333;
+}
+.marketplace-available {
+    color:#159447!important;
+}
+.marketplace-view-btn {
+    display:block;
+    width:100%;
+    margin-top:auto;
+    padding:9px 12px;
+    background:#159447;
+    border:1px solid #159447;
+    border-radius:6px;
+    box-sizing:border-box;
+    text-align:center;
+    text-decoration:none;
+    font-size:11px;
+    font-weight:600;
+    color:#fff;
+}
+.marketplace-view-btn:hover {
+    background:#117a3a;
+}
+.marketplace-empty {
+    grid-column:1/-1;
+    padding:35px;
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:10px;
+    text-align:center;
+    font-size:12px;
+    color:#777;
+}
+/* Marketplace Responsive */
+@media(max-width:1050px) {
+    .marketplace-filter-form {
+        grid-template-columns:1fr 1fr;
+    }
+    .marketplace-filter-buttons {
+        grid-column:1/-1;
+    }
+    .marketplace-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+}
+@media(max-width:700px) {
+    .marketplace-header {
+        flex-direction:column;
+        align-items:flex-start;
+        gap:12px;
+    }
+    .marketplace-filter-form {
+        grid-template-columns:1fr;
+    }
+    .marketplace-filter-buttons {
+        grid-column:auto;
+    }
+    .marketplace-grid {
+        grid-template-columns:1fr;
+    }
+}
 
+/* List / Edit Asset Form */
+.asset-form-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:20px;
+}
+.asset-form-header h1{
+    margin:0 0 5px;
+    font-size:28px;
+    color:#222;
+}
+.asset-form-header p{
+    margin:0;
+    font-size:14px;
+    color:#777;
+}
+.asset-back-btn{
+    padding:9px 14px;
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:7px;
+    font-size:11px;
+    font-weight:600;
+    color:#159447;
+    text-decoration:none;
+}
+.asset-form-card{
+    padding:22px;
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:10px;
+}
+.asset-form-card h2{
+    margin:0 0 18px;
+    font-size:18px;
+    color:#222;
+}
+.asset-form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+.asset-form-group{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.asset-form-group.full,
+.asset-description-group,
+.asset-image-section,
+.asset-resubmit-status{
+    grid-column:1/-1;
+}
+.asset-form-group label,
+.asset-image-section>label{
+    font-size:11px;
+    font-weight:600;
+    color:#333;
+}
+.asset-form-group input,
+.asset-form-group select,
+.asset-form-group textarea{
+    width:100%;
+    padding:10px 12px;
+    background:#fff;
+    border:1px solid #cfded4;
+    border-radius:6px;
+    box-sizing:border-box;
+    font-family:inherit;
+    font-size:12px;
+    color:#333;
+}
+.asset-form-group textarea{
+    min-height:110px;
+    resize:vertical;
+}
+.asset-form-group input:focus,
+.asset-form-group select:focus,
+.asset-form-group textarea:focus{
+    outline:none;
+    border-color:#159447;
+}
+.asset-image-section{
+    margin-top:16px;
+}
+.asset-current-image{
+    width:120px;
+    height:100px;
+    margin:8px 0;
+    border:1px solid #ddd;
+    border-radius:7px;
+    object-fit:cover;
+    overflow:hidden;
+}
+.asset-current-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+.asset-upload-box{
+    padding:12px;
+    background:#f7fcf9;
+    border:1px dashed #9bd8b0;
+    border-radius:7px;
+}
+.asset-upload-box input{
+    font-size:11px;
+}
+.asset-upload-box p{
+    margin:6px 0 0;
+    font-size:9px;
+    color:#777;
+}
+.asset-resubmit-status{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:16px;
+}
+.asset-resubmit-status div{
+    padding:10px;
+    background:#f4fbf6;
+    border:1px solid #b7dfc5;
+    border-radius:7px;
+}
+.asset-resubmit-status span{
+    display:block;
+    margin-bottom:3px;
+    font-size:9px;
+    color:#777;
+}
+.asset-resubmit-status strong{
+    font-size:11px;
+    color:#159447;
+}
+.asset-form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:20px;
+}
+.asset-submit-btn,
+.asset-cancel-btn{
+    padding:10px 18px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:11px;
+    font-weight:600;
+}
+.asset-submit-btn{
+    background:#159447;
+    border:1px solid #159447;
+    color:#fff;
+    cursor:pointer;
+}
+.asset-submit-btn:hover{
+    background:#117a3a;
+}
+.asset-cancel-btn{
+    background:#fff;
+    border:1px solid #159447;
+    color:#159447;
+    text-decoration:none;
+}
+.asset-form-alert{
+    padding:10px 14px;
+    margin-bottom:15px;
+    border-radius:7px;
+    font-size:11px;
+}
+.asset-form-alert.success{
+    background:#e2f5e8;
+    color:#247a40;
+}
+.asset-form-alert.error{
+    background:#fde7e7;
+    color:#a33434;
+}
+.asset-status-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+@media(max-width:700px){
+    .asset-form-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+    .asset-form-grid,
+    .asset-resubmit-status{
+        grid-template-columns:1fr;
+    }
+    .asset-form-group.full,
+    .asset-description-group,
+    .asset-image-section,
+    .asset-resubmit-status{
+        grid-column:auto;
+    }
 }
