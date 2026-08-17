@@ -39,6 +39,13 @@ if ($role == 'Manager') {
 ?>
 
 <header class="app-header">
+  <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="4" y1="7" x2="20" y2="7"></line>
+      <line x1="4" y1="12" x2="20" y2="12"></line>
+      <line x1="4" y1="17" x2="20" y2="17"></line>
+    </svg>
+  </button>
   <?php if ($role === 'Admin'): ?>
     <form class="header-search-container" method="GET" action="/CirculAPU/Admin/admin_dashboard.php" role="search">
       <img class="header-search-icon" src="/CirculAPU/assets/icons/search.png" alt="" width="20" height="20">

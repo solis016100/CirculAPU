@@ -31,8 +31,13 @@
         display:none!important;
     }
 
+    .about-page .mobile-menu-btn{
+        display:none!important;
+    }
+
     .about-page .header-right-actions{
-        width:100%;
+        width:auto;
+        margin-left:auto;
         justify-content:flex-end;
         gap:10px;
     }

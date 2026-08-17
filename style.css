@@ -2361,3 +2361,303 @@ body.auth-page {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* ========================================================================== 
+   MOBILE APP SHELL, AUTHENTICATION & SHARED PAGES
+   ========================================================================== */
+
+.mobile-menu-btn,
+.sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body:not(.auth-page):not(.signup-page-body):not(.reset-page-body) {
+        overflow-x: hidden;
+    }
+
+    .dashboard-container,
+    .main-content,
+    .dashboard-container.sidebar-collapsed .main-content {
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
+    }
+
+    .sidebar,
+    .sidebar.collapsed {
+        width: min(82vw, 300px);
+        transform: translateX(-105%);
+        transition: transform var(--transition-speed) ease-in-out;
+        box-shadow: 12px 0 30px rgba(15, 23, 42, 0.16);
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .sidebar.collapsed .sidebar-logo-text,
+    .sidebar.collapsed .nav-text,
+    .sidebar.collapsed .logout-text {
+        display: inline;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .sidebar.collapsed .sidebar-logo-container {
+        display: flex;
+    }
+
+    .sidebar.collapsed .sidebar-header {
+        justify-content: space-between;
+    }
+
+    .sidebar.collapsed .nav-item {
+        justify-content: flex-start;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 950;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: rgba(15, 23, 42, 0.42);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    body.mobile-nav-open .sidebar-backdrop {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .mobile-menu-btn {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #fff;
+        color: #0f172a;
+        cursor: pointer;
+    }
+
+    .mobile-menu-btn svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .app-header {
+        height: 62px;
+        min-height: 62px;
+        gap: 10px;
+        padding: 0 14px;
+    }
+
+    .header-search-container {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+    }
+
+    .header-search-container input {
+        min-width: 0;
+    }
+
+    .header-right-actions {
+        flex: 0 0 auto;
+        gap: 8px;
+    }
+
+    .header-divider,
+    .user-info-text {
+        display: none;
+    }
+
+    .user-avatar-circle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .page-body,
+    .dashboard-page {
+        min-width: 0;
+        padding: 18px 14px 28px;
+    }
+
+    .management-heading,
+    .management-heading-action {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .management-heading h1 {
+        font-size: clamp(23px, 7vw, 28px);
+        line-height: 1.2;
+    }
+
+    .management-heading p {
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .management-heading-action .management-create-btn,
+    .management-create-btn {
+        width: 100%;
+    }
+
+    .management-filter {
+        padding: 16px;
+    }
+
+    .management-filter form {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .management-filter-buttons {
+        flex-direction: row;
+    }
+
+    .management-filter-btn,
+    .management-reset-btn {
+        flex: 1;
+        height: 42px;
+    }
+
+    .content-card .card-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .content-card .card-header form,
+    .content-card .card-header .management-create-btn {
+        width: 100%;
+    }
+
+    .table-wrapper,
+    .management-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+        min-width: 720px;
+    }
+
+    .right-sidebar {
+        right: -105%;
+        width: min(88vw, 320px);
+    }
+
+    .logout-confirm-card {
+        width: calc(100% - 32px);
+        max-width: 420px;
+        padding: 24px 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    body.auth-page {
+        height: auto;
+        min-height: 100svh;
+        overflow-y: auto;
+    }
+
+    .auth-page .hero-section {
+        display: none;
+    }
+
+    .login-section {
+        width: 100%;
+        min-height: 100svh;
+        padding: 32px 20px;
+    }
+
+    .login-title {
+        margin-bottom: 26px;
+        font-size: clamp(1.8rem, 9vw, 2.15rem);
+    }
+
+    .options-row {
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    body.signup-page-body,
+    body.reset-page-body {
+        justify-content: flex-start;
+        min-height: 100svh;
+        padding: 24px 16px 32px;
+    }
+
+    .signup-header img,
+    .reset-header img {
+        max-width: 88px;
+    }
+
+    .signup-header h1,
+    .reset-header h1 {
+        font-size: 1.7rem;
+    }
+
+    .step-indicator {
+        width: 100%;
+        gap: 6px;
+    }
+
+    .step-pill {
+        flex: 1;
+        padding: 7px 8px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .email-field-row {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .verification-sidebar {
+        width: 100%;
+        flex-direction: row;
+    }
+
+    .verification-input,
+    .resend-btn {
+        min-height: 40px;
+    }
+
+    .verification-input {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 430px) {
+    .app-header .header-search-container {
+        display: none;
+    }
+
+    .app-header .header-right-actions {
+        margin-left: auto;
+    }
+
+    .options-row {
+        flex-direction: column;
+    }
+}

@@ -145,24 +145,53 @@ if ($user_role === 'Admin'
     </button>
   </div>
 </aside>
+<button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation" tabindex="-1"></button>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const sidebar   = document.getElementById('sidebar');
     const container = document.querySelector('.dashboard-container');
     const toggleBtn = document.getElementById('sidebarToggleBtn');
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const backdrop  = document.getElementById('sidebarBackdrop');
 
     if (!sidebar || !toggleBtn) return;
 
+    const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+    const closeMobileMenu = () => {
+      sidebar.classList.remove('mobile-open');
+      document.body.classList.remove('mobile-nav-open');
+      mobileBtn?.setAttribute('aria-expanded', 'false');
+    };
+
+    mobileBtn?.addEventListener('click', () => {
+      const willOpen = !sidebar.classList.contains('mobile-open');
+      sidebar.classList.toggle('mobile-open', willOpen);
+      document.body.classList.toggle('mobile-nav-open', willOpen);
+      mobileBtn.setAttribute('aria-expanded', String(willOpen));
+    });
+    backdrop?.addEventListener('click', closeMobileMenu);
+    sidebar.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileMenu));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeMobileMenu();
+    });
+    window.addEventListener('resize', () => {
+      if (!isMobile()) closeMobileMenu();
+    });
+
     // Restore state from LocalStorage
     const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
-    if (isCollapsed) {
+    if (isCollapsed && !isMobile()) {
       sidebar.classList.add('collapsed');
       if (container) container.classList.add('sidebar-collapsed');
     }
 
     // Toggle click listener
     toggleBtn.addEventListener('click', () => {
+      if (isMobile()) {
+        closeMobileMenu();
+        return;
+      }
       sidebar.classList.toggle('collapsed');
       if (container) container.classList.toggle('sidebar-collapsed');
 
