@@ -61,7 +61,7 @@ if($tierResult&&$tierResult->num_rows>0){
     ];
 }
 
-/* Redemption Limit */
+/* Redemption Limit Based On Tier */
 $maxRedeem=$tier['minimumExchanges'];
 
 if($maxRedeem==0){
@@ -92,18 +92,19 @@ if(isset($_POST['redeem'])){
     if($rewardResult&&$rewardResult->num_rows>0){
         $reward=$rewardResult->fetch_assoc();
 
-        if($totalRedeemed>=$maxRedeem){
-            $message="You have reached the redemption limit for your current tier.";
-            $messageType="error";
-        }elseif($reward['quantity']<=0||$reward['availability']!='Available'){
-            $message="This reward is currently unavailable.";
+        if($reward['quantity']<=0||$reward['availability']!='Available'){
+            $message="This reward is currently not available.";
             $messageType="error";
         }elseif($totalPoints<$reward['ecoPointsCost']){
             $message="You do not have enough EcoPoints.";
             $messageType="error";
+        }elseif($totalRedeemed>=$maxRedeem){
+            $message="You have reached the redemption limit for your current tier.";
+            $messageType="error";
         }else{
             $cost=$reward['ecoPointsCost'];
 
+            /* Generate Redemption ID */
             $idQuery="
             SELECT redemptionID
             FROM rewardredemption
@@ -124,18 +125,21 @@ if(isset($_POST['redeem'])){
             $conn->begin_transaction();
 
             try{
+                /* Deduct EcoPoints */
                 $conn->query("
                 UPDATE user
                 SET ecopoint=ecopoint-$cost
                 WHERE userID='$userID'
                 ");
 
+                /* Reduce Reward Stock */
                 $conn->query("
                 UPDATE rewards
                 SET quantity=quantity-1
                 WHERE rewardID='$rewardID'
                 ");
 
+                /* Save Redemption History */
                 $conn->query("
                 INSERT INTO rewardredemption
                 (redemptionID,userID,rewardID,redemptionDate)
@@ -143,6 +147,7 @@ if(isset($_POST['redeem'])){
                 ('$redemptionID','$userID','$rewardID',NOW())
                 ");
 
+                /* Set Unavailable When Stock Is Empty */
                 $conn->query("
                 UPDATE rewards
                 SET availability='Unavailable'
@@ -154,10 +159,12 @@ if(isset($_POST['redeem'])){
 
                 $totalPoints-=$cost;
                 $totalRedeemed++;
+
                 $message="Reward redeemed successfully!";
                 $messageType="success";
             }catch(Exception $e){
                 $conn->rollback();
+
                 $message="Unable to redeem reward.";
                 $messageType="error";
             }
@@ -165,7 +172,7 @@ if(isset($_POST['redeem'])){
     }
 }
 
-/* Refresh Tier */
+/* Refresh User Tier */
 $tierQuery="
 SELECT *
 FROM tiers
@@ -212,6 +219,7 @@ if($redeemProgress>100){
     $redeemProgress=100;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -219,10 +227,10 @@ if($redeemProgress>100){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rewards & Redemption - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_style.css?v=31">
+<link rel="stylesheet" href="member_style.css?v=32">
 </head>
-<body class="role-member">
 
+<body class="role-member">
 <div class="dashboard-container">
 <?php include '../sidebar.php'; ?>
 
@@ -245,11 +253,18 @@ if($redeemProgress>100){
 <div class="reward-page-layout">
     <div class="reward-main-area">
 
+        <!-- Reward Tabs -->
         <div class="reward-tabs">
-            <button class="reward-tab active" onclick="openRewardTab('rewardList',this)">Redeem Rewards</button>
-            <button class="reward-tab" onclick="openRewardTab('rewardHistory',this)">Redemption History</button>
+            <button class="reward-tab active" onclick="openRewardTab('rewardList',this)">
+                Redeem Rewards
+            </button>
+
+            <button class="reward-tab" onclick="openRewardTab('rewardHistory',this)">
+                Redemption History
+            </button>
         </div>
 
+        <!-- Redeem Rewards -->
         <div id="rewardList" class="reward-tab-content active">
             <div class="reward-grid">
 
@@ -257,10 +272,10 @@ if($redeemProgress>100){
             <?php while($reward=$rewardResult->fetch_assoc()): ?>
 
             <?php
-            $enoughPoints=$totalPoints>=$reward['ecoPointsCost'];
             $inStock=$reward['quantity']>0&&$reward['availability']=='Available';
+            $enoughPoints=$totalPoints>=$reward['ecoPointsCost'];
             $withinLimit=$totalRedeemed<$maxRedeem;
-            $canRedeem=$enoughPoints&&$inStock&&$withinLimit;
+            $canRedeem=$inStock&&$enoughPoints&&$withinLimit;
             ?>
 
                 <div class="reward-card">
@@ -269,34 +284,51 @@ if($redeemProgress>100){
                     </div>
 
                     <div class="reward-card-info">
-                        <h3><?php echo htmlspecialchars($reward['rewardName']); ?></h3>
-                        <p class="reward-description"><?php echo htmlspecialchars($reward['rewardDescription']); ?></p>
+                        <h3>
+                            <?php echo htmlspecialchars($reward['rewardName']); ?>
+                        </h3>
 
+                        <p class="reward-description">
+                            <?php echo htmlspecialchars($reward['rewardDescription']); ?>
+                        </p>
+
+                        <!-- Only Show EcoPoints -->
                         <div class="reward-card-details">
                             <div>
-                                <span>EcoPoints</span>
+                                <span>EcoPoints Required</span>
                                 <strong><?php echo $reward['ecoPointsCost']; ?></strong>
-                            </div>
-
-                            <div>
-                                <span>Quantity</span>
-                                <strong><?php echo $reward['quantity']; ?></strong>
                             </div>
                         </div>
 
-                        <?php if(!$withinLimit): ?>
-                            <span class="reward-status limit">Tier Limit Reached</span>
-                        <?php elseif(!$inStock): ?>
-                            <span class="reward-status unavailable">Unavailable</span>
+                        <!-- Reward Status -->
+                        <?php if(!$inStock): ?>
+                            <span class="reward-status unavailable">
+                                Not Available
+                            </span>
+
                         <?php elseif(!$enoughPoints): ?>
-                            <span class="reward-status points">Not Enough EcoPoints</span>
+                            <span class="reward-status points">
+                                Not Enough EcoPoints
+                            </span>
+
+                        <?php elseif(!$withinLimit): ?>
+                            <span class="reward-status limit">
+                                Tier Limit Reached
+                            </span>
+
                         <?php else: ?>
-                            <span class="reward-status available">Available</span>
+                            <span class="reward-status available">
+                                Available
+                            </span>
                         <?php endif; ?>
 
                         <form method="POST">
-                            <input type="hidden" name="rewardID" value="<?php echo $reward['rewardID']; ?>">
-                            <button type="submit" name="redeem" class="redeem-btn"
+                            <input type="hidden" name="rewardID"
+                            value="<?php echo htmlspecialchars($reward['rewardID']); ?>">
+
+                            <button type="submit"
+                            name="redeem"
+                            class="redeem-btn"
                             <?php echo !$canRedeem?'disabled':''; ?>
                             onclick="return confirm('Are you sure you want to redeem this reward?')">
                                 Redeem Now
@@ -307,14 +339,20 @@ if($redeemProgress>100){
 
             <?php endwhile; ?>
             <?php else: ?>
-                <div class="reward-empty">No rewards available.</div>
+
+                <div class="reward-empty">
+                    No rewards available.
+                </div>
+
             <?php endif; ?>
 
             </div>
         </div>
 
+        <!-- Redemption History -->
         <div id="rewardHistory" class="reward-tab-content">
             <div class="reward-history-box">
+
                 <table class="reward-history-table">
                     <thead>
                         <tr>
@@ -325,37 +363,54 @@ if($redeemProgress>100){
                     </thead>
 
                     <tbody>
+
                     <?php if($historyResult&&$historyResult->num_rows>0): ?>
                     <?php while($history=$historyResult->fetch_assoc()): ?>
 
                         <tr>
-                            <td><?php echo htmlspecialchars($history['rewardName']); ?></td>
-                            <td><?php echo $history['ecoPointsCost']; ?></td>
-                            <td><?php echo date("d M Y",strtotime($history['redemptionDate'])); ?></td>
+                            <td>
+                                <?php echo htmlspecialchars($history['rewardName']); ?>
+                            </td>
+
+                            <td>
+                                <?php echo $history['ecoPointsCost']; ?>
+                            </td>
+
+                            <td>
+                                <?php echo date("d M Y",strtotime($history['redemptionDate'])); ?>
+                            </td>
                         </tr>
 
                     <?php endwhile; ?>
                     <?php else: ?>
 
                         <tr>
-                            <td colspan="3" class="reward-empty">No redemption history found.</td>
+                            <td colspan="3" class="reward-empty">
+                                No redemption history found.
+                            </td>
                         </tr>
 
                     <?php endif; ?>
+
                     </tbody>
                 </table>
+
             </div>
         </div>
+
     </div>
 
+    <!-- Right Side -->
     <div class="reward-side-area">
 
+        <!-- EcoPoints -->
         <div class="reward-point-box">
             <h3>My EcoPoints</h3>
             <strong><?php echo $totalPoints; ?></strong>
             <span>Available EcoPoints</span>
         </div>
 
+        <!-- User Tier -->
         <div class="reward-tier-box">
             <h3>My Tier</h3>
 
@@ -385,6 +440,7 @@ if($redeemProgress>100){
             </div>
         </div>
 
+        <!-- Redemption Progress -->
         <div class="reward-limit-box">
             <h3>Redemption Progress</h3>
 
@@ -396,16 +452,26 @@ if($redeemProgress>100){
             <p>Rewards Redeemed</p>
 
             <div class="reward-progress">
-                <div class="reward-progress-bar" style="width:<?php echo $redeemProgress; ?>%"></div>
+                <div class="reward-progress-bar"
+                style="width:<?php echo $redeemProgress; ?>%">
+                </div>
             </div>
 
             <?php if($totalRedeemed>=$maxRedeem): ?>
-                <span class="reward-limit-message">Current tier limit reached</span>
-            <?php else: ?>
+
                 <span class="reward-limit-message">
-                    <?php echo $maxRedeem-$totalRedeemed; ?> redemptions remaining
+                    Current tier limit reached
                 </span>
+
+            <?php else: ?>
+
+                <span class="reward-limit-message">
+                    <?php echo $maxRedeem-$totalRedeemed; ?>
+                    redemptions remaining
+                </span>
+
             <?php endif; ?>
+
         </div>
 
     </div>
