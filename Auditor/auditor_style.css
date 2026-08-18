@@ -406,6 +406,7 @@
 .required {
     color: red !important;
     border: none !important;
+    margin-left: -3px;
 }
 
 /* Shared Create Page Buttons */

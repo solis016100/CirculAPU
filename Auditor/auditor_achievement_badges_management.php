@@ -164,6 +164,13 @@
                         </div>
                     <?php endif; ?>
 
+                    <!-- Green bar showing Success Updation -->
+                    <?php if (isset($_GET['success'])): ?>
+                        <div class="alert alert-success">
+                            Achievement Badge updated successfully.
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Search and Filter -->
                     <div class="management-filter">
                         <form method="GET" action="auditor_achievement_badges_management.php">
