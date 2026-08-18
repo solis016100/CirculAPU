@@ -123,6 +123,75 @@
 
                 $stmt->execute();
             }
+
+            // Award EcoPoints for approved Mission
+            if ($targetType == 'MissionSubmission' && $newStatus === 'Approved') {
+                // Get mission ID and EcoPoints reward
+                $stmt = $conn->prepare("SELECT m.missionID, m.ecoPointsReward
+                    FROM missions m
+                    INNER JOIN missionsubmission ms
+                        ON m.missionID = ms.missionID
+                    WHERE ms.submissionID = ?
+                ");
+
+                $stmt->bind_param(
+                    "s",
+                    $verification['targetID']
+                );
+
+                $stmt->execute();
+
+                $missionData = $stmt->get_result()->fetch_assoc();
+
+
+                if ($missionData) {
+
+                    $points = (int)$missionData['ecoPointsReward'];
+
+                    // Generate transaction ID
+                    $result = $conn->query("SELECT COALESCE(
+                            MAX(CAST(SUBSTRING(transactionID, 3) AS UNSIGNED)), 0
+                        ) + 1 AS nextID
+                        FROM ecopointstransaction
+                    ");
+
+                    $nextID = $result->fetch_assoc()['nextID'];
+
+                    $transactionID = 'ET' . str_pad(
+                        $nextID,
+                        3,
+                        '0',
+                        STR_PAD_LEFT
+                    );
+
+
+                    // Insert EcoPoints transaction
+                    $stmt = $conn->prepare("
+                        INSERT INTO ecopointstransaction
+                        (
+                            transactionID,
+                            userID,
+                            points,
+                            transactionType,
+                            sourceType,
+                            referenceID,
+                            transactionDate
+                        )
+                        VALUES (?, ?, ?, 'Earned', 'Mission', ?, NOW())
+                    ");
+
+                    $stmt->bind_param(
+                        "ssis",
+                        $transactionID,
+                        $verification['userID'],
+                        $points,
+                        $missionData['missionID']
+                    );
+
+                    $stmt->execute();
+                }
+            }
+
             // Send notification to Member
             $result = $conn->query("SELECT COALESCE(
                     MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0
@@ -175,6 +244,61 @@
             );
 
             $notify->execute();
+
+            // Update Member EcoPoints Balance
+            $stmt = $conn->prepare("
+                UPDATE user
+                SET ecopoint = ecopoint + ?
+                WHERE userID = ?
+            ");
+
+            $stmt->bind_param(
+                "is",
+                $points,
+                $verification['userID']
+            );
+
+            $stmt->execute();
+
+            // Create system log
+            $result = $conn->query("
+                SELECT COALESCE(
+                    MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0
+                ) + 1 AS nextID
+                FROM systemlog
+            ");
+
+            $nextID = $result->fetch_assoc()['nextID'];
+
+            $logID = 'LOG' . str_pad(
+                $nextID,
+                3,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            $actionType = $newStatus === 'Approved'
+                ? 'Approve'
+                : 'Reject';
+
+            $description = "$newStatus verification $id";
+
+            $stmt = $conn->prepare("
+                INSERT INTO systemlog
+                (logID, userID, actionType, refType, refID, description)
+                VALUES (?, ?, ?, 'Verification', ?, ?)
+            ");
+
+            $stmt->bind_param(
+                "sssss",
+                $logID,
+                $_SESSION['user_id'],
+                $actionType,
+                $id,
+                $description
+            );
+
+            $stmt->execute();
 
             // Update Asset COndition
             if ($targetType == 'Asset' && $selectedCondition != '') {

@@ -134,6 +134,30 @@
 
                     if (mysqli_stmt_execute($stmt)) {
                         mysqli_stmt_close($stmt);
+                        // Get next notification ID
+                        $result = mysqli_query($conn, "SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0) + 1 AS nextID FROM notification");
+
+                        $row = mysqli_fetch_assoc($result);
+                        $nextNotificationID = (int)$row['nextID'];
+
+                        // Notify all members
+                        $members = mysqli_query($conn, "SELECT userID FROM user WHERE role = 'Member'");
+
+                        while ($member = mysqli_fetch_assoc($members)) {
+                            $notificationID = "N" . str_pad($nextNotificationID++, 3, "0", STR_PAD_LEFT);
+
+                            $title = "New Achievement Badge!";
+                            $content = "A new badge \"{$badgeName}\" is now available. Requirement: {$badgeRequirement}";
+                            $status = "Unread";
+
+                            $notification = mysqli_prepare($conn, "INSERT INTO notification(notificationID, userID, title, content, status) VALUES (?, ?, ?, ?, ?)");
+
+                            mysqli_stmt_bind_param($notification, "sssss", $notificationID, $member['userID'], $title, $content, $status);
+
+                            mysqli_stmt_execute($notification);
+                            mysqli_stmt_close($notification);
+                        }
+
                         // Create System Log
                         $logResult = mysqli_query($conn, "SELECT MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)) + 1 AS nextID FROM systemlog");
 

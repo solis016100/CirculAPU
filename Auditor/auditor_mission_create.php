@@ -44,6 +44,26 @@
                 $s->bind_param("ssss",$logID,$_SESSION['user_id'],$missionID,$log);
                 $s->execute();
 
+                /* Notify members about new mission created */
+                if ($status === 'Active'){
+                    $members = $conn->query("SELECT userID FROM user WHERE role = 'Member'");
+
+                    $notificationID = 'N' . str_pad($r->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+                    while ($member = $members->fetch_assoc()) {
+                        $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0) + 1 AS nextID FROM notification");
+                        
+                        $title = 'New Mission Available!';
+                        $content = "A new mission \"$name\" is available. Complete it to earn $points EcoPoints.";
+
+                        $notify = $conn->prepare("INSERT INTO notification (notificationID, userID, title, content, status, createdDate) VALUES (?, ?, ?, ?, 'Unread', NOW())");
+
+                        $notify->bind_param("ssss", $notificationID, $member['userID'], $title, $content);
+
+                        $notify->execute();
+                    }
+                }
+
                 $conn->commit();
                 header("Location: auditor_mission_create.php?created=1");
                 exit;

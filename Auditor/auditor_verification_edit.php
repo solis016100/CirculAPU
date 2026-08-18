@@ -54,34 +54,37 @@
         exit("Record not found.");
     }
 
+    $targetType = $r['targetType'];
+    $condition = '';
+    if ($targetType === 'Asset') {
+        $stmt = $conn->prepare("SELECT assetCondition FROM assets WHERE assetID = ?");
+        $stmt->bind_param("s", $r['targetID']);
+        $stmt->execute();
+        $asset = $stmt->get_result()->fetch_assoc();
+        if ($asset) {
+            $condition = $asset['assetCondition'];
+        }
+    }
+
     /* UPDATE */
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $remarks = trim($_POST['remarks']);
+        $remarks = trim($_POST['remarks'] ?? '');
+        $condition = $_POST['condition'] ?? '';
 
-        $q = $conn->prepare("
-            UPDATE verificationrecords
-            SET remarks = ?
-            WHERE verificationID = ?
-        ");
+        $q = $conn->prepare("UPDATE verificationrecords SET remarks = ? WHERE verificationID = ?");
 
         $q->bind_param("ss", $remarks, $id);
         $q->execute();
 
-        createUpdateLog(
-            $conn,
-            $_SESSION['user_id'],
-            'Verification',
-            $id,
-            "Updated verification remarks: $id"
-        );
+        if ($targetType === 'Asset' && $condition !== '') {
+            $q = $conn->prepare("UPDATE assets SET assetCondition = ? WHERE assetID = ?");
+            $q->bind_param("ss", $condition, $r['targetID']);
+            $q->execute();
+        }
 
-        header(
-            "Location: auditor_verification_view.php?"
-            . http_build_query([
-                'verificationID' => $id,
-                'success' => 1
-            ])
-        );
+        createUpdateLog($conn, $_SESSION['user_id'], 'Verification', $id, "Updated verification remarks: $id");
+
+        header("Location: auditor_verification_view.php?" . http_build_query(['verificationID' => $id, 'success' => 1]));
         exit();
     }
 ?>
@@ -171,6 +174,26 @@
                             value="<?= $r['verifiedDate'] ? date('d M Y, h:i A', strtotime($r['verifiedDate'])) : '-' ?>"
                             readonly>
                     </div>
+
+                    <?php if ($targetType == 'Asset'): ?>
+                        <div class="auditor-management-edit-row">
+                            <label for="condition">Condition</label>
+                            <select name="condition" id="condition">
+                                <option value="Good" <?= $condition == 'Good' ? 'selected' : '' ?>>
+                                    Good
+                                </option>
+                                <option value="Like New" <?= $condition == 'Like New' ? 'selected' : '' ?>>
+                                    Like New
+                                </option>
+                                <option value="Fair" <?= $condition == 'Fair' ? 'selected' : '' ?>>
+                                    Fair
+                                </option>
+                                <option value="Poor" <?= $condition == 'Poor' ? 'selected' : '' ?>>
+                                    Poor
+                                </option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="auditor-management-edit-row">
                         <label>Status</label>

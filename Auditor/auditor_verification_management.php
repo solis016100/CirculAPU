@@ -495,6 +495,12 @@
         function closeDeletePopout() {
             document.getElementById('deletePopout').style.display = 'none';
         }
+
+        document.querySelectorAll('.management-table tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                if (window.innerWidth <= 768) row.ondblclick?.();
+            });
+        });
     </script>
 
 
