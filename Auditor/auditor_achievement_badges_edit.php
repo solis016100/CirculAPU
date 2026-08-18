@@ -158,7 +158,11 @@
                         $log->execute();
 
                         /* Successful Update */
-                        header("Location: auditor_achievement_badges_view.php?achieveBadgeID=" . urlencode($id) . "&updated=1");
+                        if ($from === 'management') {
+                            header("Location: auditor_achievement_badges_management.php?updated=1");
+                        }else {
+                            header("Location: auditor_achievement_badges_view.php?achieveBadgeID=" . urlencode($id) . "&updated=1");
+                        }
 
                         exit();
                     }else {

@@ -96,7 +96,7 @@
                 <h1>Achievement Badge Details</h1>
 
                 <!-- Green bar showing Success Updation -->
-                <?php if (isset($_GET['success'])): ?>
+                <?php if (isset($_GET['updated'])): ?>
                     <div class="alert alert-success">
                         Achievement Badge updated successfully.
                     </div>
