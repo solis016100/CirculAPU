@@ -15,6 +15,8 @@
     $badgeName = "";
     $badgeDescription = "";
     $badgeRequirement = "";
+    $requirementType = "";
+    $requirementValue = "";
 
     // Check Duplicate Badge Name
     if (isset($_POST['checkBadgeName'])) {
@@ -56,7 +58,21 @@
         // Keep entered values
         $badgeName = trim($_POST['badgeName'] ?? '');
         $badgeDescription = trim($_POST['badgeDescription'] ?? '');
-        $badgeRequirement = trim($_POST['badgeRequirement'] ?? '');
+        $requirementType = $_POST['requirementType'] ?? '';
+        $requirementValue = (int)($_POST['requirementValue'] ?? 0);
+        if ($requirementType === 'mission') {
+            $badgeRequirement = "Complete {$requirementValue} missions";
+        }elseif ($requirementType === 'ecopoints') {
+            $badgeRequirement = "Reach {$requirementValue} EcoPoints";
+        }elseif ($requirementType === 'asset') {
+            $badgeRequirement = "Get {$requirementValue} approved assets";
+        }elseif ($requirementType === 'borrowing') {
+            $badgeRequirement = "Borrow {$requirementValue} assets";
+        }elseif ($requirementType === 'reward') {
+            $badgeRequirement = "Redeem {$requirementValue} rewards";
+        }else {
+            $badgeRequirement = '';
+        }
 
         // Check if badge name exist in database
         $nameStmt = mysqli_prepare($conn, "SELECT achieveBadgeID FROM achievementbadges WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?)) LIMIT 1");
@@ -80,9 +96,9 @@
             // Duplicate badge name - stop badge creation
         }elseif ($badgeDescription === '') {
             $errorMessage = "Please enter the badge description.";
-        }elseif ($badgeRequirement === '') {
-            $errorMessage = "Please enter the badge requirement.";
-        }elseif (!isset($_FILES['badgeIcon']) || $_FILES['badgeIcon']['error'] ===  UPLOAD_ERR_NO_FILE) {
+        }elseif ($requirementType === '' || $requirementValue < 1 || $requirementValue > 10000) {
+            $errorMessage = "Please select a valid requirement.";
+        }elseif (!isset($_FILES['badgeIcon']) || $_FILES['badgeIcon']['error'] === UPLOAD_ERR_NO_FILE) {
             $errorMessage = "Please upload a badge icon.";
         }else {
             $file = $_FILES['badgeIcon'];
@@ -228,13 +244,40 @@
                             <textarea id="badgeDescription" name="badgeDescription" rows="5" maxlength="500"placeholder="Enter badge description"required><?php echo htmlspecialchars($badgeDescription); ?></textarea>
                         </div>
 
-                        <!-- Badge Requirement -->
+                        <!-- Requirement Type -->
+                        <div class="auditor-management-edit-row">
+                            <label for="requirementType">
+                                Requirement Type
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="requirementType" name="requirementType" required>
+                                <option value="">Select requirement type</option>
+                                <option value="mission">Missions Completed</option>
+                                <option value="ecopoints">EcoPoints Reached</option>
+                                <option value="asset">Approved Assets</option>
+                                <option value="borrowing">Assets Borrowed</option>
+                                <option value="reward">Rewards Redeemed</option>
+                            </select>
+                        </div>
+
+                        <!-- Requirement Value -->
+                        <div class="auditor-management-edit-row">
+                            <label for="requirementValue">
+                                Requirement Value
+                                <span class="required">*</span>
+                            </label>
+
+                            <input type="number" id="requirementValue" name="requirementValue" min="1" max="10000" placeholder="Enter value" required>
+                        </div>
+
+                        <!-- Generated Requirement -->
                         <div class="auditor-management-edit-row">
                             <label for="badgeRequirement">
                                 Requirement
-                                <span class="required">*</span>
                             </label>
-                            <textarea id="badgeRequirement" name="badgeRequirement" rows="4" maxlength="300" placeholder="Enter requirement to earn this badge" required><?php echo htmlspecialchars($badgeRequirement); ?></textarea>
+
+                            <input type="text" id="badgeRequirement" name="badgeRequirement" readonly required>
                         </div>
 
                         <!-- Badge Icon -->
@@ -359,6 +402,9 @@
     <?php endif; ?>
 
     <script>
+        const requirementType = document.getElementById('requirementType');
+        const requirementValue = document.getElementById('requirementValue');
+        const badgeRequirement = document.getElementById('badgeRequirement');
         const badgeForm = document.getElementById('badgeForm');
         const createBadgeButton = document.getElementById('createBadgeButton');
         const createBadgePopout = document.getElementById('createBadgePopout');
@@ -366,6 +412,31 @@
         const confirmCreateBadge = document.getElementById('confirmCreateBadge');
         const duplicateBadgePopout = document.getElementById('duplicateBadgePopout');
         const duplicateBadgeOK = document.getElementById('duplicateBadgeOK');
+
+        // Badge Requirement
+        function updateRequirement(){
+            const type = requirementType.value;
+            const value = requirementValue.value;
+
+            if (!type || !value) {
+                badgeRequirement.value = '';
+                return;
+            }
+
+            if (type === 'mission'){
+                badgeRequirement.value = `Complete ${value} missions`;
+            }else if (type === 'ecopoints'){
+                badgeRequirement.value = `Reach ${value} EcoPoints`;
+            }else if (type === 'asset'){
+                badgeRequirement.value = `Get ${value} approved assets`;
+            }else if (type === 'borrowing'){
+                badgeRequirement.value = `Borrow ${value} assets`;
+            }else if (type === 'reward'){
+                badgeRequirement.value = `Redeem ${value} rewards`;
+            }
+        }
+        requirementType.addEventListener('change', updateRequirement);
+        requirementValue.addEventListener('input', updateRequirement);
 
         // Open confirmation popup
         createBadgeButton.addEventListener('click', function () {
