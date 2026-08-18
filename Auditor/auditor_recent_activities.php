@@ -823,7 +823,6 @@ try {
 
 </div>
 
-<?php include 'auditor_responsive_navigation.php'; ?>
 
 </body>
 

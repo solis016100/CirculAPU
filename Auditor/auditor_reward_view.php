@@ -255,6 +255,5 @@
         <img src="../assets/images/<?php echo htmlspecialchars($reward['rewardImage']); ?>" alt="<?php echo htmlspecialchars($reward['rewardName']); ?>" onclick="event.stopPropagation();">
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

@@ -337,6 +337,5 @@
         });
         </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>
