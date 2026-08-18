@@ -65,7 +65,7 @@
         $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'MissionSubmission'");
 
         // Count Low Stock Rewards
-        $lowStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity < 3;");
+        $lowStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity > 0 AND quantity < 3;");
 
         // Count Out of Stock Rewards
         $outOfStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity = 0");
@@ -214,7 +214,7 @@
                     </a>
 
                     <!-- Pending Mission Submissions -->
-                    <a href="auditor_verification_management.php?type=Mission&status=Pending" class="stat-card">
+                    <a href="auditor_verification_management.php?type=MissionSubmission&status=Pending" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
                         </div>
@@ -242,7 +242,7 @@
                     </a>
 
                     <!-- Out of Stock Rewards -->
-                    <a href="auditor_rewards_management.php?quantity=Out%20of%20Stock" class="stat-card">
+                    <a href="auditor_rewards_management.php?quantity=out_of_stock" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/out-of-stock.png" alt="OutofStock">
                         </div>
@@ -339,7 +339,7 @@
                                 <h2>Notifications</h2>
                             </div>
 
-                            <a href="auditor_notification.php">View All</a>
+                            <a href="../notifications.php">View All</a>
                         </div>
 
                         <div class="notification-list">

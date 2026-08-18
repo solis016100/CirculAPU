@@ -91,6 +91,38 @@
             $stmt->bind_param("ssss", $newStatus, $remarks, $_SESSION['user_id'], $id);
 
             $stmt->execute();
+
+            // Update MissionSubmission / Asset status
+            if ($targetType == 'MissionSubmission') {
+                $stmt = $conn->prepare("UPDATE missionsubmission
+                    SET submissionStatus = ?
+                    WHERE submissionID = ?
+                ");
+
+                $stmt->bind_param(
+                    "ss",
+                    $newStatus,
+                    $verification['targetID']
+                );
+
+                $stmt->execute();
+
+            } elseif ($targetType == 'Asset') {
+
+                $stmt = $conn->prepare("
+                    UPDATE assets
+                    SET verificationStatus = ?
+                    WHERE assetID = ?
+                ");
+
+                $stmt->bind_param(
+                    "ss",
+                    $newStatus,
+                    $verification['targetID']
+                );
+
+                $stmt->execute();
+            }
             // Send notification to Member
             $result = $conn->query("SELECT COALESCE(
                     MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0

@@ -108,8 +108,17 @@
 
         // Filter by Quantity
         if ($quantity !== '') {
-            $safeQuantity = mysqli_real_escape_string($conn, $quantity);
-            $conditions[] = "quantity = '$safeQuantity'";
+            if ($quantity === 'low') {
+                // Low Stock = quantity 1 or 2
+                $conditions[] = "quantity > 0 AND quantity < 3";
+            }elseif ($quantity === 'out_of_stock') {
+                // Out of Stock = quantity 0
+                $conditions[] = "quantity = 0";
+            }else {
+                // Normal quantity filter
+                $safeQuantity = mysqli_real_escape_string($conn, $quantity);
+                $conditions[] = "quantity = '$safeQuantity'";
+            }
         }
 
         // Filter by Availability
@@ -251,9 +260,24 @@
                             <label for="quantity">Quantity</label>
                             <select id="quantity" name="quantity">
                                 <option value="">All Quantity</option>
+                                <!-- Low Stock -->
+                                <option value="low"
+                                    <?php echo ($quantity === 'low') ? 'selected' : ''; ?>>
+                                    Low Stock (1-2)
+                                </option>
+
+                                <!-- Out of Stock -->
+                                <option value="out_of_stock"
+                                    <?php echo ($quantity === 'out_of_stock') ? 'selected' : ''; ?>>
+                                    Out of Stock (0)
+                                </option>
+
+                                <!-- Individual Quantities -->
                                 <?php while ($row = mysqli_fetch_assoc($quantityResult)) { ?>
-                                    <option value="<?php echo $row['quantity']; ?>"<?php if ($quantity == $row['quantity']) {echo 'selected';}?>>
-                                        <?php echo $row['quantity']; ?>
+                                    <option value="<?php echo htmlspecialchars($row['quantity']); ?>"
+                                        <?php if ($quantity == $row['quantity']) { echo 'selected';}?>
+                                    >
+                                        <?php echo htmlspecialchars($row['quantity']); ?>
                                     </option>
                                 <?php } ?>
                             </select>
