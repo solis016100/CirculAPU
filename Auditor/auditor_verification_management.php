@@ -113,7 +113,7 @@
             $sql .= " AND vr.status = '$safeStatus'";
         }
 
-        $sql .= " ORDER BY vr.verifiedDate DESC";
+        $sql .= " ORDER BY vr.verificationID DESC";
 
         $countSql = "SELECT COUNT(*) AS total
              FROM verificationrecords vr

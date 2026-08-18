@@ -91,6 +91,58 @@
             $stmt->bind_param("ssss", $newStatus, $remarks, $_SESSION['user_id'], $id);
 
             $stmt->execute();
+            // Send notification to Member
+            $result = $conn->query("SELECT COALESCE(
+                    MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0
+                ) + 1 AS nextID
+                FROM notification
+            ");
+
+            $nextID = $result->fetch_assoc()['nextID'];
+
+            $notificationID = 'N' . str_pad(
+                $nextID,
+                3,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            if ($targetType == 'MissionSubmission') {
+                if ($newStatus === 'Approved') {
+                    $title = 'Mission Approved!';
+                    $content = 'Your mission "' . $targetName . '" has been approved by the auditor.';
+                } else {
+                    $title = 'Mission Rejected';
+                    $content = 'Your mission "' . $targetName . '" has been rejected by the auditor. Please check the remarks.';
+                }
+
+            } else {
+
+                if ($newStatus === 'Approved') {
+                    $title = 'Asset Approved!';
+                    $content = 'Your asset "' . $targetName . '" has been approved by the auditor.';
+                } else {
+                    $title = 'Asset Rejected';
+                    $content = 'Your asset "' . $targetName . '" has been rejected by the auditor. Please check the remarks.';
+                }
+
+            }
+
+            $notify = $conn->prepare("
+                INSERT INTO notification
+                (notificationID, userID, title, content, status, createdDate)
+                VALUES (?, ?, ?, ?, 'Unread', NOW())
+            ");
+
+            $notify->bind_param(
+                "ssss",
+                $notificationID,
+                $verification['userID'],
+                $title,
+                $content
+            );
+
+            $notify->execute();
 
             // Update Asset COndition
             if ($targetType == 'Asset' && $selectedCondition != '') {
