@@ -58,12 +58,12 @@ $bottom_nav_icons = [
 $bottom_nav_links = $bottom_nav_items[$bottom_nav_role] ?? $bottom_nav_items['Member'];
 ?>
 <nav class="role-bottom-nav" aria-label="<?php echo htmlspecialchars($bottom_nav_role, ENT_QUOTES, 'UTF-8'); ?> mobile navigation" style="--bottom-nav-count: <?php echo count($bottom_nav_links); ?>">
-<?php foreach ($bottom_nav_links as [$label, $href, $icon, $pages]):
-    $is_active = in_array($bottom_nav_page, $pages, true);
+<?php foreach ($bottom_nav_links as [$bottom_nav_label, $bottom_nav_href, $bottom_nav_icon, $bottom_nav_active_pages]):
+    $bottom_nav_is_active = in_array($bottom_nav_page, $bottom_nav_active_pages, true);
 ?>
-    <a href="<?php echo htmlspecialchars($href, ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo $is_active ? 'active' : ''; ?>"<?php echo $is_active ? ' aria-current="page"' : ''; ?>>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?php echo $bottom_nav_icons[$icon]; ?></svg>
-        <span><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></span>
+    <a href="<?php echo htmlspecialchars($bottom_nav_href, ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo $bottom_nav_is_active ? 'active' : ''; ?>"<?php echo $bottom_nav_is_active ? ' aria-current="page"' : ''; ?>>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?php echo $bottom_nav_icons[$bottom_nav_icon]; ?></svg>
+        <span><?php echo htmlspecialchars($bottom_nav_label, ENT_QUOTES, 'UTF-8'); ?></span>
     </a>
 <?php endforeach; ?>
 </nav>
