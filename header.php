@@ -36,9 +36,21 @@ if ($role == 'Manager') {
     $notification_url = '/CirculAPU/notifications.php';
 }
 
+$home_urls = [
+    'Admin' => '/CirculAPU/Admin/admin_dashboard.php',
+    'Auditor' => '/CirculAPU/Auditor/auditor_dashboard.php',
+    'Manager' => '/CirculAPU/Manager/manager_dashboard.php',
+    'Member' => '/CirculAPU/Members/member_dashboard.php',
+];
+$home_url = $home_urls[$role] ?? '/CirculAPU/dashboard.php';
+
 ?>
 
 <header class="app-header">
+  <a class="mobile-header-brand" href="<?php echo htmlspecialchars($home_url, ENT_QUOTES, 'UTF-8'); ?>" aria-label="CirculAPU dashboard">
+    <img src="/CirculAPU/assets/images/logo.png" alt="">
+    <span>CirculAPU</span>
+  </a>
   <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <line x1="4" y1="7" x2="20" y2="7"></line>
@@ -84,6 +96,7 @@ if ($role == 'Manager') {
 
 <!-- Include the popup Right Bar -->
 <?php include_once 'right_bar.php'; ?>
+<?php include_once __DIR__ . '/bottom_nav.php'; ?>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {

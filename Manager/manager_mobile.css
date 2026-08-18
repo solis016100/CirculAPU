@@ -7,15 +7,13 @@
 .mobile-report-ui,
 .mobile-report-list,
 .mobile-category-assets,
-.mobile-borrowing-ui,
-.manager-mobile-nav{
+.mobile-borrowing-ui{
     display:none;
 }
 
 @media(max-width:600px){
     body.role-manager{
         overflow-x:hidden;
-        padding-bottom:72px;
     }
 
     .role-manager .sidebar{
@@ -27,42 +25,6 @@
         margin-left:0!important;
         width:100%!important;
         max-width:100%!important;
-    }
-
-    .role-manager .app-header{
-        height:58px;
-        min-height:58px;
-        padding:0 14px;
-        position:sticky;
-        top:0;
-        z-index:50;
-    }
-
-    .role-manager .header-search-container,
-    .role-manager .header-divider{
-        display:none;
-    }
-
-    .role-manager .header-right-actions{
-        width:100%;
-        justify-content:flex-end;
-        gap:10px;
-    }
-
-    .role-manager .header-user-profile{
-        min-width:0;
-    }
-
-    .role-manager .user-email-subtitle{
-        display:none;
-    }
-
-    .role-manager .user-role-title span{
-        max-width:145px;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        white-space:nowrap;
-        font-size:13px;
     }
 
     .role-manager .dashboard-page{
@@ -266,44 +228,6 @@
         font-size:11px;
     }
 
-    .manager-mobile-nav{
-        position:fixed;
-        left:0;
-        right:0;
-        bottom:0;
-        z-index:80;
-        height:64px;
-        padding:6px 8px max(6px,env(safe-area-inset-bottom));
-        display:grid;
-        grid-template-columns:repeat(5,1fr);
-        background:#fff;
-        border-top:1px solid #dbeafe;
-        box-shadow:0 -6px 20px rgba(15,23,42,.08);
-    }
-
-    .manager-mobile-nav a{
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        gap:3px;
-        color:#64748b;
-        font-size:10px;
-        font-weight:600;
-        text-decoration:none;
-        border-radius:10px;
-    }
-
-    .manager-mobile-nav a.active{
-        color:var(--primary-color);
-        background:var(--badge-bg);
-    }
-
-    .manager-mobile-nav svg{
-        width:20px;
-        height:20px;
-        stroke:currentColor;
-    }
 }
 
 
@@ -576,28 +500,6 @@
     .mobile-category-desc{margin:10px 0 0;font-size:11px;line-height:1.4;color:#64748b}
     .mobile-category-meta span{display:block;margin-bottom:3px;font-size:9px;color:#94a3b8}
     .mobile-category-meta strong{font-size:11px;color:#334155}
-}
-
-
-/* Mobile header brand only */
-@media(max-width:600px){
-    .role-manager .app-header::before{
-        content:"CirculAPU";
-        position:absolute;
-        left:14px;
-        top:50%;
-        transform:translateY(-50%);
-        height:30px;
-        padding-left:32px;
-        display:flex;
-        align-items:center;
-        background:url("../assets/images/logo.png") left center/26px 26px no-repeat;
-        color:#0f172a;
-        font-size:13px;
-        font-weight:700;
-        white-space:nowrap;
-        pointer-events:none;
-    }
 }
 
 
@@ -1196,7 +1098,6 @@
 @media print{
     .role-manager .sidebar,
     .role-manager .app-header,
-    .role-manager .manager-mobile-nav,
     .role-manager .breadcrumb,
     .role-manager .management-heading p,
     .role-manager .asset-detail-actions{
@@ -1596,7 +1497,6 @@
 @media print{
     .role-manager .sidebar,
     .role-manager .app-header,
-    .role-manager .manager-mobile-nav,
     .role-manager .breadcrumb,
     .role-manager .category-page-actions,
     .role-manager .mobile-category-assets{
@@ -2011,9 +1911,7 @@
 @media print{
     #right-sidebar,
     .right-sidebar,
-    .right-sidebar-toggle,
-    .manager-mobile-nav,
-    .role-manager .manager-mobile-nav{
+    .right-sidebar-toggle{
         display:none!important;
         visibility:hidden!important;
     }
@@ -2110,7 +2008,6 @@
     .role-manager:has(.print-report) .app-header,
     .role-manager:has(.print-report) .right-sidebar,
     .role-manager:has(.print-report) .right-sidebar-toggle,
-    .role-manager:has(.print-report) .manager-mobile-nav,
     .role-manager:has(.print-report) .page-body > *:not(.print-report),
     .role-manager:has(.print-report) .print-report h1,
     .role-manager:has(.print-report) .print-meta{
