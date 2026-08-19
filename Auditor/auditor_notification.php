@@ -157,7 +157,7 @@
                         <div class="management-filter-group">
                             <label>Type</label>
                             <select name="type">
-                                <option value="">All Types</option><?php foreach(['Verification','Mission','Reward','Badge','User Tier','Borrowing','System'] as $x): ?>
+                                <option value="">All Types</option><?php foreach(['Verification','Mission','Reward','Badge','System'] as $x): ?>
                                 <option <?= $type==$x?'selected':'' ?>><?=$x?></option>
                             <?php endforeach; ?>
                             </select>

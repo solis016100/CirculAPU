@@ -176,7 +176,7 @@
 
                             <!-- Back Button -->
                             <div class="auditor-management-detail-back">
-                                <a href="auditor_achievement_badges_management.php">
+                                <a href="auditor_achievement_badges_management.php?search=<?= urlencode($_GET['search'] ?? '') ?>&badge=<?= urlencode($_GET['badge'] ?? '') ?>&page=<?= urlencode($_GET['page'] ?? 1) ?>">
                                     Back
                                 </a>
                             </div>

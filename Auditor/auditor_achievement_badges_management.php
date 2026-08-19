@@ -89,13 +89,13 @@
         // Search
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $badgeQuery .= "AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
+            $badgeQuery .= " AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
 
         // Filter by badge
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
-            $badgeQuery .= "AND achieveBadgeID = '$safeBadgeFilter'";
+            $badgeQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
         // Total badges records
@@ -103,12 +103,12 @@
 
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $countQuery .= "AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
+            $countQuery .= " AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
 
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
-            $countQuery .= "AND achieveBadgeID = '$safeBadgeFilter'";
+            $countQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
         $countResult = mysqli_query($conn, $countQuery);

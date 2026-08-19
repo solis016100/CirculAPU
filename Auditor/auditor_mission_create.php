@@ -12,6 +12,19 @@
     $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(missionID,2) AS UNSIGNED)),0)+1 n FROM missions");
     $missionID = 'M' . str_pad($r->fetch_assoc()['n'], 3, '0', STR_PAD_LEFT);
     $error = '';
+    $duplicateMessage = '';
+
+    if (isset($_POST['checkMissionName'])) {
+        $name = trim($_POST['missionName'] ?? '');
+
+        $check = $conn->prepare("SELECT missionID FROM missions WHERE LOWER(TRIM(missionName)) = LOWER(TRIM(?)) LIMIT 1");
+
+        $check->bind_param("s", $name);
+        $check->execute();
+
+        echo $check->get_result()->num_rows > 0 ? 'exists' : 'available';
+        exit;
+    }
 
     /* Create */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,53 +34,48 @@
         $points = (int)($_POST['ecoPointsReward'] ?? 0);
         $status = $_POST['status'] ?? '';
 
-        if (!$name || !$desc || !$req || $points < 1 || !in_array($status, ['Active','Inactive'])) {
+        if (!$name || !$desc || !$req || $points < 1 || !in_array($status, ['Active','Inactive'])){
             $error = 'Please complete all fields correctly.';
         }else {
             try {
                 $conn->begin_transaction();
 
-                $s = $conn->prepare("INSERT INTO missions
-                    (missionID,missionName,missionDescription,missionRequirement,ecoPointsReward,status)
-                    VALUES (?,?,?,?,?,?)");
-                $s->bind_param("ssssis",$missionID,$name,$desc,$req,$points,$status);
+                $s = $conn->prepare("INSERT INTO missions(missionID,missionName,missionDescription,missionRequirement,ecoPointsReward,status) VALUES (?,?,?,?,?,?)");
+                $s->bind_param("ssssis", $missionID, $name, $desc, $req, $points, $status);
                 $s->execute();
 
-                /* Log ID */
-                $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 n FROM systemlog");
-                $logID = 'LOG' . str_pad($r->fetch_assoc()['n'],3,'0',STR_PAD_LEFT);
+                /* System Log */
+                $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0) + 1 AS n FROM systemlog");
+
+                $logID = 'LOG' . str_pad($r->fetch_assoc()['n'], 3, '0', STR_PAD_LEFT);
                 $log = "Created new mission: $name";
 
-                $s = $conn->prepare("INSERT INTO systemlog
-                    (logID,userID,actionType,refType,refID,description)
-                    VALUES (?,?,'Create','Mission',?,?)");
-                $s->bind_param("ssss",$logID,$_SESSION['user_id'],$missionID,$log);
+                $s = $conn->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description)VALUES (?,?,'Create','Mission',?,?)");
+                $s->bind_param("ssss", $logID, $_SESSION['user_id'], $missionID, $log);
                 $s->execute();
 
-                /* Notify members about new mission created */
-                if ($status === 'Active'){
+                /* Notify Members only if Active */
+                if ($status === 'Active') {
                     $members = $conn->query("SELECT userID FROM user WHERE role = 'Member'");
 
-                    $notificationID = 'N' . str_pad($r->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
-
                     while ($member = $members->fetch_assoc()) {
-                        $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0) + 1 AS nextID FROM notification");
-                        
+                        $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
+
+                        $notificationID = 'N' . str_pad($r->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
                         $title = 'New Mission Available!';
                         $content = "A new mission \"$name\" is available. Complete it to earn $points EcoPoints.";
 
-                        $notify = $conn->prepare("INSERT INTO notification (notificationID, userID, title, content, status, createdDate) VALUES (?, ?, ?, ?, 'Unread', NOW())");
+                        $notify = $conn->prepare("INSERT INTO notification(notificationID,userID,title,content,status,createdDate) VALUES (?, ?, ?, ?, 'Unread', NOW())");
 
                         $notify->bind_param("ssss", $notificationID, $member['userID'], $title, $content);
-
                         $notify->execute();
                     }
                 }
-
                 $conn->commit();
                 header("Location: auditor_mission_create.php?created=1");
                 exit;
-            }catch (Throwable $e) {
+            } catch (Throwable $e) {
                 $conn->rollback();
                 $error = 'Unable to create mission. Please try again.';
             }
@@ -123,7 +131,7 @@
 
                         <div class="auditor-management-edit-row">
                             <label>Mission Name<span class="required">*</span></label>
-                            <input name="missionName" placeholder="Enter Mission Name..." required>
+                            <input id="missionName" name="missionName" placeholder="Enter Mission Name..." required>
                         </div>
 
                         <div class="auditor-management-edit-row">
@@ -161,7 +169,7 @@
                             Clear Form
                         </button>
 
-                        <button type="submit" class="auditor-management-detail-action auditor-create-btn">
+                        <button type="button" id="createMissionButton" class="auditor-management-detail-action auditor-create-btn">
                             <img src="../assets/icons/create.png" alt="">
                             Create Mission
                         </button>
@@ -197,6 +205,23 @@
         </div>
     </div>
 
+    <!-- Duplicate Mission Name Pop Out -->
+    <div id="duplicateMissionPopout" class="auditor-popout">
+        <div class="auditor-popout-box">
+            <h2>Duplicate Mission Name</h2>
+            <p>
+                This mission name already exists.
+                Please enter a different name.
+            </p>
+
+            <div class="auditor-popout-actions">
+                <button type="button" class="auditor-popout-confirm" onclick="closeDuplicateMission()">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Success Creation of Mission -->
     <div id="successPopout" class="auditor-popout">
@@ -218,29 +243,40 @@
     <script>
         const form = document.getElementById('missionForm');
         const confirmPopout = document.getElementById('confirmPopOut');
+        const createMissionButton = document.getElementById('createMissionButton');
+        const duplicateMissionPopout = document.getElementById('duplicateMissionPopout');
 
-        form.onsubmit = e => {
-            e.preventDefault();
-
+        createMissionButton.addEventListener('click', function () {
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
 
-            const data = {
-                confirmID: '<?= $missionID ?>',
-                confirmName: form.missionName.value,
-                confirmPoints: form.ecoPointsReward.value + ' EcoPoints',
-                confirmStatus: form.status.value,
-                confirmDescription: form.missionDescription.value,
-                confirmRequirement: form.missionRequirement.value
-            };
+            const data = new FormData();
+            data.append('checkMissionName', '1');
+            data.append('missionName', form.missionName.value);
 
-            for (let id in data)
-                document.getElementById(id).textContent = data[id];
+            fetch('auditor_mission_create.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(response => response.text())
+            .then(result => {
 
-            confirmPopout.classList.add('show');
-        };
+                if (result.trim() === 'exists') {
+                    duplicateMissionPopout.classList.add('show');
+                    return;
+                }
+
+                document.getElementById('confirmID').textContent = '<?= $missionID ?>';
+                document.getElementById('confirmName').textContent = form.missionName.value;
+                document.getElementById('confirmPoints').textContent = form.ecoPointsReward.value + ' EcoPoints';
+                document.getElementById('confirmStatus').textContent = form.status.value;
+                document.getElementById('confirmDescription').textContent = form.missionDescription.value;
+                document.getElementById('confirmRequirement').textContent = form.missionRequirement.value;
+                confirmPopout.classList.add('show');
+            });
+        });
 
         function closeConfirm() {
             confirmPopout.classList.remove('show');
@@ -248,6 +284,11 @@
 
         function confirmCreate() {
             form.submit();
+        }
+
+        function closeDuplicateMission() {
+            duplicateMissionPopout.classList.remove('show');
+            document.getElementById('missionName').focus();
         }
 
         <?php if (($_GET['created'] ?? '') === '1'): ?>
