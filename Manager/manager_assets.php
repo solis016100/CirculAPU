@@ -200,6 +200,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 <?php if (($_GET['removed'] ?? '') === '1'): ?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif; ?>
+<?php if (($_GET['reviewDone'] ?? '') === 'return'): ?><div class="alert alert-success">Asset listing returned for correction successfully.</div><?php elseif (($_GET['reviewDone'] ?? '') === 'verify'): ?><div class="alert alert-success">Asset listing sent for Sustainability Auditor verification successfully.</div><?php endif; ?>
 
 <section class="management-filter desktop-management-filter">
 <form method="GET">

@@ -98,6 +98,21 @@ try {
             $stmt->close();
         }
 
+        $auditorIDs = [];
+        if (!$error && $action === 'verify') {
+            $stmt = $conn->prepare("
+                SELECT userID
+                FROM user
+                WHERE role='Auditor' AND status='Active'
+                ORDER BY dateCreated ASC,userID ASC
+            ");
+            $stmt->execute();
+            $auditorRows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+            $auditorIDs = array_column($auditorRows, 'userID');
+            if (!$auditorIDs) $error = 'No active Sustainability Auditor account is available. Please try again after an Auditor is activated.';
+        }
+
         if (!$error) {
             $newStatus = $action === 'return' ? 'Draft' : ($action === 'verify' ? 'Ready for Verification' : 'Pending Review');
             $conn->begin_transaction();
@@ -140,12 +155,24 @@ try {
                 $stmt->bind_param('sssss', $logID, $managerID, $logAction, $assetID, $logText);
                 $stmt->execute(); $stmt->close();
 
+                $verificationID = '';
+                if ($action === 'verify') {
+                    $verificationID = nextID($conn, 'verificationrecords', 'verificationID', 'V');
+                    $stmt = $conn->prepare("
+                        INSERT INTO verificationrecords
+                        (verificationID,userID,verifiedBy,targetID,targetType,status,remarks,verifiedDate)
+                        VALUES (?,?,NULL,?,'Asset','Pending',NULL,NULL)
+                    ");
+                    $stmt->bind_param('sss', $verificationID, $asset['ownerID'], $assetID);
+                    $stmt->execute(); $stmt->close();
+                }
+
                 if ($action !== 'save') {
                     $notificationID = nextID($conn, 'notification', 'notificationID', 'N');
                     $title = $action === 'return' ? 'Asset Listing Returned' : 'Asset Sent for Verification';
                     $content = $action === 'return'
-                        ? "Asset $assetID was returned for correction. Reason: $reason"
-                        : "Asset $assetID has been sent for Sustainability Auditor verification.";
+                        ? "Your asset listing $assetID ($name) was returned for correction. Reason: $reason"
+                        : "Your asset listing $assetID ($name) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.";
 
                     $stmt = $conn->prepare("
                         INSERT INTO notification(notificationID,userID,title,content,status)
@@ -153,6 +180,20 @@ try {
                     ");
                     $stmt->bind_param('ssss', $notificationID, $asset['ownerID'], $title, $content);
                     $stmt->execute(); $stmt->close();
+                }
+
+                if ($action === 'verify') {
+                    $auditorTitle = 'Asset Ready for Verification';
+                    $auditorContent = "Asset $assetID ($name), submitted by {$asset['ownerName']} ({$asset['ownerID']}), has passed Resource Manager review and is ready for verification. Verification ID: $verificationID.";
+                    foreach ($auditorIDs as $auditorID) {
+                        $auditorNotificationID = nextID($conn, 'notification', 'notificationID', 'N');
+                        $stmt = $conn->prepare("
+                            INSERT INTO notification(notificationID,userID,title,content,status)
+                            VALUES (?,?,?,?,'Unread')
+                        ");
+                        $stmt->bind_param('ssss', $auditorNotificationID, $auditorID, $auditorTitle, $auditorContent);
+                        $stmt->execute(); $stmt->close();
+                    }
                 }
 
                 $conn->commit();
