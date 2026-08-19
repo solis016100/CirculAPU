@@ -96,7 +96,6 @@ try{
             COUNT(DISTINCT tr.requesterID) users
             FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID $ws",$t,$p);
 
-        /* These cards must respect the SAME transaction filters as the table/charts. */
         $stats['active']=one($c,"SELECT COUNT(*) total
             FROM transactionrequests tr
             JOIN assets a ON a.assetID=tr.assetID
@@ -162,7 +161,7 @@ try{
 
         $chart1=q($c,"SELECT c.categoryName label,COUNT(*) total FROM assets a JOIN categories c ON c.categoryID=a.categoryID $ws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$t,$p);
         $chart2=q($c,"SELECT c.categoryName label,COUNT(*) total FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID JOIN categories c ON c.categoryID=a.categoryID $tws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$tt,$tp);
-        /* Keep current-borrowing chart aligned with the filtered asset metrics. */
+        
         $chart3=q($c,"SELECT c.categoryName label,COUNT(*) total
             FROM assets a
             JOIN categories c ON c.categoryID=a.categoryID
@@ -170,11 +169,6 @@ try{
             GROUP BY c.categoryID,c.categoryName
             ORDER BY total DESC LIMIT 6",$t,$p);
 
-        /*
-         * Category table must use the same filters as the cards/charts.
-         * Asset metrics use asset created date + condition.
-         * Transaction metrics use request date + the selected asset condition.
-         */
         $assetExtra='';
         $assetParams=[];$assetTypes='';
         if($from){$assetExtra.=" AND DATE(x.createdDate)>=?";$assetParams[]=$from;$assetTypes.='s';}
@@ -205,7 +199,6 @@ try{
             FROM categories c ".($category?"WHERE c.categoryID=?":"")."
             ORDER BY totalTransactions DESC,totalAssets DESC";
 
-        /* assetExtra is repeated 3 times and txExtra 2 times in the SQL. */
         $rowParams=array_merge(
             $assetParams,$assetParams,$assetParams,
             $txParams,$txParams,
@@ -279,7 +272,6 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 </section>
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
-
 
 <section class="mobile-report-ui">
 <details class="mobile-filter-card" <?=($from||$to||$category||$condition||$availability||$listing||$status)?'open':''?>>
@@ -399,7 +391,6 @@ foreach($cards as $x):?>
 
 </section>
 <?php endif;?>
-
 
 <section class="mobile-report-list">
 <div class="mobile-section-heading">

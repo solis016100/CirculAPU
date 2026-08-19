@@ -211,7 +211,6 @@ $details = $asset ? [
 
 </main>
 
-
 </div>
 </div>
 </body>

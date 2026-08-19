@@ -109,7 +109,6 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <?php else: ?>
 
-<!-- Heading -->
 <section class="management-heading category-heading">
     <div>
         <div class="breadcrumb">
@@ -152,7 +151,6 @@ $icon = iconPath($category['categoryIcon'] ?? '');
     <div class="alert alert-success">Category updated successfully.</div>
 <?php endif; ?>
 
-<!-- Information + Statistics -->
 <section class="category-detail-layout">
 
 <article class="content-card category-info-card">
@@ -194,8 +192,6 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 </article>
 
 </section>
-
-<!-- Recent Assets -->
 
 <section class="mobile-category-assets">
 <div class="mobile-section-heading">
@@ -307,7 +303,6 @@ function openDetailCategoryAction(action){
 <?php endif;?>
 
 </main>
-
 
 </div>
 </div>

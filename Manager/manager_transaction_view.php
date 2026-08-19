@@ -541,7 +541,6 @@ onclick="pickupBox.showModal()">Confirm Pickup</button>
 </section>
 </div>
 
-
 <section class="content-card tx-activity">
 <div class="card-header"><h2>Transaction Activity<?= $logs?' ('.count($logs).')':''?></h2></div>
 <div class="table-wrapper"><table class="data-table">

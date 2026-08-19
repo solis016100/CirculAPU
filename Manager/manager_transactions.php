@@ -245,7 +245,6 @@ Waiting for Pickup Confirmation (<?=$stats['pickup']?>)
 </a>
 </section>
 
-
 <section class="mobile-transaction-ui">
 <details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo||$pickupOnly)?'open':''?>>
 <summary><span>Filter Transactions</span><?php if($search||$status||$dateFrom||$dateTo||$pickupOnly):?><small>Filters active</small><?php endif;?></summary>

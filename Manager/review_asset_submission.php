@@ -37,7 +37,6 @@ $conditions = ['New','Like New','Good','Fair','Poor'];
 try {
     $conn->set_charset('utf8mb4');
 
-    /* 1. Load Asset */
     $stmt = $conn->prepare("
         SELECT a.*,u.name ownerName,u.email ownerEmail
         FROM assets a
@@ -55,7 +54,6 @@ try {
         header("Location: manager_asset_view.php?assetID=".rawurlencode($assetID).$navParam); exit();
     }
 
-    /* 2. Active Categories + Current Category */
     if ($asset) {
         $stmt = $conn->prepare("
             SELECT categoryID,categoryName
@@ -69,7 +67,6 @@ try {
         $stmt->close();
     }
 
-    /* 3. Review */
     if ($asset && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['assetName'] ?? '');
         $categoryID = trim($_POST['categoryID'] ?? '');
@@ -173,7 +170,6 @@ try {
         $asset['description'] = $description;
         $asset['availabilityStatus'] = $availability;
     }
-
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -309,7 +305,6 @@ $image = imagePath($asset['imageURL'] ?? '');
 <?php endif; ?>
 
 </main>
-
 
 </div>
 </div>

@@ -105,7 +105,6 @@ try {
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 
-
 <section class="mobile-recent-activities-ui">
 <details class="mobile-filter-card" <?=($search||$refType||$actionType)?'open':''?>>
 <summary><span>Filter Activities</span><?php if($search||$refType||$actionType):?><small>Filters active</small><?php endif;?></summary>
@@ -225,7 +224,6 @@ try {
 </section>
 
 </main>
-
 
 </div>
 </div>

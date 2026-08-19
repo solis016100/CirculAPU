@@ -24,7 +24,6 @@ $error = '';
 try {
     $conn->set_charset('utf8mb4');
 
-    /* 1. Actions */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
@@ -46,7 +45,6 @@ try {
         }
     }
 
-    /* 2. Counts */
     $stmt = $conn->prepare("
         SELECT COUNT(*) total,SUM(status='Unread') unread
         FROM notification WHERE userID=?
@@ -59,7 +57,6 @@ try {
     $total = (int)($counts['total'] ?? 0);
     $unread = (int)($counts['unread'] ?? 0);
 
-    /* 3. List */
     $sql = "SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=?";
     $types = 's';
     $params = [$managerID];
@@ -83,7 +80,6 @@ try {
     $stmt->execute();
     $notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
-
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -124,7 +120,6 @@ try {
 <?php if (($_GET['updated'] ?? '') === '1'): ?><div class="alert alert-success">Notification marked as read.</div><?php endif; ?>
 <?php if (($_GET['allread'] ?? '') === '1'): ?><div class="alert alert-success">All notifications marked as read.</div><?php endif; ?>
 
-<!-- Summary -->
 <section class="stats-grid">
     <a href="manager_notifications.php" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/notification.png" alt=""></div>
@@ -142,8 +137,6 @@ try {
         </div>
     </a>
 </section>
-
-<!-- Filters -->
 
 <section class="mobile-notifications-ui">
 <details class="mobile-filter-card" <?=($search||$status)?'open':''?>>
@@ -220,7 +213,6 @@ try {
 </form>
 </section>
 
-<!-- Notification List -->
 <section class="content-card desktop-notification-list">
     <div class="card-header">
         <h2>All Notifications</h2>
@@ -266,7 +258,6 @@ try {
 </section>
 
 </main>
-
 
 </div>
 </div>

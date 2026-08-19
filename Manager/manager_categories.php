@@ -46,7 +46,6 @@ $totalPages = 1;
 try {
     $conn->set_charset('utf8mb4');
 
-    /* Actions */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
         $categoryID = trim($_POST['categoryID'] ?? '');
@@ -94,7 +93,6 @@ try {
         }
     }
 
-    /* Filters */
     if ($status && !in_array($status, ['Active','Inactive'], true)) $status = '';
     if (!validDate($dateFrom) || !validDate($dateTo)) $error = 'Please enter a valid date.';
     elseif ($dateFrom && $dateTo && $dateFrom > $dateTo) $error = 'Date From cannot be later than Date To.';
@@ -167,7 +165,6 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 <?php elseif (($_GET['error'] ?? '') === 'inactive'): ?><div class="alert alert-error">This category is already inactive.</div>
 <?php elseif (($_GET['error'] ?? '') === 'active'): ?><div class="alert alert-error">This category is already active.</div>
 <?php elseif (($_GET['error'] ?? '') === 'notfound'): ?><div class="alert alert-error">Category not found.</div><?php endif; ?>
-
 
 <section class="mobile-category-ui">
 <details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo)?'open':''?>>

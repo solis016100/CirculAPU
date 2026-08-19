@@ -210,7 +210,6 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 </section>
 <?php endif;?>
 
-
 <?php if($overdue && !$remindedToday):?>
 <dialog id="reminderDialog" class="flow-dialog">
     <div class="flow-dialog-inner">

@@ -92,7 +92,6 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
 
-
 <section class="mobile-borrowing-ui">
 <details class="mobile-filter-card" <?=($search||$status)?'open':''?>>
 <summary><span>Filter Borrowings</span><?php if($search||$status):?><small>Filters active</small><?php endif;?></summary>

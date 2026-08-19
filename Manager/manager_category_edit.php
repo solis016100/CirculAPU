@@ -218,7 +218,6 @@ $status = $category['status'] ?? 'Active';
 
 </main>
 
-
 </div>
 </div>
 
@@ -243,7 +242,6 @@ $status = $category['status'] ?? 'Active';
 <script>
 const editForm=document.getElementById('categoryEditForm'),
       nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), iconPlaceholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
-
 
 function openEditConfirm(){
     if(!editForm.checkValidity()){editForm.reportValidity();return}

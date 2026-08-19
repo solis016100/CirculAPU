@@ -181,7 +181,6 @@ try {
 
 </main>
 
-
 </div>
 </div>
 
@@ -204,7 +203,6 @@ try {
 
 <script>
 const form=document.getElementById('categoryForm'), nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), statusInput=document.getElementById('status'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), placeholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
-
 
 function openCategoryConfirm(){
     if(!form.checkValidity()){form.reportValidity();return}

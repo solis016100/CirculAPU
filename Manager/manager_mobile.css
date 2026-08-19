@@ -1,4 +1,5 @@
-/* Manager Mobile UI — only active on phones */
+
+/* Mobile component visibility */
 .mobile-activity-list,
 .mobile-asset-tools,
 .mobile-asset-list,
@@ -11,6 +12,7 @@
     display:none;
 }
 
+/* Dashboard */
 @media(max-width:600px){
     body.role-manager{
         overflow-x:hidden;
@@ -230,8 +232,7 @@
 
 }
 
-
-/* Asset Management mobile design */
+/* Shared management layout and Asset Management */
 @media(max-width:600px){
     .role-manager .page-body{
         padding:16px 14px 24px;
@@ -368,8 +369,7 @@
     .mobile-section-heading p{margin:0;font-size:11px;color:#64748b}
     .mobile-page-count{font-size:11px;font-weight:700;color:#64748b}
 
-
-    /* Shared mobile card patterns */
+    
     .mobile-asset-card,.mobile-category-card,.mobile-transaction-card,
     .mobile-report-card,.mobile-borrowing-card,.mobile-category-asset-card,
     .mobile-activity-history-card{
@@ -488,8 +488,7 @@
     .role-manager .flow-dialog-actions button{width:100%}
 }
 
-
-/* Category Management mobile design */
+/* Category Management */
 @media(max-width:600px){
     .desktop-category-filter,.desktop-category-list{display:none!important}
     .mobile-category-ui{display:block}
@@ -502,8 +501,7 @@
     .mobile-category-meta strong{font-size:11px;color:#334155}
 }
 
-
-/* Transaction Management mobile design */
+/* Transaction Management */
 @media(max-width:600px){
     .desktop-transaction-filter,.desktop-transaction-list{display:none!important}
     .mobile-transaction-ui{display:block}
@@ -520,8 +518,7 @@
     .mobile-transaction-meta strong{font-size:11px;color:#334155}
 }
 
-
-/* Reports mobile design */
+/* Reports */
 @media(max-width:600px){
     .desktop-report-filter,.desktop-report-list{display:none!important}
     .mobile-report-ui,.mobile-report-list{display:block}
@@ -611,8 +608,7 @@
     .mobile-report-metrics span{margin-top:2px;font-size:9px;color:#64748b}
 }
 
-
-/* Manage Returns mobile design */
+/* Manage Returns */
 @media(max-width:600px){
     .desktop-borrowing-filter,.desktop-borrowing-list{display:none!important}
     .mobile-borrowing-ui{display:block}
@@ -640,8 +636,7 @@
     .mobile-borrowing-meta strong{font-size:11px;color:#334155}
 }
 
-
-/* Borrowed Asset Details mobile design */
+/* Borrowed Asset Details */
 @media(max-width:600px){
     .role-manager .category-detail-layout{
         grid-template-columns:1fr;
@@ -721,8 +716,7 @@
     }
 }
 
-
-/* Return Inspection mobile design */
+/* Return Inspection and shared asset forms */
 @media(max-width:600px){
     .role-manager .asset-form-card{
         padding:14px;
@@ -796,8 +790,7 @@
     }
 }
 
-
-/* Transaction Details mobile design */
+/* Transaction Details */
 @media(max-width:600px){
     .role-manager .tx-top,
     .role-manager .tx-support{
@@ -889,8 +882,7 @@
     }
 }
 
-
-/* Requester History mobile table fix only */
+/* Requester History table */
 @media(max-width:600px){
     .role-manager #borrowerHistory .table-wrapper{overflow:visible}
 
@@ -934,8 +926,7 @@
     }
 }
 
-
-/* Transaction Activity mobile table fix only */
+/* Transaction Activity table */
 @media(max-width:600px){
     .role-manager .tx-activity .table-wrapper{overflow:visible}
     .role-manager .tx-activity .data-table{
@@ -958,8 +949,7 @@
     .role-manager .tx-activity .data-table th:nth-child(4){width:33%}
 }
 
-
-/* Requester History popup centering only */
+/* Requester History popup */
 @media(max-width:600px){
     .role-manager #borrowerHistory{
         top:50%;
@@ -971,8 +961,7 @@
     }
 }
 
-
-/* Asset Details mobile design */
+/* Asset Details */
 @media(max-width:600px){
     .role-manager .asset-detail-card{
         padding:14px;
@@ -1093,8 +1082,7 @@
     }
 }
 
-
-/* Asset Details print layout only */
+/* Print layout */
 @media print{
     .role-manager .sidebar,
     .role-manager .app-header,
@@ -1187,8 +1175,6 @@
     }
 }
 
-
-/* Edit Asset mobile design */
 @media(max-width:600px){
     .role-manager .asset-form-card{
         padding:14px;
@@ -1316,8 +1302,7 @@
     }
 }
 
-
-/* Review Asset Submission mobile design */
+/* Review Asset Submission */
 @media(max-width:600px){
     .role-manager .review-asset-actions{
         grid-template-columns:1fr 1fr;
@@ -1359,8 +1344,7 @@
     }
 }
 
-
-/* Category Details mobile design */
+/* Category Details */
 @media(max-width:600px){
     .desktop-category-assets-list{display:none!important}
     .mobile-category-assets{display:block}
@@ -1458,8 +1442,6 @@
     .role-manager .category-stat strong{font-size:20px}
     .role-manager .category-stat span{font-size:9px}
 
-
-
     .mobile-category-asset-top>div{min-width:0}
 
     .mobile-category-asset-top h3{
@@ -1493,7 +1475,6 @@
     }
 }
 
-/* Category Details print layout only */
 @media print{
     .role-manager .sidebar,
     .role-manager .app-header,
@@ -1560,8 +1541,7 @@
     }
 }
 
-
-/* Edit Category mobile design */
+/* Category Create and Edit forms */
 @media(max-width:600px){
     .role-manager .category-form-card{
         border-radius:14px;
@@ -1720,8 +1700,6 @@
     }
 }
 
-
-/* Create Category mobile design */
 @media(max-width:600px){
     .role-manager #categoryConfirm .flow-dialog-summary{
         grid-template-columns:1fr;
@@ -1744,14 +1722,12 @@
     }
 }
 
-
+/* Recent Activities */
 .mobile-recent-activities-ui{display:none}
 
-/* Recent Activities mobile design */
 @media(max-width:600px){
     .desktop-activity-filter,.desktop-activity-history{display:none!important}
     .mobile-recent-activities-ui{display:block}
-
 
     .mobile-activity-history-top{
         display:flex;
@@ -1785,7 +1761,6 @@
         color:#64748b;
     }
 
-
     .mobile-activity-history-meta span,
     .mobile-activity-history-details>span{
         display:block;
@@ -1810,10 +1785,9 @@
     }
 }
 
-
+/* Notifications */
 .mobile-notifications-ui{display:none}
 
-/* Notifications mobile design */
 @media(max-width:600px){
     .desktop-notification-filter,.desktop-notification-list{display:none!important}
     .mobile-notifications-ui{display:block}
@@ -1893,8 +1867,6 @@
     }
 }
 
-
-/* Recent Activities role badge size fix only */
 @media(max-width:600px){
     .role-manager .mobile-activity-history-card .role-badge{
         flex:0 0 auto;
@@ -1906,8 +1878,6 @@
     }
 }
 
-
-/* Mobile Safari print cleanup for Manager detail pages */
 @media print{
     #right-sidebar,
     .right-sidebar,
@@ -1934,7 +1904,6 @@
     }
 }
 
-/* Asset Details print: narrow/mobile print viewport */
 @media print and (max-width:760px){
     @page{size:A4 portrait;margin:10mm}
 
@@ -2001,8 +1970,6 @@
     }
 }
 
-
-/* Reports print: table only */
 @media print{
     .role-manager:has(.print-report) .sidebar,
     .role-manager:has(.print-report) .app-header,
@@ -2028,8 +1995,7 @@
     }
 }
 
-
-/* Transaction validation / reservation workflow mobile support */
+/* Transaction rejection dialog */
 @media(max-width:600px){
     .role-manager #rejectBox{
         width:calc(100vw - 24px);
@@ -2116,7 +2082,7 @@
     }
 }
 
-/* Reuse the same status colours on mobile */
+/* Mobile status colors */
 @media(max-width:600px){
     .mobile-status-pill[data-status="Approved"],
     .mobile-status-pill[data-status="Available"],
@@ -2143,5 +2109,60 @@
     .mobile-status-pill[data-status="Draft"],
     .mobile-status-pill[data-status="Read"]{background:#e2e8f0;color:#475569}
     .mobile-status-pill[data-status="Unread"]{background:#e0f2fe;color:#0369a1}
+}
+
+
+/* Profile and Change Password */
+@media(max-width:600px){
+.role-manager.profile-settings-page,.role-manager.change-password-page{overflow-x:hidden;padding-bottom:76px}
+.role-manager.profile-settings-page .sidebar,.role-manager.change-password-page .sidebar{display:none!important}
+.role-manager.profile-settings-page .main-content,.role-manager.change-password-page .main-content,.role-manager.profile-settings-page .dashboard-container.sidebar-collapsed .main-content,.role-manager.change-password-page .dashboard-container.sidebar-collapsed .main-content{width:100%!important;max-width:100%!important;margin-left:0!important}
+.role-manager.profile-settings-page .header-search-container,.role-manager.change-password-page .header-search-container,.role-manager.profile-settings-page .header-divider,.role-manager.change-password-page .header-divider,.role-manager.profile-settings-page .mobile-menu-btn,.role-manager.change-password-page .mobile-menu-btn{display:none!important}
+.role-manager.profile-settings-page .header-right-actions,.role-manager.change-password-page .header-right-actions{width:auto;margin-left:auto;gap:10px}
+.role-manager.profile-settings-page .user-email-subtitle,.role-manager.change-password-page .user-email-subtitle{display:none}
+.role-manager.profile-settings-page .user-role-title span,.role-manager.change-password-page .user-role-title span{max-width:128px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.role-manager.profile-settings-page .page-body,.role-manager.change-password-page .page-body{width:100%;padding:18px 14px 28px}
+.role-manager.profile-settings-page .breadcrumb,.role-manager.change-password-page .breadcrumb{margin-bottom:12px;font-size:10px}
+.role-manager.profile-settings-page .page-header,.role-manager.change-password-page .page-header{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.role-manager.profile-settings-page .page-header h1,.role-manager.change-password-page .page-header h1{font-size:26px;line-height:1.15;margin:0}
+.role-manager.profile-settings-page .subtitle,.role-manager.change-password-page .subtitle{margin-top:4px;font-size:12px;line-height:1.45}
+.role-manager.profile-settings-page .content-card,.role-manager.change-password-page .content-card{width:100%;min-width:0;margin:0;border-radius:14px;overflow:hidden}
+.role-manager.profile-settings-page .card-header,.role-manager.change-password-page .card-header{padding:14px 15px}
+.role-manager.profile-settings-page .card-header h2,.role-manager.change-password-page .card-header h2{font-size:16px}
+.role-manager.profile-settings-page .card-divider,.role-manager.change-password-page .card-divider{margin:0 15px}
+.role-manager.profile-settings-page .profile-page-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.role-manager.profile-settings-page .profile-page-actions>:only-child{grid-column:1/-1}
+.role-manager.profile-settings-page .profile-page-actions .action-btn{width:100%;min-height:42px}
+.role-manager.profile-settings-page .profile-grid{width:100%;grid-template-columns:minmax(0,1fr)!important;gap:12px;margin-bottom:12px}
+.role-manager.profile-settings-page .profile-details-wrapper{display:block;padding:15px}
+.role-manager.profile-settings-page .profile-info-list{gap:0}
+.role-manager.profile-settings-page .profile-info-list.padded-list{padding:15px}
+.role-manager.profile-settings-page .info-row{display:grid;grid-template-columns:105px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid #eef2f7;align-items:start;font-size:12px}
+.role-manager.profile-settings-page .info-row:last-child{border-bottom:0}
+.role-manager.profile-settings-page .info-label,.role-manager.profile-settings-page .info-label.wide-label{width:auto;font-size:11px}
+.role-manager.profile-settings-page .info-separator{display:none}
+.role-manager.profile-settings-page .info-value{min-width:0;display:block;justify-content:initial;text-align:right;overflow-wrap:anywhere;word-break:break-word}
+.role-manager.profile-settings-page .profile-edit-input{width:100%;min-height:38px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;color:#1e293b;background:#fff}
+.role-manager.profile-settings-page .activity-list{padding:4px 15px 10px}
+.role-manager.profile-settings-page .activity-row{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:12px 0;font-size:11px;align-items:start}
+.role-manager.profile-settings-page .activity-date{width:auto;grid-column:1/-1;color:#64748b}
+.role-manager.profile-settings-page .activity-desc{min-width:0;overflow-wrap:anywhere}
+.role-manager.profile-settings-page .security-footer{display:block;margin-top:12px;padding:13px 14px;font-size:10px;line-height:1.45}
+.role-manager.profile-settings-page .security-left{align-items:flex-start}
+.role-manager.profile-settings-page .security-right{margin-top:8px;padding-left:28px}
+.role-manager.change-password-page .settings-card{max-width:none}
+.role-manager.change-password-page .settings-form-body{padding:15px}
+.role-manager.change-password-page .form-row-split{display:block;padding:14px 0}
+.role-manager.change-password-page .row-text-info{padding:0 0 8px}
+.role-manager.change-password-page .row-text-info h4{font-size:13px;margin-bottom:3px}
+.role-manager.change-password-page .row-text-info p{font-size:11px}
+.role-manager.change-password-page .row-input-box{width:100%}
+.role-manager.change-password-page .row-input-box input{min-height:44px;font-size:13px}
+.role-manager.change-password-page .requirements-panel{margin:14px 0;padding:14px}
+.role-manager.change-password-page .req-header{margin-bottom:9px}
+.role-manager.change-password-page .req-header h4{font-size:13px}
+.role-manager.change-password-page .req-list-grid{grid-template-columns:1fr;gap:7px;font-size:11px;line-height:1.4}
+.role-manager.change-password-page .settings-submit-wrapper{padding:0}
+.role-manager.change-password-page .update-btn,.role-manager.change-password-page .back-btn{width:100%;min-height:44px;margin-top:12px}
 }
 

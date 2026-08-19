@@ -40,7 +40,6 @@ try {
     $pendingCount=$pending->num_rows;
     $nextPending=$pending->fetch_assoc()['assetID']??'';
 
-    /* 1. Soft Remove */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remove') {
         $removeID = trim($_POST['assetID'] ?? '');
 
@@ -72,7 +71,6 @@ try {
         }
     }
 
-    /* 2. Categories: Active + currently selected inactive category */
     $stmt = $conn->prepare("
         SELECT categoryID,categoryName
         FROM categories
@@ -82,7 +80,6 @@ try {
     $stmt->bind_param('s', $category); $stmt->execute();
     $categories = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
 
-    /* 3. Filters */
     $where = "
         WHERE (?='' OR a.assetID LIKE CONCAT('%',?,'%') OR a.assetName LIKE CONCAT('%',?,'%'))
           AND (?='' OR a.categoryID=?)
@@ -122,7 +119,6 @@ try {
     $listParams = [...$params, $perPage, $offset];
     $stmt->bind_param($types . 'ii', ...$listParams); $stmt->execute();
     $assets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
-
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -491,7 +487,6 @@ function openRemoveDialog(btn){
 <?php endif;?>
 
 </main>
-
 
 </div>
 </div>
