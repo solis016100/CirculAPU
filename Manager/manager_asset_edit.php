@@ -11,7 +11,11 @@ function nextID(mysqli $c,string $t,string $col,string $p): string {
     return sprintf($p.'%03d',$n);
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
+if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
+elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
+else{$backURL='manager_assets.php'.($back?'?'.$back:'');$backLabel='Asset Management';}
+$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 if(!$id){header('Location: manager_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$asset=null;$categories=[];$error='';$dbError='';$newFile='';
@@ -114,13 +118,13 @@ if($asset&&!empty($asset['imageURL'])){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="<?=e($backURL)?>">Asset Management</a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
 <h1>Edit Asset Information</h1><p>Update listing information while preserving transaction, review and verification status.</p>
 </section>
 
 <?php if($dbError):?>
 <div class="dashboard-error-message"><?=e($dbError)?></div>
-<a href="<?=e($backURL)?>" class="management-create-btn">Back to Asset Management</a>
+<a href="<?=e($backURL)?>" class="management-create-btn">Back to <?=e($backLabel)?></a>
 <?php elseif($asset):?>
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
 <div class="asset-form-note"><strong>Condition Protection</strong><p>Asset condition is controlled through the review/verification workflow and Return Inspection. It cannot be changed from general Edit Asset.</p></div>

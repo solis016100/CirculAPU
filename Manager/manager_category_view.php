@@ -16,7 +16,14 @@ function iconPath($v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';
+$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');
+$backLabel=$source==='reports'?'Reports':'Category Management';
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$categoryReturn=['categoryID'=>$categoryID];
+if($source==='reports')$categoryReturn['source']='reports';
+if($back)$categoryReturn['back']=$back;
+$assetNav='&source=category&back='.rawurlencode(http_build_query($categoryReturn));
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
@@ -100,7 +107,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <?php if ($error): ?>
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="<?=e($backURL)?>">Category Management</a>
+        <a href="<?=e($backURL)?>"><?=e($backLabel)?></a>
         <span>›</span><span class="breadcrumb-current">Category Details</span>
     </div>
     <h1>Category Details</h1>
@@ -112,7 +119,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <section class="management-heading category-heading">
     <div>
         <div class="breadcrumb">
-            <a href="<?=e($backURL)?>">Category Management</a>
+            <a href="<?=e($backURL)?>"><?=e($backLabel)?></a>
             <span>›</span><span class="breadcrumb-current">Category Details</span>
         </div>
         <h1>Category Details</h1>
@@ -149,6 +156,12 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <?php if (($_GET['updated'] ?? '') === '1'): ?>
     <div class="alert alert-success">Category updated successfully.</div>
+<?php elseif (($_GET['assetRemoved'] ?? '') === '1'): ?>
+    <div class="alert alert-success">Asset listing removed successfully.</div>
+<?php elseif (($_GET['reviewDone'] ?? '') === 'verify'): ?>
+    <div class="alert alert-success">Asset listing sent for Sustainability Auditor verification.</div>
+<?php elseif (($_GET['reviewDone'] ?? '') === 'return'): ?>
+    <div class="alert alert-success">Asset listing returned to the member for correction.</div>
 <?php endif; ?>
 
 <section class="category-detail-layout">
@@ -221,7 +234,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 </div>
 
 <div class="mobile-card-actions">
-<a class="primary" href="manager_asset_view.php?assetID=<?=e($a['assetID'])?>">View Asset</a>
+<a class="primary" href="manager_asset_view.php?assetID=<?=e($a['assetID'])?><?=e($assetNav)?>">View Asset</a>
 </div>
 </article>
 <?php endforeach;endif;?>
@@ -255,7 +268,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
                 <td><span class="status-badge" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span></td>
                 <td><?= date('d M Y', strtotime($a['createdDate'])) ?></td>
                 <td>
-                    <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?>"
+                    <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?><?=e($assetNav)?>"
                        class="management-action-btn" title="View">
                         <img src="../assets/icons/view.png" alt="View">
                     </a>
@@ -282,7 +295,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <form method="POST" action="manager_categories.php" class="flow-dialog-actions">
     <input type="hidden" name="action" id="detailActionInput">
-    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>"><input type="hidden" name="returnQuery" value="<?=e($source==='categories'?$back:'')?>">
+    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>"><input type="hidden" name="returnSource" value="<?=e($source)?>"><input type="hidden" name="returnQuery" value="<?=e($back)?>">
     <button type="button" class="category-form-back" onclick="detailCategoryActionDialog.close()">No</button>
     <button type="submit" class="category-form-submit" id="detailActionConfirm">Confirm</button>
 </form>

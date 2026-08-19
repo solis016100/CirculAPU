@@ -59,7 +59,7 @@ try {
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+             AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
              AND a.availabilityStatus<>'Unavailable'
 ) pickup,
             (SELECT COUNT(*) FROM borrowings
@@ -76,7 +76,7 @@ try {
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+             AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
              AND a.availabilityStatus<>'Unavailable'
 
              ORDER BY DATE(b.borrowDate) ASC,t.requestDate ASC
@@ -125,7 +125,7 @@ try {
     if ($pickupOnly) $where[] = "t.requestStatus='Approved' AND a.availabilityStatus<>'Unavailable' AND EXISTS(
         SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID
         AND b.actualReturnDate IS NULL AND b.borrowingStatus='Approved'
-        AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+        AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
     )";
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';

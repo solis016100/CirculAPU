@@ -25,8 +25,10 @@ function imagePath($v): string {
 
 $managerID=$_SESSION['user_id'];
 $assetID=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
-$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review');
-$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
+elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
+else{$backURL=$back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review';$backLabel='Asset Management';}
+$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 if (!$assetID) { header('Location: manager_assets.php'); exit(); }
 
 $asset = null;
@@ -201,7 +203,7 @@ $image = imagePath($asset['imageURL'] ?? '');
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span>
         <span class="breadcrumb-current">Review Asset Submission</span>
     </div>
     <h1>Review Asset Submission</h1>

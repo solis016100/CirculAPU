@@ -37,10 +37,12 @@ $availability=trim($_GET['availability']??'');$listing=trim($_GET['listingStatus
 $status=trim($_GET['requestStatus']??'');
 $conditions=['New','Like New','Good','Fair','Poor'];
 $availabilities=['Available','Reserved','Borrowed','Unavailable'];
-$listings=['Draft','Pending Review','Ready for Verification','Published','Rejected','Removed'];
+$listings=['Draft','Pending Review','Ready for Verification','Approved','Published','Rejected','Removed'];
 $txStatuses=['Pending','Approved','In Progress','Completed','Cancelled','Rejected','Overdue'];
 $error='';$categories=[];$selectedCategoryName='All';$stats=[];$chart1=$chart2=$chart3=$rows=$allRows=[];
-$reportBack=http_build_query($_GET);$reportBackParam='&source=reports'.($reportBack?'&back='.rawurlencode($reportBack):'');
+$reportState=$_GET;
+foreach(['assetRemoved','reviewDone','pickupDone','deactivated','reactivated','deleted','error'] as $flag)unset($reportState[$flag]);
+$reportBack=http_build_query($reportState);$reportBackParam='&source=reports'.($reportBack?'&back='.rawurlencode($reportBack):'');
 
 if(!vd($from)||!vd($to))$error='Please enter a valid date.';
 elseif($from&&$to&&$from>$to)$error='Date From cannot be later than Date To.';
@@ -58,11 +60,11 @@ try{
     }
 
     if(!$error&&$report==='asset'){
-        $w=["a.listingStatus<>'Removed'"];$p=[];$t='';wdate($w,$p,$t,'a.createdDate',$from,$to);
+        $w=[$listing==='Removed'?"a.listingStatus='Removed'":"a.listingStatus<>'Removed'"];$p=[];$t='';wdate($w,$p,$t,'a.createdDate',$from,$to);
         if($category){$w[]='a.categoryID=?';$p[]=$category;$t.='s';}
         if(in_array($condition,$conditions,true)){$w[]='a.assetCondition=?';$p[]=$condition;$t.='s';}
         if(in_array($availability,$availabilities,true)){$w[]='a.availabilityStatus=?';$p[]=$availability;$t.='s';}
-        if($listing&&in_array($listing,$listings,true)){$w[]='a.listingStatus=?';$p[]=$listing;$t.='s';}
+        if($listing&&$listing!=='Removed'&&in_array($listing,$listings,true)){$w[]='a.listingStatus=?';$p[]=$listing;$t.='s';}
         $ws='WHERE '.implode(' AND ',$w);
 
         $stats=one($c,"SELECT COUNT(*) total,
@@ -272,6 +274,10 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 </section>
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
+<?php if(($_GET['assetRemoved']??'')==='1'):?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif;?>
+<?php if(($_GET['reviewDone']??'')==='verify'):?><div class="alert alert-success">Asset listing sent for Sustainability Auditor verification.</div><?php elseif(($_GET['reviewDone']??'')==='return'):?><div class="alert alert-success">Asset listing returned to the member for correction.</div><?php elseif(($_GET['reviewDone']??'')==='approve'):?><div class="alert alert-success">Borrowing request approved successfully.</div><?php elseif(($_GET['reviewDone']??'')==='reject'):?><div class="alert alert-success">Borrowing request rejected successfully.</div><?php endif;?>
+<?php if(($pickupDone=trim($_GET['pickupDone']??''))!==''):?><div class="alert alert-success">Pickup confirmed successfully for transaction <?=e($pickupDone)?>.</div><?php endif;?>
+<?php if(($_GET['deactivated']??'')==='1'):?><div class="alert alert-success">Category deactivated successfully.</div><?php elseif(($_GET['reactivated']??'')==='1'):?><div class="alert alert-success">Category reactivated successfully.</div><?php elseif(($_GET['deleted']??'')==='1'):?><div class="alert alert-success">Category deleted successfully.</div><?php elseif(($_GET['error']??'')==='linked'):?><div class="alert alert-error">This category has linked assets and cannot be deleted. Deactivate it instead.</div><?php elseif(($_GET['error']??'')==='inactive'):?><div class="alert alert-error">This category is already inactive.</div><?php elseif(($_GET['error']??'')==='active'):?><div class="alert alert-error">This category is already active.</div><?php elseif(($_GET['error']??'')==='notfound'):?><div class="alert alert-error">Category not found.</div><?php endif;?>
 
 <section class="mobile-report-ui">
 <details class="mobile-filter-card" <?=($from||$to||$category||$condition||$availability||$listing||$status)?'open':''?>>

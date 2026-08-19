@@ -43,7 +43,19 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remove') {
         $removeID = trim($_POST['assetID'] ?? '');
 
-        $stmt = $conn->prepare("SELECT assetName,listingStatus,availabilityStatus FROM assets WHERE assetID=? LIMIT 1");
+        $stmt = $conn->prepare("
+            SELECT a.assetName,a.listingStatus,a.availabilityStatus,
+                   EXISTS(
+                       SELECT 1
+                       FROM transactionrequests tr
+                       JOIN borrowings b ON b.transactionID=tr.transactionID
+                       WHERE tr.assetID=a.assetID
+                         AND tr.requestStatus IN ('Approved','In Progress')
+                         AND b.actualReturnDate IS NULL
+                         AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+                   ) hasActiveReservation
+            FROM assets a WHERE a.assetID=? LIMIT 1
+        ");
         $stmt->bind_param('s', $removeID); $stmt->execute();
         $asset = $stmt->get_result()->fetch_assoc(); $stmt->close();
 
@@ -51,6 +63,8 @@ try {
         elseif ($asset['listingStatus'] === 'Removed') $error = 'This asset has already been removed.';
         elseif (in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true))
             $error = 'Reserved or borrowed assets cannot be removed during an active transaction.';
+        elseif ((int)($asset['hasActiveReservation'] ?? 0) === 1)
+            $error = 'This asset has an approved reservation or active borrowing and cannot be removed.';
         else {
             $conn->begin_transaction();
             try {
@@ -61,8 +75,17 @@ try {
                 $conn->commit();
                 $q=[];
                 $rq=trim($_POST['returnQuery']??'');
+                $returnSource=trim($_POST['returnSource']??'assets');
                 if($rq) parse_str($rq,$q);
-                else $q=array_intersect_key($_GET,array_flip(['search','category','condition','availability','listingStatus','verificationStatus','page']));
+                if($returnSource==='reports'){
+                    $q['assetRemoved']='1';
+                    header('Location: manager_reports.php?'.http_build_query($q)); exit();
+                }
+                if($returnSource==='category'&&$rq){
+                    $q['assetRemoved']='1';
+                    header('Location: manager_category_view.php?'.http_build_query($q)); exit();
+                }
+                if(!$q)$q=array_intersect_key($_GET,array_flip(['search','category','condition','availability','listingStatus','verificationStatus','page']));
                 $q['removed']='1';
                 header('Location: manager_assets.php?'.http_build_query($q)); exit();
             } catch (Throwable $e) {
@@ -74,10 +97,9 @@ try {
     $stmt = $conn->prepare("
         SELECT categoryID,categoryName
         FROM categories
-        WHERE status='Active' OR categoryID=?
         ORDER BY categoryName
     ");
-    $stmt->bind_param('s', $category); $stmt->execute();
+    $stmt->execute();
     $categories = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
 
     $where = "
@@ -109,7 +131,16 @@ try {
 
     $stmt = $conn->prepare("
         SELECT a.assetID,a.assetName,a.assetCondition,a.availabilityStatus,
-               a.listingStatus,a.createdDate,c.categoryName,c.categoryIcon
+               a.listingStatus,a.createdDate,c.categoryName,c.categoryIcon,
+               EXISTS(
+                   SELECT 1
+                   FROM transactionrequests tr
+                   JOIN borrowings b ON b.transactionID=tr.transactionID
+                   WHERE tr.assetID=a.assetID
+                     AND tr.requestStatus IN ('Approved','In Progress')
+                     AND b.actualReturnDate IS NULL
+                     AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+               ) hasActiveReservation
         FROM assets a
         JOIN categories c ON a.categoryID=c.categoryID
         $where
@@ -338,7 +369,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
                 <a class="primary" href="manager_asset_edit.php?assetID=<?=e($a['assetID'])?><?=$backParam?>">Edit</a>
             <?php endif;?>
 
-            <?php if($a['listingStatus']!=='Removed'&&!in_array($a['availabilityStatus'],['Reserved','Borrowed'],true)):?>
+            <?php if($a['listingStatus']!=='Removed'&&!in_array($a['availabilityStatus'],['Reserved','Borrowed'],true)&&empty($a['hasActiveReservation'])):?>
                 <button type="button" class="danger" data-id="<?=e($a['assetID'])?>" data-name="<?=e($a['assetName'])?>" onclick="openRemoveDialog(this)">Remove</button>
             <?php endif;?>
         </div>
@@ -407,7 +438,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
                         </a>
                         <?php endif; ?>
 
-                        <?php if ($a['listingStatus'] !== 'Removed' && !in_array($a['availabilityStatus'], ['Reserved','Borrowed'], true)): ?>
+                        <?php if ($a['listingStatus'] !== 'Removed' && !in_array($a['availabilityStatus'], ['Reserved','Borrowed'], true) && empty($a['hasActiveReservation'])): ?>
                         <button type="button" class="management-action-btn delete" title="Remove Asset"
                                 data-id="<?=e($a['assetID'])?>" data-name="<?=e($a['assetName'])?>"
                                 onclick="openRemoveDialog(this)">

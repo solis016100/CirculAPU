@@ -30,7 +30,7 @@ $icons = [
 ];
 
 $managerID = $_SESSION['user_id'];
-$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$backLabel=$source==='reports'?'Reports':'Category Management';$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
@@ -129,7 +129,7 @@ $status = $category['status'] ?? 'Active';
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="<?=e($backURL)?>">Category Management</a><span>›</span>
+        <a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span>
         <a href="manager_category_view.php?categoryID=<?= e($categoryID) ?><?=e($navParam)?>">Category Details</a><span>›</span>
         <span class="breadcrumb-current">Edit Category</span>
     </div>

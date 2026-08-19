@@ -181,16 +181,25 @@ function autoRejectReason(array $checks):string{
 }
 function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):string{
     if($status!=='Approved'||!$b)return 'Pickup can only be confirmed for an approved reservation.';
+    if(($b['borrowingStatus']??'')!=='Approved')return 'Pickup can only be confirmed when the borrowing status is Approved.';
     if(empty($b['borrowDate'])||empty($b['expectedReturnDate']))return 'Pickup cannot be confirmed because the reservation dates are incomplete.';
 
     $pickup=date('Y-m-d',strtotime($b['borrowDate']));
     $return=date('Y-m-d',strtotime($b['expectedReturnDate']));
-    $earliest=protectionDate($pickup);
+    $earliest=$pickup;
     $today=date('Y-m-d');
 
-    if($today<$earliest)return 'Pickup is too early. Earliest allowed confirmation is '.date('d M Y',strtotime($earliest)).'.';
+    if($today<$earliest)return 'Pickup is too early. Pickup can be confirmed from '.date('d M Y',strtotime($earliest)).'.';
     if($today>$return)return 'Pickup cannot be confirmed because the approved borrowing period has already ended.';
-    if($t['availabilityStatus']==='Unavailable')return 'Pickup cannot be confirmed because the asset is currently Unavailable.';
+
+    if($t['availabilityStatus']==='Available')
+        return 'Pickup cannot be confirmed until the asset enters its 7-day protection period and becomes Reserved.';
+    if($t['availabilityStatus']==='Unavailable')
+        return 'Pickup cannot be confirmed because the asset is currently Unavailable.';
+    if($t['availabilityStatus']==='Borrowed')
+        return 'Pickup cannot be confirmed because the asset is already marked Borrowed.';
+    if($t['availabilityStatus']!=='Reserved')
+        return 'Pickup cannot be confirmed because the asset is not Reserved for this approved request.';
 
     $s=$c->prepare("
         SELECT b.transactionID,b.expectedReturnDate,u.name borrowerName
@@ -208,7 +217,6 @@ function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):str
         $due=!empty($hold['expectedReturnDate'])?date('d M Y',strtotime($hold['expectedReturnDate'])):'unknown';
         return "Pickup cannot be confirmed because the previous borrower has not returned this asset yet (transaction {$hold['transactionID']}, expected return $due).";
     }
-    if($t['availabilityStatus']==='Borrowed')return 'Pickup cannot be confirmed because the asset is still marked Borrowed.';
     return '';
 }
 
@@ -220,6 +228,7 @@ function returnTo(string $url,array $q):never{
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$back=trim($_GET['back']??'');$source=$_GET['source']??'transactions';
 $backStatus=in_array($from,['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'],true)?$from:($from==='pending'?'Pending':'');
 $backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_transactions.php?'.$back:($from==='pickup'?'manager_transactions.php?pickup=1':($backStatus?'manager_transactions.php?requestStatus='.rawurlencode($backStatus):'manager_transactions.php')));
+$backLabel=$source==='reports'?'Reports':'Transaction Management';
 $navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'').($from?'&from='.rawurlencode($from):'');
 if(!$id){header('Location: manager_transactions.php');exit();}
 
@@ -270,12 +279,6 @@ try{
         $validationChecks=validationChecks($t,$b,$summary,$status,$schedule);
         $autoRejectReason=autoRejectReason($validationChecks);
         $pickupIssue=pickupIssue($c,$t,$b,$status,$id);
-
-        if($_SERVER['REQUEST_METHOD']!=='POST'&&$status==='Approved'&&!$pickupIssue&&$t['availabilityStatus']==='Available'){
-            assetStatus($c,$t['assetID'],$manager,'Available','Reserved',"7-day reservation protection activated for request $id");
-            logTx($c,$manager,'Update',$id,"Reservation protection activated for {$t['assetName']}");
-            $t['availabilityStatus']='Reserved';
-        }
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $action=$_POST['action']??'';$remark=trim($_POST['managerRemark']??'');
@@ -343,7 +346,7 @@ try{
                         $s->bind_param('s',$id);$s->execute();$s->close();
                         $s=$c->prepare("UPDATE borrowings SET borrowingStatus='Borrowed' WHERE borrowID=?");
                         $s->bind_param('s',$b['borrowID']);$s->execute();$s->close();
-                        assetStatus($c,$t['assetID'],$manager,$t['availabilityStatus'],'Borrowed',"Asset picked up for $id");
+                        assetStatus($c,$t['assetID'],$manager,'Reserved','Borrowed',"Asset picked up for $id");
                         logTx($c,$manager,'Assign',$id,"Pickup confirmed; borrowing started for {$t['assetName']}");
                         notify($c,$t['requesterID'],'Pickup Confirmed',"Pickup for {$t['assetName']} was confirmed. Your borrowing has started. Return by: ".d($b['expectedReturnDate']).'.');
                         $c->commit();
@@ -392,7 +395,13 @@ if($t){
     $validationChecks=validationChecks($t,$b,$summary,$status,$schedule);
     $autoRejectReason=autoRejectReason($validationChecks);
     $pickupIssue=pickupIssue($conn,$t,$b,$status,$id);
-    $pickupEarliest=$b&&!empty($b['borrowDate'])?protectionDate(date('Y-m-d',strtotime($b['borrowDate']))):'';
+    $pickupEarliest=$b&&!empty($b['borrowDate'])?date('Y-m-d',strtotime($b['borrowDate'])):'';
+    $today=date('Y-m-d');
+    $pickupDate=$b&&!empty($b['borrowDate'])?date('Y-m-d',strtotime($b['borrowDate'])):'';
+    $returnDate=$b&&!empty($b['expectedReturnDate'])?date('Y-m-d',strtotime($b['expectedReturnDate'])):'';
+    $protectionStarts=$pickupDate?protectionDate($pickupDate):'';
+    $protectionActive=$status==='Approved'&&$protectionStarts&&$returnDate&&$today>=$protectionStarts&&$today<=$returnDate;
+    $protectionPending=$status==='Approved'&&$protectionStarts&&$today<$protectionStarts;
     $personLabel=in_array($status,['Pending','Rejected','Cancelled'],true)?'Requester':'Borrower';
 }
 ?>
@@ -407,7 +416,8 @@ if($t){
 .tx-dialog-small{width:min(520px,calc(100% - 32px))}
 .tx-dialog::backdrop{background:rgba(0,0,0,.55)}
 .tx-dialog h2{margin-top:0}
-#borrowerHistory h2{margin-bottom:8px}\n#borrowerHistory>p{margin:0;color:#475569;line-height:1.5}
+#borrowerHistory h2{margin-bottom:8px}
+#borrowerHistory>p{margin:0;color:#475569;line-height:1.5}
 .tx-side-actions button:disabled{
     background:#d9dee5;
     border-color:#c7cdd4;
@@ -466,7 +476,7 @@ if($t){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="<?=e($backURL)?>">Transaction Management</a><span>›</span><span class="breadcrumb-current">Transaction Details</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span><span class="breadcrumb-current">Transaction Details</span></div>
 <h1>Transaction Details</h1><p>Review the request, borrower background and borrowing progress.</p>
 </section>
 
@@ -480,10 +490,14 @@ if($t){
 <div class="alert alert-error"><strong>Approval Blocked</strong> · <?=e(preg_replace('/^Approval blocked:\s*/i','',$approvalIssue))?></div>
 <?php elseif($status==='Completed'):?>
 <div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
+<?php elseif($status==='Approved'&&$t['availabilityStatus']==='Reserved'):?>
+<div class="asset-form-note"><strong>7-Day Protection Active</strong><p>This asset is Reserved for this approved request. Pickup can be confirmed from <?=e(d($pickupDate))?> when the member physically collects the asset.</p></div>
+<?php elseif($status==='Approved'&&$protectionPending):?>
+<div class="asset-form-note"><strong>Future Reservation Confirmed</strong><p>The asset is not locked early. It remains operationally available until <?=e(d($protectionStarts))?>, when the scheduled protection process will change it to Reserved automatically.</p></div>
 <?php elseif($status==='Approved'&&$pickupIssue):?>
-<div class="asset-form-note"><strong>Reservation Confirmed</strong><p><?=e($pickupIssue)?></p></div>
+<div class="asset-form-note"><strong>Reservation Protection Attention</strong><p><?=e($pickupIssue)?></p></div>
 <?php elseif($status==='Approved'):?>
-<div class="asset-form-note"><strong>Pickup Window Open</strong><p>The reservation is protected and pickup may be confirmed when the member physically collects the asset.</p></div>
+<div class="asset-form-note"><strong>Pickup Window Open</strong><p>The 7-day protection window is active. Pickup may be confirmed when the member physically collects the asset.</p></div>
 <?php else:?>
 <div class="asset-form-note"><strong>Status: <?=e($status)?></strong></div>
 <?php endif;?>
@@ -593,6 +607,9 @@ onclick="pickupBox.showModal()">Confirm Pickup</button>
 <dialog id="approveBox" class="flow-dialog">
 <h2>Confirm Request Approval</h2>
 <p>Approve this request and confirm the requested borrowing period for this member?</p>
+<?php if($b&&!empty($b['borrowDate'])):$approveProtection=protectionDate(date('Y-m-d',strtotime($b['borrowDate'])));?>
+<div class="asset-form-note" style="margin-bottom:14px"><strong>7-Day Reservation Rule</strong><p><?=date('Y-m-d')>=$approveProtection?'The pickup is already inside the protection window, so the asset will be Reserved immediately after approval.':'The asset will remain available before '.e(d($approveProtection)).'. A scheduled process will reserve it automatically when the 7-day protection window begins.'?></p></div>
+<?php endif;?>
 <div class="flow-dialog-summary">
 <div><strong>Transaction ID</strong><span><?=e($id)?></span></div>
 <div><strong>Asset</strong><span><?=e($t['assetName'])?></span></div>
@@ -610,7 +627,7 @@ onclick="pickupBox.showModal()">Confirm Pickup</button>
 
 <dialog id="rejectBox" class="flow-dialog">
 <h2>Reject Request</h2>
-<p>CirculAPU checks the current request automatically and prepares the rejection reason for the Manager.</p>
+<p>CirculAPU automatically validates the request against borrowing, scheduling and asset eligibility rules to support the Manager's decision.</p>
 
 <div class="tx-validation">
 <h3>System Validation</h3>

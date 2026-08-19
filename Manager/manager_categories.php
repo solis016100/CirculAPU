@@ -10,6 +10,7 @@ require_once '../delete.php';
 require_once '../db.php';
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+function js($v): string { return htmlspecialchars(json_encode((string)$v, JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_HEX_TAG), ENT_QUOTES, 'UTF-8'); }
 function validDate(string $v): bool {
     if ($v === '') return true;
     $d = DateTime::createFromFormat('Y-m-d', $v);
@@ -20,10 +21,11 @@ function iconPath(?string $v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim($v, '/');
 }
 function go(string $q): never {
-    $state=[];$rq=trim($_POST['returnQuery']??'');
+    $state=[];$rq=trim($_POST['returnQuery']??'');$returnSource=trim($_POST['returnSource']??'categories');
     if($rq) parse_str($rq,$state);
     else $state=array_intersect_key($_GET,array_flip(['search','status','dateFrom','dateTo','page']));
     parse_str($q,$extra);$state=array_merge($state,$extra);
+    if($returnSource==='reports'){header('Location: manager_reports.php?'.http_build_query($state));exit();}
     header('Location: manager_categories.php?'.http_build_query($state)); exit();
 }
 function pageURL(array $q, int $p): string {
@@ -212,10 +214,10 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
 <div class="mobile-card-actions">
 <a href="manager_category_view.php?categoryID=<?=e($c['categoryID'])?><?=$backParam?>">View</a>
 <a class="primary" href="manager_category_edit.php?categoryID=<?=e($c['categoryID'])?><?=$backParam?>">Edit</a>
-<button type="button" onclick="openCategoryAction('<?=$c['status']==='Active'?'deactivate':'reactivate'?>','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+<button type="button" onclick="openCategoryAction('<?=$c['status']==='Active'?'deactivate':'reactivate'?>',<?=js($c['categoryID'])?>,<?=js($c['categoryName'])?>)">
 <?=$c['status']==='Active'?'Deactivate':'Reactivate'?>
 </button>
-<?php if($canDelete):?><button type="button" class="danger" onclick="openCategoryAction('delete','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">Delete</button><?php endif;?>
+<?php if($canDelete):?><button type="button" class="danger" onclick="openCategoryAction('delete',<?=js($c['categoryID'])?>,<?=js($c['categoryName'])?>)">Delete</button><?php endif;?>
 </div>
 </article>
 <?php endforeach;endif;?>
@@ -285,18 +287,18 @@ $icon=iconPath($c['categoryIcon']);$canDelete=(int)$c['linkedAssets']===0;?>
         <a href="manager_category_edit.php?categoryID=<?= e($c['categoryID']) ?><?=e($backParam)?>" class="management-action-btn" title="Edit"><img src="../assets/icons/edit.png" alt="Edit"></a>
         <?php if ($c['status'] === 'Active'): ?>
         <button type="button" class="management-action-btn deactivate" title="Deactivate"
-                onclick="openCategoryAction('deactivate','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+                onclick="openCategoryAction('deactivate',<?=js($c['categoryID'])?>,<?=js($c['categoryName'])?>)">
             Deactivate
         </button>
         <?php else: ?>
         <button type="button" class="management-action-btn" title="Reactivate"
-                onclick="openCategoryAction('reactivate','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+                onclick="openCategoryAction('reactivate',<?=js($c['categoryID'])?>,<?=js($c['categoryName'])?>)">
             Reactivate
         </button>
         <?php endif; ?>
         <?php if ($canDelete): ?>
         <button type="button" class="management-action-btn delete" title="Delete Permanently"
-                onclick="openCategoryAction('delete','<?=e($c['categoryID'])?>','<?=e($c['categoryName'])?>')">
+                onclick="openCategoryAction('delete',<?=js($c['categoryID'])?>,<?=js($c['categoryName'])?>)">
             <img src="../assets/icons/delete.png" alt="Delete">
         </button>
         <?php endif; ?>
