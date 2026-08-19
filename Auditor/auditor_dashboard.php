@@ -83,18 +83,18 @@
         }
 
         // Recent Activities from SystemLog
-        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy
-        FROM systemlog sl
-        INNER JOIN user u ON sl.userID = u.userID
-        WHERE sl.refType IN('Mission', 'Asset', 'Reward', 'Badge', 'Tier', 'Verification')
-        ORDER BY sl.timeLogged DESC
-        LIMIT 5";
+        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy FROM systemlog sl INNER JOIN user u ON sl.userID = u.userID WHERE sl.userID = ? ORDER BY sl.timeLogged DESC LIMIT 5";
 
-        $activityResult = $conn->query($activitySQL);
-        if ($activityResult){
-            while($activityRow = $activityResult->fetch_assoc()){
+        $activityStatement = $conn->prepare($activitySQL);
+
+        if ($activityStatement) {
+            $activityStatement->bind_param("s", $auditorID);
+            $activityStatement->execute();
+            $activityResult = $activityStatement->get_result();
+            while ($activityRow = $activityResult->fetch_assoc()) {
                 $recentActivities[] = $activityRow;
             }
+            $activityStatement->close();
         }
 
         // Notifications
@@ -114,30 +114,6 @@
 
         // Disconnect Database
         $conn->close();
-    }
-
-    // Action Type function 
-    function getActionClass(string $actionType): string{
-        switch ($actionType){
-            case 'Approve':
-                return 'action-approved';
-            case 'Reject':
-                return 'action-rejected';
-            case 'Submit':
-                return 'action-submitted';
-            case 'Create':
-                return 'action-created';
-            case 'Update':
-                return 'action-updated';
-            case 'Delete':
-                return 'action-deleted';
-            case 'Redeem':
-                return 'action-redeemed';
-            case 'Assign':
-                return 'action-assigned';
-            default:
-                return 'action-default';
-        }
     }
 
     // Date Display function

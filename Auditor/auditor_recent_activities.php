@@ -1,99 +1,86 @@
 <?php
-session_start();
+    session_start();
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Access Control Guard for Sustainability Auditor Role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
-    header('Location: ../login.php');
-    exit();
-}
-
-require_once '../db.php';
-
-function e($value): string
-{
-    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-}
-
-/*
- * Convert action + reference type into a readable activity title.
- */
-function activityLabel(string $action, string $ref): string
-{
-    if ($action === 'Delete') {
-        return $ref === 'Asset' ? 'Removed Asset' : "Deleted $ref";
+    // Access Control Guard for Sustainability Auditor Role
+    if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
+        header('Location: ../login.php');
+        exit();
     }
 
-    $labels = [
-        'Create'  => 'Created',
-        'Submit'  => 'Submitted',
-        'Approve' => 'Approved',
-        'Reject'  => 'Rejected',
-        'Assign'  => 'Assigned',
-        'Redeem'  => 'Redeemed',
-        'Update'  => 'Updated'
+    $auditorID = $_SESSION['user_id'];
+
+    require_once '../db.php';
+
+    function e($value): string{
+        return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+    }
+
+    function activityLabel(string $action, string $ref): string{
+        if ($action === 'Delete'){
+            return $ref === 'Asset' ? 'Removed Asset' : "Deleted $ref";
+        }
+
+        $labels = [
+            'Create'  => 'Created',
+            'Approve' => 'Approved',
+            'Reject'  => 'Rejected',
+            'Redeem'  => 'Redeemed',
+            'Update'  => 'Updated'
+        ];
+        return ($labels[$action] ?? $action) . " $ref";
+    }
+
+    // Return the icon used for each activity type.
+    function activityIcon(string $action): string
+    {
+        return match ($action) {
+            'Create' => 'create.png',
+            'Update', 'Assign' => 'edit.png',
+            'Delete', 'Reject' => 'delete.png',
+            'Approve' => 'mark_as_read.png',
+            'Submit' => 'pendingVerification.png',
+            'Redeem' => 'reward.png',
+            default => 'notification.png'
+        };
+    }
+
+
+    // Filter values
+    $search = trim($_GET['search'] ?? '');
+    $refType = trim($_GET['refType'] ?? '');
+    $actionType = trim($_GET['actionType'] ?? '');
+
+    // Auditor-specific activity types
+    $refTypes = [
+        'Mission',
+        'Reward',
+        'Badge',
+        'Verification'
     ];
 
-    return ($labels[$action] ?? $action) . " $ref";
-}
+    $actionTypes = [
+        'Create',
+        'Approve',
+        'Reject',
+        'Update',
+        'Delete'
+    ];
 
-/*
- * Return the icon used for each activity type.
- */
-function activityIcon(string $action): string
-{
-    return match ($action) {
-        'Create' => 'create.png',
-        'Update', 'Assign' => 'edit.png',
-        'Delete', 'Reject' => 'delete.png',
-        'Approve' => 'mark_as_read.png',
-        'Submit' => 'pendingVerification.png',
-        'Redeem' => 'reward.png',
-        default => 'notification.png'
-    };
-}
+    $activities = [];
+    $error = '';
 
+    try {
 
-// Filter values
-$search = trim($_GET['search'] ?? '');
-$refType = trim($_GET['refType'] ?? '');
-$actionType = trim($_GET['actionType'] ?? '');
+        $conn->set_charset('utf8mb4');
 
-// Auditor-specific activity types
-$refTypes = [
-    'Mission',
-    'Asset',
-    'Reward',
-    'Badge',
-    'Tier',
-    'Verification'
-];
-
-$actionTypes = [
-    'Create',
-    'Submit',
-    'Approve',
-    'Reject',
-    'Redeem',
-    'Assign',
-    'Update',
-    'Delete'
-];
-
-$activities = [];
-$error = '';
-
-try {
-
-    $conn->set_charset('utf8mb4');
-
-    /*
-     * Retrieve activity records.
-     * LEFT JOIN is used so an activity record can still appear
-     * even if the related user record is unavailable.
-     */
-    $sql = "
+        /*
+        * Retrieve activity records.
+        * LEFT JOIN is used so an activity record can still appear
+        * even if the related user record is unavailable.
+        */
+        $sql = "
         SELECT
             sl.logID,
             sl.userID,
@@ -107,91 +94,90 @@ try {
         FROM systemlog sl
         LEFT JOIN user u
             ON sl.userID = u.userID
-        WHERE sl.refType IN (
+        WHERE sl.userID = ?
+        AND sl.refType IN (
             'Mission',
-            'Asset',
             'Reward',
             'Badge',
-            'Tier',
             'Verification'
         )
     ";
 
-    $types = '';
-    $params = [];
+        $types = 's';
+        $params = [$auditorID];
 
-    // Search
-    if ($search !== '') {
+        // Search
+        if ($search !== '') {
 
-        $sql .= "
-            AND (
-                sl.logID LIKE ?
-                OR sl.refID LIKE ?
-                OR sl.description LIKE ?
-                OR sl.userID LIKE ?
-                OR u.name LIKE ?
-                OR sl.refType LIKE ?
-                OR sl.actionType LIKE ?
-            )
-        ";
+            $sql .= "
+                AND (
+                    sl.logID LIKE ?
+                    OR sl.refID LIKE ?
+                    OR sl.description LIKE ?
+                    OR sl.userID LIKE ?
+                    OR u.name LIKE ?
+                    OR sl.refType LIKE ?
+                    OR sl.actionType LIKE ?
+                )
+            ";
 
-        $like = "%{$search}%";
+            $like = "%{$search}%";
 
-        array_push(
-            $params,
-            $like,
-            $like,
-            $like,
-            $like,
-            $like,
-            $like,
-            $like
-        );
+            array_push(
+                $params,
+                $like,
+                $like,
+                $like,
+                $like,
+                $like,
+                $like,
+                $like
+            );
 
-        $types .= 'sssssss';
+            $types .= 'sssssss';
+        }
+
+        // Filter by module
+        if (in_array($refType, $refTypes, true)) {
+
+            $sql .= " AND sl.refType = ?";
+
+            $params[] = $refType;
+            $types .= 's';
+        }
+
+        // Filter by action
+        if (in_array($actionType, $actionTypes, true)) {
+
+            $sql .= " AND sl.actionType = ?";
+
+            $params[] = $actionType;
+            $types .= 's';
+        }
+
+        // Latest activity first
+        $sql .= " ORDER BY sl.timeLogged DESC";
+
+        $stmt = $conn->prepare($sql);
+
+        if ($types !== '') {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+
+        $activities = $stmt
+            ->get_result()
+            ->fetch_all(MYSQLI_ASSOC);
+
+        $stmt->close();
+
+    } catch (Throwable $e) {
+
+        error_log($e->getMessage());
+
+        $error = 'Unable to load recent activities. Please try again.';
     }
-
-    // Filter by module
-    if (in_array($refType, $refTypes, true)) {
-
-        $sql .= " AND sl.refType = ?";
-
-        $params[] = $refType;
-        $types .= 's';
-    }
-
-    // Filter by action
-    if (in_array($actionType, $actionTypes, true)) {
-
-        $sql .= " AND sl.actionType = ?";
-
-        $params[] = $actionType;
-        $types .= 's';
-    }
-
-    // Latest activity first
-    $sql .= " ORDER BY sl.timeLogged DESC";
-
-    $stmt = $conn->prepare($sql);
-
-    if ($types !== '') {
-        $stmt->bind_param($types, ...$params);
-    }
-
-    $stmt->execute();
-
-    $activities = $stmt
-        ->get_result()
-        ->fetch_all(MYSQLI_ASSOC);
-
-    $stmt->close();
-
-} catch (Throwable $e) {
-
-    error_log($e->getMessage());
-
-    $error = 'Unable to load recent activities. Please try again.';
-}
 ?>
 
 <!DOCTYPE html>
@@ -253,8 +239,7 @@ try {
                 <h1>Recent Activities</h1>
 
                 <p>
-                    View activity records related to mission, asset,
-                    reward, badge, tier and verification management.
+                    View activity records related to verification record, mission, reward and badge management.
                 </p>
 
             </section>
