@@ -83,6 +83,7 @@ function scheduleCheck(mysqli $c,string $asset,string $currentTx,?array $b):arra
 }
 function approvalIssue(array $t,?array $b,bool $blocked,array $summary,string $status,array $schedule):string{
     if($status!=='Pending')return 'Only Pending requests can be approved.';
+    if(($t['requesterID']??'')===($t['ownerID']??''))return 'Approval blocked: members cannot borrow their own asset.';
     if($blocked)return ($summary['overdue']??0)>0
         ?'Approval blocked: requester has an overdue unreturned asset.'
         :'Approval blocked: requester already has 5 active borrowings or reservations.';
@@ -127,6 +128,12 @@ function validationChecks(array $t,?array $b,array $summary,string $status,array
     }
 
     return [
+        [
+            'label'=>'Asset ownership',
+            'ok'=>($t['requesterID']??'')!==($t['ownerID']??''),
+            'detail'=>(($t['requesterID']??'')!==($t['ownerID']??''))?'Requester is not the owner of this asset.':'Requester is the owner of this asset.',
+            'reason'=>(($t['requesterID']??'')!==($t['ownerID']??''))?'':'You cannot borrow your own asset. Please select an asset listed by another Community Member.'
+        ],
         [
             'label'=>'Current overdue borrowing',
             'ok'=>$overdue===0,
@@ -402,6 +409,13 @@ if($t){
     $protectionStarts=$pickupDate?protectionDate($pickupDate):'';
     $protectionActive=$status==='Approved'&&$protectionStarts&&$returnDate&&$today>=$protectionStarts&&$today<=$returnDate;
     $protectionPending=$status==='Approved'&&$protectionStarts&&$today<$protectionStarts;
+    $requestPriorityLabel=$requestPriorityClass='';
+    if($status==='Pending'&&$pickupDate){
+        $tomorrow=date('Y-m-d',strtotime('+1 day'));
+        if($pickupDate===$today){$requestPriorityLabel='URGENT — Pickup Today';$requestPriorityClass='urgent';}
+        elseif($pickupDate===$tomorrow){$requestPriorityLabel='Pickup Tomorrow';$requestPriorityClass='tomorrow';}
+        elseif($pickupDate<$today){$requestPriorityLabel='Pickup Date Passed';$requestPriorityClass='passed';}
+    }
     $personLabel=in_array($status,['Pending','Rejected','Cancelled'],true)?'Requester':'Borrower';
 }
 ?>
@@ -450,6 +464,9 @@ if($t){
 .tx-reject-reason{margin:12px 0;padding:12px 14px;border:1px solid #fecaca;border-radius:8px;background:#fff1f2;color:#991b1b;line-height:1.45}
 .tx-reject-pass{margin:12px 0;padding:10px 12px;border:1px solid #bbf7d0;border-radius:8px;background:#f0fdf4;color:#166534;font-size:13px}
 .tx-auto-note{margin:6px 0 0;color:#64748b;font-size:12px;line-height:1.4}
+.tx-priority-alert{margin-bottom:14px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700}
+.tx-priority-alert.urgent{border:1px solid #fecaca;background:#fff1f2;color:#b91c1c}
+.tx-priority-alert.tomorrow{border:1px solid #fed7aa;background:#fff7ed;color:#c2410c}
 @media print{
 @page{size:A4 landscape;margin:10mm}
 .sidebar,.app-header,.breadcrumb,.management-heading p,.tx-side-actions,.tx-dialog,.flow-dialog,.tx-profile .category-form-actions{display:none!important}
@@ -488,6 +505,8 @@ if($t){
 <div class="alert alert-error"><strong>OVERDUE</strong> · Return was due <?=e(d($b['expectedReturnDate']))?></div>
 <?php elseif($status==='Pending'&&$approvalIssue):?>
 <div class="alert alert-error"><strong>Approval Blocked</strong> · <?=e(preg_replace('/^Approval blocked:\s*/i','',$approvalIssue))?></div>
+<?php elseif($status==='Pending'&&$requestPriorityLabel):?>
+<div class="tx-priority-alert <?=e($requestPriorityClass)?>"><?=e($requestPriorityLabel)?> · This request should be reviewed according to its requested pickup date. Normal approval validation still applies.</div>
 <?php elseif($status==='Completed'):?>
 <div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
 <?php elseif($status==='Approved'&&$t['availabilityStatus']==='Reserved'):?>

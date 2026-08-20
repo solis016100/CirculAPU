@@ -19,7 +19,7 @@ function managerDate(?string $v): string { return $v&&strtotime($v)?date('d M Y,
 
 $managerID=$_SESSION['user_id'];
 $managerName=$_SESSION['user_name']??'Resource Manager';
-$totalAssets=$pendingListings=$activeTransactions=$currentBorrowed=0;
+$totalAssets=$pendingListings=$activeTransactions=$currentBorrowed=$urgentRequests=0;
 $recentActivities=$notifications=[];$databaseError='';
 
 require_once '../db.php';
@@ -59,6 +59,14 @@ try{
         WHERE requestStatus IN ('Approved','In Progress','Overdue')
     ")->fetch_assoc()['total'];
 
+    $urgentRequests=(int)$conn->query("
+        SELECT COUNT(DISTINCT t.transactionID) total
+        FROM transactionrequests t
+        JOIN borrowings b ON b.transactionID=t.transactionID
+        WHERE t.requestStatus='Pending'
+        AND DATE(b.borrowDate)=CURDATE()
+    ")->fetch_assoc()['total'];
+
     $r=$conn->query("
         SELECT actionType,refType,refID,description,timeLogged
         FROM systemlog
@@ -81,6 +89,10 @@ try{
 <link rel="stylesheet" href="manager_mobile.css">
 <style>
 .quick-action-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.dashboard-urgent-strip{margin:0;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border:1px solid #fecaca;border-radius:12px;background:#fff1f2;color:#991b1b;text-decoration:none}
+.dashboard-urgent-strip strong{font-size:14px}
+.dashboard-urgent-strip span{font-size:12px;line-height:1.4}
+.dashboard-urgent-strip b{white-space:nowrap}
 @media(max-width:1100px){.quick-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
@@ -118,6 +130,13 @@ try{
 <div class="stat-content"><h3>Current Borrowings</h3><strong class="stat-value"><?=$currentBorrowed?></strong><p class="stat-description">Assets currently with borrowers</p></div>
 </a>
 </section>
+
+<?php if($urgentRequests>0):?>
+<a href="manager_transactions.php?requestStatus=Pending" class="dashboard-urgent-strip">
+<div><strong>Urgent borrowing requests</strong><br><span><?=$urgentRequests?> pending request<?=$urgentRequests===1?' has':'s have'?> pickup scheduled for today. Review these requests first.</span></div>
+<b>Review Now →</b>
+</a>
+<?php endif;?>
 
 <section class="dashboard-lower-grid">
 <article class="content-card dashboard-panel">
@@ -168,7 +187,7 @@ try{
 <div class="card-header"><h2>Quick Actions</h2></div>
 <div class="quick-action-grid">
 <a href="manager_assets.php?listingStatus=Pending+Review" class="quick-action"><img src="../assets/icons/view.png" alt=""><span>Review Asset Submissions</span></a>
-<a href="manager_transactions.php?requestStatus=Pending" class="quick-action"><img src="../assets/icons/view.png" alt=""><span>Review Pending Requests</span></a>
+<a href="manager_transactions.php?requestStatus=Pending" class="quick-action"><img src="../assets/icons/view.png" alt=""><span><?=$urgentRequests>0?'Review Urgent Requests ('.$urgentRequests.')':'Review Pending Requests'?></span></a>
 <a href="manager_borrowed_assets.php" class="quick-action"><img src="../assets/icons/borrowed-assets.png" alt=""><span>Manage Returns</span></a>
 <a href="manager_categories.php" class="quick-action"><img src="../assets/icons/edit.png" alt=""><span>Manage Categories</span></a>
 <a href="manager_reports.php" class="quick-action"><img src="../assets/icons/report.png" alt=""><span>Generate Report</span></a>

@@ -39,8 +39,9 @@
     .role-manager .dashboard-welcome{order:1;margin:0}
     .role-manager .dashboard-error-message{order:2}
     .role-manager .stats-grid{order:3}
-    .role-manager .quick-actions{order:4}
-    .role-manager .dashboard-lower-grid{order:5}
+    .role-manager .dashboard-urgent-strip{order:4}
+    .role-manager .quick-actions{order:5}
+    .role-manager .dashboard-lower-grid{order:6}
 
     .role-manager .dashboard-welcome h1{
         font-size:26px;
@@ -2166,3 +2167,58 @@
 .role-manager.change-password-page .update-btn,.role-manager.change-password-page .back-btn{width:100%;min-height:44px;margin-top:12px}
 }
 
+
+@media(max-width:600px){
+    .role-manager .dashboard-urgent-strip{
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:flex-start;
+        gap:8px;
+        padding:13px 14px;
+        border-radius:12px;
+    }
+
+    .role-manager .dashboard-urgent-strip strong{
+        font-size:13px;
+    }
+
+    .role-manager .dashboard-urgent-strip span{
+        font-size:11px;
+    }
+
+    .role-manager .dashboard-urgent-strip b{
+        align-self:stretch;
+        padding-top:8px;
+        border-top:1px solid #fecaca;
+        font-size:11px;
+        text-align:right;
+    }
+
+    .mobile-transaction-status-stack{
+        flex:0 0 auto;
+        display:flex;
+        flex-direction:column;
+        align-items:flex-end;
+        gap:6px;
+        max-width:132px;
+    }
+
+    .mobile-transaction-status-stack .request-priority{
+        max-width:132px;
+        margin-top:0;
+        padding:5px 7px;
+        font-size:8px;
+        line-height:1.2;
+        text-align:center;
+        white-space:normal;
+    }
+
+    .role-manager .tx-priority-alert{
+        margin-bottom:12px;
+        padding:10px 12px;
+        border-radius:11px;
+        font-size:10px;
+        line-height:1.45;
+    }
+}
