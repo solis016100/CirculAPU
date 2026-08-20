@@ -83,7 +83,7 @@
         }
 
         // Recent Activities from SystemLog
-        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy FROM systemlog sl INNER JOIN user u ON sl.userID = u.userID WHERE sl.userID = ? ORDER BY sl.timeLogged DESC LIMIT 5";
+        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy FROM systemlog sl INNER JOIN user u ON sl.userID = u.userID WHERE sl.userID = ? ORDER BY sl.timeLogged DESC LIMIT 7";
 
         $activityStatement = $conn->prepare($activitySQL);
 
@@ -189,7 +189,7 @@
                         </div>
                     </a>
 
-                    <!-- Pending Mission Submissions -->
+                    <!-- Pending Mission Verifications -->
                     <a href="auditor_verification_management.php?type=MissionSubmission&status=Pending" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
@@ -199,7 +199,7 @@
                             <strong class="stat-value">
                                 <?php echo $pendingMissions; ?>
                             </strong>
-                            <h3>Pending Mission Submissions</h3>
+                            <h3>Pending Mission Verifications</h3>
                         </div>
                     </a>
 
