@@ -113,6 +113,10 @@
                 if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                     $errorMessage = "Unable to save the reward image.";
                 }else {
+                    if ((int)$quantity === 0) {
+                        $availability = 'Unavailable';
+                    }
+                    
                     $stmt = mysqli_prepare($conn, "INSERT INTO rewards(rewardID, rewardName, rewardDescription, rewardImage, ecoPointsCost, quantity, availability) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
                     mysqli_stmt_bind_param($stmt, "ssssdis", $nextRewardID, $rewardName, $rewardDescription, $fileName, $ecoPointsCost, $quantity, $availability);

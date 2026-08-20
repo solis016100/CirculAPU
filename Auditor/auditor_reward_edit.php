@@ -107,6 +107,13 @@
                     $ecoPointsCostInt = (int)$ecoPointsCost;
                     $quantityInt = (int)$quantity;
 
+                    /* Automatically make reward unavailable when quantity is 0 */
+                    if ($quantityInt === 0) {
+                        $availability = 'Unavailable';
+                    }
+
+                    $update->bind_param("sssiiss", $rewardName, $rewardDescription, $image, $ecoPointsCostInt, $quantityInt, $availability, $id);
+
                     $update->bind_param("sssiiss", $rewardName, $rewardDescription, $image, $ecoPointsCostInt, $quantityInt, $availability, $id);
 
                     if ($update->execute()) {
