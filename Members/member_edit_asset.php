@@ -255,10 +255,7 @@ if (isset($_POST['resubmit'])) {
 
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="member_new_style.css">
-    <style>
-        .required-star{color:#d93025}
-        .required-note{margin:-10px 0 16px;font-size:10px;color:#777}
-    </style>
+
 </head>
 
 <body class="role-member">

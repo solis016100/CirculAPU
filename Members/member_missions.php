@@ -91,17 +91,16 @@ function generateEcoPointTransactionID($conn) {
 /* Generate Notification ID */
 function generateNotificationID($conn) {
     $result = $conn->query("
-    SELECT notificationID
+    SELECT MAX(
+        CAST(SUBSTRING(notificationID,2) AS UNSIGNED)
+    ) AS maxNumber
     FROM notification
-    WHERE notificationID LIKE 'N%'
-    AND notificationID NOT LIKE 'NOT%'
-    ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC
-    LIMIT 1
+    WHERE notificationID REGEXP '^N[0-9]+$'
     ");
 
-    if ($result && $result->num_rows > 0) {
+    if ($result) {
         $row = $result->fetch_assoc();
-        $number = (int)substr($row['notificationID'],1) + 1;
+        $number = ((int)($row['maxNumber'] ?? 0)) + 1;
     } else {
         $number = 1;
     }
@@ -334,13 +333,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uploadProof'])) {
                                 $auditorID = $conn->real_escape_string($auditor['userID']);
                                 $notificationID = generateNotificationID($conn);
 
-                                $conn->query("
+                                $auditorNotificationQuery = "
                                 INSERT INTO notification
                                 (notificationID, userID, title, content, status, createdDate)
                                 VALUES
                                 ('$notificationID', '$auditorID', '$safeTitle',
                                  '$safeContent', 'Unread', NOW())
-                                ");
+                                ";
+
+                                if (!$conn->query($auditorNotificationQuery)) {
+                                    $error = "Auditor notification failed: ".$conn->error;
+                                    break;
+                                }
                             }
                         }
 
@@ -360,16 +364,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uploadProof'])) {
                         $safeMemberNotificationContent =
                             $conn->real_escape_string($memberNotificationContent);
 
-                        $conn->query("
+                        $memberNotificationQuery = "
                         INSERT INTO notification
                         (notificationID, userID, title, content, status, createdDate)
                         VALUES
                         ('$memberNotificationID', '$userID', '$safeMemberNotificationTitle',
                          '$safeMemberNotificationContent', 'Unread', NOW())
-                        ");
+                        ";
 
-                        header("Location: member_missions.php?tab=my&uploaded=1");
-                        exit();
+                        if (!$conn->query($memberNotificationQuery)) {
+                            $error = "Member notification failed: ".$conn->error;
+                        }
+
+                        if ($error == "") {
+                            header("Location: member_missions.php?tab=my&uploaded=1");
+                            exit();
+                        }
 
                     } else {
                         $error = "Unable to create verification record: ".$conn->error;

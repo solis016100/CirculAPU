@@ -104,6 +104,27 @@ function generateEcoPointTransactionID($conn){
     return "ET".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
+
+/* Generate Notification ID */
+function generateNotificationID($conn){
+    $result=$conn->query("
+    SELECT MAX(
+        CAST(SUBSTRING(notificationID,2) AS UNSIGNED)
+    ) AS maxNumber
+    FROM notification
+    WHERE notificationID REGEXP '^N[0-9]+$'
+    ");
+
+    if($result){
+        $row=$result->fetch_assoc();
+        $number=((int)($row['maxNumber']??0))+1;
+    }else{
+        $number=1;
+    }
+
+    return "N".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
 /* Redeem Reward */
 if(isset($_POST['redeem'])){
     $rewardID=$conn->real_escape_string($_POST['rewardID']);
@@ -188,6 +209,94 @@ if(isset($_POST['redeem'])){
                 AND quantity<=0
                 ");
 
+                /* Get Member Name */
+                $memberResult=$conn->query("
+                SELECT name
+                FROM user
+                WHERE userID='$userID'
+                LIMIT 1
+                ");
+
+                $redeemMemberName=$memberName;
+
+                if($memberResult&&$memberResult->num_rows>0){
+                    $memberData=$memberResult->fetch_assoc();
+                    $redeemMemberName=$memberData['name'];
+                }
+
+                /* Notify Member */
+                $memberNotificationID=generateNotificationID($conn);
+
+                $memberNotificationTitle="Reward Redeemed Successfully";
+
+                $memberNotificationContent=
+                    "You redeemed ".
+                    $reward['rewardName'].
+                    " (".$rewardID.") for ".
+                    $cost.
+                    " EcoPoints.";
+
+                $safeMemberTitle=$conn->real_escape_string($memberNotificationTitle);
+                $safeMemberContent=$conn->real_escape_string($memberNotificationContent);
+
+                $memberNotificationQuery="
+                INSERT INTO notification
+                (notificationID,userID,title,content,status,createdDate)
+                VALUES
+                ('$memberNotificationID','$userID','$safeMemberTitle',
+                 '$safeMemberContent','Unread',NOW())
+                ";
+
+                if(!$conn->query($memberNotificationQuery)){
+                    throw new Exception(
+                        "Member notification failed: ".$conn->error
+                    );
+                }
+
+                /* Notify Active Auditors */
+                $auditorResult=$conn->query("
+                SELECT userID
+                FROM user
+                WHERE role='Auditor'
+                AND status='Active'
+                ");
+
+                if($auditorResult){
+
+                    $auditorNotificationTitle="Reward Redeemed";
+
+                    $auditorNotificationContent=
+                        $redeemMemberName.
+                        " (".$userID.") redeemed ".
+                        $reward['rewardName'].
+                        " (".$rewardID.") for ".
+                        $cost.
+                        " EcoPoints.";
+
+                    $safeAuditorTitle=$conn->real_escape_string($auditorNotificationTitle);
+                    $safeAuditorContent=$conn->real_escape_string($auditorNotificationContent);
+
+                    while($auditor=$auditorResult->fetch_assoc()){
+
+                        $auditorID=$conn->real_escape_string($auditor['userID']);
+                        $auditorNotificationID=generateNotificationID($conn);
+
+                        $auditorNotificationQuery="
+                        INSERT INTO notification
+                        (notificationID,userID,title,content,status,createdDate)
+                        VALUES
+                        ('$auditorNotificationID','$auditorID','$safeAuditorTitle',
+                         '$safeAuditorContent','Unread',NOW())
+                        ";
+
+                        if(!$conn->query($auditorNotificationQuery)){
+                            throw new Exception(
+                                "Auditor notification failed: ".$conn->error
+                            );
+                        }
+                    }
+                }
+
                 $conn->commit();
 
                 $currentPoints-=$cost;
@@ -197,7 +306,7 @@ if(isset($_POST['redeem'])){
             }catch(Exception $e){
                 $conn->rollback();
 
-                $message="Unable to redeem reward.";
+                $message="Unable to redeem reward: ".$e->getMessage();
                 $messageType="error";
             }
         }
@@ -279,6 +388,7 @@ $historyResult=$conn->query($historyQuery);
 <title>Rewards & Redemption - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="member_new_style.css">
+
 </head>
 
 <body class="role-member">
@@ -329,8 +439,17 @@ $historyResult=$conn->query($historyQuery);
             ?>
 
                 <div class="reward-card">
-                    <div class="reward-icon">
-                        <span>🎁</span>
+                    <div class="reward-image-box">
+                        <?php if(!empty($reward['rewardImage'])): ?>
+                            <img
+                                src="../assets/images/<?php echo htmlspecialchars($reward['rewardImage']); ?>"
+                                alt="<?php echo htmlspecialchars($reward['rewardName']); ?>"
+                                class="reward-image"
+                                onclick="openRewardImage(this.src, this.alt)"
+                            >
+                        <?php else: ?>
+                            <div class="reward-image-placeholder">No Image</div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="reward-card-info">
@@ -367,15 +486,14 @@ $historyResult=$conn->query($historyQuery);
                             </span>
                         <?php endif; ?>
 
-                        <form method="POST">
+                        <form method="POST" class="reward-redeem-form">
                             <input type="hidden" name="rewardID"
                             value="<?php echo htmlspecialchars($reward['rewardID']); ?>">
 
-                            <button type="submit"
-                            name="redeem"
+                            <button type="button"
                             class="redeem-btn"
                             <?php echo !$canRedeem?'disabled':''; ?>
-                            onclick="return confirm('Are you sure you want to redeem this reward?')">
+                            onclick="openRedeemConfirm(this)">
                                 Redeem Now
                             </button>
                         </form>
@@ -502,7 +620,102 @@ $historyResult=$conn->query($historyQuery);
 </div>
 </div>
 
+<!-- Redeem Confirmation Modal -->
+<div id="redeemConfirmModal" class="redeem-confirm-modal">
+    <div class="redeem-confirm-box">
+
+        <div class="redeem-confirm-icon">?</div>
+
+        <h2>Confirm Redemption</h2>
+
+        <p>
+            Are you sure you want to redeem this reward?
+        </p>
+
+        <div class="redeem-confirm-actions">
+            <button type="button"
+                    class="redeem-cancel-btn"
+                    onclick="closeRedeemConfirm()">
+                Cancel
+            </button>
+
+            <button type="button"
+                    class="redeem-confirm-btn"
+                    onclick="confirmRedeem()">
+                Yes, Redeem
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Reward Image Preview Modal -->
+<div id="rewardImageModal" class="reward-image-modal" onclick="closeRewardImage(event)">
+    <button type="button" class="reward-image-close" onclick="closeRewardImage()">×</button>
+    <div class="reward-image-modal-content">
+        <img id="rewardImageLarge" src="" alt="">
+        <p id="rewardImageCaption"></p>
+    </div>
+</div>
+
 <script>
+let selectedRedeemForm=null;
+
+function openRedeemConfirm(button){
+    selectedRedeemForm=button.closest(".reward-redeem-form");
+    document.getElementById("redeemConfirmModal").classList.add("show");
+}
+
+function closeRedeemConfirm(){
+    document.getElementById("redeemConfirmModal").classList.remove("show");
+    selectedRedeemForm=null;
+}
+
+function confirmRedeem(){
+    if(selectedRedeemForm){
+        var redeemInput=document.createElement("input");
+
+        redeemInput.type="hidden";
+        redeemInput.name="redeem";
+        redeemInput.value="1";
+
+        selectedRedeemForm.appendChild(redeemInput);
+        selectedRedeemForm.submit();
+    }
+}
+
+document.getElementById("redeemConfirmModal").addEventListener("click",function(event){
+    if(event.target===this){
+        closeRedeemConfirm();
+    }
+});
+
+function openRewardImage(imageSrc,imageAlt){
+    var modal=document.getElementById("rewardImageModal");
+    var largeImage=document.getElementById("rewardImageLarge");
+    var caption=document.getElementById("rewardImageCaption");
+
+    largeImage.src=imageSrc;
+    largeImage.alt=imageAlt;
+    caption.textContent=imageAlt;
+    modal.classList.add("show");
+}
+
+function closeRewardImage(event){
+    var modal=document.getElementById("rewardImageModal");
+
+    if(!event || event.target===modal || event.target.classList.contains("reward-image-close")){
+        modal.classList.remove("show");
+    }
+}
+
+document.addEventListener("keydown",function(event){
+    if(event.key==="Escape"){
+        document.getElementById("rewardImageModal").classList.remove("show");
+        closeRedeemConfirm();
+    }
+});
+
 function openRewardTab(tabName,button){
     var contents=document.querySelectorAll(".reward-tab-content");
     var tabs=document.querySelectorAll(".reward-tab");

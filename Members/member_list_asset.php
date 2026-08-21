@@ -67,6 +67,28 @@ function generateVerificationID($conn) {
     return "V" . str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
+
+/* Generate Notification ID */
+function generateNotificationID($conn) {
+    $result = $conn->query("
+    SELECT notificationID
+    FROM notification
+    WHERE notificationID LIKE 'N%'
+    AND notificationID NOT LIKE 'NOT%'
+    ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC
+    LIMIT 1
+    ");
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $number = (int)substr($row['notificationID'],1) + 1;
+    } else {
+        $number = 1;
+    }
+
+    return "N" . str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
 /* Submit New Asset */
 if (isset($_POST['submitAsset'])) {
 
@@ -190,6 +212,92 @@ if (isset($_POST['submitAsset'])) {
                     NOW()
                 )
                 ");
+
+                /* Get Member Name */
+                $memberResult = $conn->query("
+                SELECT name
+                FROM user
+                WHERE userID='$userID'
+                LIMIT 1
+                ");
+
+                $memberName = "Member";
+
+                if ($memberResult && $memberResult->num_rows > 0) {
+                    $memberData = $memberResult->fetch_assoc();
+                    $memberName = $memberData['name'];
+                }
+
+                /* Send Notification To Manager */
+                $managerResult = $conn->query("
+                SELECT userID
+                FROM user
+                WHERE role='Manager'
+                AND status='Active'
+                ");
+
+                if ($managerResult) {
+
+                    $managerTitle = "New Asset for Review";
+
+                    $managerContent =
+                        $memberName .
+                        " (" . $userID . ") added the asset " .
+                        $assetName .
+                        " (" . $assetID . ") for review.";
+
+                    $safeManagerTitle =
+                        $conn->real_escape_string($managerTitle);
+
+                    $safeManagerContent =
+                        $conn->real_escape_string($managerContent);
+
+                    while ($manager = $managerResult->fetch_assoc()) {
+
+                        $managerID =
+                            $conn->real_escape_string($manager['userID']);
+
+                        $notificationID =
+                            generateNotificationID($conn);
+
+                        if (!$conn->query("
+                        INSERT INTO notification
+                        (notificationID,userID,title,content,status,createdDate)
+                        VALUES
+                        ('$notificationID','$managerID','$safeManagerTitle',
+                         '$safeManagerContent','Unread',NOW())
+                        ")) {
+                            throw new Exception("Unable to send manager notification.");
+                        }
+                    }
+                }
+
+                /* Send Notification To Member */
+                $memberNotificationID =
+                    generateNotificationID($conn);
+
+                $memberTitle =
+                    "Asset Submitted Successfully";
+
+                $memberContent =
+                    $assetName .
+                    " (" . $assetID . ") has been submitted successfully and is ready for verification.";
+
+                $safeMemberTitle =
+                    $conn->real_escape_string($memberTitle);
+
+                $safeMemberContent =
+                    $conn->real_escape_string($memberContent);
+
+                if (!$conn->query("
+                INSERT INTO notification
+                (notificationID,userID,title,content,status,createdDate)
+                VALUES
+                ('$memberNotificationID','$userID','$safeMemberTitle',
+                 '$safeMemberContent','Unread',NOW())
+                ")) {
+                    throw new Exception("Unable to send member notification.");
+                }
 
                 $conn->commit();
 

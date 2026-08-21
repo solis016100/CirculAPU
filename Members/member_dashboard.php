@@ -31,7 +31,20 @@ WHERE userID='$userID'
 
 $user=$userResult->fetch_assoc();
 $memberName=$user['name']??'Member';
-$totalPoint=$user['ecopoint']??0;
+
+/* Current EcoPoints - can be spent on rewards */
+$currentPoint=$user['ecopoint']??0;
+
+/* Total Earned EcoPoints - used for badge and tier progress */
+$totalEarnedPointResult=$conn->query("
+SELECT COALESCE(SUM(points),0) AS totalEarned
+FROM ecopointstransaction
+WHERE userID='$userID'
+AND transactionType='Earned'
+");
+
+$totalEarnedPointData=$totalEarnedPointResult->fetch_assoc();
+$totalEarnedPoint=$totalEarnedPointData['totalEarned']??0;
 
 /* Request Count
    Same source as My Request page:
@@ -135,8 +148,8 @@ if($totalExchange>=5){
     $totalBadge++;
 }
 
-/* AB003 - Reach 500 EcoPoints */
-if($totalPoint>=500){
+/* AB003 - Reach 500 Total EcoPoints */
+if($totalEarnedPoint>=500){
     $totalBadge++;
 }
 
@@ -144,13 +157,28 @@ if($totalPoint>=500){
 $tierResult=$conn->query("
 SELECT *
 FROM tiers
-WHERE minimumEcoPoints<=$totalPoint
-AND minimumExchanges<=$totalExchange
-ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
+WHERE minimumEcoPoints<=$totalEarnedPoint
+ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ");
 
-$currentTier=$tierResult->fetch_assoc();
+$currentTier=null;
+
+if($tierResult&&$tierResult->num_rows>0){
+    $currentTier=$tierResult->fetch_assoc();
+}else{
+    /* Fallback to lowest tier in database */
+    $lowestTierResult=$conn->query("
+    SELECT *
+    FROM tiers
+    ORDER BY minimumEcoPoints ASC
+    LIMIT 1
+    ");
+
+    if($lowestTierResult&&$lowestTierResult->num_rows>0){
+        $currentTier=$lowestTierResult->fetch_assoc();
+    }
+}
 
 /* Next Tier */
 $nextTier=null;
@@ -158,21 +186,34 @@ $progress=100;
 $pointsLeft=0;
 
 if($currentTier){
+
+    $currentMin=(int)$currentTier['minimumEcoPoints'];
+
     $nextResult=$conn->query("
     SELECT *
     FROM tiers
-    WHERE minimumEcoPoints>".$currentTier['minimumEcoPoints']."
+    WHERE minimumEcoPoints>$currentMin
     ORDER BY minimumEcoPoints ASC
     LIMIT 1
     ");
 
     if($nextResult&&$nextResult->num_rows>0){
+
         $nextTier=$nextResult->fetch_assoc();
-        $currentMin=$currentTier['minimumEcoPoints'];
-        $nextMin=$nextTier['minimumEcoPoints'];
-        $progress=(($totalPoint-$currentMin)/($nextMin-$currentMin))*100;
-        $progress=max(0,min(100,$progress));
-        $pointsLeft=max(0,$nextMin-$totalPoint);
+        $nextMin=(int)$nextTier['minimumEcoPoints'];
+
+        if($nextMin>$currentMin){
+            $progress=(($totalEarnedPoint-$currentMin)/($nextMin-$currentMin))*100;
+            $progress=max(0,min(100,$progress));
+        }else{
+            $progress=0;
+        }
+
+        $pointsLeft=max(0,$nextMin-$totalEarnedPoint);
+
+    }else{
+        $progress=100;
+        $pointsLeft=0;
     }
 }
 ?>
@@ -221,7 +262,7 @@ if($currentTier){
         <div class="stat-icon">
             <img src="../assets/icons/point.png" alt="EcoPoints">
         </div>
-        <h2><?php echo $totalPoint; ?></h2>
+        <h2><?php echo $currentPoint; ?></h2>
         <p>EcoPoints</p>
     </div>
 
@@ -307,8 +348,8 @@ if($currentTier){
         <div class="ecopoint-progress">
             <div class="point-top">
                 <div>
-                    <strong><?php echo $totalPoint; ?></strong>
-                    <span>Current EcoPoints</span>
+                    <strong><?php echo $totalEarnedPoint; ?></strong>
+                    <span>Total EcoPoints</span>
                 </div>
 
                 <?php if($nextTier): ?>

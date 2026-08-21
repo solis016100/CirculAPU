@@ -159,32 +159,6 @@ if(isset($_GET['badge'])){
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="member_new_style.css">
 
-<style>
-.badge-tier-info{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:7px;
-    margin-top:12px;
-}
-.badge-tier-info div{
-    padding:7px;
-    background:#f4fbf6;
-    border:1px solid #c5e5d0;
-    border-radius:6px;
-}
-.badge-tier-info span{
-    display:block;
-    margin:0;
-    font-size:8px;
-    color:#777;
-}
-.badge-tier-info strong{
-    display:block;
-    margin-top:2px;
-    font-size:11px;
-    color:#159447;
-}
-</style>
 </head>
 
 <body class="role-member">

@@ -22,12 +22,23 @@ if ($conn->connect_error) {
     $conn->set_charset("utf8mb4");
 }
 
-/* Borrow Request */
+/* Borrow Request
+   Use borrowingStatus after the borrowing record has been created.
+   Before that, fall back to transaction requestStatus. */
 $borrowQuery = "
-    SELECT a.assetName AS requestName, a.imageURL,
-           tr.requestStatus, tr.requestDate, tr.requestMessage
+    SELECT
+        a.assetName AS requestName,
+        a.imageURL,
+        tr.requestStatus,
+        tr.requestDate,
+        tr.requestMessage,
+        b.borrowingStatus,
+        COALESCE(b.borrowingStatus, tr.requestStatus) AS displayStatus
     FROM transactionrequests tr
-    INNER JOIN assets a ON tr.assetID = a.assetID
+    INNER JOIN assets a
+        ON tr.assetID = a.assetID
+    LEFT JOIN borrowings b
+        ON b.transactionID = tr.transactionID
     WHERE tr.requesterID = '$userID'
     ORDER BY tr.requestDate DESC
 ";
@@ -107,6 +118,11 @@ if (!$assetResult) {
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
+                            <option value="borrowed">Borrowed</option>
+                            <option value="returned">Returned</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="overdue">Overdue</option>
                             <option value="rejected">Rejected</option>
                         </select>
                     </div>
@@ -116,8 +132,8 @@ if (!$assetResult) {
                         <?php if ($borrowResult->num_rows > 0): ?>
                             <?php while ($request = $borrowResult->fetch_assoc()): ?>
                                 <?php
-                                $borrowStatus = $request['requestStatus'];
-                                $borrowStatusClass = strtolower($borrowStatus);
+                                $borrowStatus = $request['displayStatus'] ?? $request['requestStatus'];
+                                $borrowStatusClass = strtolower(trim($borrowStatus));
                                 ?>
 
                                 <div class="request-item"
@@ -311,23 +327,42 @@ if (!$assetResult) {
 
                         <div class="guide-item">
                             <strong>Pending</strong>
-                            <p>
-                                Your borrow request is waiting for approval.
-                            </p>
+                            <p>Your borrow request is waiting for approval.</p>
                         </div>
 
                         <div class="guide-item">
                             <strong>Approved</strong>
-                            <p>
-                                Your borrow request has been approved.
-                            </p>
+                            <p>Your borrow request has been approved.</p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Borrowed</strong>
+                            <p>The asset has been collected and the borrowing is active.</p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Returned</strong>
+                            <p>The asset has been returned and is waiting for completion.</p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Completed</strong>
+                            <p>The borrowing process has been completed successfully.</p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Cancelled</strong>
+                            <p>The borrowing request or borrowing has been cancelled.</p>
+                        </div>
+
+                        <div class="guide-item">
+                            <strong>Overdue</strong>
+                            <p>The expected return date has passed and the asset has not been returned.</p>
                         </div>
 
                         <div class="guide-item">
                             <strong>Rejected</strong>
-                            <p>
-                                Your borrow request was not approved.
-                            </p>
+                            <p>Your borrow request was not approved.</p>
                         </div>
 
                     </div>
@@ -485,6 +520,11 @@ function showRequest(type, button) {
             <option value="">All Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
+            <option value="borrowed">Borrowed</option>
+            <option value="returned">Returned</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="overdue">Overdue</option>
             <option value="rejected">Rejected</option>
         `;
 
