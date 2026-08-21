@@ -29,7 +29,7 @@ $messageType = "";
 $assetID = $_GET['id'] ?? '';
 
 if ($assetID == '') {
-    header("Location: member_requests.php");
+    header("Location: member_request.php");
     exit();
 }
 
@@ -112,17 +112,9 @@ if (isset($_POST['resubmit'])) {
     $assetCondition = $_POST['assetCondition'] ?? '';
     $description = trim($_POST['description'] ?? '');
 
-    $hasCurrentImage = !empty($asset['imageURL']);
-    $hasNewImage = !empty($_FILES['assetImage']['name']);
-
     if ($assetName == '' || $categoryID == '' || $assetCondition == '' || $description == '') {
 
         $message = "Please complete all required fields.";
-        $messageType = "error";
-
-    } elseif (!$hasCurrentImage && !$hasNewImage) {
-
-        $message = "Please upload an asset image.";
         $messageType = "error";
 
     } else {
@@ -188,7 +180,7 @@ if (isset($_POST['resubmit'])) {
                     assetCondition = '$assetCondition',
                     imageURL = '$safeImageURL',
                     availabilityStatus = 'Unavailable',
-                    listingStatus = 'Pending Review',
+                    listingStatus = 'Ready for Verification',
                     verificationStatus = 'Pending',
                     updatedDate = NOW()
                 WHERE assetID = '$assetID'
@@ -230,7 +222,7 @@ if (isset($_POST['resubmit'])) {
 
                 $conn->commit();
 
-                header("Location: member_requests.php");
+                header("Location: member_request.php");
                 exit();
 
             } catch (Exception $e) {
@@ -255,7 +247,6 @@ if (isset($_POST['resubmit'])) {
 
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="member_new_style.css">
-
 </head>
 
 <body class="role-member">
@@ -277,7 +268,7 @@ if (isset($_POST['resubmit'])) {
                     <p>Update your asset information and resubmit it for verification.</p>
                 </div>
 
-                <a href="member_requests.php" class="asset-back-btn">
+                <a href="member_request.php" class="asset-back-btn">
                     ← Back to My Request
                 </a>
 
@@ -294,13 +285,13 @@ if (isset($_POST['resubmit'])) {
             <form method="POST" enctype="multipart/form-data" class="asset-form-card">
 
                 <h2>Asset Information</h2>
-                <p class="required-note"><span class="required-star">*</span> All fields are required.</p>
+
 
                 <div class="asset-form-grid">
 
                     <!-- Asset Name -->
                     <div class="asset-form-group">
-                        <label>Asset Name <span class="required-star">*</span></label>
+                        <label>Asset Name</label>
 
                         <input
                             type="text"
@@ -313,7 +304,7 @@ if (isset($_POST['resubmit'])) {
 
                     <!-- Category -->
                     <div class="asset-form-group">
-                        <label>Category <span class="required-star">*</span></label>
+                        <label>Category</label>
 
                         <select name="categoryID" required>
 
@@ -340,7 +331,7 @@ if (isset($_POST['resubmit'])) {
 
                     <!-- Condition -->
                     <div class="asset-form-group">
-                        <label>Condition <span class="required-star">*</span></label>
+                        <label>Condition</label>
 
                         <select name="assetCondition" required>
 
@@ -375,7 +366,7 @@ if (isset($_POST['resubmit'])) {
                 <!-- Description -->
                 <div class="asset-form-group asset-description-group">
 
-                    <label>Description <span class="required-star">*</span></label>
+                    <label>Description</label>
 
                     <textarea
                         name="description"
@@ -386,17 +377,14 @@ if (isset($_POST['resubmit'])) {
                 </div>
 
 
-                <!-- Asset Image -->
+                <!-- Current Image -->
                 <div class="asset-image-section">
 
-                    <label>Asset Image <span class="required-star">*</span></label>
+                    <label>Asset Image</label>
 
-                    <!-- Current Image -->
                     <?php if (!empty($asset['imageURL'])): ?>
 
-                        <p class="current-image-text">Current Image</p>
-
-                        <div class="asset-current-image" id="currentImageBox">
+                        <div class="asset-current-image">
                             <img
                                 src="../<?php echo htmlspecialchars($asset['imageURL']); ?>"
                                 alt="<?php echo htmlspecialchars($asset['assetName']); ?>"
@@ -406,42 +394,17 @@ if (isset($_POST['resubmit'])) {
                     <?php endif; ?>
 
 
-                    <!-- New Image Preview -->
-                    <div id="newImageArea" style="display:none;">
-
-                        <p class="current-image-text">New Image Preview</p>
-
-                        <div class="asset-current-image">
-                            <img id="newImagePreview" src="" alt="New Asset Image">
-                        </div>
-
-                    </div>
-
-
-                    <!-- Choose New Image -->
                     <div class="asset-upload-box">
 
                         <input
                             type="file"
                             name="assetImage"
-                            id="assetImage"
                             accept=".jpg,.jpeg,.png"
-                            onchange="previewNewImage()"
                         >
 
                         <p>
-                            Choose a new image only if you want to replace the current image.
-                            If you cancel it, the current image will remain.
+                            Upload a new image only if you want to replace the current image.
                         </p>
-
-                        <button
-                            type="button"
-                            id="cancelImageBtn"
-                            class="cancel-image-btn"
-                            onclick="cancelNewImage()"
-                            style="display:none;">
-                            Cancel New Image
-                        </button>
 
                     </div>
 
@@ -467,7 +430,7 @@ if (isset($_POST['resubmit'])) {
                 <!-- Buttons -->
                 <div class="asset-form-actions">
 
-                    <a href="member_requests.php" class="asset-cancel-btn">
+                    <a href="member_request.php" class="asset-cancel-btn">
                         Cancel
                     </a>
 
@@ -484,39 +447,6 @@ if (isset($_POST['resubmit'])) {
     </div>
 
 </div>
-
-<script>
-function previewNewImage() {
-    const imageInput = document.getElementById('assetImage');
-    const newImageArea = document.getElementById('newImageArea');
-    const newImagePreview = document.getElementById('newImagePreview');
-    const cancelImageBtn = document.getElementById('cancelImageBtn');
-
-    if (imageInput.files && imageInput.files[0]) {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            newImagePreview.src = e.target.result;
-            newImageArea.style.display = 'block';
-            cancelImageBtn.style.display = 'inline-block';
-        };
-
-        reader.readAsDataURL(imageInput.files[0]);
-    }
-}
-
-function cancelNewImage() {
-    const imageInput = document.getElementById('assetImage');
-    const newImageArea = document.getElementById('newImageArea');
-    const newImagePreview = document.getElementById('newImagePreview');
-    const cancelImageBtn = document.getElementById('cancelImageBtn');
-
-    imageInput.value = '';
-    newImagePreview.src = '';
-    newImageArea.style.display = 'none';
-    cancelImageBtn.style.display = 'none';
-}
-</script>
 
 </body>
 </html>
