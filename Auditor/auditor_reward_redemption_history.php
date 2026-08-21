@@ -10,113 +10,86 @@
 
     $conn->set_charset("utf8mb4");
 
-    $rewardName = isset($_GET['rewardName']) ? trim($_GET['rewardName']) : '';
+    $search = trim($_GET['search'] ?? '');
+    $rewardName = trim($_GET['rewardName'] ?? '');
+    $redemptionDate = trim($_GET['redemptionDate'] ?? '');
 
-    $redemptionDate = isset($_GET['redemptionDate']) ? trim($_GET['redemptionDate']) : '';
+    $limit = 8;
+    $page = max(1, (int)($_GET['page'] ?? 1));
 
-    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-
-    /* =========================================================
-    PAGINATION
-    ========================================================= */
-    $recordsPerPage = 8;
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-
-    if ($page < 1) {
-        $page = 1;
-    }
-
-    /* =========================================================
-    COUNT RECORDS
-    ========================================================= */
-    $countQuery = "SELECT COUNT(*) AS total FROM rewardredemption rr LEFT JOIN rewards r ON rr.rewardID = r.rewardID WHERE 1=1";
-
-    $countParams = [];
-    $countTypes = '';
-
-    if ($search !== '') {
-        $countQuery .= "AND (r.rewardName LIKE ? OR rr.redemptionDate LIKE ?)";
-
-        $searchValue = "%$search%";
-
-        $countParams[] = $searchValue;
-        $countParams[] = $searchValue;
-
-        $countTypes .= "ss";
-    }
-
-    if ($rewardName !== '') {
-        $countQuery .= " AND r.rewardName LIKE ?";
-        $countParams[] = "%$rewardName%";
-        $countTypes .= "s";
-    }
-
-    if ($redemptionDate !== '') {
-        $countQuery .= " AND DATE(rr.redemptionDate) = ?";
-        $countParams[] = $redemptionDate;
-        $countTypes .= "s";
-    }
-
-    $countStmt = $conn->prepare($countQuery);
-
-    if (!empty($countParams)) {
-        $countStmt->bind_param($countTypes, ...$countParams);
-    }
-
-    $countStmt->execute();
-
-    $countRow = $countStmt->get_result()->fetch_assoc();
-
-    $totalRedemptions = (int)$countRow['total'];
-
-    $countStmt->close();
-
-    $totalPages = max(1, ceil($totalRedemptions / $recordsPerPage));
-
-    if ($page > $totalPages) {
-        $page = $totalPages;
-    }
-
-    $offset = ($page - 1) * $recordsPerPage;
-
-    /* =========================================================
-    GET REDEMPTION RECORDS
-    ========================================================= */
-    $query = "SELECT rr.redemptionID, rr.userID, u.name AS memberName, rr.rewardID, r.rewardName, rr.redemptionDate FROM rewardredemption rr LEFT JOIN user u ON rr.userID = u.userID LEFT JOIN rewards r ON rr.rewardID = r.rewardID WHERE 1=1";
-
+    $where = " WHERE 1=1";
     $params = [];
     $types = '';
 
+    /* Search */
     if ($search !== '') {
-        $query .= "AND (r.rewardName LIKE ? OR rr.redemptionDate LIKE ?)";
-
-        $searchValue = "%$search%";
-
-        $params[] = $searchValue;
-        $params[] = $searchValue;
-
-        $types .= "ss";
+        $where .= " AND (rr.redemptionID LIKE ? OR rr.userID LIKE ? OR u.name LIKE ? OR rr.rewardID LIKE ? OR r.rewardName LIKE ? OR rr.redemptionDate LIKE ?)";
+        $s = "%$search%";
+        array_push($params, $s, $s, $s, $s, $s, $s);
+        $types .= "ssssss";
     }
 
+    /* Reward Name */
     if ($rewardName !== '') {
-        $query .= " AND r.rewardName LIKE ?";
-        $params[] = "%$rewardName%";
+        $where .= " AND r.rewardName = ?";
+        $params[] = $rewardName;
         $types .= "s";
     }
 
+    /* Redemption Date */
     if ($redemptionDate !== '') {
-        $query .= " AND DATE(rr.redemptionDate) = ?";
+        $where .= " AND DATE(rr.redemptionDate) = ?";
         $params[] = $redemptionDate;
         $types .= "s";
     }
 
-    $query .= " ORDER BY rr.redemptionDate DESC LIMIT ? OFFSET ?";
+    /* =========================================================
+    REWARD LIST FOR DROPDOWN
+    ========================================================= */
+    $rewardList = [];
+    $rewardResult = $conn->query("SELECT rewardName FROM rewards ORDER BY rewardName ASC");
 
-    $params[] = $recordsPerPage;
+    while ($reward = $rewardResult->fetch_assoc()) {
+        $rewardList[] = $reward['rewardName'];
+    }
+
+    /* =========================================================
+    COUNT
+    ========================================================= */
+
+    $countSQL = "SELECT COUNT(*) AS total FROM rewardredemption rr LEFT JOIN user u ON rr.userID = u.userID LEFT JOIN rewards r ON rr.rewardID = r.rewardID $where";
+
+    $countStmt = $conn->prepare($countSQL);
+
+    if ($params) {
+        $countStmt->bind_param($types, ...$params);
+    }
+
+    $countStmt->execute();
+
+    $total = $countStmt->get_result()->fetch_assoc()['total'];
+
+    $countStmt->close();
+
+    /* =========================================================
+    PAGINATION
+    ========================================================= */
+    $pages = max(1, ceil($total / $limit));
+
+    $page = min($page, $pages);
+
+    $offset = ($page - 1) * $limit;
+
+    /* =========================================================
+    RECORDS
+    ========================================================= */
+    $sql = "SELECT rr.redemptionID, rr.userID, u.name AS memberName, rr.rewardID, r.rewardName, rr.redemptionDate FROM rewardredemption rr LEFT JOIN user u ON rr.userID = u.userID LEFT JOIN rewards r ON rr.rewardID = r.rewardID $where ORDER BY rr.redemptionDate DESC LIMIT ? OFFSET ?";
+
+    $params[] = $limit;
     $params[] = $offset;
     $types .= "ii";
 
-    $stmt = $conn->prepare($query);
+    $stmt = $conn->prepare($sql);
 
     $stmt->bind_param($types, ...$params);
 
@@ -169,10 +142,19 @@
                         </div>
                         <!-- Reward Name -->
                         <div class="management-filter-group">
-                            <label for="rewardName">
+                            <label for="Reward Name">
                                 Reward Name
                             </label>
-                            <input type="text" id="rewardName" name="rewardName" placeholder="Search by reward name..." value="<?php echo htmlspecialchars($rewardName); ?>">
+                            <select name="rewardName" id="rewardName">
+                                <option value="">
+                                    All Rewards
+                                </option>
+                                <?php foreach ($rewardList as $reward): ?>
+                                    <option value="<?= htmlspecialchars($reward) ?>" <?= $rewardName === $reward ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($reward) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
 
                         <!-- Redemption Date -->
@@ -203,7 +185,7 @@
                     <!-- Table Headings -->
                     <div class="management-list-header">
                         <h2>Reward Redemption</h2>
-                        <p>Total Redemptions: <?php echo $totalRedemptions; ?></p>
+                        <p>Total Redemptions: <?php echo $total; ?></p>
                     </div>
 
                     <div class="management-table-wrapper">
@@ -250,9 +232,9 @@
 
                     <div class="management-table-footer">
                         <p>
-                            Showing <?php echo $totalRedemptions > 0 ? $offset + 1 : 0; ?>
-                            to <?php echo min($offset + $recordsPerPage, $totalRedemptions);?>
-                            of <?php echo $totalRedemptions; ?>
+                            Showing <?php echo $total > 0 ? $offset + 1 : 0; ?>
+                            to <?php echo min($offset + $limit, $total); ?>
+                            of <?php echo $total; ?>
                             entries
                         </p>
 
@@ -271,7 +253,7 @@
                             <?php endif; ?>
 
                             <!-- Page Numbers -->
-                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                            <?php for ($i = 1; $i <= $pages; $i++): ?>
                                 <?php $paginationParams['page'] = $i; ?>
                                 <a href="?<?php echo http_build_query($paginationParams);?>" class="<?php echo $i == $page ? 'active' : ''; ?>">
                                     <?php echo $i; ?>
@@ -279,7 +261,7 @@
                             <?php endfor; ?>
 
                             <!-- Next -->
-                            <?php if ($page < $totalPages): ?>
+                            <?php if ($page < $pages): ?>
                                 <?php $paginationParams['page'] = $page + 1; ?>
                                 <a href="?<?php echo http_build_query($paginationParams);?>">
                                     &rsaquo;

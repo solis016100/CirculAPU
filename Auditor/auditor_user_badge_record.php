@@ -38,6 +38,8 @@
         $types .= "s";
     }
 
+    $badgeList = $conn->query("SELECT achieveBadgeName FROM achievementbadges ORDER BY achieveBadgeName");
+
     /* Count */
     $stmt = $conn->prepare("SELECT COUNT(*) total FROM `user achievement badge` uab LEFT JOIN user u ON uab.userID=u.userID LEFT JOIN achievementbadges ab ON uab.achieveBadgeID=ab.achieveBadgeID $where");
     if ($params) $stmt->bind_param($types, ...$params);
@@ -108,8 +110,15 @@
                         <!-- Badge Name -->
                         <div class="management-filter-group">
                             <label>Badge Name</label>
-                            <input name="badgeName" placeholder="Search by badge name..."
-                            value="<?= htmlspecialchars($badgeName) ?>">
+                            <select name="badgeName">
+                                <option value="">All Badges</option>
+                                <?php while ($badge = $badgeList->fetch_assoc()): ?>
+                                    <option value="<?= htmlspecialchars($badge['achieveBadgeName']) ?>"
+                                        <?= $badgeName === $badge['achieveBadgeName'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($badge['achieveBadgeName']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
 
                         <!-- Awarded Date -->
