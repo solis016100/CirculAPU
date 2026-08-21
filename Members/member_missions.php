@@ -30,19 +30,19 @@ function generateSubmissionID($conn) {
     $result = $conn->query("
     SELECT submissionID
     FROM missionsubmission
-    WHERE submissionID LIKE 'MS%'
-    ORDER BY CAST(SUBSTRING(submissionID,3) AS UNSIGNED) DESC
+    WHERE submissionID LIKE 'S%'
+    ORDER BY CAST(SUBSTRING(submissionID,2) AS UNSIGNED) DESC
     LIMIT 1
     ");
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        $number = (int)substr($row['submissionID'],2) + 1;
+        $number = (int)substr($row['submissionID'],1) + 1;
     } else {
         $number = 1;
     }
 
-    return "MS".str_pad($number,3,"0",STR_PAD_LEFT);
+    return "S".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
 /* Generate Verification ID */
@@ -93,19 +93,20 @@ function generateNotificationID($conn) {
     $result = $conn->query("
     SELECT notificationID
     FROM notification
-    WHERE notificationID LIKE 'NOT%'
-    ORDER BY CAST(SUBSTRING(notificationID,4) AS UNSIGNED) DESC
+    WHERE notificationID LIKE 'N%'
+    AND notificationID NOT LIKE 'NOT%'
+    ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC
     LIMIT 1
     ");
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        $number = (int)substr($row['notificationID'],3) + 1;
+        $number = (int)substr($row['notificationID'],1) + 1;
     } else {
         $number = 1;
     }
 
-    return "NOT".str_pad($number,3,"0",STR_PAD_LEFT);
+    return "N".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
 
@@ -342,6 +343,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uploadProof'])) {
                                 ");
                             }
                         }
+
+                        /* Send Notification To Member */
+                        $memberNotificationID = generateNotificationID($conn);
+
+                        $memberNotificationTitle = "Mission Submitted Successfully";
+
+                        $memberNotificationContent =
+                            "Your proof for " .
+                            $missionName .
+                            " (" . $missionID . ") has been submitted successfully and is waiting for auditor approval.";
+
+                        $safeMemberNotificationTitle =
+                            $conn->real_escape_string($memberNotificationTitle);
+
+                        $safeMemberNotificationContent =
+                            $conn->real_escape_string($memberNotificationContent);
+
+                        $conn->query("
+                        INSERT INTO notification
+                        (notificationID, userID, title, content, status, createdDate)
+                        VALUES
+                        ('$memberNotificationID', '$userID', '$safeMemberNotificationTitle',
+                         '$safeMemberNotificationContent', 'Unread', NOW())
+                        ");
 
                         header("Location: member_missions.php?tab=my&uploaded=1");
                         exit();
@@ -593,7 +618,14 @@ if (!$myMissionResult) {
 
             <?php endif; ?>
 
-            <?php if(strtolower($missionUserStatus)!=='verified'): ?>
+            <?php
+            $statusLower = strtolower(trim($missionUserStatus));
+            ?>
+
+            <?php if(
+                $statusLower === 'in progress' ||
+                $statusLower === 'rejected'
+            ): ?>
 
             <form method="post" enctype="multipart/form-data" class="proof-upload-form">
                 <input type="hidden" name="missionID"
@@ -607,9 +639,28 @@ if (!$myMissionResult) {
                 </div>
 
                 <button type="submit" name="uploadProof" class="upload-proof-btn">
-                    <?php echo empty($missionEvidence)?'Upload Proof':'Replace Proof'; ?>
+                    <?php
+                    echo $statusLower === 'rejected'
+                        ? 'Resubmit Proof'
+                        : 'Upload Proof';
+                    ?>
                 </button>
             </form>
+
+            <?php elseif($statusLower === 'pending'): ?>
+
+            <div class="mission-proof-locked pending">
+                Proof submitted. Waiting for auditor approval.
+            </div>
+
+            <?php elseif(
+                $statusLower === 'approved' ||
+                $statusLower === 'verified'
+            ): ?>
+
+            <div class="mission-proof-locked approved">
+                ✓ Mission approved. Proof submission is completed.
+            </div>
 
             <?php endif; ?>
 

@@ -49,26 +49,39 @@ $earnedPointResult = $conn->query($earnedPointQuery);
 $earnedPointData = $earnedPointResult->fetch_assoc();
 $totalEarnedPoints = $earnedPointData['totalEarned'] ?? 0;
 
-/* Get User Tier Based On Total EcoPoints */
+/* Get Current Tier Based On Total Earned EcoPoints */
 $tierQuery="
-SELECT *
+SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
 WHERE minimumEcoPoints<=$totalEarnedPoints
 ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
+
 $tierResult=$conn->query($tierQuery);
 
 if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }else{
-    $tier=[
-        'tierID'=>'T001',
-        'tierName'=>'Eco Beginner',
-        'tierDescription'=>'Starting milestone for new sustainability participants',
-        'tierIcon'=>'icon_tier1.png',
-        'minimumEcoPoints'=>0
-    ];
+    /* Fallback to the lowest tier from database */
+    $lowestTierResult=$conn->query("
+    SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
+    FROM tiers
+    ORDER BY minimumEcoPoints ASC
+    LIMIT 1
+    ");
+
+    if($lowestTierResult&&$lowestTierResult->num_rows>0){
+        $tier=$lowestTierResult->fetch_assoc();
+    }else{
+        $tier=[
+            'tierID'=>'',
+            'tierName'=>'No Tier',
+            'tierDescription'=>'No tier information available',
+            'tierIcon'=>'',
+            'minimumEcoPoints'=>0
+        ];
+    }
 }
 
 /* Generate EcoPoint Transaction ID */
@@ -191,23 +204,36 @@ if(isset($_POST['redeem'])){
     }
 }
 
-/* Refresh User Tier */
+/* Refresh Current Points */
+$currentPointResult=$conn->query("
+SELECT ecopoint
+FROM user
+WHERE userID='$userID'
+");
+
+if($currentPointResult&&$currentPointResult->num_rows>0){
+    $currentPointData=$currentPointResult->fetch_assoc();
+    $currentPoints=(int)($currentPointData['ecopoint']??0);
+}
+
+/* Refresh Current Tier */
 $tierQuery="
-SELECT *
+SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
 WHERE minimumEcoPoints<=$totalEarnedPoints
 ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
+
 $tierResult=$conn->query($tierQuery);
 
 if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }
 
-/* Get Next Tier */
+/* Get Next Tier Based On Total Earned EcoPoints */
 $nextTierQuery="
-SELECT tierName,minimumEcoPoints
+SELECT tierID,tierName,minimumEcoPoints
 FROM tiers
 WHERE minimumEcoPoints>$totalEarnedPoints
 ORDER BY minimumEcoPoints ASC
@@ -218,7 +244,7 @@ $nextTierResult=$conn->query($nextTierQuery);
 
 if($nextTierResult&&$nextTierResult->num_rows>0){
     $nextTier=$nextTierResult->fetch_assoc();
-    $pointsToNextTier=$nextTier['minimumEcoPoints']-$totalEarnedPoints;
+    $pointsToNextTier=max(0,$nextTier['minimumEcoPoints']-$totalEarnedPoints);
 }else{
     $nextTier=null;
     $pointsToNextTier=0;
@@ -440,8 +466,10 @@ $historyResult=$conn->query($historyQuery);
             <h3>My Tier</h3>
 
             <div class="reward-tier-icon">
+                <?php if(!empty($tier['tierIcon'])): ?>
                 <img src="../assets/images/<?php echo htmlspecialchars($tier['tierIcon']); ?>"
                 alt="<?php echo htmlspecialchars($tier['tierName']); ?>">
+                <?php endif; ?>
             </div>
 
             <strong class="reward-tier-name">

@@ -75,24 +75,24 @@ ORDER BY requestDate DESC
 LIMIT 4
 ");
 
-/* Completed Missions */
 /* My Missions */
-$missionResult = $conn->query("
+$missionResult=$conn->query("
 SELECT COUNT(*) AS total
 FROM missionsubmission
 WHERE userID='$userID'
 ");
 
-$totalMission = $missionResult->fetch_assoc()['total'] ?? 0;
+$totalMission=$missionResult->fetch_assoc()['total']??0;
 
-/* Badges */
-$badgeResult=$conn->query("
+/* Completed Missions For Badge */
+$completedMissionResult=$conn->query("
 SELECT COUNT(*) AS total
-FROM `user achievement badge`
+FROM missionsubmission
 WHERE userID='$userID'
+AND submissionStatus IN ('Approved','Verified')
 ");
 
-$totalBadge=$badgeResult->fetch_assoc()['total']??0;
+$totalCompletedMission=$completedMissionResult->fetch_assoc()['total']??0;
 
 /* Available Missions */
 $missionListResult=$conn->query("
@@ -121,6 +121,24 @@ AND requestStatus='Completed'
 ");
 
 $totalExchange=$exchangeResult->fetch_assoc()['total']??0;
+
+/* Badges Earned */
+$totalBadge=0;
+
+/* AB001 - Complete 1 Mission */
+if($totalCompletedMission>=1){
+    $totalBadge++;
+}
+
+/* AB002 - Complete 5 Exchanges */
+if($totalExchange>=5){
+    $totalBadge++;
+}
+
+/* AB003 - Reach 500 EcoPoints */
+if($totalPoint>=500){
+    $totalBadge++;
+}
 
 /* Current Tier */
 $tierResult=$conn->query("

@@ -2,6 +2,7 @@
 session_start();
 
 /* Member Access */
+
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
@@ -20,8 +21,8 @@ $conn->set_charset("utf8mb4");
 $message = "";
 $messageType = "";
 
-
 /* Get Asset ID */
+
 $assetID = trim($_GET['id'] ?? $_POST['assetID'] ?? '');
 
 if ($assetID == '') {
@@ -31,8 +32,8 @@ if ($assetID == '') {
 
 $assetIDSafe = $conn->real_escape_string($assetID);
 
-
 /* Get Asset Information */
+
 $assetQuery = "
 SELECT
     a.assetID,
@@ -64,14 +65,14 @@ if (!$assetResult || $assetResult->num_rows == 0) {
 
 $asset = $assetResult->fetch_assoc();
 
-
 /* Cannot Borrow Own Asset */
+
 if ($asset['ownerID'] == $userID) {
     die("You cannot borrow your own asset.");
 }
 
-
 /* Asset Must Be Published + Approved */
+
 if (
     $asset['listingStatus'] != 'Published' ||
     $asset['verificationStatus'] != 'Approved'
@@ -79,8 +80,8 @@ if (
     die("This asset is not available for borrowing.");
 }
 
-
 /* Generate Transaction ID */
+
 function generateTransactionID($conn)
 {
     $result = $conn->query("
@@ -93,65 +94,68 @@ function generateTransactionID($conn)
 
     if ($result && $result->num_rows > 0) {
 
-        $lastID =
-            $result->fetch_assoc()['transactionID'];
+        $lastID = $result->fetch_assoc()['transactionID'];
 
-        $number =
-            (int)substr($lastID, 2) + 1;
+        $number = (int)substr($lastID, 2) + 1;
 
     } else {
 
         $number = 1;
     }
 
-    return "TR" .
-        str_pad(
-            $number,
-            3,
-            "0",
-            STR_PAD_LEFT
-        );
+    return "TR" . str_pad($number, 3, "0", STR_PAD_LEFT);
 }
 
+/* Generate Borrow ID */
 
-/* Generate Notification ID */
-function generateNotificationID($conn)
+function generateBorrowID($conn)
 {
     $result = $conn->query("
-        SELECT notificationID
-        FROM notification
-        WHERE notificationID LIKE 'N%'
-        AND notificationID NOT LIKE 'NOT%'
-        ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC
+        SELECT borrowID
+        FROM borrowings
+        WHERE borrowID LIKE 'B%'
+        ORDER BY CAST(SUBSTRING(borrowID,2) AS UNSIGNED) DESC
         LIMIT 1
     ");
 
     if ($result && $result->num_rows > 0) {
 
-        $row = $result->fetch_assoc();
+        $lastID = $result->fetch_assoc()['borrowID'];
 
-        $number =
-            (int)substr(
-                $row['notificationID'],
-                1
-            ) + 1;
+        $number = (int)substr($lastID, 1) + 1;
 
     } else {
 
         $number = 1;
     }
 
-    return "N" .
-        str_pad(
-            $number,
-            3,
-            "0",
-            STR_PAD_LEFT
-        );
+    return "B" . str_pad($number, 3, "0", STR_PAD_LEFT);
 }
 
+/* Generate Notification ID */
+
+function generateNotificationID($conn){
+    $result=$conn->query("
+    SELECT notificationID
+    FROM notification
+    WHERE notificationID LIKE 'N%'
+    AND notificationID NOT LIKE 'NOT%'
+    ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC
+    LIMIT 1
+    ");
+
+    if($result&&$result->num_rows>0){
+        $row=$result->fetch_assoc();
+        $number=(int)substr($row['notificationID'],1)+1;
+    }else{
+        $number=1;
+    }
+
+    return "N".str_pad($number,3,"0",STR_PAD_LEFT);
+}
 
 /* Submit Borrow Request */
+
 if (isset($_POST['submitRequest'])) {
 
     $borrowDate =
@@ -172,8 +176,8 @@ if (isset($_POST['submitRequest'])) {
 
     $today = date('Y-m-d');
 
-
     /* Validation */
+
     if (
         $borrowDate == '' ||
         $returnDate == '' ||
@@ -185,7 +189,6 @@ if (isset($_POST['submitRequest'])) {
 
         $messageType =
             "error";
-
 
     } elseif (
         !$term1 ||
@@ -199,7 +202,6 @@ if (isset($_POST['submitRequest'])) {
         $messageType =
             "error";
 
-
     } elseif ($borrowDate < $today) {
 
         $message =
@@ -207,7 +209,6 @@ if (isset($_POST['submitRequest'])) {
 
         $messageType =
             "error";
-
 
     } elseif ($returnDate <= $borrowDate) {
 
@@ -217,14 +218,13 @@ if (isset($_POST['submitRequest'])) {
         $messageType =
             "error";
 
-
     } else {
 
         $userIDSafe =
             $conn->real_escape_string($userID);
 
+        /* Prevent Duplicate Request */
 
-        /* Prevent Duplicate Active Request */
         $duplicateQuery = "
         SELECT transactionID
         FROM transactionrequests
@@ -237,7 +237,6 @@ if (isset($_POST['submitRequest'])) {
         $duplicateResult =
             $conn->query($duplicateQuery);
 
-
         if (
             $duplicateResult &&
             $duplicateResult->num_rows > 0
@@ -249,34 +248,20 @@ if (isset($_POST['submitRequest'])) {
             $messageType =
                 "error";
 
-
         } else {
 
+            /* Generate IDs */
 
-            /* Generate Transaction ID */
             $transactionID =
                 generateTransactionID($conn);
 
+            $borrowID =
+                generateBorrowID($conn);
 
-            /*
-            Borrow Date + Return Date are stored
-            inside requestMessage.
-
-            Member side DOES NOT create borrowings.
-            */
+            /* Request Message */
 
             $requestMessage =
-                "Borrow Date: " .
-                $borrowDate .
-                "\n" .
-
-                "Expected Return Date: " .
-                $returnDate .
-                "\n" .
-
-                "Purpose: " .
-                $purpose;
-
+                "Purpose: " . $purpose;
 
             if ($additionalNotes != '') {
 
@@ -285,49 +270,96 @@ if (isset($_POST['submitRequest'])) {
                     $additionalNotes;
             }
 
-
             $requestMessageSafe =
                 $conn->real_escape_string(
                     $requestMessage
                 );
 
+            $borrowDateSafe =
+                $conn->real_escape_string(
+                    $borrowDate
+                );
 
-            /* =====================================
-               Insert Transaction Request ONLY
-            ===================================== */
+            $returnDateSafe =
+                $conn->real_escape_string(
+                    $returnDate
+                );
 
-            $insertQuery = "
-            INSERT INTO transactionrequests
-            (
-                transactionID,
-                assetID,
-                requesterID,
-                requestDate,
-                requestStatus,
-                managerRemark,
-                decisionDate,
-                requestMessage
-            )
-            VALUES
-            (
-                '$transactionID',
-                '$assetIDSafe',
-                '$userIDSafe',
-                NOW(),
-                'Pending',
-                NULL,
-                NULL,
-                '$requestMessageSafe'
-            )
-            ";
+            /* Create both records together */
 
+            $conn->begin_transaction();
 
-            if ($conn->query($insertQuery)) {
+            try {
 
+                /* Create Transaction Request */
 
-                /* =====================================
-                   Get Member Name
-                ===================================== */
+                $insertRequest = "
+                INSERT INTO transactionrequests
+                (
+                    transactionID,
+                    assetID,
+                    requesterID,
+                    requestDate,
+                    requestStatus,
+                    managerRemark,
+                    decisionDate,
+                    requestMessage
+                )
+                VALUES
+                (
+                    '$transactionID',
+                    '$assetIDSafe',
+                    '$userIDSafe',
+                    NOW(),
+                    'Pending',
+                    NULL,
+                    NULL,
+                    '$requestMessageSafe'
+                )
+                ";
+
+                if (!$conn->query($insertRequest)) {
+
+                    throw new Exception(
+                        "Unable to create transaction request."
+                    );
+                }
+
+                /* Create Borrowing Record */
+
+                $insertBorrowing = "
+                INSERT INTO borrowings
+                (
+                    borrowID,
+                    assetID,
+                    borrowerID,
+                    transactionID,
+                    borrowDate,
+                    expectedReturnDate,
+                    actualReturnDate,
+                    borrowingStatus
+                )
+                VALUES
+                (
+                    '$borrowID',
+                    '$assetIDSafe',
+                    '$userIDSafe',
+                    '$transactionID',
+                    '$borrowDateSafe',
+                    '$returnDateSafe',
+                    NULL,
+                    'Pending'
+                )
+                ";
+
+                if (!$conn->query($insertBorrowing)) {
+
+                    throw new Exception(
+                        "Unable to create borrowing record."
+                    );
+                }
+
+                /* Get Member Name */
 
                 $memberResult =
                     $conn->query("
@@ -337,9 +369,7 @@ if (isset($_POST['submitRequest'])) {
                     LIMIT 1
                     ");
 
-
                 $memberName = "Member";
-
 
                 if (
                     $memberResult &&
@@ -353,43 +383,33 @@ if (isset($_POST['submitRequest'])) {
                         $memberData['name'];
                 }
 
-
-
-                /* =====================================
-                   Notify Exchange Manager
-                ===================================== */
+                /* Notify Manager */
 
                 $managerResult =
                     $conn->query("
                     SELECT userID
                     FROM user
-                    WHERE role = 'Exchange Manager'
+                    WHERE role = 'Manager'
                     AND status = 'Active'
                     ");
 
-
                 if ($managerResult) {
-
 
                     while (
                         $manager =
                         $managerResult->fetch_assoc()
                     ) {
 
-
                         $notificationID =
                             generateNotificationID($conn);
-
 
                         $managerID =
                             $conn->real_escape_string(
                                 $manager['userID']
                             );
 
-
                         $managerTitle =
                             "Borrow Request";
-
 
                         $managerContent =
                             $memberName .
@@ -399,111 +419,131 @@ if (isset($_POST['submitRequest'])) {
                             " (" . $asset['assetID'] . "). " .
                             "Ready for approval.";
 
-
                         $safeManagerTitle =
                             $conn->real_escape_string(
                                 $managerTitle
                             );
-
 
                         $safeManagerContent =
                             $conn->real_escape_string(
                                 $managerContent
                             );
 
+                        $insertManagerNotification = "
+                        INSERT INTO notification
+                        (
+                            notificationID,
+                            userID,
+                            title,
+                            content,
+                            status,
+                            createdDate
+                        )
+                        VALUES
+                        (
+                            '$notificationID',
+                            '$managerID',
+                            '$safeManagerTitle',
+                            '$safeManagerContent',
+                            'Unread',
+                            NOW()
+                        )
+                        ";
 
-                        $conn->query("
-                            INSERT INTO notification
-                            (
-                                notificationID,
-                                userID,
-                                title,
-                                content,
-                                status,
-                                createdDate
-                            )
-                            VALUES
-                            (
-                                '$notificationID',
-                                '$managerID',
-                                '$safeManagerTitle',
-                                '$safeManagerContent',
-                                'Unread',
-                                NOW()
-                            )
-                        ");
+                        if (!$conn->query(
+                            $insertManagerNotification
+                        )) {
+
+                            throw new Exception(
+                                "Unable to send manager notification."
+                            );
+                        }
                     }
                 }
 
-
-
-                /* =====================================
-                   Notify Member
-                ===================================== */
+                /* Notify Member */
 
                 $notificationID =
                     generateNotificationID($conn);
 
-
                 $memberTitle =
                     "Borrow Request Submitted Successfully";
-
 
                 $memberContent =
                     "Your request to borrow " .
                     $asset['assetName'] .
                     " (" . $asset['assetID'] . ") " .
-                    "has been submitted successfully and is waiting for approval.";
-
+                    "from " .
+                    date(
+                        "d M Y",
+                        strtotime($borrowDate)
+                    ) .
+                    " to " .
+                    date(
+                        "d M Y",
+                        strtotime($returnDate)
+                    ) .
+                    " has been submitted successfully and is waiting for approval.";
 
                 $safeMemberTitle =
                     $conn->real_escape_string(
                         $memberTitle
                     );
 
-
                 $safeMemberContent =
                     $conn->real_escape_string(
                         $memberContent
                     );
 
+                $insertMemberNotification = "
+                INSERT INTO notification
+                (
+                    notificationID,
+                    userID,
+                    title,
+                    content,
+                    status,
+                    createdDate
+                )
+                VALUES
+                (
+                    '$notificationID',
+                    '$userIDSafe',
+                    '$safeMemberTitle',
+                    '$safeMemberContent',
+                    'Unread',
+                    NOW()
+                )
+                ";
 
-                $conn->query("
-                    INSERT INTO notification
-                    (
-                        notificationID,
-                        userID,
-                        title,
-                        content,
-                        status,
-                        createdDate
-                    )
-                    VALUES
-                    (
-                        '$notificationID',
-                        '$userIDSafe',
-                        '$safeMemberTitle',
-                        '$safeMemberContent',
-                        'Unread',
-                        NOW()
-                    )
-                ");
+                if (!$conn->query(
+                    $insertMemberNotification
+                )) {
 
+                    throw new Exception(
+                        "Unable to send member notification."
+                    );
+                }
 
+                /* Success */
 
-                /* Redirect */
+                $conn->commit();
+
                 header(
                     "Location: member_requests.php?borrowSubmitted=1"
                 );
 
                 exit();
 
+            } catch (Exception $e) {
 
-            } else {
+                /* Rollback */
+
+                $conn->rollback();
 
                 $message =
-                    "Unable to submit request: " .
-                    $conn->error;
+                    "Unable to submit borrow request: " .
+                    $e->getMessage();
 
                 $messageType =
                     "error";
@@ -515,6 +555,7 @@ if (isset($_POST['submitRequest'])) {
 ?>
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -542,25 +583,20 @@ if (isset($_POST['submitRequest'])) {
 
 </head>
 
-
 <body class="role-member">
 
 <div class="dashboard-container">
 
-
     <?php include '../sidebar.php'; ?>
-
 
     <div class="main-content">
 
-
         <?php include '../header.php'; ?>
-
 
         <main class="page-body">
 
+            <!-- Page Header -->
 
-            <!-- Header -->
             <div class="borrow-form-header">
 
                 <div>
@@ -575,7 +611,6 @@ if (isset($_POST['submitRequest'])) {
 
                 </div>
 
-
                 <a
                     href="member_asset_details.php?id=<?php echo urlencode($asset['assetID']); ?>"
                     class="borrow-back-btn"
@@ -585,9 +620,8 @@ if (isset($_POST['submitRequest'])) {
 
             </div>
 
-
-
             <!-- Error Message -->
+
             <?php if ($message != ''): ?>
 
                 <div
@@ -602,14 +636,12 @@ if (isset($_POST['submitRequest'])) {
 
             <?php endif; ?>
 
+            <!-- Borrow Form -->
 
-
-            <!-- Form -->
             <form
                 method="POST"
                 class="borrow-form"
             >
-
 
                 <input
                     type="hidden"
@@ -617,11 +649,9 @@ if (isset($_POST['submitRequest'])) {
                     value="<?php echo htmlspecialchars($asset['assetID']); ?>"
                 >
 
-
-
                 <!-- Asset Summary -->
-                <div class="borrow-asset-summary">
 
+                <div class="borrow-asset-summary">
 
                     <div>
 
@@ -640,8 +670,6 @@ if (isset($_POST['submitRequest'])) {
                         </strong>
 
                     </div>
-
-
 
                     <div>
 
@@ -662,8 +690,6 @@ if (isset($_POST['submitRequest'])) {
 
                     </div>
 
-
-
                     <div>
 
                         <span>
@@ -681,8 +707,6 @@ if (isset($_POST['submitRequest'])) {
                         </strong>
 
                     </div>
-
-
 
                     <div>
 
@@ -703,26 +727,21 @@ if (isset($_POST['submitRequest'])) {
 
                     </div>
 
-
                 </div>
 
-
-
                 <!-- Borrow Details -->
-                <section class="borrow-form-section">
 
+                <section class="borrow-form-section">
 
                     <h2>
                         Borrow Details
                     </h2>
 
-
                     <div class="borrow-date-grid">
 
-
                         <!-- Borrow Date -->
-                        <div class="borrow-form-group">
 
+                        <div class="borrow-form-group">
 
                             <label>
 
@@ -734,7 +753,6 @@ if (isset($_POST['submitRequest'])) {
 
                             </label>
 
-
                             <input
                                 type="date"
                                 name="borrowDate"
@@ -743,14 +761,11 @@ if (isset($_POST['submitRequest'])) {
                                 required
                             >
 
-
                         </div>
 
-
-
                         <!-- Expected Return Date -->
-                        <div class="borrow-form-group">
 
+                        <div class="borrow-form-group">
 
                             <label>
 
@@ -762,7 +777,6 @@ if (isset($_POST['submitRequest'])) {
 
                             </label>
 
-
                             <input
                                 type="date"
                                 name="returnDate"
@@ -771,17 +785,13 @@ if (isset($_POST['submitRequest'])) {
                                 required
                             >
 
-
                         </div>
-
 
                     </div>
 
-
-
                     <!-- Purpose -->
-                    <div class="borrow-form-group">
 
+                    <div class="borrow-form-group">
 
                         <label>
 
@@ -793,7 +803,6 @@ if (isset($_POST['submitRequest'])) {
 
                         </label>
 
-
                         <input
                             type="text"
                             name="purpose"
@@ -802,14 +811,11 @@ if (isset($_POST['submitRequest'])) {
                             required
                         >
 
-
                     </div>
 
-
-
                     <!-- Additional Notes -->
-                    <div class="borrow-form-group">
 
+                    <div class="borrow-form-group">
 
                         <label>
 
@@ -821,29 +827,25 @@ if (isset($_POST['submitRequest'])) {
 
                         </label>
 
-
                         <textarea
                             name="additionalNotes"
                             rows="3"
                             placeholder="Type your notes here..."
                         ><?php echo htmlspecialchars($_POST['additionalNotes'] ?? ''); ?></textarea>
 
-
                     </div>
-
 
                 </section>
 
+                <!-- Terms & Conditions -->
 
-
-                <!-- Terms -->
-                <section class="borrow-form-section borrow-terms">
-
+                <section
+                    class="borrow-form-section borrow-terms"
+                >
 
                     <h2>
                         Terms & Conditions
                     </h2>
-
 
                     <label>
 
@@ -857,7 +859,6 @@ if (isset($_POST['submitRequest'])) {
 
                     </label>
 
-
                     <label>
 
                         <input
@@ -869,7 +870,6 @@ if (isset($_POST['submitRequest'])) {
                         I agree to keep the item in good condition and use it responsibly.
 
                     </label>
-
 
                     <label>
 
@@ -883,14 +883,11 @@ if (isset($_POST['submitRequest'])) {
 
                     </label>
 
-
                 </section>
 
-
-
                 <!-- Buttons -->
-                <div class="borrow-form-actions">
 
+                <div class="borrow-form-actions">
 
                     <a
                         href="member_asset_details.php?id=<?php echo urlencode($asset['assetID']); ?>"
@@ -898,7 +895,6 @@ if (isset($_POST['submitRequest'])) {
                     >
                         Cancel
                     </a>
-
 
                     <button
                         type="submit"
@@ -908,24 +904,21 @@ if (isset($_POST['submitRequest'])) {
                         Submit Request →
                     </button>
 
-
                 </div>
-
 
             </form>
 
-
         </main>
-
 
     </div>
 
-
 </div>
 
-
-
 <script>
+
+/* =============================================
+   Return Date Must Be After Borrow Date
+============================================= */
 
 const borrowDate =
     document.querySelector(
@@ -937,7 +930,6 @@ const returnDate =
         '[name="returnDate"]'
     );
 
-
 borrowDate.addEventListener(
     'change',
     function () {
@@ -946,21 +938,17 @@ borrowDate.addEventListener(
             return;
         }
 
-
         const start =
             new Date(this.value);
-
 
         start.setDate(
             start.getDate() + 1
         );
 
-
         returnDate.min =
             start
             .toISOString()
             .split('T')[0];
-
 
         if (
             returnDate.value &&
@@ -973,7 +961,6 @@ borrowDate.addEventListener(
 );
 
 </script>
-
 
 </body>
 

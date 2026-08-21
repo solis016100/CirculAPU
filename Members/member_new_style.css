@@ -2381,3 +2381,64 @@ body.role-member .view-details-btn:hover {
         box-sizing:border-box;
     }
 }
+
+/* =========================
+   Mission Status Fix
+========================= */
+
+/* In Progress = Blue */
+.my-mission-status.in-progress,
+.mission-detail-status.in-progress {
+    background:#e7efff;
+    border:1px solid #a8c5ed;
+    color:#315f9f;
+}
+
+/* Pending = Yellow */
+.my-mission-status.pending,
+.mission-detail-status.pending {
+    background:#fff3d6;
+    border:1px solid #e8cd7e;
+    color:#8a6813;
+}
+
+/* Approved / Verified = Green */
+.my-mission-status.approved,
+.mission-detail-status.approved,
+.my-mission-status.verified,
+.mission-detail-status.verified {
+    background:#d8f2e1;
+    border:1px solid #79ca95;
+    color:#0f6f34;
+}
+
+/* Rejected = Red */
+.my-mission-status.rejected,
+.mission-detail-status.rejected {
+    background:#fde7e7;
+    border:1px solid #e6a2a2;
+    color:#a33434;
+}
+
+/* Proof locked message */
+.mission-proof-locked {
+    margin-top:14px;
+    padding:12px 15px;
+    border-radius:7px;
+    font-size:11px;
+    font-weight:600;
+}
+
+/* Waiting for auditor */
+.mission-proof-locked.pending {
+    background:#fff8e1;
+    border:1px solid #e8cd7e;
+    color:#8a6813;
+}
+
+/* Mission approved */
+.mission-proof-locked.approved {
+    background:#e8f7ed;
+    border:1px solid #79ca95;
+    color:#0f6f34;
+}
