@@ -66,8 +66,6 @@
             $badgeRequirement = "Reach {$requirementValue} EcoPoints";
         }elseif ($requirementType === 'asset') {
             $badgeRequirement = "Get {$requirementValue} approved assets";
-        }elseif ($requirementType === 'borrowing') {
-            $badgeRequirement = "Borrow {$requirementValue} assets";
         }elseif ($requirementType === 'reward') {
             $badgeRequirement = "Redeem {$requirementValue} rewards";
         }else {
@@ -280,7 +278,6 @@
                                 <option value="mission">Missions Completed</option>
                                 <option value="ecopoints">EcoPoints Reached</option>
                                 <option value="asset">Approved Assets</option>
-                                <option value="borrowing">Assets Borrowed</option>
                                 <option value="reward">Rewards Redeemed</option>
                             </select>
                         </div>
@@ -453,8 +450,6 @@
                 badgeRequirement.value = `Reach ${value} EcoPoints`;
             }else if (type === 'asset'){
                 badgeRequirement.value = `Get ${value} approved assets`;
-            }else if (type === 'borrowing'){
-                badgeRequirement.value = `Borrow ${value} assets`;
             }else if (type === 'reward'){
                 badgeRequirement.value = `Redeem ${value} rewards`;
             }

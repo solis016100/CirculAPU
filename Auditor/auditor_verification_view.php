@@ -10,6 +10,109 @@
     require_once '../print.php';
     require_once '../delete.php';
 
+    function checkMemberBadges($conn, $userID) {
+        $badges = $conn->query("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeRequirement FROM achievementbadges");
+
+        while ($badge = $badges->fetch_assoc()) {
+            $requirement = $badge['achieveBadgeRequirement'];
+            $required = 0;
+            $actual = 0;
+            $matched = false;
+
+            /* Missions */
+            if (preg_match('/Complete\s+(\d+)\s+missions?/i', $requirement, $m)) {
+                $required = (int)$m[1];
+                $stmt = $conn->prepare("SELECT COUNT(*) total FROM missionsubmission WHERE userID = ? AND submissionStatus = 'Approved'");
+
+                $stmt->bind_param("s", $userID);
+                $stmt->execute();
+                $actual = (int)$stmt->get_result()->fetch_assoc()['total'];
+                $stmt->close();
+                $matched = true;
+            }/* EcoPoints */
+            elseif (preg_match('/Reach\s+(\d+)\s+EcoPoints/i', $requirement, $m)) {
+                $required = (int)$m[1];
+
+                $stmt = $conn->prepare("SELECT ecopoint FROM user WHERE userID = ?");
+
+                $stmt->bind_param("s", $userID);
+                $stmt->execute();
+                $actual = (int)$stmt->get_result()->fetch_assoc()['ecopoint'];
+                $stmt->close();
+                $matched = true;
+            }/* Approved Assets */
+            elseif (preg_match('/Get\s+(\d+)\s+approved\s+assets?/i', $requirement, $m)) {
+                $required = (int)$m[1];
+                $stmt = $conn->prepare("SELECT COUNT(*) total FROM assets WHERE ownerID = ? AND verificationStatus = 'Approved'");
+
+                $stmt->bind_param("s", $userID);
+                $stmt->execute();
+                $actual = (int)$stmt->get_result()->fetch_assoc()['total'];
+                $stmt->close();
+                $matched = true;
+            }/* Rewards Redeemed */
+            elseif (preg_match('/Redeem\s+(\d+)\s+rewards?/i', $requirement, $m)) {
+                $required = (int)$m[1];
+                $stmt = $conn->prepare("SELECT COUNT(*) total FROM rewardredemption WHERE userID = ?");
+
+                $stmt->bind_param("s", $userID);
+                $stmt->execute();
+                $actual = (int)$stmt->get_result()->fetch_assoc()['total'];
+                $stmt->close();
+                $matched = true;
+            }
+
+            /* Award Badge */
+            if ($matched && $actual >= $required) {
+                $stmt = $conn->prepare("SELECT userBadgeID FROM `user achievement badge` WHERE userID = ? AND achieveBadgeID = ?");
+
+                $stmt->bind_param("ss", $userID, $badge['achieveBadgeID']);
+
+                $stmt->execute();
+
+                $alreadyEarned = $stmt->get_result()->num_rows > 0;
+                $stmt->close();
+
+                if (!$alreadyEarned) {
+                    $result = $conn->query("SELECT userBadgeID FROM `user achievement badge` ORDER BY CAST(SUBSTRING(userBadgeID,4) AS UNSIGNED) DESC LIMIT 1");
+
+                    $lastID = $result->fetch_assoc();
+
+                    $nextID = $lastID ? ((int)substr($lastID['userBadgeID'], 3) + 1) : 1;
+
+                    $userBadgeID = 'UAB' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
+
+                    $stmt = $conn->prepare("INSERT INTO `user achievement badge`(userBadgeID, userID, achieveBadgeID, awardedDate) VALUES (?, ?, ?, NOW())");
+
+                    $stmt->bind_param("sss", $userBadgeID, $userID, $badge['achieveBadgeID']);
+
+                    $stmt->execute();
+                    $stmt->close();
+
+                    /* Notification */
+                    $result = $conn->query("SELECT notificationID FROM notification ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC LIMIT 1");
+
+                    $lastNotification = $result->fetch_assoc();
+
+                    $nextID = $lastNotification ? ((int)substr($lastNotification['notificationID'], 1) + 1) : 1;
+
+                    $notificationID = 'N' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
+
+                    $title = 'Achievement Badge Earned!';
+
+                    $content = 'Congratulations! You earned the "' . $badge['achieveBadgeName'] . '" achievement badge.';
+
+                    $stmt = $conn->prepare("INSERT INTO notification(notificationID, userID, title, content, status, createdDate) VALUES (?, ?, ?, ?, 'Unread', NOW())");
+
+                    $stmt->bind_param("ssss", $notificationID, $userID, $title, $content);
+
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            }
+        }
+    }
+
     $id = $_GET['verificationID'] ?? '';
 
     if (!$id) {
@@ -115,164 +218,93 @@
 
                 $stmt->bind_param("ss", $newStatus, $verification['targetID']);
                 $stmt->execute();
+                $stmt->close();
 
-            }else {
+                /* Award Mission EcoPoints */
+                if ($newStatus === 'Approved') {
+                    /* Check whether EcoPoints were already awarded */
+                    $stmt = $conn->prepare("SELECT transactionID FROM ecopointstransaction WHERE userID = ? AND sourceType = 'Mission' AND referenceID = ? LIMIT 1");
+
+                    $stmt->bind_param("ss", $verification['userID'], $verification['targetID']);
+
+                    $stmt->execute();
+
+                    $alreadyAwarded = $stmt->get_result()->num_rows > 0;
+                    $stmt->close();
+
+                    /* Only award once */
+                    if (!$alreadyAwarded) {
+                        /* Get Mission EcoPoints */
+                        $stmt = $conn->prepare("SELECT m.ecoPointsReward FROM missions m JOIN missionsubmission ms ON m.missionID = ms.missionID WHERE ms.submissionID = ?");
+
+                        $stmt->bind_param("s", $verification['targetID']);
+                        $stmt->execute();
+
+                        $reward = $stmt->get_result()->fetch_assoc();
+                        $stmt->close();
+
+                        if ($reward) {
+                            $points = (int)$reward['ecoPointsReward'];
+                            /* Update member EcoPoints */
+                            $stmt = $conn->prepare("UPDATE user SET ecopoint = ecopoint + ? WHERE userID = ?");
+
+                            $stmt->bind_param("is", $points, $verification['userID']);
+
+                            $stmt->execute();
+                            $stmt->close();
+
+                            /* Generate Transaction ID */
+                            $result = $conn->query("SELECT transactionID FROM ecopointstransaction ORDER BY CAST(SUBSTRING(transactionID,3) AS UNSIGNED) DESC LIMIT 1");
+
+                            $lastTransaction = $result->fetch_assoc();
+
+                            $nextID = $lastTransaction ? ((int)substr($lastTransaction['transactionID'], 2) + 1) : 1;
+
+                            $transactionID = 'ET' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
+
+                            /* Record EcoPoints Transaction */
+                            $stmt = $conn->prepare("INSERT INTO ecopointstransaction(transactionID, userID, points, transactionType, sourceType, referenceID, transactionDate) VALUES (?, ?, ?, 'Earned', 'Mission', ?, NOW())");
+
+                            $stmt->bind_param("ssis", $transactionID, $verification['userID'], $points, $verification['targetID']);
+
+                            $stmt->execute();
+                            $stmt->close();
+                        }
+                    }
+                }
+            } else {
+                /* Asset */
                 $stmt = $conn->prepare("UPDATE assets SET verificationStatus = ? WHERE assetID = ?");
 
                 $stmt->bind_param("ss", $newStatus, $verification['targetID']);
+
                 $stmt->execute();
+                $stmt->close();
 
                 /* Update Asset Condition */
                 if ($selectedCondition !== '') {
-                    $stmt = $conn->prepare("UPDATE assets SET assetCondition = ? WHERE assetID = ?
-                    ");
+                    $stmt = $conn->prepare("UPDATE assets SET assetCondition = ? WHERE assetID = ?");
 
                     $stmt->bind_param("ss", $selectedCondition, $verification['targetID']);
+
                     $stmt->execute();
-                }
-
-                // Check Asset Achievement Badges
-                if ($newStatus == 'Approved') {
-                    // Count approved assets
-                    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM assets WHERE userID = ? AND verificationStatus = 'Approved'");
-
-                    $stmt->bind_param("s", $verification['userID']);
-                    $stmt->execute();
-
-                    $approvedAssets = (int)$stmt->get_result()->fetch_assoc()['total'];
-
-                    // Get Asset Badges
-                    $badges = $conn->query("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeRequirement FROM achievementbadges WHERE achieveBadgeRequirement LIKE 'Get % approved asset%'");
-
-                    while ($badge = $badges->fetch_assoc()) {
-                        if (preg_match('/Get\s+(\d+)\s+approved\s+assets?/i', $badge['achieveBadgeRequirement'], $match)) {
-                            $required = (int)$match[1];
-
-                            if ($approvedAssets >= $required) {
-                                // Check if already earned
-                                $stmt = $conn->prepare("SELECT userBadgeID FROM `user achievement badge` WHERE userID = ? AND achieveBadgeID = ?");
-
-                                $stmt->bind_param("ss", $verification['userID'], $badge['achieveBadgeID']);
-                                $stmt->execute();
-
-                                if ($stmt->get_result()->num_rows == 0) {
-                                    // Generate User Badge ID
-                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(userBadgeID,4) AS UNSIGNED)),0) + 1 AS nextID FROM `user achievement badge`");
-
-                                    $userBadgeID = 'UAB' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
-
-                                    // Award Badge
-                                    $stmt = $conn->prepare("INSERT INTO `user achievement badge`(userBadgeID,userID,achieveBadgeID,awardedDate) VALUES (?,?,?,NOW())");
-
-                                    $stmt->bind_param("sss", $userBadgeID, $verification['userID'], $badge['achieveBadgeID']);
-                                    $stmt->execute();
-
-                                    // Badge Notification
-                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
-
-                                    $notificationID = 'N' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
-
-                                    $title = 'Achievement Badge Earned!';
-
-                                    $content = 'Congratulations! You earned the "' . $badge['achieveBadgeName'] . '" achievement badge.';
-
-                                    $notify = $conn->prepare("INSERT INTO notification(notificationID,userID,title,content,status,createdDate) VALUES (?,?,?,?,'Unread',NOW())");
-
-                                    $notify->bind_param("ssss", $notificationID, $verification['userID'], $title, $content);
-                                    $notify->execute();
-                                }
-                            }
-                        }
-                    }
+                    $stmt->close();
                 }
             }
 
-            /* Mission EcoPoints + Badge */
-            if ($targetType == 'MissionSubmission' && $newStatus == 'Approved') {
-                /* Get Mission Reward */
-                $stmt = $conn->prepare("SELECT missionID, ecoPointsReward FROM missions WHERE missionID = (SELECT missionID FROM missionsubmission WHERE submissionID = ?)");
-
-                $stmt->bind_param("s", $verification['targetID']);
-                $stmt->execute();
-
-                $missionData = $stmt->get_result()->fetch_assoc();
-
-                if ($missionData) {
-                    $points = (int)$missionData['ecoPointsReward'];
-                    /* Transaction ID */
-                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(transactionID,3) AS UNSIGNED)),0) + 1 AS nextID FROM ecopointstransaction");
-
-                    $transactionID = 'ET' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
-
-                    /* EcoPoints Transaction */
-                    $stmt = $conn->prepare("INSERT INTO ecopointstransaction(transactionID,userID,points,transactionType, sourceType,referenceID,transactionDate) VALUES (?,? ,?,'Earned','Mission',?,NOW())");
-
-                    $stmt->bind_param("ssis", $transactionID, $verification['userID'], $points, $missionData['missionID']);
-                    $stmt->execute();
-
-                    /* Update User EcoPoints */
-                    $stmt = $conn->prepare("UPDATE user SET ecopoint = ecopoint + ? WHERE userID = ?");
-
-                    $stmt->bind_param("is", $points, $verification['userID']);
-                    $stmt->execute();
-
-                    /* Count Approved Missions */
-                    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM missionsubmission WHERE userID = ? AND submissionStatus = 'Approved'");
-
-                    $stmt->bind_param("s", $verification['userID']);
-                    $stmt->execute();
-
-                    $completed = (int)$stmt->get_result()->fetch_assoc()['total'];
-
-                    /* Check Mission Badges */
-                    $badges = $conn->query("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeRequirement FROM a");
-
-                    while ($badge = $badges->fetch_assoc()) {
-                        if (preg_match('/Complete\s+(\d+)\s+missions?/i', $badge['achieveBadgeRequirement'], $match)) {
-                            $required = (int)$match[1];
-                            if ($completed >= $required) {
-                                /* Already Earned? */
-                                $stmt = $conn->prepare("SELECT userBadgeID FROM `user achievement badge` WHERE userID = ? AND achieveBadgeID = ?");
-
-                                $stmt->bind_param("ss", $verification['userID'], $badge['achieveBadgeID']);
-                                $stmt->execute();
-
-                                if ($stmt->get_result()->num_rows == 0) {
-                                    /* User Badge ID */
-                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(userBadgeID,4) AS UNSIGNED)),0) + 1 AS nextID FROM `user achievement badge`");
-
-                                    $userBadgeID = 'UAB' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
-
-                                    /* Award Badge */
-                                    $stmt = $conn->prepare("INSERT INTO `user achievement badge` (userBadgeID,userID,achieveBadgeID,awardedDate) VALUES (?,?,?,NOW())");
-
-                                    $stmt->bind_param("sss", $userBadgeID, $verification['userID'], $badge['achieveBadgeID']);
-                                    $stmt->execute();
-
-                                    // Badge Notification
-                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
-
-                                    $notificationID = 'N' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
-
-                                    $title = 'Achievement Badge Earned!';
-
-                                    $content = 'Congratulations! You earned the "' . $badge['achieveBadgeName'] . '" achievement badge.';
-
-                                    $notify = $conn->prepare("INSERT INTO notification(notificationID,userID,title,content,status,createdDate) VALUES (?,?,?,?,'Unread',NOW())");
-
-                                    $notify->bind_param("ssss", $notificationID, $verification['userID'], $title, $content);
-                                    $notify->execute();
-                                }
-                            }
-                        }
-                    }
-                }
+            /* Check ALL badge requirements */
+            if ($newStatus === 'Approved') {
+                checkMemberBadges($conn, $verification['userID']);
             }
 
             /* Notification */
-            $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
+            $result = $conn->query("SELECT notificationID FROM notification ORDER BY CAST(SUBSTRING(notificationID,2) AS UNSIGNED) DESC LIMIT 1");
 
-            $notificationID = 'N' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+            $lastNotification = $result->fetch_assoc();
+
+            $nextID = $lastNotification ? ((int)substr($lastNotification['notificationID'], 1) + 1) : 1;
+
+            $notificationID = 'N' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
 
             if ($targetType == 'MissionSubmission') {
                 $title = $newStatus == 'Approved' ? 'Mission Approved!' : 'Mission Rejected';
