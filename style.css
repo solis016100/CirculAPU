@@ -1327,6 +1327,13 @@ body.auth-page {
     font-size: 15px;
 }
 
+.management-heading-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
 
 /* CREATE BUTTON */
 

@@ -600,6 +600,13 @@
 
 /* Responsive */
 @media (max-width:768px) {
+    .management-heading-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
     .management-create-btn {
         padding:4px 8px!important;
         font-size:8px!important;
@@ -1095,7 +1102,7 @@
 }
 
 @media (max-width:768px) {
-    .reward-table {
+    .reward-table, .redemption-table {
         width:100%!important;
         min-width:0!important;
         table-layout:fixed;
@@ -1136,6 +1143,28 @@
         font-size:9px!important;
         padding:4px 5px!important;
     }
+
+    .redemption-table th:nth-child(3),
+    .redemption-table td:nth-child(3),
+    .redemption-table th:nth-child(5),
+    .redemption-table td:nth-child(5) {
+        display: none;
+    }
+
+    .redemption-table th:nth-child(1),
+    .redemption-table td:nth-child(1) { width:7%; }
+
+    .redemption-table th:nth-child(2),
+    .redemption-table td:nth-child(2) { width:21%; }
+
+    .redemption-table th:nth-child(4),
+    .redemption-table td:nth-child(4) { width:15%; }
+
+    .redemption-table th:nth-child(6),
+    .redemption-table td:nth-child(6) { width:16%; }
+
+    .redemption-table th:nth-child(7),
+    .redemption-table td:nth-child(7) { width:25%; }
 
 }
 
