@@ -47,8 +47,8 @@
                     createDeleteLog($conn, $_SESSION['user_id'], 'Reward', $deleteID, 'Deleted reward: ' . $rewardData['rewardName']);
 
                     // Successful delete
-                    header("Location: auditor_rewards_management.php?deleted=1");
-
+                    $returnQuery = $_POST['returnQuery'] ?? '';
+                    header("Location: auditor_rewards_management.php?deleted=1" . ($returnQuery !== '' ? '&' . $returnQuery : ''));
                     exit();
                 }else {
                     $stmt->close();
@@ -75,6 +75,10 @@
         $ecoPoints = isset($_GET['ecoPoints']) ? trim($_GET['ecoPoints']) : '';
         $quantity = isset($_GET['quantity']) ? trim($_GET['quantity']) : '';
         $availability = isset($_GET['availability']) ? trim($_GET['availability']) : '';
+
+        // Keep current filters when navigating to other pages
+        $returnParams = $_GET;
+        $returnQuery = http_build_query($returnParams);
 
         // Number of rewards displayed per page
         $recordsPerPage = 8;
@@ -108,8 +112,17 @@
 
         // Filter by Quantity
         if ($quantity !== '') {
-            $safeQuantity = mysqli_real_escape_string($conn, $quantity);
-            $conditions[] = "quantity = '$safeQuantity'";
+            if ($quantity === 'low') {
+                // Low Stock = quantity 1 or 2
+                $conditions[] = "quantity > 0 AND quantity < 3";
+            }elseif ($quantity === 'out_of_stock') {
+                // Out of Stock = quantity 0
+                $conditions[] = "quantity = 0";
+            }else {
+                // Normal quantity filter
+                $safeQuantity = mysqli_real_escape_string($conn, $quantity);
+                $conditions[] = "quantity = '$safeQuantity'";
+            }
         }
 
         // Filter by Availability
@@ -251,9 +264,24 @@
                             <label for="quantity">Quantity</label>
                             <select id="quantity" name="quantity">
                                 <option value="">All Quantity</option>
+                                <!-- Low Stock -->
+                                <option value="low"
+                                    <?php echo ($quantity === 'low') ? 'selected' : ''; ?>>
+                                    Low Stock (1-2)
+                                </option>
+
+                                <!-- Out of Stock -->
+                                <option value="out_of_stock"
+                                    <?php echo ($quantity === 'out_of_stock') ? 'selected' : ''; ?>>
+                                    Out of Stock (0)
+                                </option>
+
+                                <!-- Individual Quantities -->
                                 <?php while ($row = mysqli_fetch_assoc($quantityResult)) { ?>
-                                    <option value="<?php echo $row['quantity']; ?>"<?php if ($quantity == $row['quantity']) {echo 'selected';}?>>
-                                        <?php echo $row['quantity']; ?>
+                                    <option value="<?php echo htmlspecialchars($row['quantity']); ?>"
+                                        <?php if ($quantity == $row['quantity']) { echo 'selected';}?>
+                                    >
+                                        <?php echo htmlspecialchars($row['quantity']); ?>
                                     </option>
                                 <?php } ?>
                             </select>
@@ -313,7 +341,7 @@
 
                             <tbody>
                                 <?php $number = $offset + 1; while ($row = mysqli_fetch_assoc($result)) { ?>
-                                    <tr ondblclick="window.location.href='auditor_reward_view.php?rewardID=<?= urlencode($row['rewardID']) ?>&from=management'">
+                                    <tr ondblclick="window.location.href='auditor_reward_view.php?rewardID=<?= urlencode($row['rewardID']) ?>&from=management&<?= htmlspecialchars($returnQuery) ?>'">
                                         <td>
                                             <?php echo $number; ?>
                                         </td>
@@ -353,17 +381,17 @@
                                         <td>
                                             <div class="management-actions">
                                                 <!-- View -->
-                                                <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>" class="management-action-btn" title="View Reward">
+                                                <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&from=management&<?php echo htmlspecialchars($returnQuery); ?>" class="management-action-btn" title="View Reward">
                                                     <img src="../assets/icons/view.png" alt="View">
                                                 </a>
 
                                                 <!-- Edit -->
-                                                <a href="auditor_reward_edit.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&from=management" class="management-action-btn" title="Edit Reward">
+                                                <a href="auditor_reward_edit.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&from=management&<?php echo htmlspecialchars($returnQuery); ?>" class="management-action-btn" title="Edit Reward">
                                                     <img src="../assets/icons/edit.png" alt="Edit">
                                                 </a>
 
                                                 <!-- Print -->
-                                                <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&print=1&from=management" class="management-action-btn" title="Print Reward">
+                                                <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&print=1&from=management&<?php echo htmlspecialchars($returnQuery); ?>" class="management-action-btn" title="Print Reward">
                                                     <img src="../assets/icons/print.png" alt="Print">
                                                 </a>
 
@@ -443,6 +471,8 @@
 
                 <form method="POST">
                     <input type="hidden" name="rewardID" id="deleteRewardID">
+                    <input type="hidden" name="returnQuery" value="<?php echo htmlspecialchars($returnQuery); ?>">
+
                     <button type="submit" name="delete_reward" class="auditor-popout-confirm">
                         Yes, Delete
                     </button>
@@ -460,8 +490,13 @@
         function closeDeletePopout() {
             document.getElementById('deletePopout').classList.remove('show');
         }
+
+        document.querySelectorAll('.management-table tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                if (window.innerWidth <= 768) row.ondblclick?.();
+            });
+        });
     </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

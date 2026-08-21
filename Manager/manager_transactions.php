@@ -15,6 +15,16 @@ function validDate($v): bool {
     return $d && $d->format('Y-m-d') === $v;
 }
 function showDate($v): string { return $v && strtotime($v) ? date('d M Y', strtotime($v)) : '-'; }
+function pickupPriority($pickup,string $requestStatus): array {
+    if($requestStatus!=='Pending'||!$pickup||!strtotime($pickup))return ['', ''];
+    $date=date('Y-m-d',strtotime($pickup));
+    $today=date('Y-m-d');
+    $tomorrow=date('Y-m-d',strtotime('+1 day'));
+    if($date===$today)return ['URGENT — Pickup Today','urgent'];
+    if($date===$tomorrow)return ['Pickup Tomorrow','tomorrow'];
+    if($date<$today)return ['Pickup Date Passed','passed'];
+    return ['', ''];
+}
 function pageURL($p): string {
     $q = $_GET; $q['page'] = $p;
     return 'manager_transactions.php?' . http_build_query($q);
@@ -37,7 +47,7 @@ $viewAll = ($_GET['viewAll'] ?? '') === '1';
 
 $statuses = ['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'];
 $transactions=[];$nextPending=$nextPickup='';
-$stats=['pending'=>0,'pickup'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
+$stats=['pending'=>0,'urgent'=>0,'pickup'=>0,'active'=>0,'overdue'=>0,'completed'=>0];
 $error='';
 $perPage = $viewAll ? 100000 : 8;
 $page = max(1, (int)($_GET['page'] ?? 1));
@@ -53,13 +63,16 @@ try {
     $row = $conn->query("
         SELECT
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Pending') pending,
+            (SELECT COUNT(DISTINCT t.transactionID) FROM transactionrequests t
+             JOIN borrowings b ON b.transactionID=t.transactionID
+             WHERE t.requestStatus='Pending' AND DATE(b.borrowDate)=CURDATE()) urgent,
             (SELECT COUNT(*) FROM transactionrequests t
              JOIN borrowings b ON b.transactionID=t.transactionID
              JOIN assets a ON a.assetID=t.assetID
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+             AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
              AND a.availabilityStatus<>'Unavailable'
 ) pickup,
             (SELECT COUNT(*) FROM borrowings
@@ -68,7 +81,19 @@ try {
              WHERE DATE(expectedReturnDate)<CURDATE() AND actualReturnDate IS NULL
              AND borrowingStatus IN ('Borrowed','Active','Overdue')) overdue,
             (SELECT COUNT(*) FROM transactionrequests WHERE requestStatus='Completed') completed,
-            (SELECT transactionID FROM transactionrequests WHERE requestStatus='Pending' ORDER BY requestDate ASC LIMIT 1) nextPending,
+            (SELECT t.transactionID
+             FROM transactionrequests t
+             LEFT JOIN borrowings b ON b.transactionID=t.transactionID
+             WHERE t.requestStatus='Pending'
+             ORDER BY CASE
+                 WHEN DATE(b.borrowDate)=CURDATE() THEN 0
+                 WHEN DATE(b.borrowDate)=DATE_ADD(CURDATE(),INTERVAL 1 DAY) THEN 1
+                 WHEN DATE(b.borrowDate)>CURDATE() THEN 2
+                 ELSE 3
+             END,
+             CASE WHEN DATE(b.borrowDate)>=CURDATE() THEN DATE(b.borrowDate) END ASC,
+             t.requestDate ASC
+             LIMIT 1) nextPending,
             (SELECT t.transactionID
              FROM transactionrequests t
              JOIN borrowings b ON b.transactionID=t.transactionID
@@ -76,7 +101,7 @@ try {
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+             AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
              AND a.availabilityStatus<>'Unavailable'
 
              ORDER BY DATE(b.borrowDate) ASC,t.requestDate ASC
@@ -125,7 +150,7 @@ try {
     if ($pickupOnly) $where[] = "t.requestStatus='Approved' AND a.availabilityStatus<>'Unavailable' AND EXISTS(
         SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID
         AND b.actualReturnDate IS NULL AND b.borrowingStatus='Approved'
-        AND CURDATE() BETWEEN DATE_SUB(DATE(b.borrowDate),INTERVAL 7 DAY) AND DATE(b.expectedReturnDate)
+        AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
     )";
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -142,7 +167,7 @@ try {
         $totalPages = max(1, (int)ceil($total / $perPage));
         $page = min($page, $totalPages); $offset = ($page - 1) * $perPage;
 
-        $order=$pickupOnly?'pickupDate ASC,t.requestDate ASC':($status==='Pending'?'t.requestDate ASC':'t.requestDate DESC');
+        $order=$pickupOnly?'pickupDate ASC,t.requestDate ASC':($status==='Pending'?"CASE WHEN DATE(pickupDate)=CURDATE() THEN 0 WHEN DATE(pickupDate)=DATE_ADD(CURDATE(),INTERVAL 1 DAY) THEN 1 WHEN DATE(pickupDate)>CURDATE() THEN 2 ELSE 3 END, CASE WHEN DATE(pickupDate)>=CURDATE() THEN DATE(pickupDate) END ASC, t.requestDate ASC":'t.requestDate DESC');
         $stmt = $conn->prepare("
             SELECT t.transactionID,t.requestDate,t.requestStatus,a.assetName,
                    u.userID requesterID,u.name requesterName,
@@ -189,6 +214,10 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 .transaction-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .queue-action-link{display:inline-flex;padding:6px 10px;border-radius:6px;background:var(--primary-color);color:#fff;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap}
 .queue-action-link:hover{background:var(--primary-hover)}
+.request-priority{display:inline-flex;margin-top:5px;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap}
+.request-priority.urgent{background:#fee2e2;color:#b91c1c}
+.request-priority.tomorrow{background:#ffedd5;color:#c2410c}
+.request-priority.passed{background:#fef3c7;color:#92400e}
 @media(max-width:650px){.transaction-heading-actions{justify-content:stretch}.transaction-heading-actions .management-create-btn{flex:1}}
 </style>
 </head>
@@ -207,7 +236,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 <?php if($nextPending):?>
 <a href="manager_transaction_view.php?transactionID=<?=e($nextPending)?>&from=pending" class="management-create-btn">
 <img src="../assets/icons/pendingVerification.png" alt="">
-Review Pending Requests (<?=$stats['pending']?>)
+<?=$stats['urgent']>0?'Review Urgent Requests ('.$stats['urgent'].')':'Review Pending Requests ('.$stats['pending'].')'?>
 </a>
 <?php endif;?>
 <?php if($nextPickup):?>
@@ -245,7 +274,6 @@ Waiting for Pickup Confirmation (<?=$stats['pickup']?>)
 </a>
 </section>
 
-
 <section class="mobile-transaction-ui">
 <details class="mobile-filter-card" <?=($search||$status||$dateFrom||$dateTo||$pickupOnly)?'open':''?>>
 <summary><span>Filter Transactions</span><?php if($search||$status||$dateFrom||$dateTo||$pickupOnly):?><small>Filters active</small><?php endif;?></summary>
@@ -276,7 +304,8 @@ Waiting for Pickup Confirmation (<?=$stats['pickup']?>)
 <?php if(!$transactions):?>
 <div class="mobile-empty-card">No transaction requests found.</div>
 <?php else:foreach($transactions as $t):
-$displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']);?>
+$displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']);
+[$priorityLabel,$priorityClass]=pickupPriority($t['pickupDate'],$t['requestStatus']);?>
 <article class="mobile-transaction-card">
 <div class="mobile-transaction-top">
 <div>
@@ -284,11 +313,14 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 <h3><?=e($t['assetName'])?></h3>
 <p><?=e($t['requesterName'])?> · <?=e($t['requesterID'])?></p>
 </div>
+<div class="mobile-transaction-status-stack">
 <span class="mobile-status-pill <?=$t['isOverdue']?'mobile-overdue':''?>" data-status="<?=e($displayStatus)?>"><?=e($displayStatus)?></span>
+<?php if($priorityLabel):?><span class="request-priority <?=e($priorityClass)?>"><?=e($priorityLabel)?></span><?php endif;?>
+</div>
 </div>
 
 <div class="mobile-transaction-meta">
-<div><span><?=$pickupOnly?'Pickup':'Requested'?></span><strong><?=e(showDate($pickupOnly?$t['pickupDate']:$t['requestDate']))?></strong></div>
+<div><span><?=$pickupOnly||$status==='Pending'?'Pickup':'Requested'?></span><strong><?=e(showDate(($pickupOnly||$status==='Pending')?$t['pickupDate']:$t['requestDate']))?></strong></div>
 <div><span>Expected Return</span><strong><?=e(showDate($t['dueDate']))?></strong></div>
 </div>
 
@@ -349,18 +381,18 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 </div>
 <div class="management-table-wrapper">
 <table class="management-table">
-<thead><tr><th>#</th><th>Transaction ID</th><th>Asset Name</th><th>Requester</th><th>Status</th><th><?=$pickupOnly?'Pickup Date':'Request Date'?></th><th>Expected Return</th><th>Action</th></tr></thead>
+<thead><tr><th>#</th><th>Transaction ID</th><th>Asset Name</th><th>Requester</th><th>Status</th><th><?=$pickupOnly||$status==='Pending'?'Pickup Date':'Request Date'?></th><th>Expected Return</th><th>Action</th></tr></thead>
 <tbody>
 <?php if (!$transactions): ?>
 <tr><td colspan="8" class="management-empty-state">No transaction requests found.</td></tr>
-<?php else: foreach ($transactions as $i => $t): $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']); ?>
+<?php else: foreach ($transactions as $i => $t): $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']); [$priorityLabel,$priorityClass]=pickupPriority($t['pickupDate'],$t['requestStatus']); ?>
 <tr>
 <td><?= $offset + $i + 1 ?></td>
 <td><strong><?= e($t['transactionID']) ?></strong></td>
 <td><?= e($t['assetName']) ?></td>
 <td><?= e($t['requesterName'] . ' (' . $t['requesterID'] . ')') ?></td>
-<td><span class="status-badge" data-status="<?=e($displayStatus)?>"><?=e($displayStatus)?></span></td>
-<td><?= e(showDate($pickupOnly?$t['pickupDate']:$t['requestDate'])) ?></td>
+<td><span class="status-badge" data-status="<?=e($displayStatus)?>"><?=e($displayStatus)?></span><?php if($priorityLabel):?><br><span class="request-priority <?=e($priorityClass)?>"><?=e($priorityLabel)?></span><?php endif;?></td>
+<td><?= e(showDate(($pickupOnly||$status==='Pending')?$t['pickupDate']:$t['requestDate'])) ?></td>
 <td><?= e(showDate($t['dueDate'])) ?></td>
 <td>
 <?php if($pickupOnly||$status==='Pending'):?>
@@ -456,12 +488,5 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPic
 <?php endif;?>
 
 </main>
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 </div></div>
 </body></html>

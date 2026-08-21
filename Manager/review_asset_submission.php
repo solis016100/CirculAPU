@@ -25,8 +25,10 @@ function imagePath($v): string {
 
 $managerID=$_SESSION['user_id'];
 $assetID=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
-$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review');
-$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
+elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
+else{$backURL=$back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review';$backLabel='Asset Management';}
+$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 if (!$assetID) { header('Location: manager_assets.php'); exit(); }
 
 $asset = null;
@@ -37,7 +39,6 @@ $conditions = ['New','Like New','Good','Fair','Poor'];
 try {
     $conn->set_charset('utf8mb4');
 
-    /* 1. Load Asset */
     $stmt = $conn->prepare("
         SELECT a.*,u.name ownerName,u.email ownerEmail
         FROM assets a
@@ -55,7 +56,6 @@ try {
         header("Location: manager_asset_view.php?assetID=".rawurlencode($assetID).$navParam); exit();
     }
 
-    /* 2. Active Categories + Current Category */
     if ($asset) {
         $stmt = $conn->prepare("
             SELECT categoryID,categoryName
@@ -69,7 +69,6 @@ try {
         $stmt->close();
     }
 
-    /* 3. Review */
     if ($asset && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['assetName'] ?? '');
         $categoryID = trim($_POST['categoryID'] ?? '');
@@ -97,6 +96,21 @@ try {
             $stmt->execute();
             if (!$stmt->get_result()->fetch_row()) $error = 'Please select a valid category.';
             $stmt->close();
+        }
+
+        $auditorIDs = [];
+        if (!$error && $action === 'verify') {
+            $stmt = $conn->prepare("
+                SELECT userID
+                FROM user
+                WHERE role='Auditor' AND status='Active'
+                ORDER BY dateCreated ASC,userID ASC
+            ");
+            $stmt->execute();
+            $auditorRows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+            $auditorIDs = array_column($auditorRows, 'userID');
+            if (!$auditorIDs) $error = 'No active Sustainability Auditor account is available. Please try again after an Auditor is activated.';
         }
 
         if (!$error) {
@@ -141,12 +155,24 @@ try {
                 $stmt->bind_param('sssss', $logID, $managerID, $logAction, $assetID, $logText);
                 $stmt->execute(); $stmt->close();
 
+                $verificationID = '';
+                if ($action === 'verify') {
+                    $verificationID = nextID($conn, 'verificationrecords', 'verificationID', 'V');
+                    $stmt = $conn->prepare("
+                        INSERT INTO verificationrecords
+                        (verificationID,userID,verifiedBy,targetID,targetType,status,remarks,verifiedDate)
+                        VALUES (?,?,NULL,?,'Asset','Pending',NULL,NULL)
+                    ");
+                    $stmt->bind_param('sss', $verificationID, $asset['ownerID'], $assetID);
+                    $stmt->execute(); $stmt->close();
+                }
+
                 if ($action !== 'save') {
                     $notificationID = nextID($conn, 'notification', 'notificationID', 'N');
                     $title = $action === 'return' ? 'Asset Listing Returned' : 'Asset Sent for Verification';
                     $content = $action === 'return'
-                        ? "Asset $assetID was returned for correction. Reason: $reason"
-                        : "Asset $assetID has been sent for Sustainability Auditor verification.";
+                        ? "Your asset listing $assetID ($name) was returned for correction. Reason: $reason"
+                        : "Your asset listing $assetID ($name) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.";
 
                     $stmt = $conn->prepare("
                         INSERT INTO notification(notificationID,userID,title,content,status)
@@ -154,6 +180,20 @@ try {
                     ");
                     $stmt->bind_param('ssss', $notificationID, $asset['ownerID'], $title, $content);
                     $stmt->execute(); $stmt->close();
+                }
+
+                if ($action === 'verify') {
+                    $auditorTitle = 'Asset Ready for Verification';
+                    $auditorContent = "Asset $assetID ($name), submitted by {$asset['ownerName']} ({$asset['ownerID']}), has passed Resource Manager review and is ready for verification. Verification ID: $verificationID.";
+                    foreach ($auditorIDs as $auditorID) {
+                        $auditorNotificationID = nextID($conn, 'notification', 'notificationID', 'N');
+                        $stmt = $conn->prepare("
+                            INSERT INTO notification(notificationID,userID,title,content,status)
+                            VALUES (?,?,?,?,'Unread')
+                        ");
+                        $stmt->bind_param('ssss', $auditorNotificationID, $auditorID, $auditorTitle, $auditorContent);
+                        $stmt->execute(); $stmt->close();
+                    }
                 }
 
                 $conn->commit();
@@ -173,7 +213,6 @@ try {
         $asset['description'] = $description;
         $asset['availabilityStatus'] = $availability;
     }
-
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -205,7 +244,7 @@ $image = imagePath($asset['imageURL'] ?? '');
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span>
         <span class="breadcrumb-current">Review Asset Submission</span>
     </div>
     <h1>Review Asset Submission</h1>
@@ -309,14 +348,6 @@ $image = imagePath($asset['imageURL'] ?? '');
 <?php endif; ?>
 
 </main>
-
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 
 </div>
 </div>

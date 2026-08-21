@@ -179,19 +179,18 @@
                     </div>
 
                     <div class="auditor-management-edit-actions">
-                        <button type="submit">
-                            Save Changes
-                        </button>
-
                         <a href="<?= $from === 'view' ? 'auditor_mission_view.php?missionID=' . urlencode($id) : 'auditor_missions_management.php' ?> ">
                             Cancel
                         </a>
+                        
+                        <button type="submit">
+                            Save Changes
+                        </button>
                     </div>
                 </form>
             </section>
         </main>
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

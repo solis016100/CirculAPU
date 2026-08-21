@@ -11,7 +11,11 @@ function nextID(mysqli $c,string $t,string $col,string $p): string {
     return sprintf($p.'%03d',$n);
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$manager=$_SESSION['user_id'];$id=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
+if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
+elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
+else{$backURL='manager_assets.php'.($back?'?'.$back:'');$backLabel='Asset Management';}
+$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 if(!$id){header('Location: manager_assets.php');exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$asset=null;$categories=[];$error='';$dbError='';$newFile='';
@@ -114,13 +118,13 @@ if($asset&&!empty($asset['imageURL'])){
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="<?=e($backURL)?>">Asset Management</a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
+<div class="breadcrumb"><a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span><a href="manager_asset_view.php?assetID=<?=e($id)?><?=e($navParam)?>">Asset Details</a><span>›</span><span class="breadcrumb-current">Edit Asset</span></div>
 <h1>Edit Asset Information</h1><p>Update listing information while preserving transaction, review and verification status.</p>
 </section>
 
 <?php if($dbError):?>
 <div class="dashboard-error-message"><?=e($dbError)?></div>
-<a href="<?=e($backURL)?>" class="management-create-btn">Back to Asset Management</a>
+<a href="<?=e($backURL)?>" class="management-create-btn">Back to <?=e($backLabel)?></a>
 <?php elseif($asset):?>
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
 <div class="asset-form-note"><strong>Condition Protection</strong><p>Asset condition is controlled through the review/verification workflow and Return Inspection. It cannot be changed from general Edit Asset.</p></div>
@@ -202,12 +206,5 @@ function openEditAssetConfirm(){
 <?php endif;?>
 
 </main>
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 </div></div>
 </body></html>

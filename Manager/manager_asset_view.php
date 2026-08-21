@@ -30,8 +30,10 @@ function imagePath($v): string {
 
 $assetID=trim($_GET['assetID']??'');
 $back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
-$backURL=($source==='reports'?'manager_reports.php':'manager_assets.php').($back?'?'.$back:'');
-$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
+elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
+else{$backURL='manager_assets.php'.($back?'?'.$back:'');$backLabel='Asset Management';}
+$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 
 if (!$assetID) {
     header('Location: manager_assets.php');
@@ -45,7 +47,16 @@ try {
     $conn->set_charset('utf8mb4');
 
     $stmt = $conn->prepare("
-        SELECT a.*,c.categoryName,c.categoryIcon,u.name ownerName
+        SELECT a.*,c.categoryName,c.categoryIcon,u.name ownerName,
+               EXISTS(
+                   SELECT 1
+                   FROM transactionrequests tr
+                   JOIN borrowings b ON b.transactionID=tr.transactionID
+                   WHERE tr.assetID=a.assetID
+                     AND tr.requestStatus IN ('Approved','In Progress')
+                     AND b.actualReturnDate IS NULL
+                     AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+               ) hasActiveReservation
         FROM assets a
         JOIN categories c ON a.categoryID=c.categoryID
         JOIN user u ON a.ownerID=u.userID
@@ -66,7 +77,7 @@ try {
     $error = 'Unable to load the asset details. Please try again.';
 }
 
-if(!$back&&$source!=='reports'&&($asset['listingStatus']??'')==='Pending Review')
+if(!$back&&$source==='assets'&&($asset['listingStatus']??'')==='Pending Review')
     $backURL='manager_assets.php?listingStatus=Pending+Review';
 
 $image = imagePath($asset['imageURL'] ?? '');
@@ -109,7 +120,7 @@ $details = $asset ? [
 
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="<?=e($backURL)?>">Asset Management</a><span>›</span>
+        <a href="<?=e($backURL)?>"><?=e($backLabel)?></a><span>›</span>
         <span class="breadcrumb-current">Asset Details</span>
     </div>
     <h1>Asset Details</h1>
@@ -118,7 +129,7 @@ $details = $asset ? [
 
 <?php if ($error): ?>
     <div class="dashboard-error-message"><?= e($error) ?></div>
-    <a href="manager_assets.php" class="management-create-btn">Back to Asset Management</a>
+    <a href="<?=e($backURL)?>" class="management-create-btn">Back to <?=e($backLabel)?></a>
 
 <?php elseif ($asset): ?>
 
@@ -174,7 +185,8 @@ $details = $asset ? [
 
                 <?php if (
                     $asset['listingStatus'] !== 'Removed' &&
-                    !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true)
+                    !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true) &&
+                    empty($asset['hasActiveReservation'])
                 ): ?>
                     <button type="button" class="asset-detail-action-btn delete" onclick="removeAssetDialog.showModal()">
                         <img src="../assets/icons/delete.png" alt=""><span>Remove Asset</span>
@@ -188,7 +200,7 @@ $details = $asset ? [
     </div>
     </section>
 
-<?php if ($asset && $asset['listingStatus'] !== 'Removed' && !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true)): ?>
+<?php if ($asset && $asset['listingStatus'] !== 'Removed' && !in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true) && empty($asset['hasActiveReservation'])): ?>
 <dialog id="removeAssetDialog" class="flow-dialog">
 <h2>Confirm Asset Removal</h2>
 <p>Remove this listing from normal use? The record will be retained for auditing.</p>
@@ -200,7 +212,7 @@ $details = $asset ? [
 
 <form method="POST" action="manager_assets.php" class="flow-dialog-actions">
     <input type="hidden" name="action" value="remove">
-    <input type="hidden" name="assetID" value="<?= e($assetID) ?>"><input type="hidden" name="returnQuery" value="<?=e($source==='assets'?$back:'')?>">
+    <input type="hidden" name="assetID" value="<?= e($assetID) ?>"><input type="hidden" name="returnSource" value="<?=e($source)?>"><input type="hidden" name="returnQuery" value="<?=e($back)?>">
     <button type="button" class="category-form-back" onclick="removeAssetDialog.close()">No</button>
     <button type="submit" class="category-form-submit">Yes, Remove</button>
 </form>
@@ -210,14 +222,6 @@ $details = $asset ? [
 <?php endif; ?>
 
 </main>
-
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 
 </div>
 </div>

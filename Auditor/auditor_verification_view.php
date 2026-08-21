@@ -17,7 +17,6 @@
         exit();
     }
 
-    /* Filter */
     $search = $_GET['search'] ?? '';
     $user = $_GET['user'] ?? '';
     $type = $_GET['type'] ?? '';
@@ -25,9 +24,8 @@
 
     $filterQuery = http_build_query(['search' => $search, 'user' => $user, 'type' => $type, 'status' => $status]);
 
-    // Get verification record
+    /* Get Verification */
     $stmt = $conn->prepare("SELECT v.*, u.name AS userName, a.name AS auditorName FROM verificationrecords v LEFT JOIN user u ON v.userID = u.userID LEFT JOIN user a ON v.verifiedBy = a.userID WHERE v.verificationID = ?");
-
     $stmt->bind_param("s", $id);
     $stmt->execute();
 
@@ -38,7 +36,7 @@
         exit();
     }
 
-    // Get target details
+    /* Get Target */
     $targetType = $verification['targetType'];
     $targetName = '';
     $image = '';
@@ -54,16 +52,10 @@
 
         $asset = $stmt->get_result()->fetch_assoc();
 
-        if ($asset) {
-            $targetName = $asset['assetName'];
-            $category = $asset['categoryName'];
-            $condition = $asset['assetCondition'];
-            $image = $asset['imageURL'];
-            $submissionDate = $asset['createdDate'];
-        }
+        if ($asset) {$targetName = $asset['assetName']; $category = $asset['categoryName']; $condition = $asset['assetCondition']; $image = $asset['imageURL']; $submissionDate = $asset['createdDate'];}
 
     }else {
-        $stmt = $conn->prepare(" SELECT m.missionName, ms.evidencePath, ms.submissionDate FROM missions m JOIN missionsubmission ms ON m.missionID = ms.missionID WHERE ms.submissionID = ?");
+        $stmt = $conn->prepare("SELECT m.missionName, ms.evidencePath, ms.submissionDate FROM missions m JOIN missionsubmission ms ON m.missionID = ms.missionID WHERE ms.submissionID = ?");
 
         $stmt->bind_param("s", $verification['targetID']);
         $stmt->execute();
@@ -77,61 +69,240 @@
         }
     }
 
-
-    // Approve or Reject
+    /* Approve / Reject */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $action = $_POST['action'] ?? '';
-        $remarks = trim($_POST['remarks'] ?? '');
-
-        if (in_array($action, ['approve', 'reject']) && $remarks != '') {
-            $newStatus = $action == 'approve' ? 'Approved' : 'Rejected';
-            $selectedCondition = $_POST['condition'] ?? '';
-            $stmt = $conn->prepare("UPDATE verificationrecords SET status = ?, remarks = ?, verifiedBy = ?, verifiedDate = NOW() WHERE verificationID = ? AND status = 'Pending'");
-
-            $stmt->bind_param("ssss", $newStatus, $remarks, $_SESSION['user_id'], $id);
-
-            $stmt->execute();
-
-            // Update Asset COndition
-            if ($targetType == 'Asset' && $selectedCondition != '') {
-                $stmt = $conn->prepare("UPDATE assets SET assetCondition = ? WHERE assetID = ?");
-
-                $stmt->bind_param("ss", $selectedCondition, $verification['targetID']);
-
-                $stmt->execute();
-            }
-
-            header("Location: auditor_verification_view.php?" . http_build_query(['verificationID' => $id, 'search' => $search, 'user' => $user, 'type' => $type, 'status' => $status, 'verified' => 1]));
-
-            exit();
-        }
-    }
-
-    // Delete verification record
-    if (isset($_POST['delete_verification'])) {
-        $stmt = $conn->prepare("SELECT verificationID FROM verificationrecords WHERE verificationID = ?");
-
-        $stmt->bind_param("s", $id);
-        $stmt->execute();
-
-        $record = $stmt->get_result()->fetch_assoc();
-
-        if ($record) {
+        /* Delete */
+        if (isset($_POST['delete_verification'])) {
             $stmt = $conn->prepare("DELETE FROM verificationrecords WHERE verificationID = ?");
 
             $stmt->bind_param("s", $id);
             $stmt->execute();
 
-            // Generate system log
-            $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
-            $nextID = $result->fetch_assoc()['nextID'];
-            $logID = 'LOG' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
-            $description = "Deleted verification record: " . $id;
-            $stmt = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Verification', ?, ?)");
+            $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0) + 1 AS nextID FROM systemlog");
+
+            $logID = 'LOG' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+            $description = "Deleted verification record: $id";
+
+            $stmt = $conn->prepare("INSERT INTO systemlog (logID,userID,actionType,refType,refID,description) VALUES (?,?,'Delete','Verification',?,?)");
+
             $stmt->bind_param("ssss", $logID, $_SESSION['user_id'], $id, $description);
+
             $stmt->execute();
 
-            header("Location: auditor_verification_management.php?" . $filterQuery . '&deleted=1');
+            header("Location: auditor_verification_management.php?" . $filterQuery . "&deleted=1");
+            exit();
+        }
+
+        /* Approve / Reject */
+        $action = $_POST['action'] ?? '';
+        $remarks = trim($_POST['remarks'] ?? '');
+        $selectedCondition = $_POST['condition'] ?? '';
+
+        if (in_array($action, ['approve', 'reject']) && $remarks !== '') {
+            $newStatus = $action == 'approve' ? 'Approved' : 'Rejected';
+
+            /* Update Verification */
+            $stmt = $conn->prepare("UPDATE verificationrecords SET status = ?, remarks = ?, verifiedBy = ?, verifiedDate = NOW() WHERE verificationID = ? AND status = 'Pending'");
+
+            $stmt->bind_param("ssss", $newStatus, $remarks, $_SESSION['user_id'], $id);
+            $stmt->execute();
+
+            /* Update Mission / Asset */
+            if ($targetType == 'MissionSubmission') {
+                $stmt = $conn->prepare("UPDATE missionsubmission SET submissionStatus = ? WHERE submissionID = ?");
+
+                $stmt->bind_param("ss", $newStatus, $verification['targetID']);
+                $stmt->execute();
+
+            }else {
+                $stmt = $conn->prepare("UPDATE assets SET verificationStatus = ? WHERE assetID = ?");
+
+                $stmt->bind_param("ss", $newStatus, $verification['targetID']);
+                $stmt->execute();
+
+                /* Update Asset Condition */
+                if ($selectedCondition !== '') {
+                    $stmt = $conn->prepare("UPDATE assets SET assetCondition = ? WHERE assetID = ?
+                    ");
+
+                    $stmt->bind_param("ss", $selectedCondition, $verification['targetID']);
+                    $stmt->execute();
+                }
+
+                // Check Asset Achievement Badges
+                if ($newStatus == 'Approved') {
+                    // Count approved assets
+                    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM assets WHERE userID = ? AND verificationStatus = 'Approved'");
+
+                    $stmt->bind_param("s", $verification['userID']);
+                    $stmt->execute();
+
+                    $approvedAssets = (int)$stmt->get_result()->fetch_assoc()['total'];
+
+                    // Get Asset Badges
+                    $badges = $conn->query("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeRequirement FROM achievementbadges WHERE achieveBadgeRequirement LIKE 'Get % approved asset%'");
+
+                    while ($badge = $badges->fetch_assoc()) {
+                        if (preg_match('/Get\s+(\d+)\s+approved\s+assets?/i', $badge['achieveBadgeRequirement'], $match)) {
+                            $required = (int)$match[1];
+
+                            if ($approvedAssets >= $required) {
+                                // Check if already earned
+                                $stmt = $conn->prepare("SELECT userBadgeID FROM `user achievement badge` WHERE userID = ? AND achieveBadgeID = ?");
+
+                                $stmt->bind_param("ss", $verification['userID'], $badge['achieveBadgeID']);
+                                $stmt->execute();
+
+                                if ($stmt->get_result()->num_rows == 0) {
+                                    // Generate User Badge ID
+                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(userBadgeID,4) AS UNSIGNED)),0) + 1 AS nextID FROM `user achievement badge`");
+
+                                    $userBadgeID = 'UAB' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+                                    // Award Badge
+                                    $stmt = $conn->prepare("INSERT INTO `user achievement badge`(userBadgeID,userID,achieveBadgeID,awardedDate) VALUES (?,?,?,NOW())");
+
+                                    $stmt->bind_param("sss", $userBadgeID, $verification['userID'], $badge['achieveBadgeID']);
+                                    $stmt->execute();
+
+                                    // Badge Notification
+                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
+
+                                    $notificationID = 'N' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+                                    $title = 'Achievement Badge Earned!';
+
+                                    $content = 'Congratulations! You earned the "' . $badge['achieveBadgeName'] . '" achievement badge.';
+
+                                    $notify = $conn->prepare("INSERT INTO notification(notificationID,userID,title,content,status,createdDate) VALUES (?,?,?,?,'Unread',NOW())");
+
+                                    $notify->bind_param("ssss", $notificationID, $verification['userID'], $title, $content);
+                                    $notify->execute();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* Mission EcoPoints + Badge */
+            if ($targetType == 'MissionSubmission' && $newStatus == 'Approved') {
+                /* Get Mission Reward */
+                $stmt = $conn->prepare("SELECT missionID, ecoPointsReward FROM missions WHERE missionID = (SELECT missionID FROM missionsubmission WHERE submissionID = ?)");
+
+                $stmt->bind_param("s", $verification['targetID']);
+                $stmt->execute();
+
+                $missionData = $stmt->get_result()->fetch_assoc();
+
+                if ($missionData) {
+                    $points = (int)$missionData['ecoPointsReward'];
+                    /* Transaction ID */
+                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(transactionID,3) AS UNSIGNED)),0) + 1 AS nextID FROM ecopointstransaction");
+
+                    $transactionID = 'ET' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+                    /* EcoPoints Transaction */
+                    $stmt = $conn->prepare("INSERT INTO ecopointstransaction(transactionID,userID,points,transactionType, sourceType,referenceID,transactionDate) VALUES (?,? ,?,'Earned','Mission',?,NOW())");
+
+                    $stmt->bind_param("ssis", $transactionID, $verification['userID'], $points, $missionData['missionID']);
+                    $stmt->execute();
+
+                    /* Update User EcoPoints */
+                    $stmt = $conn->prepare("UPDATE user SET ecopoint = ecopoint + ? WHERE userID = ?");
+
+                    $stmt->bind_param("is", $points, $verification['userID']);
+                    $stmt->execute();
+
+                    /* Count Approved Missions */
+                    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM missionsubmission WHERE userID = ? AND submissionStatus = 'Approved'");
+
+                    $stmt->bind_param("s", $verification['userID']);
+                    $stmt->execute();
+
+                    $completed = (int)$stmt->get_result()->fetch_assoc()['total'];
+
+                    /* Check Mission Badges */
+                    $badges = $conn->query("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeRequirement FROM a");
+
+                    while ($badge = $badges->fetch_assoc()) {
+                        if (preg_match('/Complete\s+(\d+)\s+missions?/i', $badge['achieveBadgeRequirement'], $match)) {
+                            $required = (int)$match[1];
+                            if ($completed >= $required) {
+                                /* Already Earned? */
+                                $stmt = $conn->prepare("SELECT userBadgeID FROM `user achievement badge` WHERE userID = ? AND achieveBadgeID = ?");
+
+                                $stmt->bind_param("ss", $verification['userID'], $badge['achieveBadgeID']);
+                                $stmt->execute();
+
+                                if ($stmt->get_result()->num_rows == 0) {
+                                    /* User Badge ID */
+                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(userBadgeID,4) AS UNSIGNED)),0) + 1 AS nextID FROM `user achievement badge`");
+
+                                    $userBadgeID = 'UAB' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+                                    /* Award Badge */
+                                    $stmt = $conn->prepare("INSERT INTO `user achievement badge` (userBadgeID,userID,achieveBadgeID,awardedDate) VALUES (?,?,?,NOW())");
+
+                                    $stmt->bind_param("sss", $userBadgeID, $verification['userID'], $badge['achieveBadgeID']);
+                                    $stmt->execute();
+
+                                    // Badge Notification
+                                    $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
+
+                                    $notificationID = 'N' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+                                    $title = 'Achievement Badge Earned!';
+
+                                    $content = 'Congratulations! You earned the "' . $badge['achieveBadgeName'] . '" achievement badge.';
+
+                                    $notify = $conn->prepare("INSERT INTO notification(notificationID,userID,title,content,status,createdDate) VALUES (?,?,?,?,'Unread',NOW())");
+
+                                    $notify->bind_param("ssss", $notificationID, $verification['userID'], $title, $content);
+                                    $notify->execute();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* Notification */
+            $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID,2) AS UNSIGNED)),0) + 1 AS nextID FROM notification");
+
+            $notificationID = 'N' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+            if ($targetType == 'MissionSubmission') {
+                $title = $newStatus == 'Approved' ? 'Mission Approved!' : 'Mission Rejected';
+
+                $content = $newStatus == 'Approved' ? 'Your mission "' . $targetName . '" has been approved by the auditor.' : 'Your mission "' . $targetName . '" has been rejected by the auditor. Please check the remarks.';
+            }else {
+                $title = $newStatus == 'Approved' ? 'Asset Approved!' : 'Asset Rejected';
+
+                $content = $newStatus == 'Approved' ? 'Your asset "' . $targetName . '" has been approved by the auditor.' : 'Your asset "' . $targetName . '" has been rejected by the auditor. Please check the remarks.';
+            }
+
+            $stmt = $conn->prepare("INSERT INTO notification(notificationID,userID,title,content,status,createdDate) VALUES (?,?,?,?,'Unread',NOW())");
+
+            $stmt->bind_param("ssss", $notificationID, $verification['userID'], $title, $content);
+            $stmt->execute();
+
+            /* System Log */
+            $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0) + 1 AS nextID FROM systemlog");
+
+            $logID = 'LOG' . str_pad($result->fetch_assoc()['nextID'], 3, '0', STR_PAD_LEFT);
+
+            $actionType = $newStatus == 'Approved' ? 'Approve' : 'Reject';
+
+            $description = "$newStatus verification $id";
+
+            $stmt = $conn->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,? ,?,'Verification',?,?)");
+
+            $stmt->bind_param("sssss", $logID, $_SESSION['user_id'], $actionType, $id, $description);
+            $stmt->execute();
+
+            header("Location: auditor_verification_view.php?" . http_build_query(['verificationID' => $id, 'search' => $search, 'user' => $user, 'type' => $type, 'status' => $status, 'verified' => 1]));
             exit();
         }
     }
@@ -534,6 +705,5 @@
         }
     </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

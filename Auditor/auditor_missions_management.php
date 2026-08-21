@@ -458,6 +458,12 @@
         function closeDeletePopout() {
             document.getElementById('deletePopout').style.display = 'none';
         }
+
+        document.querySelectorAll('.management-table tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                if (window.innerWidth <= 768) row.ondblclick?.();
+            });
+        });
     </script>
 
 
@@ -481,6 +487,5 @@
         </div>
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

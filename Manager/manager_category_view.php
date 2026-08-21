@@ -16,7 +16,14 @@ function iconPath($v): string {
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$categoryID=trim($_GET['categoryID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'categories';
+$backURL=($source==='reports'?'manager_reports.php':'manager_categories.php').($back?'?'.$back:'');
+$backLabel=$source==='reports'?'Reports':'Category Management';
+$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'');
+$categoryReturn=['categoryID'=>$categoryID];
+if($source==='reports')$categoryReturn['source']='reports';
+if($back)$categoryReturn['back']=$back;
+$assetNav='&source=category&back='.rawurlencode(http_build_query($categoryReturn));
 if (!$categoryID) { header('Location: manager_categories.php'); exit(); }
 
 $category = null;
@@ -100,7 +107,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 <?php if ($error): ?>
 <section class="management-heading">
     <div class="breadcrumb">
-        <a href="<?=e($backURL)?>">Category Management</a>
+        <a href="<?=e($backURL)?>"><?=e($backLabel)?></a>
         <span>›</span><span class="breadcrumb-current">Category Details</span>
     </div>
     <h1>Category Details</h1>
@@ -109,11 +116,10 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <?php else: ?>
 
-<!-- Heading -->
 <section class="management-heading category-heading">
     <div>
         <div class="breadcrumb">
-            <a href="<?=e($backURL)?>">Category Management</a>
+            <a href="<?=e($backURL)?>"><?=e($backLabel)?></a>
             <span>›</span><span class="breadcrumb-current">Category Details</span>
         </div>
         <h1>Category Details</h1>
@@ -150,9 +156,14 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <?php if (($_GET['updated'] ?? '') === '1'): ?>
     <div class="alert alert-success">Category updated successfully.</div>
+<?php elseif (($_GET['assetRemoved'] ?? '') === '1'): ?>
+    <div class="alert alert-success">Asset listing removed successfully.</div>
+<?php elseif (($_GET['reviewDone'] ?? '') === 'verify'): ?>
+    <div class="alert alert-success">Asset listing sent for Sustainability Auditor verification.</div>
+<?php elseif (($_GET['reviewDone'] ?? '') === 'return'): ?>
+    <div class="alert alert-success">Asset listing returned to the member for correction.</div>
 <?php endif; ?>
 
-<!-- Information + Statistics -->
 <section class="category-detail-layout">
 
 <article class="content-card category-info-card">
@@ -195,8 +206,6 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 </section>
 
-<!-- Recent Assets -->
-
 <section class="mobile-category-assets">
 <div class="mobile-section-heading">
 <div>
@@ -225,7 +234,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 </div>
 
 <div class="mobile-card-actions">
-<a class="primary" href="manager_asset_view.php?assetID=<?=e($a['assetID'])?>">View Asset</a>
+<a class="primary" href="manager_asset_view.php?assetID=<?=e($a['assetID'])?><?=e($assetNav)?>">View Asset</a>
 </div>
 </article>
 <?php endforeach;endif;?>
@@ -259,7 +268,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
                 <td><span class="status-badge" data-status="<?=e($a['listingStatus'])?>"><?=e($a['listingStatus'])?></span></td>
                 <td><?= date('d M Y', strtotime($a['createdDate'])) ?></td>
                 <td>
-                    <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?>"
+                    <a href="manager_asset_view.php?assetID=<?= e($a['assetID']) ?><?=e($assetNav)?>"
                        class="management-action-btn" title="View">
                         <img src="../assets/icons/view.png" alt="View">
                     </a>
@@ -286,7 +295,7 @@ $icon = iconPath($category['categoryIcon'] ?? '');
 
 <form method="POST" action="manager_categories.php" class="flow-dialog-actions">
     <input type="hidden" name="action" id="detailActionInput">
-    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>"><input type="hidden" name="returnQuery" value="<?=e($source==='categories'?$back:'')?>">
+    <input type="hidden" name="categoryID" value="<?=e($categoryID)?>"><input type="hidden" name="returnSource" value="<?=e($source)?>"><input type="hidden" name="returnQuery" value="<?=e($back)?>">
     <button type="button" class="category-form-back" onclick="detailCategoryActionDialog.close()">No</button>
     <button type="submit" class="category-form-submit" id="detailActionConfirm">Confirm</button>
 </form>
@@ -307,14 +316,6 @@ function openDetailCategoryAction(action){
 <?php endif;?>
 
 </main>
-
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 
 </div>
 </div>

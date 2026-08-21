@@ -24,7 +24,6 @@ $error = '';
 try {
     $conn->set_charset('utf8mb4');
 
-    /* 1. Actions */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
@@ -46,7 +45,6 @@ try {
         }
     }
 
-    /* 2. Counts */
     $stmt = $conn->prepare("
         SELECT COUNT(*) total,SUM(status='Unread') unread
         FROM notification WHERE userID=?
@@ -59,7 +57,6 @@ try {
     $total = (int)($counts['total'] ?? 0);
     $unread = (int)($counts['unread'] ?? 0);
 
-    /* 3. List */
     $sql = "SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=?";
     $types = 's';
     $params = [$managerID];
@@ -83,7 +80,6 @@ try {
     $stmt->execute();
     $notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
-
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -124,7 +120,6 @@ try {
 <?php if (($_GET['updated'] ?? '') === '1'): ?><div class="alert alert-success">Notification marked as read.</div><?php endif; ?>
 <?php if (($_GET['allread'] ?? '') === '1'): ?><div class="alert alert-success">All notifications marked as read.</div><?php endif; ?>
 
-<!-- Summary -->
 <section class="stats-grid">
     <a href="manager_notifications.php" class="stat-card">
         <div class="stat-icon"><img src="../assets/icons/notification.png" alt=""></div>
@@ -142,8 +137,6 @@ try {
         </div>
     </a>
 </section>
-
-<!-- Filters -->
 
 <section class="mobile-notifications-ui">
 <details class="mobile-filter-card" <?=($search||$status)?'open':''?>>
@@ -220,7 +213,6 @@ try {
 </form>
 </section>
 
-<!-- Notification List -->
 <section class="content-card desktop-notification-list">
     <div class="card-header">
         <h2>All Notifications</h2>
@@ -266,14 +258,6 @@ try {
 </section>
 
 </main>
-
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 
 </div>
 </div>

@@ -113,12 +113,47 @@
                 if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                     $errorMessage = "Unable to save the reward image.";
                 }else {
+                    if ((int)$quantity === 0) {
+                        $availability = 'Unavailable';
+                    }
+                    
                     $stmt = mysqli_prepare($conn, "INSERT INTO rewards(rewardID, rewardName, rewardDescription, rewardImage, ecoPointsCost, quantity, availability) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
                     mysqli_stmt_bind_param($stmt, "ssssdis", $nextRewardID, $rewardName, $rewardDescription, $fileName, $ecoPointsCost, $quantity, $availability);
 
                     if (mysqli_stmt_execute($stmt)) {
                         mysqli_stmt_close($stmt);
+
+                        // Notify members when there is new reward created
+                        if ($availability === 'Available') {
+                            /* Get next Notification ID */
+                            $notificationResult = mysqli_query($conn, "SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0) + 1 AS nextID FROM notification");
+                            
+                            $memberResult = mysqli_query($conn, "SELECT userID FROM user WHERE role = 'Member' AND status = 'Active'");
+
+                            $notificationRow = mysqli_fetch_assoc($notificationResult);
+
+                            $nextNotificationID = (int)$notificationRow['nextID'];
+
+                            /* Notification text */
+                            $title = "New Reward Available!";
+                            $content = "A new reward \"" . $rewardName . "\" is now available for redemption. " . "It costs " . $ecoPointsCost . " EcoPoints.";
+
+                            /* Alert notification for each member */
+                            $notifyStmt = mysqli_prepare($conn, "INSERT INTO notification(notificationID, userID, title, content, status, createdDate) VALUES (?, ?, ?, ?, 'Unread', NOW())");
+
+                            while ($member = mysqli_fetch_assoc($memberResult)) {
+                                $notificationID = 'N' . str_pad($nextNotificationID, 3, '0', STR_PAD_LEFT);
+
+                                mysqli_stmt_bind_param($notifyStmt, "ssss", $notificationID, $member['userID'], $title, $content);
+
+                                mysqli_stmt_execute($notifyStmt);
+
+                                $nextNotificationID++;
+                            }
+
+                            mysqli_stmt_close($notifyStmt);
+                        }
 
                         // Create System Log
                         $logResult = mysqli_query($conn, "SELECT MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)) + 1 AS nextID FROM systemlog");
@@ -490,6 +525,5 @@
         <?php endif; ?>
     </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

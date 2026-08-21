@@ -13,6 +13,10 @@
 
     $id = $_GET['rewardID'] ?? '';
 
+    $returnParams = $_GET;
+    unset($returnParams['rewardID'], $returnParams['from'], $returnParams['print']);
+    $returnQuery = http_build_query($returnParams);
+
     /* Get Reward */
     $stmt = mysqli_prepare($conn, "SELECT rewardID, rewardName, rewardDescription, rewardImage, ecoPointsCost, quantity, availability FROM rewards WHERE rewardID = ?");
 
@@ -180,7 +184,7 @@
 
                         <!-- Back -->
                         <div class="auditor-management-detail-back">
-                            <a href="auditor_rewards_management.php">
+                            <a href="auditor_rewards_management.php<?php echo $returnQuery !== '' ? '?' . htmlspecialchars($returnQuery) : '';?>">
                                 Back
                             </a>
                         </div>
@@ -255,6 +259,5 @@
         <img src="../assets/images/<?php echo htmlspecialchars($reward['rewardImage']); ?>" alt="<?php echo htmlspecialchars($reward['rewardName']); ?>" onclick="event.stopPropagation();">
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

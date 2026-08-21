@@ -2,7 +2,6 @@
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Ensure user is logged in
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
@@ -11,7 +10,6 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
 require_once 'db.php';
 require_once 'Admin/admin_helpers.php';
 
-// 2. Fetch the active user's actual data from the database
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare(
     "SELECT u.userID, u.name, u.email, u.role, u.status, u.dateCreated,
@@ -29,7 +27,6 @@ $stmt->close();
 
 $user_exists = (bool) $user_data;
 
-// Fallback in case session exists but user is missing from DB
 if (!$user_data) {
     $user_data = [
         'userID' => 'N/A',
@@ -149,7 +146,6 @@ if ($last_login_at && ($last_login_timestamp = strtotime($last_login_at)) !== fa
         : date('d M Y, h:i A', $last_login_timestamp);
 }
 
-// Dynamically set the theme class based on the logged-in user's role
 $theme_class = 'role-' . strtolower($user_data['role']);
 $user_role_display = htmlspecialchars($user_data['role']);
 ?>
@@ -160,8 +156,9 @@ $user_role_display = htmlspecialchars($user_data['role']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Settings - CirculAPU</title>
     <link rel="stylesheet" href="style.css">
+    <?php if (($user_data['role'] ?? '') === 'Manager'): ?><link rel="stylesheet" href="/CirculAPU/Manager/manager_mobile.css?v=<?=filemtime(__DIR__.'/Manager/manager_mobile.css')?>"><?php endif; ?>
 </head>
-<body class="<?php echo htmlspecialchars($theme_class); ?>">
+<body class="<?php echo htmlspecialchars($theme_class); ?> profile-settings-page">
     <div class="dashboard-container">
         
             <?php include 'sidebar.php'; ?>
@@ -201,7 +198,7 @@ $user_role_display = htmlspecialchars($user_data['role']);
                 <?php endif; ?>
 
                 <div class="profile-grid">
-                    <!-- Profile Information Card -->
+                    
                     <form id="profile-edit-form" method="POST" class="content-card">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['profile_csrf_token']); ?>">
                         <input type="hidden" name="save_profile" value="1">
@@ -272,7 +269,6 @@ $user_role_display = htmlspecialchars($user_data['role']);
                         </div>
                     </form>
 
-                    <!-- Account Summary Card -->
                     <div class="content-card">
                         <div class="card-header">
                             <img src="/CirculAPU/assets/icons/users.svg" alt="Account" width="20" height="20">
@@ -299,7 +295,6 @@ $user_role_display = htmlspecialchars($user_data['role']);
                     </div>
                 </div>
 
-                <!-- Recent Account Activity Card -->
                 <div class="content-card full-width-card">
                     <div class="card-header space-between">
                         <div class="header-left">
@@ -328,7 +323,6 @@ $user_role_display = htmlspecialchars($user_data['role']);
                     </div>
                 </div>
 
-                <!-- Security Footer -->
                 <div class="security-footer">
                     <div class="security-left">
                         <img src="/CirculAPU/assets/icons/shield.svg" alt="Secure" width="20" height="20">

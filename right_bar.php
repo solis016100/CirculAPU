@@ -26,6 +26,15 @@
       <img src="/CirculAPU/assets/icons/about.svg" alt="About Icon">
       About
     </a>
+
+    <button type="button" class="right-sidebar-link right-sidebar-logout" id="openRightBarLogoutConfirm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      Log Out
+    </button>
   </div>
 </div>
 
@@ -83,6 +92,8 @@
 document.addEventListener('DOMContentLoaded', function () {
   const dialog = document.getElementById('logoutConfirmDialog');
   const sidebarBtn = document.getElementById('openSidebarLogoutConfirm');
+  const rightBarBtn = document.getElementById('openRightBarLogoutConfirm');
+  const rightBar = document.getElementById('right-sidebar');
   const cancelBtn = document.getElementById('cancelLogoutConfirm');
   let lastTrigger = null;
 
@@ -90,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const openDialog = (event) => {
     lastTrigger = event?.currentTarget || null;
+    rightBar?.classList.remove('active');
     dialog.classList.add('active');
     dialog.setAttribute('aria-hidden', 'false');
     cancelBtn.focus();
@@ -102,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   if (sidebarBtn) sidebarBtn.addEventListener('click', openDialog);
+  if (rightBarBtn) rightBarBtn.addEventListener('click', openDialog);
   cancelBtn.addEventListener('click', closeDialog);
 
   dialog.addEventListener('click', function (event) {

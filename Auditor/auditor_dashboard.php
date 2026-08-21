@@ -65,7 +65,7 @@
         $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'MissionSubmission'");
 
         // Count Low Stock Rewards
-        $lowStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity < 3;");
+        $lowStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity > 0 AND quantity < 3;");
 
         // Count Out of Stock Rewards
         $outOfStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity = 0");
@@ -83,18 +83,18 @@
         }
 
         // Recent Activities from SystemLog
-        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy
-        FROM systemlog sl
-        INNER JOIN user u ON sl.userID = u.userID
-        WHERE sl.refType IN('Mission', 'Asset', 'Reward', 'Badge', 'Tier', 'Verification')
-        ORDER BY sl.timeLogged DESC
-        LIMIT 5";
+        $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy FROM systemlog sl INNER JOIN user u ON sl.userID = u.userID WHERE sl.userID = ? ORDER BY sl.timeLogged DESC LIMIT 7";
 
-        $activityResult = $conn->query($activitySQL);
-        if ($activityResult){
-            while($activityRow = $activityResult->fetch_assoc()){
+        $activityStatement = $conn->prepare($activitySQL);
+
+        if ($activityStatement) {
+            $activityStatement->bind_param("s", $auditorID);
+            $activityStatement->execute();
+            $activityResult = $activityStatement->get_result();
+            while ($activityRow = $activityResult->fetch_assoc()) {
                 $recentActivities[] = $activityRow;
             }
+            $activityStatement->close();
         }
 
         // Notifications
@@ -114,30 +114,6 @@
 
         // Disconnect Database
         $conn->close();
-    }
-
-    // Action Type function 
-    function getActionClass(string $actionType): string{
-        switch ($actionType){
-            case 'Approve':
-                return 'action-approved';
-            case 'Reject':
-                return 'action-rejected';
-            case 'Submit':
-                return 'action-submitted';
-            case 'Create':
-                return 'action-created';
-            case 'Update':
-                return 'action-updated';
-            case 'Delete':
-                return 'action-deleted';
-            case 'Redeem':
-                return 'action-redeemed';
-            case 'Assign':
-                return 'action-assigned';
-            default:
-                return 'action-default';
-        }
     }
 
     // Date Display function
@@ -213,8 +189,8 @@
                         </div>
                     </a>
 
-                    <!-- Pending Mission Submissions -->
-                    <a href="auditor_verification_management.php?type=Mission&status=Pending" class="stat-card">
+                    <!-- Pending Mission Verifications -->
+                    <a href="auditor_verification_management.php?type=MissionSubmission&status=Pending" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
                         </div>
@@ -223,7 +199,7 @@
                             <strong class="stat-value">
                                 <?php echo $pendingMissions; ?>
                             </strong>
-                            <h3>Pending Mission Submissions</h3>
+                            <h3>Pending Mission Verifications</h3>
                         </div>
                     </a>
 
@@ -242,7 +218,7 @@
                     </a>
 
                     <!-- Out of Stock Rewards -->
-                    <a href="auditor_rewards_management.php?quantity=Out%20of%20Stock" class="stat-card">
+                    <a href="auditor_rewards_management.php?quantity=out_of_stock" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/out-of-stock.png" alt="OutofStock">
                         </div>
@@ -339,7 +315,7 @@
                                 <h2>Notifications</h2>
                             </div>
 
-                            <a href="auditor_notification.php">View All</a>
+                            <a href="../notifications.php">View All</a>
                         </div>
 
                         <div class="notification-list">
@@ -394,6 +370,5 @@
         </div>
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

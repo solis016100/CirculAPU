@@ -11,6 +11,10 @@
     $id = $_GET['rewardID'] ?? $_GET['rewardID'] ?? '';
     $from = $_GET['from'] ?? 'management';
 
+    $returnParams = $_GET;
+    unset($returnParams['rewardID'], $returnParams['from']);
+    $returnQuery = http_build_query($returnParams);
+
     if (!$id) {
         header("Location: auditor_rewards_management.php");
         exit();
@@ -102,6 +106,13 @@
 
                     $ecoPointsCostInt = (int)$ecoPointsCost;
                     $quantityInt = (int)$quantity;
+
+                    /* Automatically make reward unavailable when quantity is 0 */
+                    if ($quantityInt === 0) {
+                        $availability = 'Unavailable';
+                    }
+
+                    $update->bind_param("sssiiss", $rewardName, $rewardDescription, $image, $ecoPointsCostInt, $quantityInt, $availability, $id);
 
                     $update->bind_param("sssiiss", $rewardName, $rewardDescription, $image, $ecoPointsCostInt, $quantityInt, $availability, $id);
 
@@ -250,7 +261,7 @@
 
                         <!-- Action Buttons -->
                         <div class="auditor-management-edit-actions">
-                            <a href="<?php echo $from === 'view' ? 'auditor_reward_view.php?rewardID=' . urlencode($id) : 'auditor_rewards_management.php'; ?>">
+                            <a href="<?php if ($from === 'view') {echo 'auditor_reward_view.php?rewardID=' . urlencode($id); if ($returnQuery !== '') {echo '&' . htmlspecialchars($returnQuery);}}else {echo 'auditor_rewards_management.php'; if ($returnQuery !== '') {echo '?' . htmlspecialchars($returnQuery);}}?>">
                                 Cancel
                             </a>
 
@@ -273,6 +284,5 @@
         });
     </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

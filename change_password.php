@@ -1,16 +1,14 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-require_once 'db.php'; // Centralized database connection
+require_once 'db.php'; 
 require_once 'Admin/admin_helpers.php';
 
-// Ensure user is logged in
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
 }
 
-// Dynamically set the theme class based on the logged-in user's role
 $theme_class = 'role-' . strtolower($_SESSION['user_role']);
 $user_role_display = htmlspecialchars($_SESSION['user_role']);
 
@@ -23,7 +21,6 @@ if (empty($_SESSION['password_csrf_token'])) {
     $_SESSION['password_csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Handle Password Update Form Submission
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['update_password'])) {
     $current_password = is_string($_POST['current_password'] ?? null) ? $_POST['current_password'] : '';
     $new_password = is_string($_POST['new_password'] ?? null) ? $_POST['new_password'] : '';
@@ -31,7 +28,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['update_pas
     $submitted_token = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';
     $user_id = $_SESSION['user_id'];
 
-    // 1. Fetch current user data to verify old password
     $stmt = $conn->prepare("SELECT password, role FROM user WHERE userID = ? AND status = 'Active'");
     $stmt->bind_param("s", $user_id);
     $stmt->execute();
@@ -40,11 +36,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['update_pas
     if (!hash_equals($_SESSION['password_csrf_token'], $submitted_token)) {
         $error = 'Your session has expired. Refresh the page and try again.';
     } elseif ($row = $result->fetch_assoc()) {
-        // Verify current password (supports both plain text fallback and hashes)
+        
         if (!password_verify($current_password, $row['password']) && $current_password !== $row['password']) {
             $error = "The current password you entered is incorrect.";
         } else {
-            // 2. Validate New Password Requirements
+            
             $uppercase = preg_match('@[A-Z]@', $new_password);
             $lowercase = preg_match('@[a-z]@', $new_password);
             $number    = preg_match('@[0-9]@', $new_password);
@@ -57,7 +53,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['update_pas
             } elseif ($current_password === $new_password) {
                 $error = "New password cannot be the same as your current password.";
             } else {
-                // 3. Hash and Update Password
+                
                 $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
                 $conn->begin_transaction();
                 try {
@@ -101,8 +97,9 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password - CirculAPU</title>
     <link rel="stylesheet" href="style.css">
+    <?php if (($_SESSION['user_role'] ?? '') === 'Manager'): ?><link rel="stylesheet" href="/CirculAPU/Manager/manager_mobile.css?v=<?=filemtime(__DIR__.'/Manager/manager_mobile.css')?>"><?php endif; ?>
 </head>
-<body class="<?php echo htmlspecialchars($theme_class); ?>">
+<body class="<?php echo htmlspecialchars($theme_class); ?> change-password-page">
     <div class="dashboard-container">
         
             <?php include 'sidebar.php'; ?>
@@ -139,7 +136,7 @@ $conn->close();
                         <hr class="card-divider">
                         
                         <div class="settings-form-body">
-                            <!-- Current Password -->
+                            
                             <div class="form-row-split">
                                 <div class="row-text-info">
                                     <h4>Current Password</h4>
@@ -151,7 +148,6 @@ $conn->close();
                                 </div>
                             </div>
 
-                            <!-- New Password -->
                             <div class="form-row-split">
                                 <div class="row-text-info">
                                     <h4>New Password</h4>
@@ -163,7 +159,6 @@ $conn->close();
                                 </div>
                             </div>
 
-                            <!-- Confirm New Password -->
                             <div class="form-row-split">
                                 <div class="row-text-info">
                                     <h4>Confirm New Password</h4>
@@ -175,7 +170,6 @@ $conn->close();
                                 </div>
                             </div>
 
-                            <!-- Password Requirements Box -->
                             <div class="requirements-panel">
                                 <div class="req-header">
                                     <img src="/CirculAPU/assets/icons/shield.svg" alt="Shield" width="18" height="18">

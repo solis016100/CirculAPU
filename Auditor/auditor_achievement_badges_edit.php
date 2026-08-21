@@ -53,6 +53,25 @@
         exit();
     }
 
+    $requirementType = '';
+    $requirementValue = '';
+    if (preg_match('/Complete (\d+) missions?/i', $badge['achieveBadgeRequirement'], $m)) {
+        $requirementType = 'mission';
+        $requirementValue = $m[1];
+    }elseif (preg_match('/Reach (\d+) EcoPoints/i', $badge['achieveBadgeRequirement'], $m)) {
+        $requirementType = 'ecopoints';
+        $requirementValue = $m[1];
+    }elseif (preg_match('/Get (\d+) approved assets?/i', $badge['achieveBadgeRequirement'], $m)) {
+        $requirementType = 'asset';
+        $requirementValue = $m[1];
+    }elseif (preg_match('/Borrow (\d+) assets?/i', $badge['achieveBadgeRequirement'], $m)) {
+        $requirementType = 'borrowing';
+        $requirementValue = $m[1];
+    }elseif (preg_match('/Redeem (\d+) rewards?/i', $badge['achieveBadgeRequirement'], $m)) {
+        $requirementType = 'reward';
+        $requirementValue = $m[1];
+    }
+
     $errorMessage = "";
     $successMessage = "";
 
@@ -60,13 +79,29 @@
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $badgeName = trim($_POST['badgeName'] ?? '');
         $badgeDescription = trim($_POST['badgeDescription'] ?? '');
-        $badgeRequirement = trim($_POST['badgeRequirement'] ?? '');
+        $requirementType = $_POST['requirementType'] ?? '';
+        $requirementValue = (int)($_POST['requirementValue'] ?? 0);
+
+        if ($requirementType === 'mission') {
+            $badgeRequirement = $requirementValue == 1 ? "Complete 1 mission" : "Complete {$requirementValue} missions";
+        }elseif ($requirementType === 'ecopoints') {
+            $badgeRequirement = "Reach {$requirementValue} EcoPoints";
+        }elseif ($requirementType === 'asset') {
+            $badgeRequirement = $requirementValue == 1 ? "Get 1 approved asset" : "Get {$requirementValue} approved assets";
+        }elseif ($requirementType === 'borrowing') {
+            $badgeRequirement = $requirementValue == 1 ? "Borrow 1 asset" : "Borrow {$requirementValue} assets";
+        }elseif ($requirementType === 'reward') {
+            $badgeRequirement = $requirementValue == 1 ? "Redeem 1 reward" : "Redeem {$requirementValue} rewards";
+        }else {
+            $badgeRequirement = '';
+        }
+
         if ($badgeName === '') {
             $errorMessage = "Please enter the badge name.";
         }elseif ($badgeDescription === '') {
             $errorMessage = "Please enter the badge description.";
-        }elseif ($badgeRequirement === '') {
-            $errorMessage = "Please enter the badge requirement.";
+        }elseif ($requirementType === '' || $requirementValue < 1 || $requirementValue > 10000){
+            $errorMessage = "Please enter a valid requirement.";
         }else {
             /* Check Duplicate Badge Name */
             $check = $conn->prepare("SELECT achieveBadgeID FROM achievementbadges WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?)) AND achieveBadgeID != ? LIMIT 1");
@@ -123,7 +158,11 @@
                         $log->execute();
 
                         /* Successful Update */
-                        header("Location: auditor_achievement_badges_view.php?achieveBadgeID=" . urlencode($id) . "&updated=1");
+                        if ($from === 'management') {
+                            header("Location: auditor_achievement_badges_management.php?updated=1");
+                        }else {
+                            header("Location: auditor_achievement_badges_view.php?achieveBadgeID=" . urlencode($id) . "&updated=1");
+                        }
 
                         exit();
                     }else {
@@ -208,8 +247,33 @@
                         </div>
 
                         <div class="auditor-management-edit-row">
-                            <label>Requirement</label>
-                            <textarea name="badgeRequirement" required><?php echo htmlspecialchars($badge['achieveBadgeRequirement']); ?></textarea>
+                            <label for="requirementType">
+                                Requirement Type
+                            </label>
+
+                            <select id="requirementType" name="requirementType" required>
+                                <option value="">Select requirement type</option>
+                                <option value="mission" <?= $requirementType === 'mission' ? 'selected' : '' ?>>Missions Completed</option>
+                                <option value="ecopoints" <?= $requirementType === 'ecopoints' ? 'selected' : '' ?>>EcoPoints Reached</option>
+                                <option value="asset" <?= $requirementType === 'asset' ? 'selected' : '' ?>>Approved Assets</option>
+                                <option value="borrowing" <?= $requirementType === 'borrowing' ? 'selected' : '' ?>>Assets Borrowed</option>
+                                <option value="reward" <?= $requirementType === 'reward' ? 'selected' : '' ?>>Rewards Redeemed</option>
+                            </select>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label for="requirementValue">
+                                Requirement Value
+                            </label>
+                            <input type="number" id="requirementValue" name="requirementValue" min="1" max="10000" value="<?= htmlspecialchars($requirementValue) ?>" placeholder="Enter value" required>
+                        </div>
+
+                        <div class="auditor-management-edit-row">
+                            <label for="badgeRequirement">
+                                Requirement
+                            </label>
+
+                            <input type="text" id="badgeRequirement" name="badgeRequirement" value="<?= htmlspecialchars($badge['achieveBadgeRequirement']) ?>" readonly required>
                         </div>
 
                         <div class="auditor-management-edit-actions">
@@ -228,14 +292,50 @@
     </div>
 
     <script>
+        const requirementType = document.getElementById('requirementType');
+        const requirementValue = document.getElementById('requirementValue');
+        const badgeRequirement = document.getElementById('badgeRequirement');
+
+        function updateRequirement() {
+            const type = requirementType.value;
+            const value = requirementValue.value;
+
+            if (!type || !value) {
+                badgeRequirement.value = '';
+                return;
+            }
+
+            if (type === 'mission') {
+                badgeRequirement.value = value == 1
+                    ? 'Complete 1 mission'
+                    : `Complete ${value} missions`;
+            }else if (type === 'ecopoints') {
+                badgeRequirement.value = `Reach ${value} EcoPoints`;
+            }else if (type === 'asset') {
+                badgeRequirement.value = value == 1
+                    ? 'Get 1 approved asset'
+                    : `Get ${value} approved assets`;
+            }else if (type === 'borrowing') {
+                badgeRequirement.value = value == 1
+                    ? 'Borrow 1 asset'
+                    : `Borrow ${value} assets`;
+            }else if (type === 'reward') {
+                badgeRequirement.value = value == 1
+                    ? 'Redeem 1 reward'
+                    : `Redeem ${value} rewards`;
+            }
+        }
+
+        requirementType.addEventListener('change', updateRequirement);
+        requirementValue.addEventListener('input', updateRequirement);
+
         document.getElementById('badgeIcon').addEventListener('change', function () {
             if (this.files.length) {
                 document.getElementById('badgeIconPreview').src =
                     URL.createObjectURL(this.files[0]);
             }
         });
-    </script>
+        </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

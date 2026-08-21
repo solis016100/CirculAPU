@@ -19,7 +19,7 @@ function managerDate(?string $v): string { return $v&&strtotime($v)?date('d M Y,
 
 $managerID=$_SESSION['user_id'];
 $managerName=$_SESSION['user_name']??'Resource Manager';
-$totalAssets=$pendingListings=$activeTransactions=$currentBorrowed=0;
+$totalAssets=$pendingListings=$activeTransactions=$currentBorrowed=$urgentRequests=0;
 $recentActivities=$notifications=[];$databaseError='';
 
 require_once '../db.php';
@@ -59,6 +59,14 @@ try{
         WHERE requestStatus IN ('Approved','In Progress','Overdue')
     ")->fetch_assoc()['total'];
 
+    $urgentRequests=(int)$conn->query("
+        SELECT COUNT(DISTINCT t.transactionID) total
+        FROM transactionrequests t
+        JOIN borrowings b ON b.transactionID=t.transactionID
+        WHERE t.requestStatus='Pending'
+        AND DATE(b.borrowDate)=CURDATE()
+    ")->fetch_assoc()['total'];
+
     $r=$conn->query("
         SELECT actionType,refType,refID,description,timeLogged
         FROM systemlog
@@ -81,6 +89,10 @@ try{
 <link rel="stylesheet" href="manager_mobile.css">
 <style>
 .quick-action-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.dashboard-urgent-strip{margin:0;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border:1px solid #fecaca;border-radius:12px;background:#fff1f2;color:#991b1b;text-decoration:none}
+.dashboard-urgent-strip strong{font-size:14px}
+.dashboard-urgent-strip span{font-size:12px;line-height:1.4}
+.dashboard-urgent-strip b{white-space:nowrap}
 @media(max-width:1100px){.quick-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
@@ -118,6 +130,13 @@ try{
 <div class="stat-content"><h3>Current Borrowings</h3><strong class="stat-value"><?=$currentBorrowed?></strong><p class="stat-description">Assets currently with borrowers</p></div>
 </a>
 </section>
+
+<?php if($urgentRequests>0):?>
+<a href="manager_transactions.php?requestStatus=Pending" class="dashboard-urgent-strip">
+<div><strong>Urgent borrowing requests</strong><br><span><?=$urgentRequests?> pending request<?=$urgentRequests===1?' has':'s have'?> pickup scheduled for today. Review these requests first.</span></div>
+<b>Review Now →</b>
+</a>
+<?php endif;?>
 
 <section class="dashboard-lower-grid">
 <article class="content-card dashboard-panel">
@@ -168,7 +187,7 @@ try{
 <div class="card-header"><h2>Quick Actions</h2></div>
 <div class="quick-action-grid">
 <a href="manager_assets.php?listingStatus=Pending+Review" class="quick-action"><img src="../assets/icons/view.png" alt=""><span>Review Asset Submissions</span></a>
-<a href="manager_transactions.php?requestStatus=Pending" class="quick-action"><img src="../assets/icons/view.png" alt=""><span>Review Pending Requests</span></a>
+<a href="manager_transactions.php?requestStatus=Pending" class="quick-action"><img src="../assets/icons/view.png" alt=""><span><?=$urgentRequests>0?'Review Urgent Requests ('.$urgentRequests.')':'Review Pending Requests'?></span></a>
 <a href="manager_borrowed_assets.php" class="quick-action"><img src="../assets/icons/borrowed-assets.png" alt=""><span>Manage Returns</span></a>
 <a href="manager_categories.php" class="quick-action"><img src="../assets/icons/edit.png" alt=""><span>Manage Categories</span></a>
 <a href="manager_reports.php" class="quick-action"><img src="../assets/icons/report.png" alt=""><span>Generate Report</span></a>
@@ -176,29 +195,6 @@ try{
 </section>
 
 </main>
-
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php" class="active" aria-current="page">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-<span>Home</span>
-</a>
-<a href="manager_assets.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
-<span>Assets</span>
-</a>
-<a href="manager_categories.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg>
-<span>Categories</span>
-</a>
-<a href="manager_transactions.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-<span>Transactions</span>
-</a>
-<a href="manager_reports.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
-<span>Reports</span>
-</a>
-</nav>
 
 </div></div>
 </body></html>

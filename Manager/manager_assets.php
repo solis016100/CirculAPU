@@ -40,11 +40,22 @@ try {
     $pendingCount=$pending->num_rows;
     $nextPending=$pending->fetch_assoc()['assetID']??'';
 
-    /* 1. Soft Remove */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remove') {
         $removeID = trim($_POST['assetID'] ?? '');
 
-        $stmt = $conn->prepare("SELECT assetName,listingStatus,availabilityStatus FROM assets WHERE assetID=? LIMIT 1");
+        $stmt = $conn->prepare("
+            SELECT a.assetName,a.listingStatus,a.availabilityStatus,
+                   EXISTS(
+                       SELECT 1
+                       FROM transactionrequests tr
+                       JOIN borrowings b ON b.transactionID=tr.transactionID
+                       WHERE tr.assetID=a.assetID
+                         AND tr.requestStatus IN ('Approved','In Progress')
+                         AND b.actualReturnDate IS NULL
+                         AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+                   ) hasActiveReservation
+            FROM assets a WHERE a.assetID=? LIMIT 1
+        ");
         $stmt->bind_param('s', $removeID); $stmt->execute();
         $asset = $stmt->get_result()->fetch_assoc(); $stmt->close();
 
@@ -52,6 +63,8 @@ try {
         elseif ($asset['listingStatus'] === 'Removed') $error = 'This asset has already been removed.';
         elseif (in_array($asset['availabilityStatus'], ['Reserved','Borrowed'], true))
             $error = 'Reserved or borrowed assets cannot be removed during an active transaction.';
+        elseif ((int)($asset['hasActiveReservation'] ?? 0) === 1)
+            $error = 'This asset has an approved reservation or active borrowing and cannot be removed.';
         else {
             $conn->begin_transaction();
             try {
@@ -62,8 +75,17 @@ try {
                 $conn->commit();
                 $q=[];
                 $rq=trim($_POST['returnQuery']??'');
+                $returnSource=trim($_POST['returnSource']??'assets');
                 if($rq) parse_str($rq,$q);
-                else $q=array_intersect_key($_GET,array_flip(['search','category','condition','availability','listingStatus','verificationStatus','page']));
+                if($returnSource==='reports'){
+                    $q['assetRemoved']='1';
+                    header('Location: manager_reports.php?'.http_build_query($q)); exit();
+                }
+                if($returnSource==='category'&&$rq){
+                    $q['assetRemoved']='1';
+                    header('Location: manager_category_view.php?'.http_build_query($q)); exit();
+                }
+                if(!$q)$q=array_intersect_key($_GET,array_flip(['search','category','condition','availability','listingStatus','verificationStatus','page']));
                 $q['removed']='1';
                 header('Location: manager_assets.php?'.http_build_query($q)); exit();
             } catch (Throwable $e) {
@@ -72,17 +94,14 @@ try {
         }
     }
 
-    /* 2. Categories: Active + currently selected inactive category */
     $stmt = $conn->prepare("
         SELECT categoryID,categoryName
         FROM categories
-        WHERE status='Active' OR categoryID=?
         ORDER BY categoryName
     ");
-    $stmt->bind_param('s', $category); $stmt->execute();
+    $stmt->execute();
     $categories = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
 
-    /* 3. Filters */
     $where = "
         WHERE (?='' OR a.assetID LIKE CONCAT('%',?,'%') OR a.assetName LIKE CONCAT('%',?,'%'))
           AND (?='' OR a.categoryID=?)
@@ -112,7 +131,16 @@ try {
 
     $stmt = $conn->prepare("
         SELECT a.assetID,a.assetName,a.assetCondition,a.availabilityStatus,
-               a.listingStatus,a.createdDate,c.categoryName,c.categoryIcon
+               a.listingStatus,a.createdDate,c.categoryName,c.categoryIcon,
+               EXISTS(
+                   SELECT 1
+                   FROM transactionrequests tr
+                   JOIN borrowings b ON b.transactionID=tr.transactionID
+                   WHERE tr.assetID=a.assetID
+                     AND tr.requestStatus IN ('Approved','In Progress')
+                     AND b.actualReturnDate IS NULL
+                     AND b.borrowingStatus IN ('Approved','Borrowed','Active','Overdue')
+               ) hasActiveReservation
         FROM assets a
         JOIN categories c ON a.categoryID=c.categoryID
         $where
@@ -122,7 +150,6 @@ try {
     $listParams = [...$params, $perPage, $offset];
     $stmt->bind_param($types . 'ii', ...$listParams); $stmt->execute();
     $assets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
-
 
 } catch (Throwable $e) {
     error_log($e->getMessage());
@@ -173,6 +200,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 <?php if (($_GET['removed'] ?? '') === '1'): ?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif; ?>
+<?php if (($_GET['reviewDone'] ?? '') === 'return'): ?><div class="alert alert-success">Asset listing returned for correction successfully.</div><?php elseif (($_GET['reviewDone'] ?? '') === 'verify'): ?><div class="alert alert-success">Asset listing sent for Sustainability Auditor verification successfully.</div><?php endif; ?>
 
 <section class="management-filter desktop-management-filter">
 <form method="GET">
@@ -342,7 +370,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
                 <a class="primary" href="manager_asset_edit.php?assetID=<?=e($a['assetID'])?><?=$backParam?>">Edit</a>
             <?php endif;?>
 
-            <?php if($a['listingStatus']!=='Removed'&&!in_array($a['availabilityStatus'],['Reserved','Borrowed'],true)):?>
+            <?php if($a['listingStatus']!=='Removed'&&!in_array($a['availabilityStatus'],['Reserved','Borrowed'],true)&&empty($a['hasActiveReservation'])):?>
                 <button type="button" class="danger" data-id="<?=e($a['assetID'])?>" data-name="<?=e($a['assetName'])?>" onclick="openRemoveDialog(this)">Remove</button>
             <?php endif;?>
         </div>
@@ -411,7 +439,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
                         </a>
                         <?php endif; ?>
 
-                        <?php if ($a['listingStatus'] !== 'Removed' && !in_array($a['availabilityStatus'], ['Reserved','Borrowed'], true)): ?>
+                        <?php if ($a['listingStatus'] !== 'Removed' && !in_array($a['availabilityStatus'], ['Reserved','Borrowed'], true) && empty($a['hasActiveReservation'])): ?>
                         <button type="button" class="management-action-btn delete" title="Remove Asset"
                                 data-id="<?=e($a['assetID'])?>" data-name="<?=e($a['assetName'])?>"
                                 onclick="openRemoveDialog(this)">
@@ -491,24 +519,6 @@ function openRemoveDialog(btn){
 <?php endif;?>
 
 </main>
-
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span>
-</a>
-<a href="manager_assets.php" class="active" aria-current="page">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span>
-</a>
-<a href="manager_categories.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span>
-</a>
-<a href="manager_transactions.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span>
-</a>
-<a href="manager_reports.php">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span>
-</a>
-</nav>
 
 </div>
 </div>

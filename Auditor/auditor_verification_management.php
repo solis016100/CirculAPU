@@ -113,7 +113,7 @@
             $sql .= " AND vr.status = '$safeStatus'";
         }
 
-        $sql .= " ORDER BY vr.verifiedDate DESC";
+        $sql .= " ORDER BY vr.verificationID DESC";
 
         $countSql = "SELECT COUNT(*) AS total
              FROM verificationrecords vr
@@ -239,78 +239,80 @@
                 <?php endif; ?>
 
                 <!-- Search and Filter -->
-                <form class="management-filter" method="get" action="auditor_verification_management.php">
-                    <div class="management-filter-group search">
-                        <label for="verificationSearch">Search Verification Record</label>
-                        <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status...">
-                    </div>
+                <div class="management-filter">
+                    <form method="get" action="auditor_verification_management.php">
+                        <div class="management-filter-group search">
+                            <label for="verificationSearch">Search Verification Record</label>
+                            <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status...">
+                        </div>
 
-                    <!-- Filter by User -->
-                    <div class="management-filter-group">
-                        <label for="userFilter">User</label>
-                        <select id="userFilter" name="user">
-                            <option value="">All Users</option>
-                            <?php foreach ($users as $user): ?>
-                                <option value="<?php echo htmlspecialchars($user['userID']); ?>"
-                                    <?php echo ($userFilter === $user['userID']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($user['name']); ?>
+                        <!-- Filter by User -->
+                        <div class="management-filter-group">
+                            <label for="userFilter">User</label>
+                            <select id="userFilter" name="user">
+                                <option value="">All Users</option>
+                                <?php foreach ($users as $user): ?>
+                                    <option value="<?php echo htmlspecialchars($user['userID']); ?>"
+                                        <?php echo ($userFilter === $user['userID']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($user['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Filter by Type of verification record -->
+                        <div class="management-filter-group">
+                            <label for="typeFilter">Type</label>
+                            <select id="typeFilter" name="type">
+                                <option value="">
+                                    All Type
                                 </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
 
-                    <!-- Filter by Type of verification record -->
-                    <div class="management-filter-group">
-                        <label for="typeFilter">Type</label>
-                        <select id="typeFilter" name="type">
-                            <option value="">
-                                All Type
-                            </option>
+                                <option value="Asset" <?php echo ($typeFilter === 'Asset') ? 'selected' : ''; ?>>
+                                    Asset 
+                                </option>
 
-                            <option value="Asset" <?php echo ($typeFilter === 'Asset') ? 'selected' : ''; ?>>
-                                Asset 
-                            </option>
+                                <option value="MissionSubmission" <?php echo ($typeFilter === 'MissionSubmission') ? 'selected' : ''; ?>>
+                                    Mission
+                                </option>
+                            </select>
+                        </div>
 
-                            <option value="MissionSubmission" <?php echo ($typeFilter === 'MissionSubmission') ? 'selected' : ''; ?>>
-                                Mission
-                            </option>
-                        </select>
-                    </div>
+                        <!-- Filter by Status -->
+                        <div class="management-filter-group">
+                            <label for="statusFilter">Status</label>
+                            <select id="statusFilter" name="status">
+                                <option value="">
+                                    All Status
+                                </option>
 
-                    <!-- Filter by Status -->
-                    <div class="management-filter-group">
-                        <label for="statusFilter">Status</label>
-                        <select id="statusFilter" name="status">
-                            <option value="">
-                                All Status
-                            </option>
+                                <option value="Pending" <?php echo ($statusFilter === 'Pending') ?'selected' : ''; ?>>
+                                    Pending
+                                </option>
 
-                            <option value="Pending" <?php echo ($statusFilter === 'Pending') ?'selected' : ''; ?>>
-                                Pending
-                            </option>
+                                <option value="Approved" <?php echo ($statusFilter === 'Approved') ? 'selected' : ''; ?>>
+                                    Approved
+                                </option>
 
-                            <option value="Approved" <?php echo ($statusFilter === 'Approved') ? 'selected' : ''; ?>>
-                                Approved
-                            </option>
+                                <option value="Rejected" <?php echo ($statusFilter === 'Rejected') ? 'selected' : ''; ?>>
+                                    Rejected
+                                </option>
+                            </select>
+                        </div>
 
-                            <option value="Rejected" <?php echo ($statusFilter === 'Rejected') ? 'selected' : ''; ?>>
-                                Rejected
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- Filter buttons - Filter/Reset -->
-                    <div class="management-filter-buttons">
-                        <button type="submit" class="management-filter-btn">
-                            <img src="../assets/icons/filter.png" alt="Filter">
-                            Filter
-                        </button>
-                        <a href="auditor_verification_management.php" class="management-reset-btn">
-                            <img src="../assets/icons/reset.png" alt="Reset">
-                            Reset
-                        </a>
-                    </div>
-                </form>
+                        <!-- Filter buttons - Filter/Reset -->
+                        <div class="management-filter-buttons">
+                            <button type="submit" class="management-filter-btn">
+                                <img src="../assets/icons/filter.png" alt="Filter">
+                                Filter
+                            </button>
+                            <a href="auditor_verification_management.php" class="management-reset-btn">
+                                <img src="../assets/icons/reset.png" alt="Reset">
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
 
 
                 <!-- Verification Record List -->
@@ -463,7 +465,7 @@
                             <div class="pagination">
                                 <?php if ($page > 1): ?>
                                     <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $page - 1]) ?>">
-                                        &laquo;
+                                        &lt;
                                     </a>
                                 <?php endif; ?>
 
@@ -475,7 +477,7 @@
 
                                 <?php if ($page < $totalPages): ?>
                                     <a href="?<?= http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter, 'page' => $page + 1]) ?>">
-                                        &raquo;
+                                        &gt;
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -495,6 +497,12 @@
         function closeDeletePopout() {
             document.getElementById('deletePopout').style.display = 'none';
         }
+
+        document.querySelectorAll('.management-table tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                if (window.innerWidth <= 768) row.ondblclick?.();
+            });
+        });
     </script>
 
 
@@ -518,6 +526,5 @@
         </div>
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

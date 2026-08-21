@@ -89,13 +89,13 @@
         // Search
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $badgeQuery .= "AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
+            $badgeQuery .= " AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
 
         // Filter by badge
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
-            $badgeQuery .= "AND achieveBadgeID = '$safeBadgeFilter'";
+            $badgeQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
         // Total badges records
@@ -103,12 +103,12 @@
 
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
-            $countQuery .= "AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
+            $countQuery .= " AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
 
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
-            $countQuery .= "AND achieveBadgeID = '$safeBadgeFilter'";
+            $countQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
         $countResult = mysqli_query($conn, $countQuery);
@@ -161,6 +161,13 @@
                     <?php if (isset($_GET['deleted'])): ?>
                         <div class="alert alert-success">
                             Achievement badge deleted successfully.
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Green bar showing Success Updation -->
+                    <?php if (isset($_GET['updated'])): ?>
+                        <div class="alert alert-success">
+                            Achievement Badge updated successfully.
                         </div>
                     <?php endif; ?>
 
@@ -359,8 +366,13 @@
         function closeDeletePopout() {
             document.getElementById('deletePopout').classList.remove('show');
         }
+
+        document.querySelectorAll('.management-table tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                if (window.innerWidth <= 768) row.ondblclick?.();
+            });
+        });
     </script>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

@@ -95,6 +95,13 @@
 
                 <h1>Achievement Badge Details</h1>
 
+                <!-- Green bar showing Success Updation -->
+                <?php if (isset($_GET['updated'])): ?>
+                    <div class="alert alert-success">
+                        Achievement Badge updated successfully.
+                    </div>
+                <?php endif; ?>
+
                 <!-- Badge Details -->
                 <form method="POST" enctype="multipart/form-data">
                     <div class="management-view-card">
@@ -169,7 +176,7 @@
 
                             <!-- Back Button -->
                             <div class="auditor-management-detail-back">
-                                <a href="auditor_achievement_badges_management.php">
+                                <a href="auditor_achievement_badges_management.php?search=<?= urlencode($_GET['search'] ?? '') ?>&badge=<?= urlencode($_GET['badge'] ?? '') ?>&page=<?= urlencode($_GET['page'] ?? 1) ?>">
                                     Back
                                 </a>
                             </div>
@@ -242,6 +249,5 @@
         <img src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="Badge Icon" onclick="event.stopPropagation();">
     </div>
 
-    <?php include 'auditor_responsive_navigation.php'; ?>
 </body>
 </html>

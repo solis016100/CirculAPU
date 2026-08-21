@@ -37,10 +37,12 @@ $availability=trim($_GET['availability']??'');$listing=trim($_GET['listingStatus
 $status=trim($_GET['requestStatus']??'');
 $conditions=['New','Like New','Good','Fair','Poor'];
 $availabilities=['Available','Reserved','Borrowed','Unavailable'];
-$listings=['Draft','Pending Review','Ready for Verification','Published','Rejected','Removed'];
+$listings=['Draft','Pending Review','Ready for Verification','Approved','Published','Rejected','Removed'];
 $txStatuses=['Pending','Approved','In Progress','Completed','Cancelled','Rejected','Overdue'];
 $error='';$categories=[];$selectedCategoryName='All';$stats=[];$chart1=$chart2=$chart3=$rows=$allRows=[];
-$reportBack=http_build_query($_GET);$reportBackParam='&source=reports'.($reportBack?'&back='.rawurlencode($reportBack):'');
+$reportState=$_GET;
+foreach(['assetRemoved','reviewDone','pickupDone','deactivated','reactivated','deleted','error'] as $flag)unset($reportState[$flag]);
+$reportBack=http_build_query($reportState);$reportBackParam='&source=reports'.($reportBack?'&back='.rawurlencode($reportBack):'');
 
 if(!vd($from)||!vd($to))$error='Please enter a valid date.';
 elseif($from&&$to&&$from>$to)$error='Date From cannot be later than Date To.';
@@ -58,11 +60,11 @@ try{
     }
 
     if(!$error&&$report==='asset'){
-        $w=["a.listingStatus<>'Removed'"];$p=[];$t='';wdate($w,$p,$t,'a.createdDate',$from,$to);
+        $w=[$listing==='Removed'?"a.listingStatus='Removed'":"a.listingStatus<>'Removed'"];$p=[];$t='';wdate($w,$p,$t,'a.createdDate',$from,$to);
         if($category){$w[]='a.categoryID=?';$p[]=$category;$t.='s';}
         if(in_array($condition,$conditions,true)){$w[]='a.assetCondition=?';$p[]=$condition;$t.='s';}
         if(in_array($availability,$availabilities,true)){$w[]='a.availabilityStatus=?';$p[]=$availability;$t.='s';}
-        if($listing&&in_array($listing,$listings,true)){$w[]='a.listingStatus=?';$p[]=$listing;$t.='s';}
+        if($listing&&$listing!=='Removed'&&in_array($listing,$listings,true)){$w[]='a.listingStatus=?';$p[]=$listing;$t.='s';}
         $ws='WHERE '.implode(' AND ',$w);
 
         $stats=one($c,"SELECT COUNT(*) total,
@@ -96,7 +98,6 @@ try{
             COUNT(DISTINCT tr.requesterID) users
             FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID $ws",$t,$p);
 
-        /* These cards must respect the SAME transaction filters as the table/charts. */
         $stats['active']=one($c,"SELECT COUNT(*) total
             FROM transactionrequests tr
             JOIN assets a ON a.assetID=tr.assetID
@@ -162,7 +163,7 @@ try{
 
         $chart1=q($c,"SELECT c.categoryName label,COUNT(*) total FROM assets a JOIN categories c ON c.categoryID=a.categoryID $ws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$t,$p);
         $chart2=q($c,"SELECT c.categoryName label,COUNT(*) total FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID JOIN categories c ON c.categoryID=a.categoryID $tws GROUP BY c.categoryID,c.categoryName ORDER BY total DESC LIMIT 6",$tt,$tp);
-        /* Keep current-borrowing chart aligned with the filtered asset metrics. */
+        
         $chart3=q($c,"SELECT c.categoryName label,COUNT(*) total
             FROM assets a
             JOIN categories c ON c.categoryID=a.categoryID
@@ -170,11 +171,6 @@ try{
             GROUP BY c.categoryID,c.categoryName
             ORDER BY total DESC LIMIT 6",$t,$p);
 
-        /*
-         * Category table must use the same filters as the cards/charts.
-         * Asset metrics use asset created date + condition.
-         * Transaction metrics use request date + the selected asset condition.
-         */
         $assetExtra='';
         $assetParams=[];$assetTypes='';
         if($from){$assetExtra.=" AND DATE(x.createdDate)>=?";$assetParams[]=$from;$assetTypes.='s';}
@@ -205,7 +201,6 @@ try{
             FROM categories c ".($category?"WHERE c.categoryID=?":"")."
             ORDER BY totalTransactions DESC,totalAssets DESC";
 
-        /* assetExtra is repeated 3 times and txExtra 2 times in the SQL. */
         $rowParams=array_merge(
             $assetParams,$assetParams,$assetParams,
             $txParams,$txParams,
@@ -279,7 +274,10 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 </section>
 
 <?php if($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?>
-
+<?php if(($_GET['assetRemoved']??'')==='1'):?><div class="alert alert-success">Asset listing removed successfully.</div><?php endif;?>
+<?php if(($_GET['reviewDone']??'')==='verify'):?><div class="alert alert-success">Asset listing sent for Sustainability Auditor verification.</div><?php elseif(($_GET['reviewDone']??'')==='return'):?><div class="alert alert-success">Asset listing returned to the member for correction.</div><?php elseif(($_GET['reviewDone']??'')==='approve'):?><div class="alert alert-success">Borrowing request approved successfully.</div><?php elseif(($_GET['reviewDone']??'')==='reject'):?><div class="alert alert-success">Borrowing request rejected successfully.</div><?php endif;?>
+<?php if(($pickupDone=trim($_GET['pickupDone']??''))!==''):?><div class="alert alert-success">Pickup confirmed successfully for transaction <?=e($pickupDone)?>.</div><?php endif;?>
+<?php if(($_GET['deactivated']??'')==='1'):?><div class="alert alert-success">Category deactivated successfully.</div><?php elseif(($_GET['reactivated']??'')==='1'):?><div class="alert alert-success">Category reactivated successfully.</div><?php elseif(($_GET['deleted']??'')==='1'):?><div class="alert alert-success">Category deleted successfully.</div><?php elseif(($_GET['error']??'')==='linked'):?><div class="alert alert-error">This category has linked assets and cannot be deleted. Deactivate it instead.</div><?php elseif(($_GET['error']??'')==='inactive'):?><div class="alert alert-error">This category is already inactive.</div><?php elseif(($_GET['error']??'')==='active'):?><div class="alert alert-error">This category is already active.</div><?php elseif(($_GET['error']??'')==='notfound'):?><div class="alert alert-error">Category not found.</div><?php endif;?>
 
 <section class="mobile-report-ui">
 <details class="mobile-filter-card" <?=($from||$to||$category||$condition||$availability||$listing||$status)?'open':''?>>
@@ -400,7 +398,6 @@ foreach($cards as $x):?>
 </section>
 <?php endif;?>
 
-
 <section class="mobile-report-list">
 <div class="mobile-section-heading">
 <div>
@@ -506,11 +503,4 @@ Category <?=e($selectedCategoryName)?><?= $report!=='transaction'?' · Condition
 </section>
 <?php endif;?>
 </main>
-<nav class="manager-mobile-nav" aria-label="Manager mobile navigation">
-<a href="manager_dashboard.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Home</span></a>
-<a href="manager_assets.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span>Assets</span></a>
-<a href="manager_categories.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg><span>Categories</span></a>
-<a href="manager_transactions.php"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Transactions</span></a>
-<a href="manager_reports.php" class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span>Reports</span></a>
-</nav>
 </div></div></body></html>
