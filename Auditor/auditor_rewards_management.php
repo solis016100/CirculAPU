@@ -194,10 +194,17 @@
                         <p>Manage all Rewards on the platform</p>
                     </div>
 
-                    <a href="auditor_reward_create.php" class="management-create-btn">
-                        <img src="../assets/icons/create.png" alt="Create">
-                        Create New Reward
-                    </a>
+                    <div class="management-heading-buttons">
+                        <a href="auditor_reward_redemption_history.php" class="management-create-btn">
+                            <img src="../assets/icons/history.png" alt="RedemptionHistory">
+                            Redemption History
+                        </a>
+
+                        <a href="auditor_reward_create.php" class="management-create-btn">
+                            <img src="../assets/icons/create.png" alt="Create">
+                            Create New Reward
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Green bar showing Success Creation -->
