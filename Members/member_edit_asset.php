@@ -1,8 +1,3 @@
-brary
-/
-member_edit_asset_fixed_cancel.php
-
-
 <?php
 session_start();
 
@@ -117,9 +112,17 @@ if (isset($_POST['resubmit'])) {
     $assetCondition = $_POST['assetCondition'] ?? '';
     $description = trim($_POST['description'] ?? '');
 
+    $hasCurrentImage = !empty($asset['imageURL']);
+    $hasNewImage = !empty($_FILES['assetImage']['name']);
+
     if ($assetName == '' || $categoryID == '' || $assetCondition == '' || $description == '') {
 
         $message = "Please complete all required fields.";
+        $messageType = "error";
+
+    } elseif (!$hasCurrentImage && !$hasNewImage) {
+
+        $message = "Please upload an asset image.";
         $messageType = "error";
 
     } else {
@@ -252,6 +255,10 @@ if (isset($_POST['resubmit'])) {
 
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="member_new_style.css">
+    <style>
+        .required-star{color:#d93025}
+        .required-note{margin:-10px 0 16px;font-size:10px;color:#777}
+    </style>
 </head>
 
 <body class="role-member">
@@ -290,13 +297,13 @@ if (isset($_POST['resubmit'])) {
             <form method="POST" enctype="multipart/form-data" class="asset-form-card">
 
                 <h2>Asset Information</h2>
-
+                <p class="required-note"><span class="required-star">*</span> All fields are required.</p>
 
                 <div class="asset-form-grid">
 
                     <!-- Asset Name -->
                     <div class="asset-form-group">
-                        <label>Asset Name</label>
+                        <label>Asset Name <span class="required-star">*</span></label>
 
                         <input
                             type="text"
@@ -309,7 +316,7 @@ if (isset($_POST['resubmit'])) {
 
                     <!-- Category -->
                     <div class="asset-form-group">
-                        <label>Category</label>
+                        <label>Category <span class="required-star">*</span></label>
 
                         <select name="categoryID" required>
 
@@ -336,7 +343,7 @@ if (isset($_POST['resubmit'])) {
 
                     <!-- Condition -->
                     <div class="asset-form-group">
-                        <label>Condition</label>
+                        <label>Condition <span class="required-star">*</span></label>
 
                         <select name="assetCondition" required>
 
@@ -371,7 +378,7 @@ if (isset($_POST['resubmit'])) {
                 <!-- Description -->
                 <div class="asset-form-group asset-description-group">
 
-                    <label>Description</label>
+                    <label>Description <span class="required-star">*</span></label>
 
                     <textarea
                         name="description"
@@ -385,7 +392,7 @@ if (isset($_POST['resubmit'])) {
                 <!-- Asset Image -->
                 <div class="asset-image-section">
 
-                    <label>Asset Image</label>
+                    <label>Asset Image <span class="required-star">*</span></label>
 
                     <!-- Current Image -->
                     <?php if (!empty($asset['imageURL'])): ?>
@@ -468,7 +475,7 @@ if (isset($_POST['resubmit'])) {
                     </a>
 
                     <button type="submit" name="resubmit" class="asset-submit-btn">
-                        Resubmit for Verification →
+                        Resubmit for Review →
                     </button>
 
                 </div>

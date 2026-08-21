@@ -33,31 +33,43 @@ $user=$userResult->fetch_assoc();
 $memberName=$user['name']??'Member';
 $totalPoint=$user['ecopoint']??0;
 
-/* Request Count */
+/* Request Count
+   Same source as My Request page:
+   Borrow Request = transactionrequests
+   Asset Update   = assets owned by the member
+*/
 $requestResult=$conn->query("
 SELECT
 (SELECT COUNT(*) FROM transactionrequests WHERE requesterID='$userID')
 +
-(SELECT COUNT(*) FROM verificationrecords WHERE userID='$userID' AND targetType='Asset') AS total
+(SELECT COUNT(*) FROM assets WHERE ownerID='$userID') AS total
 ");
 
 $totalRequest=$requestResult->fetch_assoc()['total']??0;
 
-/* Recent Requests */
+/* Recent Requests
+   Asset Update uses assets.listingStatus so the dashboard
+   shows the same asset information/status as My Request.
+*/
 $requestListResult=$conn->query("
-SELECT a.assetName AS requestName,'Borrow' AS requestType,
-tr.requestStatus,tr.requestDate
+SELECT
+    a.assetName AS requestName,
+    'Borrow Request' AS requestType,
+    tr.requestStatus AS requestStatus,
+    tr.requestDate AS requestDate
 FROM transactionrequests tr
-JOIN assets a ON tr.assetID=a.assetID
+INNER JOIN assets a ON tr.assetID=a.assetID
 WHERE tr.requesterID='$userID'
 
 UNION ALL
 
-SELECT a.assetName,'Asset Update',vr.status,vr.verifiedDate
-FROM verificationrecords vr
-JOIN assets a ON vr.targetID=a.assetID
-WHERE vr.userID='$userID'
-AND vr.targetType='Asset'
+SELECT
+    a.assetName AS requestName,
+    'Asset Update' AS requestType,
+    a.listingStatus AS requestStatus,
+    a.updatedDate AS requestDate
+FROM assets a
+WHERE a.ownerID='$userID'
 
 ORDER BY requestDate DESC
 LIMIT 4
@@ -226,8 +238,19 @@ if($currentTier){
                 <?php while($request=$requestListResult->fetch_assoc()): ?>
                     <?php
                     $status=$request['requestStatus'];
-                    if($request['requestType']==='Asset Update'&&strtolower($status)==='pending'){
-                        $status='Published';
+
+                    // Keep the real database status.
+                    // Only normalize the CSS class name.
+                    $statusClass=strtolower(trim($status));
+
+                    if($statusClass==='pending review'){
+                        $statusClass='pending';
+                    }elseif($statusClass==='ready for verification'){
+                        $statusClass='published';
+                    }elseif($statusClass==='removed'){
+                        $statusClass='rejected';
+                    }else{
+                        $statusClass=str_replace(' ','-',$statusClass);
                     }
                     ?>
 
@@ -241,7 +264,7 @@ if($currentTier){
                         </span>
 
                         <span>
-                            <span class="request-status <?php echo strtolower($status); ?>">
+                            <span class="request-status <?php echo htmlspecialchars($statusClass); ?>">
                                 <?php echo htmlspecialchars($status); ?>
                             </span>
                         </span>

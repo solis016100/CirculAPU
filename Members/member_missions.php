@@ -65,6 +65,91 @@ function generateVerificationID($conn) {
     return "V".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
+
+/* Generate EcoPoint Transaction ID */
+function generateEcoPointTransactionID($conn) {
+    $result = $conn->query("
+    SELECT transactionID
+    FROM ecopointstransaction
+    WHERE transactionID LIKE 'ET%'
+    ORDER BY CAST(SUBSTRING(transactionID,3) AS UNSIGNED) DESC
+    LIMIT 1
+    ");
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $number = (int)substr($row['transactionID'],2) + 1;
+    } else {
+        $number = 1;
+    }
+
+    return "ET".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
+
+
+/* Generate Notification ID */
+function generateNotificationID($conn) {
+    $result = $conn->query("
+    SELECT notificationID
+    FROM notification
+    WHERE notificationID LIKE 'NOT%'
+    ORDER BY CAST(SUBSTRING(notificationID,4) AS UNSIGNED) DESC
+    LIMIT 1
+    ");
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $number = (int)substr($row['notificationID'],3) + 1;
+    } else {
+        $number = 1;
+    }
+
+    return "NOT".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
+
+/* Add EcoPoints Transaction When Mission Is Approved */
+$approvedMissionQuery = "
+SELECT
+    ms.submissionID,
+    m.ecoPointsReward
+FROM missionsubmission ms
+INNER JOIN missions m
+ON ms.missionID = m.missionID
+WHERE ms.userID = '$userID'
+AND ms.submissionStatus IN ('Approved','Verified')
+AND NOT EXISTS (
+    SELECT 1
+    FROM ecopointstransaction et
+    WHERE et.userID = ms.userID
+    AND et.referenceID = ms.submissionID
+    AND et.transactionType = 'Earned'
+    AND et.sourceType = 'Mission'
+)
+";
+
+$approvedMissionResult = $conn->query($approvedMissionQuery);
+
+if ($approvedMissionResult) {
+    while ($approvedMission = $approvedMissionResult->fetch_assoc()) {
+
+        $transactionID = generateEcoPointTransactionID($conn);
+        $submissionID = $conn->real_escape_string($approvedMission['submissionID']);
+        $rewardPoints = (int)$approvedMission['ecoPointsReward'];
+
+        $conn->query("
+        INSERT INTO ecopointstransaction
+        (transactionID, userID, points, transactionType,
+         sourceType, referenceID, transactionDate)
+        VALUES
+        ('$transactionID', '$userID', $rewardPoints, 'Earned',
+         'Mission', '$submissionID', NOW())
+        ");
+    }
+}
+
+
 /* Join Mission */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['joinMission'])) {
     $missionID = $conn->real_escape_string($_POST['missionID']);
@@ -193,8 +278,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uploadProof'])) {
                     }
 
                     if ($conn->query($verificationQuery)) {
+
+                        /* Send Notification To Auditor(s) */
+                        $missionInfoResult = $conn->query("
+                        SELECT missionName
+                        FROM missions
+                        WHERE missionID='$missionID'
+                        LIMIT 1
+                        ");
+
+                        $missionName = "Mission";
+
+                        if ($missionInfoResult && $missionInfoResult->num_rows > 0) {
+                            $missionInfo = $missionInfoResult->fetch_assoc();
+                            $missionName = $missionInfo['missionName'];
+                        }
+
+                        /* Get latest member name */
+                        $memberInfoResult = $conn->query("
+                        SELECT name
+                        FROM user
+                        WHERE userID='$userID'
+                        LIMIT 1
+                        ");
+
+                        if ($memberInfoResult && $memberInfoResult->num_rows > 0) {
+                            $memberInfo = $memberInfoResult->fetch_assoc();
+                            $memberName = $memberInfo['name'];
+                        }
+
+                        /* Send to all active Auditors */
+                        $auditorResult = $conn->query("
+                        SELECT userID
+                        FROM user
+                        WHERE role='Auditor'
+                        AND status='Active'
+                        ");
+
+                        if ($auditorResult) {
+
+                            $notificationTitle = "Mission Completed";
+
+                            $notificationContent =
+                                $memberName .
+                                " completed the mission " .
+                                $missionName .
+                                " (" . $missionID . "). Mission ready for approval.";
+
+                            $safeTitle = $conn->real_escape_string($notificationTitle);
+                            $safeContent = $conn->real_escape_string($notificationContent);
+
+                            while ($auditor = $auditorResult->fetch_assoc()) {
+
+                                $auditorID = $conn->real_escape_string($auditor['userID']);
+                                $notificationID = generateNotificationID($conn);
+
+                                $conn->query("
+                                INSERT INTO notification
+                                (notificationID, userID, title, content, status, createdDate)
+                                VALUES
+                                ('$notificationID', '$auditorID', '$safeTitle',
+                                 '$safeContent', 'Unread', NOW())
+                                ");
+                            }
+                        }
+
                         header("Location: member_missions.php?tab=my&uploaded=1");
                         exit();
+
                     } else {
                         $error = "Unable to create verification record: ".$conn->error;
                     }

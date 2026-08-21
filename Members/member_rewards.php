@@ -37,7 +37,7 @@ $currentPoints=$pointData['ecopoint']??0;
 
 
 
-/* Get Total Earned EcoPoints */
+/* Get Total EcoPoints */
 $earnedPointQuery = "
 SELECT COALESCE(SUM(points),0) AS totalEarned
 FROM ecopointstransaction
@@ -49,24 +49,12 @@ $earnedPointResult = $conn->query($earnedPointQuery);
 $earnedPointData = $earnedPointResult->fetch_assoc();
 $totalEarnedPoints = $earnedPointData['totalEarned'] ?? 0;
 
-/* Count Completed Exchanges */
-$exchangeQuery="
-SELECT COUNT(*) AS totalExchange
-FROM transactionrequests
-WHERE requesterID='$userID'
-AND requestStatus='Completed'
-";
-$exchangeResult=$conn->query($exchangeQuery);
-$exchangeData=$exchangeResult->fetch_assoc();
-$totalExchange=$exchangeData['totalExchange']??0;
-
-/* Get User Tier */
+/* Get User Tier Based On Total EcoPoints */
 $tierQuery="
 SELECT *
 FROM tiers
 WHERE minimumEcoPoints<=$totalEarnedPoints
-AND minimumExchanges<=$totalExchange
-ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
+ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
 $tierResult=$conn->query($tierQuery);
@@ -79,27 +67,9 @@ if($tierResult&&$tierResult->num_rows>0){
         'tierName'=>'Eco Beginner',
         'tierDescription'=>'Starting milestone for new sustainability participants',
         'tierIcon'=>'icon_tier1.png',
-        'minimumEcoPoints'=>0,
-        'minimumExchanges'=>0
+        'minimumEcoPoints'=>0
     ];
 }
-
-/* Redemption Limit Based On Tier */
-$maxRedeem=$tier['minimumExchanges'];
-
-if($maxRedeem==0){
-    $maxRedeem=1;
-}
-
-/* Count Redeemed Rewards */
-$redeemCountQuery="
-SELECT COUNT(*) AS totalRedeemed
-FROM rewardredemption
-WHERE userID='$userID'
-";
-$redeemCountResult=$conn->query($redeemCountQuery);
-$redeemCountData=$redeemCountResult->fetch_assoc();
-$totalRedeemed=$redeemCountData['totalRedeemed']??0;
 
 /* Generate EcoPoint Transaction ID */
 function generateEcoPointTransactionID($conn){
@@ -140,9 +110,6 @@ if(isset($_POST['redeem'])){
             $messageType="error";
         }elseif($currentPoints<$reward['ecoPointsCost']){
             $message="You do not have enough EcoPoints.";
-            $messageType="error";
-        }elseif($totalRedeemed>=$maxRedeem){
-            $message="You have reached the redemption limit for your current tier.";
             $messageType="error";
         }else{
             $cost=$reward['ecoPointsCost'];
@@ -211,7 +178,6 @@ if(isset($_POST['redeem'])){
                 $conn->commit();
 
                 $currentPoints-=$cost;
-                $totalRedeemed++;
 
                 $message="Reward redeemed successfully!";
                 $messageType="success";
@@ -230,8 +196,7 @@ $tierQuery="
 SELECT *
 FROM tiers
 WHERE minimumEcoPoints<=$totalEarnedPoints
-AND minimumExchanges<=$totalExchange
-ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
+ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
 $tierResult=$conn->query($tierQuery);
@@ -240,10 +205,23 @@ if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }
 
-$maxRedeem=$tier['minimumExchanges'];
+/* Get Next Tier */
+$nextTierQuery="
+SELECT tierName,minimumEcoPoints
+FROM tiers
+WHERE minimumEcoPoints>$totalEarnedPoints
+ORDER BY minimumEcoPoints ASC
+LIMIT 1
+";
 
-if($maxRedeem==0){
-    $maxRedeem=1;
+$nextTierResult=$conn->query($nextTierQuery);
+
+if($nextTierResult&&$nextTierResult->num_rows>0){
+    $nextTier=$nextTierResult->fetch_assoc();
+    $pointsToNextTier=$nextTier['minimumEcoPoints']-$totalEarnedPoints;
+}else{
+    $nextTier=null;
+    $pointsToNextTier=0;
 }
 
 /* Get Rewards */
@@ -265,12 +243,6 @@ ORDER BY rr.redemptionDate DESC
 ";
 $historyResult=$conn->query($historyQuery);
 
-/* Redemption Progress */
-$redeemProgress=($totalRedeemed/$maxRedeem)*100;
-
-if($redeemProgress>100){
-    $redeemProgress=100;
-}
 ?>
 
 <!DOCTYPE html>
@@ -280,7 +252,7 @@ if($redeemProgress>100){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rewards & Redemption - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_new_style.css?v=32">
+<link rel="stylesheet" href="member_new_style.css">
 </head>
 
 <body class="role-member">
@@ -327,8 +299,7 @@ if($redeemProgress>100){
             <?php
             $inStock=$reward['quantity']>0&&$reward['availability']=='Available';
             $enoughPoints=$currentPoints>=$reward['ecoPointsCost'];
-            $withinLimit=$totalRedeemed<$maxRedeem;
-            $canRedeem=$inStock&&$enoughPoints&&$withinLimit;
+            $canRedeem=$inStock&&$enoughPoints;
             ?>
 
                 <div class="reward-card">
@@ -362,11 +333,6 @@ if($redeemProgress>100){
                         <?php elseif(!$enoughPoints): ?>
                             <span class="reward-status points">
                                 Not Enough EcoPoints
-                            </span>
-
-                        <?php elseif(!$withinLimit): ?>
-                            <span class="reward-status limit">
-                                Tier Limit Reached
                             </span>
 
                         <?php else: ?>
@@ -464,7 +430,7 @@ if($redeemProgress>100){
             <span>Current EcoPoints</span>
 
             <p>
-                Total Earned:
+                Total EcoPoints:
                 <strong><?php echo $totalEarnedPoints; ?></strong>
             </p>
         </div>
@@ -488,49 +454,17 @@ if($redeemProgress>100){
 
             <div class="reward-tier-info">
                 <div>
-                    <span>Total Earned EcoPoints</span>
+                    <span>Total EcoPoints</span>
                     <strong><?php echo $totalEarnedPoints; ?></strong>
                 </div>
 
                 <div>
-                    <span>Exchanges</span>
-                    <strong><?php echo $totalExchange; ?></strong>
+                    <span>Points to Next Tier</span>
+                    <strong>
+                        <?php echo $nextTier ? $pointsToNextTier : 'Max Tier'; ?>
+                    </strong>
                 </div>
             </div>
-        </div>
-
-        <!-- Redemption Progress -->
-        <div class="reward-limit-box">
-            <h3>Redemption Progress</h3>
-
-            <div class="reward-limit-number">
-                <strong><?php echo $totalRedeemed; ?></strong>
-                <span>/ <?php echo $maxRedeem; ?></span>
-            </div>
-
-            <p>Rewards Redeemed</p>
-
-            <div class="reward-progress">
-                <div class="reward-progress-bar"
-                style="width:<?php echo $redeemProgress; ?>%">
-                </div>
-            </div>
-
-            <?php if($totalRedeemed>=$maxRedeem): ?>
-
-                <span class="reward-limit-message">
-                    Current tier limit reached
-                </span>
-
-            <?php else: ?>
-
-                <span class="reward-limit-message">
-                    <?php echo $maxRedeem-$totalRedeemed; ?>
-                    redemptions remaining
-                </span>
-
-            <?php endif; ?>
-
         </div>
 
     </div>

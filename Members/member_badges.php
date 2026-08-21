@@ -14,33 +14,22 @@ if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Member'){
 
 $userID=$_SESSION['user_id'];
 
-/* Get EcoPoints */
+/* Get Total EcoPoints = all Earned EcoPoints */
 $pointQuery="
-SELECT ecopoint
-FROM user
+SELECT COALESCE(SUM(points),0) AS totalPoints
+FROM ecopointstransaction
 WHERE userID='$userID'
+AND transactionType='Earned'
 ";
 $pointResult=$conn->query($pointQuery);
 $pointData=$pointResult->fetch_assoc();
-$totalPoints=$pointData['ecopoint']??0;
+$totalPoints=(int)($pointData['totalPoints']??0);
 
-/* Count Completed Exchanges */
-$exchangeQuery="
-SELECT COUNT(*) AS totalExchange
-FROM transactionrequests
-WHERE requesterID='$userID'
-AND requestStatus='Completed'
-";
-$exchangeResult=$conn->query($exchangeQuery);
-$exchangeData=$exchangeResult->fetch_assoc();
-$totalExchange=$exchangeData['totalExchange']??0;
-
-/* Get User Tier */
+/* Get User Tier Based On Total EcoPoints */
 $tierQuery="
-SELECT tierName,tierDescription,tierIcon,minimumEcoPoints,minimumExchanges
+SELECT tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
-WHERE minimumEcoPoints<='$totalPoints'
-AND minimumExchanges<='$totalExchange'
+WHERE minimumEcoPoints<=$totalPoints
 ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
@@ -55,6 +44,24 @@ if($tierResult&&$tierResult->num_rows>0){
     $tierName="Eco Beginner";
     $tierDescription="Starting milestone for new sustainability participants";
     $tierIcon="icon_tier1.png";
+}
+
+/* Get Next Tier */
+$nextTierQuery="
+SELECT tierName,minimumEcoPoints
+FROM tiers
+WHERE minimumEcoPoints>$totalPoints
+ORDER BY minimumEcoPoints ASC
+LIMIT 1
+";
+$nextTierResult=$conn->query($nextTierQuery);
+
+if($nextTierResult&&$nextTierResult->num_rows>0){
+    $nextTier=$nextTierResult->fetch_assoc();
+    $pointsToNextTier=$nextTier['minimumEcoPoints']-$totalPoints;
+}else{
+    $nextTier=null;
+    $pointsToNextTier=0;
 }
 
 /* Get All Badges */
@@ -115,6 +122,33 @@ if(isset($_GET['badge'])){
 <title>Achievement Badges - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="member_new_style.css">
+
+<style>
+.badge-tier-info{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin-top:12px;
+}
+.badge-tier-info div{
+    padding:7px;
+    background:#f4fbf6;
+    border:1px solid #c5e5d0;
+    border-radius:6px;
+}
+.badge-tier-info span{
+    display:block;
+    margin:0;
+    font-size:8px;
+    color:#777;
+}
+.badge-tier-info strong{
+    display:block;
+    margin-top:2px;
+    font-size:11px;
+    color:#159447;
+}
+</style>
 </head>
 
 <body class="role-member">
@@ -198,10 +232,19 @@ $isEarned=in_array($badgeID,$earnedBadges);
         <strong><?php echo htmlspecialchars($tierName); ?></strong>
         <span><?php echo htmlspecialchars($tierDescription); ?></span>
 
-        <p>
-            <?php echo $totalPoints; ?> EcoPoints ·
-            <?php echo $totalExchange; ?> Exchanges
-        </p>
+        <div class="badge-tier-info">
+            <div>
+                <span>Total EcoPoints</span>
+                <strong><?php echo $totalPoints; ?></strong>
+            </div>
+
+            <div>
+                <span>Points to Next Tier</span>
+                <strong>
+                    <?php echo $nextTier ? $pointsToNextTier : 'Max Tier'; ?>
+                </strong>
+            </div>
+        </div>
     </div>
 
     <div class="badge-guide-box">
@@ -344,10 +387,19 @@ $isEarned=in_array($badgeID,$earnedBadges);
         <strong><?php echo htmlspecialchars($tierName); ?></strong>
         <span><?php echo htmlspecialchars($tierDescription); ?></span>
 
-        <p>
-            <?php echo $totalPoints; ?> EcoPoints ·
-            <?php echo $totalExchange; ?> Exchanges
-        </p>
+        <div class="badge-tier-info">
+            <div>
+                <span>Total EcoPoints</span>
+                <strong><?php echo $totalPoints; ?></strong>
+            </div>
+
+            <div>
+                <span>Points to Next Tier</span>
+                <strong>
+                    <?php echo $nextTier ? $pointsToNextTier : 'Max Tier'; ?>
+                </strong>
+            </div>
+        </div>
     </div>
 
     <div class="badge-guide-box">
