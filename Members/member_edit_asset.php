@@ -1,8 +1,3 @@
-brary
-/
-member_edit_asset_fixed_cancel.php
-
-
 <?php
 session_start();
 
@@ -85,27 +80,25 @@ ORDER BY categoryName ASC
 $categoryResult = $conn->query($categoryQuery);
 
 
-/* Generate Verification ID */
-function generateVerificationID($conn) {
+/* Generate Notification ID */
+function generateNotificationID($conn) {
 
-    $idQuery = "
-    SELECT verificationID
-    FROM verificationrecords
-    WHERE verificationID LIKE 'V%'
-    ORDER BY CAST(SUBSTRING(verificationID,2) AS UNSIGNED) DESC
-    LIMIT 1
-    ";
+    $result = $conn->query("
+    SELECT MAX(
+        CAST(SUBSTRING(notificationID,2) AS UNSIGNED)
+    ) AS maxNumber
+    FROM notification
+    WHERE notificationID REGEXP '^N[0-9]+$'
+    ");
 
-    $idResult = $conn->query($idQuery);
-
-    if ($idResult && $idResult->num_rows > 0) {
-        $lastID = $idResult->fetch_assoc()['verificationID'];
-        $number = (int)substr($lastID,1) + 1;
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $number = ((int)($row['maxNumber'] ?? 0)) + 1;
     } else {
         $number = 1;
     }
 
-    return "V" . str_pad($number,3,"0",STR_PAD_LEFT);
+    return "N" . str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
 
@@ -117,9 +110,17 @@ if (isset($_POST['resubmit'])) {
     $assetCondition = $_POST['assetCondition'] ?? '';
     $description = trim($_POST['description'] ?? '');
 
+    $hasCurrentImage = !empty($asset['imageURL']);
+    $hasNewImage = !empty($_FILES['assetImage']['name']);
+
     if ($assetName == '' || $categoryID == '' || $assetCondition == '' || $description == '') {
 
         $message = "Please complete all required fields.";
+        $messageType = "error";
+
+    } elseif (!$hasCurrentImage && !$hasNewImage) {
+
+        $message = "Please upload an asset image.";
         $messageType = "error";
 
     } else {
@@ -192,38 +193,137 @@ if (isset($_POST['resubmit'])) {
                 AND ownerID = '$userID'
                 ";
 
-                $conn->query($updateQuery);
+                if (!$conn->query($updateQuery)) {
+                    throw new Exception("Unable to update asset: " . $conn->error);
+                }
 
 
-                /* Add New Verification Record */
-                $verificationID = generateVerificationID($conn);
+                /* Get Existing Verification Record */
+                $verificationCheck = $conn->query("
+                SELECT verificationID
+                FROM verificationrecords
+                WHERE targetID = '$assetID'
+                AND targetType = 'Asset'
+                ORDER BY verifiedDate DESC, verificationID DESC
+                LIMIT 1
+                ");
 
-                $verificationQuery = "
-                INSERT INTO verificationrecords
-                (
-                    verificationID,
-                    userID,
-                    verifiedBy,
-                    targetID,
-                    targetType,
-                    status,
-                    remarks,
-                    verifiedDate
-                )
+                /* Update Existing Verification Record If It Exists
+                   Do not insert a new verification record during resubmit. */
+                if ($verificationCheck && $verificationCheck->num_rows > 0) {
+
+                    $verificationData = $verificationCheck->fetch_assoc();
+                    $verificationID = $conn->real_escape_string(
+                        $verificationData['verificationID']
+                    );
+
+                    $verificationQuery = "
+                    UPDATE verificationrecords
+                    SET
+                        userID = '$userID',
+                        verifiedBy = NULL,
+                        status = 'Pending',
+                        remarks = NULL,
+                        verifiedDate = NOW()
+                    WHERE verificationID = '$verificationID'
+                    ";
+
+                    if (!$conn->query($verificationQuery)) {
+                        throw new Exception(
+                            "Unable to update verification record: " . $conn->error
+                        );
+                    }
+                }
+
+
+                /* Get Latest Member Name */
+                $latestMemberName = $memberName;
+
+                $memberResult = $conn->query("
+                SELECT name
+                FROM user
+                WHERE userID = '$userID'
+                LIMIT 1
+                ");
+
+                if ($memberResult && $memberResult->num_rows > 0) {
+                    $memberData = $memberResult->fetch_assoc();
+                    $latestMemberName = $memberData['name'];
+                }
+
+
+                /* Send Notification To Member */
+                $memberNotificationID = generateNotificationID($conn);
+
+                $memberTitle = "Asset Resubmitted Successfully";
+                $memberContent =
+                    "Your asset " . $assetName .
+                    " (" . $assetID .
+                    ") has been resubmitted successfully and is pending manager review.";
+
+                $safeMemberTitle = $conn->real_escape_string($memberTitle);
+                $safeMemberContent = $conn->real_escape_string($memberContent);
+
+                $memberNotificationQuery = "
+                INSERT INTO notification
+                (notificationID, userID, title, content, status, createdDate)
                 VALUES
-                (
-                    '$verificationID',
-                    '$userID',
-                    NULL,
-                    '$assetID',
-                    'Asset',
-                    'Pending',
-                    NULL,
-                    NOW()
-                )
+                ('$memberNotificationID', '$userID', '$safeMemberTitle',
+                 '$safeMemberContent', 'Unread', NOW())
                 ";
 
-                $conn->query($verificationQuery);
+                if (!$conn->query($memberNotificationQuery)) {
+                    throw new Exception(
+                        "Member notification failed: " . $conn->error
+                    );
+                }
+
+
+                /* Send Notification To Active Manager(s) */
+                $managerResult = $conn->query("
+                SELECT userID
+                FROM user
+                WHERE role = 'Manager'
+                AND status = 'Active'
+                ");
+
+                if (!$managerResult) {
+                    throw new Exception(
+                        "Unable to find manager: " . $conn->error
+                    );
+                }
+
+                while ($manager = $managerResult->fetch_assoc()) {
+
+                    $managerID = $conn->real_escape_string($manager['userID']);
+                    $managerNotificationID = generateNotificationID($conn);
+
+                    $managerTitle = "Asset Resubmitted for Review";
+                    $managerContent =
+                        $latestMemberName .
+                        " (" . $userID . ") resubmitted " .
+                        $assetName .
+                        " (" . $assetID .
+                        "). The asset is pending review.";
+
+                    $safeManagerTitle = $conn->real_escape_string($managerTitle);
+                    $safeManagerContent = $conn->real_escape_string($managerContent);
+
+                    $managerNotificationQuery = "
+                    INSERT INTO notification
+                    (notificationID, userID, title, content, status, createdDate)
+                    VALUES
+                    ('$managerNotificationID', '$managerID', '$safeManagerTitle',
+                     '$safeManagerContent', 'Unread', NOW())
+                    ";
+
+                    if (!$conn->query($managerNotificationQuery)) {
+                        throw new Exception(
+                            "Manager notification failed: " . $conn->error
+                        );
+                    }
+                }
+
 
                 $conn->commit();
 
@@ -234,7 +334,7 @@ if (isset($_POST['resubmit'])) {
 
                 $conn->rollback();
 
-                $message = "Unable to resubmit asset.";
+                $message = "Unable to resubmit asset: " . $e->getMessage();
                 $messageType = "error";
             }
         }
@@ -387,7 +487,7 @@ if (isset($_POST['resubmit'])) {
 
                     <label>Asset Image</label>
 
-                    <!-- Current Image -->
+                    <!-- Previous / Current Image -->
                     <?php if (!empty($asset['imageURL'])): ?>
 
                         <p class="current-image-text">Current Image</p>
@@ -408,13 +508,13 @@ if (isset($_POST['resubmit'])) {
                         <p class="current-image-text">New Image Preview</p>
 
                         <div class="asset-current-image">
-                            <img id="newImagePreview" src="" alt="New Asset Image">
+                            <img id="newImagePreview" src="" alt="New Asset Image Preview">
                         </div>
 
                     </div>
 
 
-                    <!-- Choose New Image -->
+                    <!-- Replace Image -->
                     <div class="asset-upload-box">
 
                         <input
@@ -426,8 +526,8 @@ if (isset($_POST['resubmit'])) {
                         >
 
                         <p>
-                            Choose a new image only if you want to replace the current image.
-                            If you cancel it, the current image will remain.
+                            Leave this empty to keep the current image.
+                            Choose a new image only if you want to replace it.
                         </p>
 
                         <button
@@ -468,7 +568,7 @@ if (isset($_POST['resubmit'])) {
                     </a>
 
                     <button type="submit" name="resubmit" class="asset-submit-btn">
-                        Resubmit for Verification →
+                        Resubmit for Review →
                     </button>
 
                 </div>
@@ -481,36 +581,40 @@ if (isset($_POST['resubmit'])) {
 
 </div>
 
+
 <script>
 function previewNewImage() {
-    const imageInput = document.getElementById('assetImage');
-    const newImageArea = document.getElementById('newImageArea');
-    const newImagePreview = document.getElementById('newImagePreview');
-    const cancelImageBtn = document.getElementById('cancelImageBtn');
 
-    if (imageInput.files && imageInput.files[0]) {
+    const input = document.getElementById('assetImage');
+    const area = document.getElementById('newImageArea');
+    const preview = document.getElementById('newImagePreview');
+    const cancelBtn = document.getElementById('cancelImageBtn');
+
+    if (input.files && input.files[0]) {
+
         const reader = new FileReader();
 
         reader.onload = function(e) {
-            newImagePreview.src = e.target.result;
-            newImageArea.style.display = 'block';
-            cancelImageBtn.style.display = 'inline-block';
+            preview.src = e.target.result;
+            area.style.display = 'block';
+            cancelBtn.style.display = 'inline-block';
         };
 
-        reader.readAsDataURL(imageInput.files[0]);
+        reader.readAsDataURL(input.files[0]);
     }
 }
 
 function cancelNewImage() {
-    const imageInput = document.getElementById('assetImage');
-    const newImageArea = document.getElementById('newImageArea');
-    const newImagePreview = document.getElementById('newImagePreview');
-    const cancelImageBtn = document.getElementById('cancelImageBtn');
 
-    imageInput.value = '';
-    newImagePreview.src = '';
-    newImageArea.style.display = 'none';
-    cancelImageBtn.style.display = 'none';
+    const input = document.getElementById('assetImage');
+    const area = document.getElementById('newImageArea');
+    const preview = document.getElementById('newImagePreview');
+    const cancelBtn = document.getElementById('cancelImageBtn');
+
+    input.value = '';
+    preview.src = '';
+    area.style.display = 'none';
+    cancelBtn.style.display = 'none';
 }
 </script>
 

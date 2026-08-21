@@ -37,7 +37,7 @@ $currentPoints=$pointData['ecopoint']??0;
 
 
 
-/* Get Total Earned EcoPoints */
+/* Get Total EcoPoints */
 $earnedPointQuery = "
 SELECT COALESCE(SUM(points),0) AS totalEarned
 FROM ecopointstransaction
@@ -49,57 +49,40 @@ $earnedPointResult = $conn->query($earnedPointQuery);
 $earnedPointData = $earnedPointResult->fetch_assoc();
 $totalEarnedPoints = $earnedPointData['totalEarned'] ?? 0;
 
-/* Count Completed Exchanges */
-$exchangeQuery="
-SELECT COUNT(*) AS totalExchange
-FROM transactionrequests
-WHERE requesterID='$userID'
-AND requestStatus='Completed'
-";
-$exchangeResult=$conn->query($exchangeQuery);
-$exchangeData=$exchangeResult->fetch_assoc();
-$totalExchange=$exchangeData['totalExchange']??0;
-
-/* Get User Tier */
+/* Get Current Tier Based On Total Earned EcoPoints */
 $tierQuery="
-SELECT *
+SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
 WHERE minimumEcoPoints<=$totalEarnedPoints
-AND minimumExchanges<=$totalExchange
-ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
+ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
+
 $tierResult=$conn->query($tierQuery);
 
 if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }else{
-    $tier=[
-        'tierID'=>'T001',
-        'tierName'=>'Eco Beginner',
-        'tierDescription'=>'Starting milestone for new sustainability participants',
-        'tierIcon'=>'icon_tier1.png',
-        'minimumEcoPoints'=>0,
-        'minimumExchanges'=>0
-    ];
+    /* Fallback to the lowest tier from database */
+    $lowestTierResult=$conn->query("
+    SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
+    FROM tiers
+    ORDER BY minimumEcoPoints ASC
+    LIMIT 1
+    ");
+
+    if($lowestTierResult&&$lowestTierResult->num_rows>0){
+        $tier=$lowestTierResult->fetch_assoc();
+    }else{
+        $tier=[
+            'tierID'=>'',
+            'tierName'=>'No Tier',
+            'tierDescription'=>'No tier information available',
+            'tierIcon'=>'',
+            'minimumEcoPoints'=>0
+        ];
+    }
 }
-
-/* Redemption Limit Based On Tier */
-$maxRedeem=$tier['minimumExchanges'];
-
-if($maxRedeem==0){
-    $maxRedeem=1;
-}
-
-/* Count Redeemed Rewards */
-$redeemCountQuery="
-SELECT COUNT(*) AS totalRedeemed
-FROM rewardredemption
-WHERE userID='$userID'
-";
-$redeemCountResult=$conn->query($redeemCountQuery);
-$redeemCountData=$redeemCountResult->fetch_assoc();
-$totalRedeemed=$redeemCountData['totalRedeemed']??0;
 
 /* Generate EcoPoint Transaction ID */
 function generateEcoPointTransactionID($conn){
@@ -121,6 +104,27 @@ function generateEcoPointTransactionID($conn){
     return "ET".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
+
+/* Generate Notification ID */
+function generateNotificationID($conn){
+    $result=$conn->query("
+    SELECT MAX(
+        CAST(SUBSTRING(notificationID,2) AS UNSIGNED)
+    ) AS maxNumber
+    FROM notification
+    WHERE notificationID REGEXP '^N[0-9]+$'
+    ");
+
+    if($result){
+        $row=$result->fetch_assoc();
+        $number=((int)($row['maxNumber']??0))+1;
+    }else{
+        $number=1;
+    }
+
+    return "N".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
 /* Redeem Reward */
 if(isset($_POST['redeem'])){
     $rewardID=$conn->real_escape_string($_POST['rewardID']);
@@ -140,9 +144,6 @@ if(isset($_POST['redeem'])){
             $messageType="error";
         }elseif($currentPoints<$reward['ecoPointsCost']){
             $message="You do not have enough EcoPoints.";
-            $messageType="error";
-        }elseif($totalRedeemed>=$maxRedeem){
-            $message="You have reached the redemption limit for your current tier.";
             $messageType="error";
         }else{
             $cost=$reward['ecoPointsCost'];
@@ -208,42 +209,154 @@ if(isset($_POST['redeem'])){
                 AND quantity<=0
                 ");
 
+                /* Get Member Name */
+                $memberResult=$conn->query("
+                SELECT name
+                FROM user
+                WHERE userID='$userID'
+                LIMIT 1
+                ");
+
+                $redeemMemberName=$memberName;
+
+                if($memberResult&&$memberResult->num_rows>0){
+                    $memberData=$memberResult->fetch_assoc();
+                    $redeemMemberName=$memberData['name'];
+                }
+
+                /* Notify Member */
+                $memberNotificationID=generateNotificationID($conn);
+
+                $memberNotificationTitle="Reward Redeemed Successfully";
+
+                $memberNotificationContent=
+                    "You redeemed ".
+                    $reward['rewardName'].
+                    " (".$rewardID.") for ".
+                    $cost.
+                    " EcoPoints.";
+
+                $safeMemberTitle=$conn->real_escape_string($memberNotificationTitle);
+                $safeMemberContent=$conn->real_escape_string($memberNotificationContent);
+
+                $memberNotificationQuery="
+                INSERT INTO notification
+                (notificationID,userID,title,content,status,createdDate)
+                VALUES
+                ('$memberNotificationID','$userID','$safeMemberTitle',
+                 '$safeMemberContent','Unread',NOW())
+                ";
+
+                if(!$conn->query($memberNotificationQuery)){
+                    throw new Exception(
+                        "Member notification failed: ".$conn->error
+                    );
+                }
+
+                /* Notify Active Auditors */
+                $auditorResult=$conn->query("
+                SELECT userID
+                FROM user
+                WHERE role='Auditor'
+                AND status='Active'
+                ");
+
+                if($auditorResult){
+
+                    $auditorNotificationTitle="Reward Redeemed";
+
+                    $auditorNotificationContent=
+                        $redeemMemberName.
+                        " (".$userID.") redeemed ".
+                        $reward['rewardName'].
+                        " (".$rewardID.") for ".
+                        $cost.
+                        " EcoPoints.";
+
+                    $safeAuditorTitle=$conn->real_escape_string($auditorNotificationTitle);
+                    $safeAuditorContent=$conn->real_escape_string($auditorNotificationContent);
+
+                    while($auditor=$auditorResult->fetch_assoc()){
+
+                        $auditorID=$conn->real_escape_string($auditor['userID']);
+                        $auditorNotificationID=generateNotificationID($conn);
+
+                        $auditorNotificationQuery="
+                        INSERT INTO notification
+                        (notificationID,userID,title,content,status,createdDate)
+                        VALUES
+                        ('$auditorNotificationID','$auditorID','$safeAuditorTitle',
+                         '$safeAuditorContent','Unread',NOW())
+                        ";
+
+                        if(!$conn->query($auditorNotificationQuery)){
+                            throw new Exception(
+                                "Auditor notification failed: ".$conn->error
+                            );
+                        }
+                    }
+                }
+
                 $conn->commit();
 
                 $currentPoints-=$cost;
-                $totalRedeemed++;
 
                 $message="Reward redeemed successfully!";
                 $messageType="success";
             }catch(Exception $e){
                 $conn->rollback();
 
-                $message="Unable to redeem reward.";
+                $message="Unable to redeem reward: ".$e->getMessage();
                 $messageType="error";
             }
         }
     }
 }
 
-/* Refresh User Tier */
+/* Refresh Current Points */
+$currentPointResult=$conn->query("
+SELECT ecopoint
+FROM user
+WHERE userID='$userID'
+");
+
+if($currentPointResult&&$currentPointResult->num_rows>0){
+    $currentPointData=$currentPointResult->fetch_assoc();
+    $currentPoints=(int)($currentPointData['ecopoint']??0);
+}
+
+/* Refresh Current Tier */
 $tierQuery="
-SELECT *
+SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
 WHERE minimumEcoPoints<=$totalEarnedPoints
-AND minimumExchanges<=$totalExchange
-ORDER BY minimumEcoPoints DESC,minimumExchanges DESC
+ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
+
 $tierResult=$conn->query($tierQuery);
 
 if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }
 
-$maxRedeem=$tier['minimumExchanges'];
+/* Get Next Tier Based On Total Earned EcoPoints */
+$nextTierQuery="
+SELECT tierID,tierName,minimumEcoPoints
+FROM tiers
+WHERE minimumEcoPoints>$totalEarnedPoints
+ORDER BY minimumEcoPoints ASC
+LIMIT 1
+";
 
-if($maxRedeem==0){
-    $maxRedeem=1;
+$nextTierResult=$conn->query($nextTierQuery);
+
+if($nextTierResult&&$nextTierResult->num_rows>0){
+    $nextTier=$nextTierResult->fetch_assoc();
+    $pointsToNextTier=max(0,$nextTier['minimumEcoPoints']-$totalEarnedPoints);
+}else{
+    $nextTier=null;
+    $pointsToNextTier=0;
 }
 
 /* Get Rewards */
@@ -265,12 +378,6 @@ ORDER BY rr.redemptionDate DESC
 ";
 $historyResult=$conn->query($historyQuery);
 
-/* Redemption Progress */
-$redeemProgress=($totalRedeemed/$maxRedeem)*100;
-
-if($redeemProgress>100){
-    $redeemProgress=100;
-}
 ?>
 
 <!DOCTYPE html>
@@ -280,7 +387,8 @@ if($redeemProgress>100){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rewards & Redemption - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_new_style.css?v=32">
+<link rel="stylesheet" href="member_new_style.css">
+
 </head>
 
 <body class="role-member">
@@ -327,13 +435,21 @@ if($redeemProgress>100){
             <?php
             $inStock=$reward['quantity']>0&&$reward['availability']=='Available';
             $enoughPoints=$currentPoints>=$reward['ecoPointsCost'];
-            $withinLimit=$totalRedeemed<$maxRedeem;
-            $canRedeem=$inStock&&$enoughPoints&&$withinLimit;
+            $canRedeem=$inStock&&$enoughPoints;
             ?>
 
                 <div class="reward-card">
-                    <div class="reward-icon">
-                        <span>🎁</span>
+                    <div class="reward-image-box">
+                        <?php if(!empty($reward['rewardImage'])): ?>
+                            <img
+                                src="../assets/images/<?php echo htmlspecialchars($reward['rewardImage']); ?>"
+                                alt="<?php echo htmlspecialchars($reward['rewardName']); ?>"
+                                class="reward-image"
+                                onclick="openRewardImage(this.src, this.alt)"
+                            >
+                        <?php else: ?>
+                            <div class="reward-image-placeholder">No Image</div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="reward-card-info">
@@ -364,26 +480,20 @@ if($redeemProgress>100){
                                 Not Enough EcoPoints
                             </span>
 
-                        <?php elseif(!$withinLimit): ?>
-                            <span class="reward-status limit">
-                                Tier Limit Reached
-                            </span>
-
                         <?php else: ?>
                             <span class="reward-status available">
                                 Available
                             </span>
                         <?php endif; ?>
 
-                        <form method="POST">
+                        <form method="POST" class="reward-redeem-form">
                             <input type="hidden" name="rewardID"
                             value="<?php echo htmlspecialchars($reward['rewardID']); ?>">
 
-                            <button type="submit"
-                            name="redeem"
+                            <button type="button"
                             class="redeem-btn"
                             <?php echo !$canRedeem?'disabled':''; ?>
-                            onclick="return confirm('Are you sure you want to redeem this reward?')">
+                            onclick="openRedeemConfirm(this)">
                                 Redeem Now
                             </button>
                         </form>
@@ -464,7 +574,7 @@ if($redeemProgress>100){
             <span>Current EcoPoints</span>
 
             <p>
-                Total Earned:
+                Total EcoPoints:
                 <strong><?php echo $totalEarnedPoints; ?></strong>
             </p>
         </div>
@@ -474,8 +584,10 @@ if($redeemProgress>100){
             <h3>My Tier</h3>
 
             <div class="reward-tier-icon">
+                <?php if(!empty($tier['tierIcon'])): ?>
                 <img src="../assets/images/<?php echo htmlspecialchars($tier['tierIcon']); ?>"
                 alt="<?php echo htmlspecialchars($tier['tierName']); ?>">
+                <?php endif; ?>
             </div>
 
             <strong class="reward-tier-name">
@@ -488,49 +600,17 @@ if($redeemProgress>100){
 
             <div class="reward-tier-info">
                 <div>
-                    <span>Total Earned EcoPoints</span>
+                    <span>Total EcoPoints</span>
                     <strong><?php echo $totalEarnedPoints; ?></strong>
                 </div>
 
                 <div>
-                    <span>Exchanges</span>
-                    <strong><?php echo $totalExchange; ?></strong>
+                    <span>Points to Next Tier</span>
+                    <strong>
+                        <?php echo $nextTier ? $pointsToNextTier : 'Max Tier'; ?>
+                    </strong>
                 </div>
             </div>
-        </div>
-
-        <!-- Redemption Progress -->
-        <div class="reward-limit-box">
-            <h3>Redemption Progress</h3>
-
-            <div class="reward-limit-number">
-                <strong><?php echo $totalRedeemed; ?></strong>
-                <span>/ <?php echo $maxRedeem; ?></span>
-            </div>
-
-            <p>Rewards Redeemed</p>
-
-            <div class="reward-progress">
-                <div class="reward-progress-bar"
-                style="width:<?php echo $redeemProgress; ?>%">
-                </div>
-            </div>
-
-            <?php if($totalRedeemed>=$maxRedeem): ?>
-
-                <span class="reward-limit-message">
-                    Current tier limit reached
-                </span>
-
-            <?php else: ?>
-
-                <span class="reward-limit-message">
-                    <?php echo $maxRedeem-$totalRedeemed; ?>
-                    redemptions remaining
-                </span>
-
-            <?php endif; ?>
-
         </div>
 
     </div>
@@ -540,7 +620,102 @@ if($redeemProgress>100){
 </div>
 </div>
 
+<!-- Redeem Confirmation Modal -->
+<div id="redeemConfirmModal" class="redeem-confirm-modal">
+    <div class="redeem-confirm-box">
+
+        <div class="redeem-confirm-icon">?</div>
+
+        <h2>Confirm Redemption</h2>
+
+        <p>
+            Are you sure you want to redeem this reward?
+        </p>
+
+        <div class="redeem-confirm-actions">
+            <button type="button"
+                    class="redeem-cancel-btn"
+                    onclick="closeRedeemConfirm()">
+                Cancel
+            </button>
+
+            <button type="button"
+                    class="redeem-confirm-btn"
+                    onclick="confirmRedeem()">
+                Yes, Redeem
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Reward Image Preview Modal -->
+<div id="rewardImageModal" class="reward-image-modal" onclick="closeRewardImage(event)">
+    <button type="button" class="reward-image-close" onclick="closeRewardImage()">×</button>
+    <div class="reward-image-modal-content">
+        <img id="rewardImageLarge" src="" alt="">
+        <p id="rewardImageCaption"></p>
+    </div>
+</div>
+
 <script>
+let selectedRedeemForm=null;
+
+function openRedeemConfirm(button){
+    selectedRedeemForm=button.closest(".reward-redeem-form");
+    document.getElementById("redeemConfirmModal").classList.add("show");
+}
+
+function closeRedeemConfirm(){
+    document.getElementById("redeemConfirmModal").classList.remove("show");
+    selectedRedeemForm=null;
+}
+
+function confirmRedeem(){
+    if(selectedRedeemForm){
+        var redeemInput=document.createElement("input");
+
+        redeemInput.type="hidden";
+        redeemInput.name="redeem";
+        redeemInput.value="1";
+
+        selectedRedeemForm.appendChild(redeemInput);
+        selectedRedeemForm.submit();
+    }
+}
+
+document.getElementById("redeemConfirmModal").addEventListener("click",function(event){
+    if(event.target===this){
+        closeRedeemConfirm();
+    }
+});
+
+function openRewardImage(imageSrc,imageAlt){
+    var modal=document.getElementById("rewardImageModal");
+    var largeImage=document.getElementById("rewardImageLarge");
+    var caption=document.getElementById("rewardImageCaption");
+
+    largeImage.src=imageSrc;
+    largeImage.alt=imageAlt;
+    caption.textContent=imageAlt;
+    modal.classList.add("show");
+}
+
+function closeRewardImage(event){
+    var modal=document.getElementById("rewardImageModal");
+
+    if(!event || event.target===modal || event.target.classList.contains("reward-image-close")){
+        modal.classList.remove("show");
+    }
+}
+
+document.addEventListener("keydown",function(event){
+    if(event.key==="Escape"){
+        document.getElementById("rewardImageModal").classList.remove("show");
+        closeRedeemConfirm();
+    }
+});
+
 function openRewardTab(tabName,button){
     var contents=document.querySelectorAll(".reward-tab-content");
     var tabs=document.querySelectorAll(".reward-tab");

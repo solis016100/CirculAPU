@@ -14,33 +14,22 @@ if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Member'){
 
 $userID=$_SESSION['user_id'];
 
-/* Get EcoPoints */
+/* Get Total EcoPoints = all Earned EcoPoints */
 $pointQuery="
-SELECT ecopoint
-FROM user
+SELECT COALESCE(SUM(points),0) AS totalPoints
+FROM ecopointstransaction
 WHERE userID='$userID'
+AND transactionType='Earned'
 ";
 $pointResult=$conn->query($pointQuery);
 $pointData=$pointResult->fetch_assoc();
-$totalPoints=$pointData['ecopoint']??0;
+$totalPoints=(int)($pointData['totalPoints']??0);
 
-/* Count Completed Exchanges */
-$exchangeQuery="
-SELECT COUNT(*) AS totalExchange
-FROM transactionrequests
-WHERE requesterID='$userID'
-AND requestStatus='Completed'
-";
-$exchangeResult=$conn->query($exchangeQuery);
-$exchangeData=$exchangeResult->fetch_assoc();
-$totalExchange=$exchangeData['totalExchange']??0;
-
-/* Get User Tier */
+/* Get Current Tier Based On Total EcoPoints Only */
 $tierQuery="
-SELECT tierName,tierDescription,tierIcon,minimumEcoPoints,minimumExchanges
+SELECT tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
-WHERE minimumEcoPoints<='$totalPoints'
-AND minimumExchanges<='$totalExchange'
+WHERE minimumEcoPoints<=$totalPoints
 ORDER BY minimumEcoPoints DESC
 LIMIT 1
 ";
@@ -57,6 +46,24 @@ if($tierResult&&$tierResult->num_rows>0){
     $tierIcon="icon_tier1.png";
 }
 
+/* Get Next Tier Based On Total EcoPoints Only */
+$nextTierQuery="
+SELECT tierName,minimumEcoPoints
+FROM tiers
+WHERE minimumEcoPoints>$totalPoints
+ORDER BY minimumEcoPoints ASC
+LIMIT 1
+";
+$nextTierResult=$conn->query($nextTierQuery);
+
+if($nextTierResult&&$nextTierResult->num_rows>0){
+    $nextTier=$nextTierResult->fetch_assoc();
+    $pointsToNextTier=$nextTier['minimumEcoPoints']-$totalPoints;
+}else{
+    $nextTier=null;
+    $pointsToNextTier=0;
+}
+
 /* Get All Badges */
 $badgeQuery="
 SELECT achieveBadgeID,achieveBadgeName,achieveBadgeDescription,
@@ -71,20 +78,56 @@ while($badge=$badgeResult->fetch_assoc()){
     $badges[]=$badge;
 }
 
-/* Get Earned Badges */
-$earnedQuery="
-SELECT achieveBadgeID,awardedDate
-FROM `user achievement badge`
+/* Get Member Progress For Badge Requirements */
+
+/* Completed Missions */
+$completedMissionQuery="
+SELECT COUNT(*) AS total
+FROM missionsubmission
 WHERE userID='$userID'
+AND submissionStatus IN ('Approved','Verified')
 ";
-$earnedResult=$conn->query($earnedQuery);
 
+$completedMissionResult=$conn->query($completedMissionQuery);
+$totalCompletedMission=0;
+
+if($completedMissionResult){
+    $completedMissionData=$completedMissionResult->fetch_assoc();
+    $totalCompletedMission=(int)($completedMissionData['total']??0);
+}
+
+/* Completed Exchanges */
+$completedExchangeQuery="
+SELECT COUNT(*) AS total
+FROM transactionrequests
+WHERE requesterID='$userID'
+AND requestStatus='Completed'
+";
+
+$completedExchangeResult=$conn->query($completedExchangeQuery);
+$totalCompletedExchange=0;
+
+if($completedExchangeResult){
+    $completedExchangeData=$completedExchangeResult->fetch_assoc();
+    $totalCompletedExchange=(int)($completedExchangeData['total']??0);
+}
+
+/* Calculate Earned Badges */
 $earnedBadges=[];
-$awardedDates=[];
 
-while($row=$earnedResult->fetch_assoc()){
-    $earnedBadges[]=$row['achieveBadgeID'];
-    $awardedDates[$row['achieveBadgeID']]=$row['awardedDate'];
+foreach($badges as $badge){
+
+    $badgeID=$badge['achieveBadgeID'];
+
+    if($badgeID==='AB001' && $totalCompletedMission>=1){
+        $earnedBadges[]=$badgeID;
+    }
+    elseif($badgeID==='AB002' && $totalCompletedExchange>=5){
+        $earnedBadges[]=$badgeID;
+    }
+    elseif($badgeID==='AB003' && $totalPoints>=500){
+        $earnedBadges[]=$badgeID;
+    }
 }
 
 /* Badge Count */
@@ -115,6 +158,7 @@ if(isset($_GET['badge'])){
 <title>Achievement Badges - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="member_new_style.css">
+
 </head>
 
 <body class="role-member">
@@ -161,11 +205,7 @@ $isEarned=in_array($badgeID,$earnedBadges);
             <?php if($isEarned): ?>
                 <span class="badge-status earned">Earned</span>
 
-                <?php if(isset($awardedDates[$badgeID])): ?>
-                    <small class="badge-earned-date">
-                        Earned on <?php echo date("d M Y",strtotime($awardedDates[$badgeID])); ?>
-                    </small>
-                <?php endif; ?>
+                
 
             <?php else: ?>
                 <span class="badge-status locked">Locked</span>
@@ -198,10 +238,19 @@ $isEarned=in_array($badgeID,$earnedBadges);
         <strong><?php echo htmlspecialchars($tierName); ?></strong>
         <span><?php echo htmlspecialchars($tierDescription); ?></span>
 
-        <p>
-            <?php echo $totalPoints; ?> EcoPoints ·
-            <?php echo $totalExchange; ?> Exchanges
-        </p>
+        <div class="badge-tier-info">
+            <div>
+                <span>Total EcoPoints</span>
+                <strong><?php echo $totalPoints; ?></strong>
+            </div>
+
+            <div>
+                <span>Points to Next Tier</span>
+                <strong>
+                    <?php echo $nextTier ? $pointsToNextTier : 'Max Tier'; ?>
+                </strong>
+            </div>
+        </div>
     </div>
 
     <div class="badge-guide-box">
@@ -209,22 +258,17 @@ $isEarned=in_array($badgeID,$earnedBadges);
 
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Join and complete sustainability missions</p>
+            <p>Complete 1 sustainability mission</p>
         </div>
 
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Lend or borrow assets</p>
+            <p>Complete 5 successful exchanges</p>
         </div>
 
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Reduce waste and save energy</p>
-        </div>
-
-        <div class="badge-guide-item">
-            <span>✓</span>
-            <p>Earn EcoPoints to upgrade your tier</p>
+            <p>Reach 500 total EcoPoints</p>
         </div>
     </div>
 </div>
@@ -319,11 +363,7 @@ $isEarned=in_array($badgeID,$earnedBadges);
                 ?>
             </span>
 
-            <?php if($isEarned&&isset($awardedDates[$badgeID])): ?>
-                <small class="badge-earned-date">
-                    <?php echo date("d M Y",strtotime($awardedDates[$badgeID])); ?>
-                </small>
-            <?php endif; ?>
+            
         </a>
 
     <?php endforeach; ?>
@@ -344,10 +384,19 @@ $isEarned=in_array($badgeID,$earnedBadges);
         <strong><?php echo htmlspecialchars($tierName); ?></strong>
         <span><?php echo htmlspecialchars($tierDescription); ?></span>
 
-        <p>
-            <?php echo $totalPoints; ?> EcoPoints ·
-            <?php echo $totalExchange; ?> Exchanges
-        </p>
+        <div class="badge-tier-info">
+            <div>
+                <span>Total EcoPoints</span>
+                <strong><?php echo $totalPoints; ?></strong>
+            </div>
+
+            <div>
+                <span>Points to Next Tier</span>
+                <strong>
+                    <?php echo $nextTier ? $pointsToNextTier : 'Max Tier'; ?>
+                </strong>
+            </div>
+        </div>
     </div>
 
     <div class="badge-guide-box">
@@ -355,22 +404,17 @@ $isEarned=in_array($badgeID,$earnedBadges);
 
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Join and complete sustainability missions</p>
+            <p>Complete 1 sustainability mission</p>
         </div>
 
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Lend or borrow assets</p>
+            <p>Complete 5 successful exchanges</p>
         </div>
 
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Reduce waste and save energy</p>
-        </div>
-
-        <div class="badge-guide-item">
-            <span>✓</span>
-            <p>Earn EcoPoints to upgrade your tier</p>
+            <p>Reach 500 total EcoPoints</p>
         </div>
     </div>
 </div>
