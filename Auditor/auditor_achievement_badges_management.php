@@ -144,10 +144,17 @@
                             <p>Manage all Achievement Badges on the platform</p>
                         </div>
 
-                        <a href="auditor_achievement_badges_create.php" class="management-create-btn">
-                            <img src="../assets/icons/create.png" alt="Create">
-                            Create New Achievement Badge
-                        </a>
+                        <div class="management-heading-buttons">
+                            <a href="auditor_user_badge_record.php" class="management-create-btn">
+                                <img src="../assets/icons/user_badge.png" alt="UserBadges">
+                                User Badges
+                            </a>
+
+                            <a href="auditor_achievement_badges_create.php" class="management-create-btn">
+                                <img src="../assets/icons/create.png" alt="Create">
+                                Create New Achievement Badge
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Green bar showing Success Creation -->

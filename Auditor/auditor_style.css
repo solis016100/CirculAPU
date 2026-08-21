@@ -1271,7 +1271,8 @@
 }
 
 @media (max-width:768px) {
-    .badge-table {
+    .badge-table,
+    .user-badge-table {
         width:100%!important;
         min-width:0!important;
         table-layout:fixed;
@@ -1288,6 +1289,28 @@
     .badge-table td:last-child {
         display:none;
     }
+
+    .user-badge-table th:nth-child(3),
+    .user-badge-table td:nth-child(3),
+    .user-badge-table th:nth-child(5),
+    .user-badge-table td:nth-child(5) {
+        display: none;
+    }
+
+    .user-badge-table th:nth-child(1),
+    .user-badge-table td:nth-child(1) { width:7%; }
+
+    .user-badge-table th:nth-child(2),
+    .user-badge-table td:nth-child(2) { width:21%; }
+
+    .user-badge-table th:nth-child(4),
+    .user-badge-table td:nth-child(4) { width:15%; }
+
+    .user-badge-table th:nth-child(6),
+    .user-badge-table td:nth-child(6) { width:16%; }
+
+    .user-badge-table th:nth-child(7),
+    .user-badge-table td:nth-child(7) { width:25%; }
 }
 
 
@@ -1554,52 +1577,3 @@
 
 }
 
-
-/* ===== SMALL PHONE ===== */
-
-@media (max-width: 480px) {
-
-    .page-body {
-        padding: 12px !important;
-    }
-
-    .dashboard-welcome h1 {
-        font-size: 25px;
-    }
-
-    .dashboard-welcome p {
-        font-size: 13px;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 8px !important;
-    }
-
-    .stat-card {
-        min-height: 130px !important;
-        padding: 10px !important;
-    }
-
-    .stat-icon {
-        width: 45px !important;
-        height: 45px !important;
-    }
-
-    .stat-icon img {
-        width: 23px !important;
-        height: 23px !important;
-    }
-
-    .stat-card .stat-value {
-        font-size: 23px !important;
-    }
-
-    .stat-card h3 {
-        font-size: 11px !important;
-    }
-
-    .content-card {
-        padding: 16px !important;
-    }
-}
