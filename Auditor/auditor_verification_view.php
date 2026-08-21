@@ -97,9 +97,10 @@
         /* Approve / Reject */
         $action = $_POST['action'] ?? '';
         $remarks = trim($_POST['remarks'] ?? '');
+        $remarks = $remarks === '' ? null : $remarks;
         $selectedCondition = $_POST['condition'] ?? '';
 
-        if (in_array($action, ['approve', 'reject']) && $remarks !== '') {
+        if (in_array($action, ['approve', 'reject'])) {
             $newStatus = $action == 'approve' ? 'Approved' : 'Rejected';
 
             /* Update Verification */
@@ -622,7 +623,6 @@
                     name="remarks"
                     class="decision-remarks"
                     rows="4"
-                    required
                     placeholder="Enter remarks..."
                 ></textarea>
 
