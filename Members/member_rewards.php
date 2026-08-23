@@ -125,6 +125,142 @@ function generateNotificationID($conn){
     return "N".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
+
+/* Generate User Badge ID */
+function generateUserBadgeID($conn){
+
+    $result=$conn->query("
+    SELECT MAX(
+        CAST(SUBSTRING(userBadgeID,4) AS UNSIGNED)
+    ) AS maxNumber
+    FROM `user achievement badge`
+    WHERE userBadgeID REGEXP '^UAB[0-9]+$'
+    ");
+
+    if($result){
+        $row=$result->fetch_assoc();
+        $number=((int)($row['maxNumber']??0))+1;
+    }else{
+        $number=1;
+    }
+
+    return "UAB".str_pad($number,3,"0",STR_PAD_LEFT);
+}
+
+
+/* Check Reward Redemption Badge */
+function checkRewardRedeemBadge($conn,$userID){
+
+    /* Get Rewards Redeemed Badge */
+    $badgeResult=$conn->query("
+    SELECT
+        achieveBadgeID,
+        achieveBadgeName,
+        achieveBadgeRequirement
+    FROM achievementbadges
+    WHERE achieveBadgeName='Rewards Redeemed'
+    LIMIT 1
+    ");
+
+    if(!$badgeResult||$badgeResult->num_rows==0){
+        return;
+    }
+
+    $badge=$badgeResult->fetch_assoc();
+
+    $badgeID=$conn->real_escape_string($badge['achieveBadgeID']);
+    $badgeName=$badge['achieveBadgeName'];
+    $requirement=$badge['achieveBadgeRequirement'];
+
+
+    /* Get Required Redeem Number From Requirement */
+    preg_match('/(\d+)/',$requirement,$matches);
+
+    $requiredRedeem=isset($matches[1])
+        ? (int)$matches[1]
+        : 1;
+
+
+    /* Count Member Reward Redemptions */
+    $redeemCountResult=$conn->query("
+    SELECT COUNT(*) AS totalRedeemed
+    FROM rewardredemption
+    WHERE userID='$userID'
+    ");
+
+    if(!$redeemCountResult){
+        throw new Exception(
+            "Unable to check reward badge progress: ".$conn->error
+        );
+    }
+
+    $redeemCountData=$redeemCountResult->fetch_assoc();
+    $totalRedeemed=(int)($redeemCountData['totalRedeemed']??0);
+
+
+    /* Check Member Already Has Badge */
+    $earnedResult=$conn->query("
+    SELECT userBadgeID
+    FROM `user achievement badge`
+    WHERE userID='$userID'
+    AND achieveBadgeID='$badgeID'
+    LIMIT 1
+    ");
+
+    if($earnedResult&&$earnedResult->num_rows>0){
+        return;
+    }
+
+
+    /* Award Badge When Requirement Is Met */
+    if($totalRedeemed>=$requiredRedeem){
+
+        $userBadgeID=generateUserBadgeID($conn);
+
+        $awardBadgeQuery="
+        INSERT INTO `user achievement badge`
+        (userBadgeID,userID,achieveBadgeID,awardedDate)
+        VALUES
+        ('$userBadgeID','$userID','$badgeID',NOW())
+        ";
+
+        if(!$conn->query($awardBadgeQuery)){
+            throw new Exception(
+                "Unable to award badge: ".$conn->error
+            );
+        }
+
+
+        /* Notify Member About New Badge */
+        $notificationID=generateNotificationID($conn);
+
+        $notificationTitle="New Badge Earned";
+
+        $notificationContent=
+            "Congratulations! You earned the ".
+            $badgeName.
+            " badge.";
+
+        $safeTitle=$conn->real_escape_string($notificationTitle);
+        $safeContent=$conn->real_escape_string($notificationContent);
+
+        $badgeNotificationQuery="
+        INSERT INTO notification
+        (notificationID,userID,title,content,status,createdDate)
+        VALUES
+        ('$notificationID','$userID','$safeTitle',
+         '$safeContent','Unread',NOW())
+        ";
+
+        if(!$conn->query($badgeNotificationQuery)){
+            throw new Exception(
+                "Badge notification failed: ".$conn->error
+            );
+        }
+    }
+}
+
+
 /* Redeem Reward */
 if(isset($_POST['redeem'])){
     $rewardID=$conn->real_escape_string($_POST['rewardID']);
@@ -184,12 +320,23 @@ if(isset($_POST['redeem'])){
                 ");
 
                 /* Save Redemption History */
-                $conn->query("
+                $redemptionQuery="
                 INSERT INTO rewardredemption
                 (redemptionID,userID,rewardID,redemptionDate)
                 VALUES
                 ('$redemptionID','$userID','$rewardID',NOW())
-                ");
+                ";
+
+                if(!$conn->query($redemptionQuery)){
+                    throw new Exception(
+                        "Unable to save redemption history: ".$conn->error
+                    );
+                }
+
+
+                /* Check Reward Redemption Badge */
+                checkRewardRedeemBadge($conn,$userID);
+
 
                 /* Save EcoPoint Transaction */
                 $transactionID=generateEcoPointTransactionID($conn);
