@@ -417,7 +417,7 @@ if($currentTier){
     <div class="dashboard-card main-notification-quick">
         <div class="dashboard-card-header">
             <h2>Notifications</h2>
-            <a href="/CirculAPU/notifications.php">View All</a>
+            <a href="member_notifications.php">View All</a>
         </div>
 
         <div class="notification-preview">

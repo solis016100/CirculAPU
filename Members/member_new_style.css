@@ -945,64 +945,7 @@ body.role-member .view-details-btn:hover {
     line-height:1.6;
     color:#666;}
     /* Responsive */
-@media(max-width:1100px) {
-.stats-grid {
-    grid-template-columns:repeat(2,1fr);}
-.badge-grid {
-    grid-template-columns:repeat(2,1fr);}
-}
-@media(max-width:1000px) {
-.my-request-layout,.badge-page-layout {
-    grid-template-columns:1fr;}
-.badge-side-area {
-    display:grid;
-    grid-template-columns:1fr 1fr;}
-}
-@media(max-width:900px) {
-.recent-request-card,.available-mission-card {
-    width:100%;}
-}
-@media(max-width:850px) {
-.mission-card {
-    grid-template-columns:70px 1fr;}
-.mission-card-right,.mission-card-action {
-    grid-column:2;
-    text-align:left;}
-}
-@media(max-width:750px) {
-.request-tools,.mission-detail-info-grid {
-    grid-template-columns:1fr;}
-.request-item {
-    grid-template-columns:70px 1fr;}
-.request-item-date,.request-item-action {
-    grid-column:2;
-    text-align:left;}
-.badge-summary-grid {
-    grid-template-columns:repeat(2,1fr);}
-.badge-side-area {
-    grid-template-columns:1fr;}
-}
-@media(max-width:700px) {
-.stats-grid {
-    grid-template-columns:1fr;}
-.mission-detail-header {
-    grid-template-columns:70px 1fr;}
-.mission-detail-points {
-    grid-column:2;}
-.proof-upload-form {
-    flex-direction:column;
-    align-items:stretch;}
-.upload-proof-btn {
-    width:100%;}
-.badge-detail-card {
-    grid-template-columns:1fr;}
-}
-@media(max-width:500px) {
-.badge-grid {
-    grid-template-columns:1fr;}
-.badge-tabs,.request-tabs {
-    overflow-x:auto;}
-}
+
 /* Rewards & Redemption */
 .reward-page-header {
     margin-bottom:22px;
@@ -1307,21 +1250,6 @@ body.role-member .view-details-btn:hover {
     color:#a33434;
 }
 
-@media(max-width:900px) {
-    .reward-page-layout {
-        grid-template-columns:1fr;
-    }
-    .reward-side-area {
-        display:grid;
-        grid-template-columns:1fr 1fr;
-    }
-}
-@media(max-width:700px) {
-    .reward-grid,.reward-side-area {
-        grid-template-columns:1fr;
-    }
-}
-
 /* Main Dashboard Quick Access Only */
 .main-quick-grid {
     display:grid;
@@ -1510,14 +1438,7 @@ body.role-member .view-details-btn:hover {
     color:#666;
     text-align:right;}
     /* Responsive */
-@media(max-width:900px) {
-    .main-request-quick,
-    .main-reward-quick,
-    .main-mission-quick,
-.main-notification-quick {
-    grid-column:1/-1;
-    height:auto;}
-}
+
 /* Assets Marketplace */
 .marketplace-header {
     display:flex;
@@ -1778,33 +1699,6 @@ body.role-member .view-details-btn:hover {
 .required-note{margin:-10px 0 16px;font-size:10px;color:#777}
 
 /* Marketplace Responsive */
-@media(max-width:1050px) {
-    .marketplace-filter-form {
-        grid-template-columns:1fr 1fr;
-    }
-    .marketplace-filter-buttons {
-        grid-column:1/-1;
-    }
-    .marketplace-grid {
-        grid-template-columns:repeat(2,minmax(0,1fr));
-    }
-}
-@media(max-width:700px) {
-    .marketplace-header {
-        flex-direction:column;
-        align-items:flex-start;
-        gap:12px;
-    }
-    .marketplace-filter-form {
-        grid-template-columns:1fr;
-    }
-    .marketplace-filter-buttons {
-        grid-column:auto;
-    }
-    .marketplace-grid {
-        grid-template-columns:1fr;
-    }
-}
 
 /* List / Edit Asset Form */
 .asset-form-header{
@@ -1903,14 +1797,6 @@ body.role-member .view-details-btn:hover {
 .asset-form-alert.error{background:#fde7e7;color:#a33434}
 
 .asset-status-group{display:flex;flex-wrap:wrap;gap:5px}
-
-@media(max-width:700px){
-    .asset-form-header{flex-direction:column;align-items:flex-start}
-    .asset-form-grid,.asset-resubmit-status{grid-template-columns:1fr}
-    .asset-description-group,.asset-image-section,.asset-resubmit-status{
-        grid-column:auto;
-    }
-}
 
 /* Asset Details */
 .asset-details-header {
@@ -2091,7 +1977,6 @@ body.role-member .view-details-btn:hover {
     background:#f4fbf6;
 }
 
-
 /* Form */
 
 .borrow-form {
@@ -2100,7 +1985,6 @@ body.role-member .view-details-btn:hover {
     border-radius:10px;
     overflow:hidden;
 }
-
 
 /* Asset Summary */
 
@@ -2133,7 +2017,6 @@ body.role-member .view-details-btn:hover {
     color:#222;
 }
 
-
 /* Form Section */
 
 .borrow-form-section {
@@ -2147,7 +2030,6 @@ body.role-member .view-details-btn:hover {
     color:#222;
 }
 
-
 /* Two Date Fields */
 
 .borrow-date-grid {
@@ -2155,7 +2037,6 @@ body.role-member .view-details-btn:hover {
     grid-template-columns:1fr 1fr;
     gap:22px;
 }
-
 
 /* Fields */
 
@@ -2209,7 +2090,6 @@ body.role-member .view-details-btn:hover {
     color:#aaa;
 }
 
-
 /* Terms & Conditions */
 
 .borrow-terms {
@@ -2233,7 +2113,6 @@ body.role-member .view-details-btn:hover {
     margin-top:2px;
     accent-color:#159447;
 }
-
 
 /* Bottom Buttons */
 
@@ -2277,7 +2156,6 @@ body.role-member .view-details-btn:hover {
     background:#117a3a;
 }
 
-
 /* Error Message */
 
 .borrow-alert {
@@ -2293,72 +2171,7 @@ body.role-member .view-details-btn:hover {
     color:#a33434;
 }
 
-
 /* Responsive */
-
-@media(max-width:800px) {
-
-    .borrow-asset-summary {
-        grid-template-columns:1fr 1fr;
-    }
-
-    .borrow-date-grid {
-        grid-template-columns:1fr;
-        gap:0;
-    }
-}
-
-@media(max-width:600px) {
-
-    .borrow-form-header {
-        align-items:flex-start;
-        gap:15px;
-    }
-
-    .borrow-asset-summary {
-        grid-template-columns:1fr;
-    }
-
-    .borrow-form-actions {
-        flex-direction:column;
-    }
-
-    .borrow-cancel-btn,
-    .borrow-submit-btn {
-        width:100%;
-        box-sizing:border-box;
-    }
-}
-@media(max-width:900px) {
-    .asset-main-box {
-        grid-template-columns:260px 1fr;
-        gap:25px;
-        padding:20px;
-    }
-    .asset-image-box {
-        height:210px;
-    }
-}
-@media(max-width:700px) {
-    .asset-details-header {
-        align-items:flex-start;
-        gap:15px;
-    }
-    .asset-main-box {
-        grid-template-columns:1fr;
-    }
-    .asset-image-box {
-        max-width:350px;
-        margin:auto;
-    }
-    .asset-detail-actions {
-        text-align:center;
-    }
-    .request-borrow-btn {
-        width:100%;
-        box-sizing:border-box;
-    }
-}
 
 /* =========================
    Mission Status Fix
@@ -2563,7 +2376,6 @@ body.role-member .view-details-btn:hover {
     color:#777;
 }
 
-
 /* =========================
    Reward Image Popup
 ========================= */
@@ -2707,7 +2519,6 @@ body.role-member .view-details-btn:hover {
     color:#159447;
 }
 
-
 /* =========================
    Badge Details Image
 ========================= */
@@ -2735,7 +2546,6 @@ body.role-member .view-details-btn:hover {
 .badge-detail-icon .clickable-badge:hover {
     transform:scale(1.05);
 }
-
 
 /* =========================
    Badge Image Popup
@@ -2878,7 +2688,384 @@ body.role-member .view-details-btn:hover {
     border-color:#117a3a;
 }
 
-@media(max-width:500px) {
+/* =========================================================
+   RESPONSIVE DESIGN
+   All responsive rules are grouped at the bottom.
+========================================================= */
+
+/* Large screens / small desktop */
+@media (max-width:1100px) {
+    .badge-grid {
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+/* Large tablet */
+@media (max-width:1050px) {
+    .marketplace-filter-form {
+        grid-template-columns:1fr 1fr;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:1/-1;
+    }
+
+    .marketplace-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+}
+
+/* Tablet */
+@media (max-width:1000px) {
+    .my-request-layout,.badge-page-layout {
+        grid-template-columns:1fr;
+    }
+
+    .badge-side-area {
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+/* Tablet / compact layout */
+@media (max-width:900px) {
+    .recent-request-card,.available-mission-card {
+        width:100%;
+    }
+
+    .reward-page-layout {
+        grid-template-columns:1fr;
+    }
+
+    .reward-side-area {
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        grid-column:1/-1;
+        height:auto;
+    }
+
+    .asset-main-box {
+        grid-template-columns:260px 1fr;
+        gap:25px;
+        padding:20px;
+    }
+
+    .asset-image-box {
+        height:210px;
+    }
+}
+
+/* Tablet mission cards */
+@media (max-width:850px) {
+    .mission-card {
+        grid-template-columns:minmax(0,1fr) 110px 22px;
+        gap:10px;
+        padding:18px;
+    }
+
+    /* Give more space to mission name and description */
+    .mission-card-info {
+        min-width:0;
+    }
+
+    .mission-card-info h2 {
+        font-size:17px;
+        line-height:1.2;
+    }
+
+    .mission-card-info p {
+        font-size:11px;
+        line-height:1.4;
+    }
+
+    /* Make status / progress / EcoPoints area smaller */
+    .mission-card-right {
+        grid-column:auto;
+        text-align:center;
+    }
+
+    .my-mission-status {
+        min-height:38px;
+        padding:6px 7px;
+        margin-bottom:7px;
+        font-size:10px;
+    }
+
+    .mission-points,
+    .mission-small-points {
+        padding:7px 6px;
+    }
+
+    .mission-points strong {
+        font-size:13px;
+    }
+
+    .mission-points span,
+    .mission-small-points {
+        font-size:9px;
+    }
+
+    .mission-card-action {
+        grid-column:auto;
+        text-align:center;
+    }
+}
+
+/* Tablet borrow form */
+@media (max-width:800px) {
+    .borrow-asset-summary {
+        grid-template-columns:1fr 1fr;
+    }
+
+    .borrow-date-grid {
+        grid-template-columns:1fr;
+        gap:0;
+    }
+}
+
+/* Small tablet */
+@media (max-width:750px) {
+    .request-tools,.mission-detail-info-grid {
+        grid-template-columns:1fr;
+    }
+
+    .request-item {
+        grid-template-columns:70px 1fr;
+    }
+
+    .request-item-date,.request-item-action {
+        grid-column:2;
+        text-align:left;
+    }
+
+    .badge-summary-grid {
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .badge-side-area {
+        grid-template-columns:1fr;
+    }
+}
+
+/* Mobile / small tablet */
+@media (max-width:700px) {
+    .mission-detail-header {
+        grid-template-columns:70px 1fr;
+    }
+
+    .mission-detail-points {
+        grid-column:2;
+    }
+
+    .proof-upload-form {
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .upload-proof-btn {
+        width:100%;
+    }
+
+    .badge-detail-card {
+        grid-template-columns:1fr;
+    }
+
+    .reward-grid,.reward-side-area {
+        grid-template-columns:1fr;
+    }
+
+    .marketplace-header {
+        flex-direction:column;
+        align-items:flex-start;
+        gap:12px;
+    }
+
+    .marketplace-filter-form {
+        grid-template-columns:1fr;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:auto;
+    }
+
+    .marketplace-grid {
+        grid-template-columns:1fr;
+    }
+
+    .asset-form-header {
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .asset-form-grid,.asset-resubmit-status {
+        grid-template-columns:1fr;
+    }
+
+    .asset-description-group,
+    .asset-image-section,
+    .asset-resubmit-status {
+        grid-column:auto;
+    }
+
+    .asset-details-header {
+        align-items:flex-start;
+        gap:15px;
+    }
+
+    .asset-main-box {
+        grid-template-columns:1fr;
+    }
+
+    .asset-image-box {
+        max-width:350px;
+        margin:auto;
+    }
+
+    .asset-detail-actions {
+        text-align:center;
+    }
+
+    .request-borrow-btn {
+        width:100%;
+        box-sizing:border-box;
+    }
+
+    .mission-detail-top, .badge-detail-top {
+        flex-direction:column;
+        align-items:flex-start;
+        gap:12px;
+    }
+
+    .mission-back-btn, .badge-back-btn {
+        width:100%;
+        box-sizing:border-box;
+        text-align:center;
+    }
+
+    .request-modal {
+        padding:12px;
+    }
+
+    .request-modal-box {
+        width:100%;
+        max-width:100%;
+    }
+
+    .modal-detail-row {
+        grid-template-columns:1fr;
+        gap:5px;
+    }
+
+    .reward-history-box {
+        overflow-x:auto;
+    }
+
+    .reward-history-table {
+        min-width:520px;
+    }
+}
+
+/* Mobile */
+@media (max-width:600px) {
+    .borrow-form-header {
+        align-items:flex-start;
+        gap:15px;
+    }
+
+    .borrow-asset-summary {
+        grid-template-columns:1fr;
+    }
+
+    .borrow-form-actions {
+        flex-direction:column;
+    }
+
+    .borrow-cancel-btn, .borrow-submit-btn {
+        width:100%;
+        box-sizing:border-box;
+    }
+}
+
+/* Mission cards on small mobile */
+@media (max-width:500px) {
+    .mission-card {
+        grid-template-columns:minmax(0,1fr) 100px 18px;
+        gap:8px;
+        padding:15px;
+    }
+
+    .mission-card-info h2 {
+        font-size:16px;
+    }
+
+    .mission-card-info p {
+        font-size:10px;
+    }
+
+    .my-mission-status {
+        min-height:34px;
+        padding:5px 6px;
+        font-size:9px;
+    }
+
+    .mission-points,
+    .mission-small-points {
+        padding:6px 5px;
+    }
+}
+
+/* Main Dashboard Top 4 Stats Cards - Keep Same Row */
+@media (max-width:700px) {
+    .stats-grid {
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        gap:8px;
+    }
+
+    .stat-card {
+        min-height:95px;
+        padding:10px 6px;
+        gap:7px;
+        flex-direction:column;
+        justify-content:center;
+        text-align:center;
+    }
+
+    .stat-icon {
+        width:38px;
+        height:38px;
+    }
+
+    .stat-icon img {
+        width:24px;
+        height:24px;
+    }
+
+    .stat-card h2 {
+        font-size:17px;
+    }
+
+    .stat-card p {
+        font-size:9px;
+        line-height:1.2;
+    }
+}
+
+/* Small mobile */
+@media (max-width:500px) {
+    .badge-grid {
+        grid-template-columns:1fr;
+    }
+
+    .badge-tabs,.request-tabs {
+        overflow-x:auto;
+    }
+
     .redeem-confirm-box {
         width:100%;
         padding:22px;
@@ -2886,5 +3073,1836 @@ body.role-member .view-details-btn:hover {
 
     .redeem-confirm-actions {
         flex-direction:column;
+    }
+
+    .reward-card {
+        grid-template-columns:1fr;
+        text-align:center;
+    }
+
+    .reward-image-box {
+        margin:0 auto;
+    }
+
+    .reward-card-details {
+        width:100%;
+    }
+
+    .redeem-btn {
+        width:100%;
+    }
+
+    .reward-tabs, .mission-tabs {
+        overflow-x:auto;
+    }
+
+    .reward-tab, .mission-tab {
+        flex:0 0 auto;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE FINE-TUNING
+   Marketplace / My Request / Mission / Rewards / Badges
+========================================================= */
+
+@media (max-width:900px) {
+
+    /* -------------------------
+       Marketplace
+    ------------------------- */
+
+    .marketplace-header {
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+    }
+
+    .marketplace-header > div:first-child {
+        min-width:0;
+    }
+
+    .marketplace-header h1 {
+        font-size:24px;
+    }
+
+    .marketplace-header p {
+        font-size:12px;
+    }
+
+    .marketplace-add-btn {
+        flex-shrink:0;
+        padding:8px 11px;
+        font-size:10px;
+        border-radius:6px;
+    }
+
+    .marketplace-filter-box {
+        padding:12px;
+        margin-bottom:16px;
+    }
+
+    .marketplace-filter-form {
+        grid-template-columns:minmax(140px,1.2fr) repeat(3,minmax(90px,.7fr)) auto;
+        gap:8px;
+        align-items:end;
+    }
+
+    .marketplace-filter-group {
+        gap:4px;
+    }
+
+    .marketplace-filter-group label {
+        font-size:9px;
+    }
+
+    .marketplace-filter-group input,
+    .marketplace-filter-group select {
+        height:34px;
+        padding:0 8px;
+        font-size:10px;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:auto;
+        gap:5px;
+    }
+
+    .marketplace-filter-btn,
+    .marketplace-reset-btn {
+        height:34px;
+        padding:0 9px;
+        font-size:9px;
+    }
+
+    .marketplace-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+
+    .marketplace-card {
+        min-height:300px;
+    }
+
+    .marketplace-card-image {
+        height:125px;
+    }
+
+    .marketplace-card-body {
+        padding:11px;
+    }
+
+    .marketplace-card-body h3 {
+        font-size:13px;
+    }
+
+    .marketplace-owner,
+    .marketplace-description {
+        font-size:9px;
+    }
+
+
+    /* -------------------------
+       My Request
+    ------------------------- */
+
+    .request-tools {
+        grid-template-columns:minmax(0,1fr) 125px;
+        gap:8px;
+        padding:12px;
+    }
+
+    .request-tools input,
+    .request-tools select {
+        height:34px;
+        padding:0 9px;
+        font-size:10px;
+    }
+
+
+    /* -------------------------
+       Mission
+    ------------------------- */
+
+    .mission-card {
+        grid-template-columns:minmax(0,1fr) 92px 18px;
+        gap:10px;
+        padding:16px 18px;
+    }
+
+    .mission-card-info {
+        min-width:0;
+        padding-left:4px;
+    }
+
+    .mission-card-info h2 {
+        margin-bottom:7px;
+        font-size:16px;
+        line-height:1.25;
+    }
+
+    .mission-card-info p {
+        font-size:10px;
+        line-height:1.45;
+    }
+
+    .mission-card-right {
+        width:92px;
+        justify-self:end;
+        text-align:center;
+    }
+
+    .my-mission-status {
+        min-height:34px;
+        padding:5px 6px;
+        margin-bottom:6px;
+        font-size:9px;
+    }
+
+    .mission-points,
+    .mission-small-points {
+        padding:6px 5px;
+    }
+
+    .mission-points strong {
+        font-size:12px;
+    }
+
+    .mission-points span,
+    .mission-small-points {
+        font-size:8px;
+    }
+
+    .mission-card-action {
+        justify-self:end;
+    }
+
+    .mission-card-action a {
+        font-size:18px;
+    }
+
+
+    /* -------------------------
+       Rewards
+    ------------------------- */
+
+    .reward-page-layout {
+        grid-template-columns:minmax(0,1fr) 175px;
+        gap:12px;
+        align-items:start;
+    }
+
+    .reward-side-area {
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        grid-column:2;
+        grid-row:1;
+    }
+
+    .reward-point-box,
+    .reward-tier-box {
+        padding:12px;
+    }
+
+    .reward-point-box h3,
+    .reward-tier-box h3 {
+        margin-bottom:9px;
+        font-size:12px;
+    }
+
+    .reward-point-box > strong {
+        font-size:24px;
+    }
+
+    .reward-point-box > span,
+    .reward-point-box p {
+        font-size:9px;
+    }
+
+    .reward-tier-icon {
+        width:48px;
+        height:48px;
+        margin-bottom:7px;
+    }
+
+    .reward-tier-icon img {
+        width:34px!important;
+        height:34px!important;
+    }
+
+    .reward-tier-name {
+        font-size:11px;
+    }
+
+    .reward-tier-description {
+        font-size:8px;
+        margin-bottom:8px;
+    }
+
+    .reward-tier-info {
+        grid-template-columns:1fr;
+        gap:5px;
+    }
+
+    .reward-tier-info div {
+        padding:6px;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+        padding:10px;
+    }
+
+    .reward-card {
+        grid-template-columns:1fr;
+        gap:8px;
+        min-height:0;
+        padding:10px;
+        text-align:center;
+    }
+
+    .reward-image-box {
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        min-height:80px;
+    }
+
+    .reward-image {
+        max-width:85px;
+        max-height:85px;
+        object-fit:contain;
+    }
+
+    .reward-card-info h3 {
+        font-size:12px;
+    }
+
+    .reward-description {
+        font-size:8px;
+        margin-bottom:7px;
+    }
+
+    .reward-card-details {
+        width:100%;
+        margin-bottom:7px;
+    }
+
+    .reward-card-details div {
+        padding:6px;
+    }
+
+    .reward-status {
+        margin-bottom:7px;
+        padding:3px 6px;
+        font-size:8px;
+    }
+
+    .redeem-btn {
+        width:100%;
+        padding:6px 8px;
+        font-size:9px;
+    }
+
+
+    /* -------------------------
+       Badges
+    ------------------------- */
+
+    .badge-page-layout {
+        grid-template-columns:minmax(0,1fr) 180px;
+        gap:12px;
+    }
+
+    .badge-side-area {
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .badge-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+        padding:10px;
+    }
+
+    .badge-card {
+        min-height:145px;
+        padding:11px 8px;
+    }
+
+    .badge-card-icon {
+        width:48px;
+        height:48px;
+    }
+
+    .badge-card-icon img {
+        width:31px!important;
+        height:31px!important;
+    }
+
+    .badge-card h3 {
+        font-size:11px;
+    }
+
+    .badge-card p {
+        min-height:24px;
+        font-size:8px;
+    }
+
+    .badge-summary-grid {
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+
+@media (max-width:700px) {
+
+    /* Marketplace remains 2 cards per row */
+    .marketplace-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+    }
+
+    .marketplace-filter-form {
+        grid-template-columns:minmax(120px,1fr) 105px 105px;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:auto;
+    }
+
+    .marketplace-filter-group:nth-child(4) {
+        display:none;
+    }
+
+    .marketplace-card-image {
+        height:105px;
+    }
+
+    .marketplace-card-body {
+        padding:9px;
+    }
+
+    /* My Request search + status stay in one line */
+    .request-tools {
+        grid-template-columns:minmax(0,1fr) 110px;
+    }
+
+    /* Mission: longer left content, smaller right status */
+    .mission-card {
+        grid-template-columns:minmax(0,1fr) 82px 16px;
+        gap:7px;
+        padding:14px;
+    }
+
+    .mission-card-info h2 {
+        font-size:15px;
+    }
+
+    .mission-card-info p {
+        font-size:9px;
+    }
+
+    .mission-card-right {
+        width:82px;
+    }
+
+    /* Rewards keep points/tier at top-right */
+    .reward-page-layout {
+        grid-template-columns:minmax(0,1fr) 145px;
+        gap:8px;
+    }
+
+    .reward-side-area {
+        grid-column:2;
+        grid-row:1;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:7px;
+        padding:8px;
+    }
+
+    .reward-card {
+        padding:8px;
+    }
+
+    .reward-image {
+        max-width:70px;
+        max-height:70px;
+    }
+
+    /* Badges remain 2 per row */
+    .badge-page-layout {
+        grid-template-columns:1fr;
+    }
+
+    .badge-side-area {
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+
+    .badge-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+        padding:8px;
+    }
+}
+
+
+@media (max-width:500px) {
+
+    .marketplace-header {
+        align-items:flex-start;
+    }
+
+    .marketplace-header h1 {
+        font-size:21px;
+    }
+
+    .marketplace-add-btn {
+        padding:7px 9px;
+        font-size:9px;
+    }
+
+    .marketplace-filter-form {
+        grid-template-columns:minmax(0,1fr) 95px;
+    }
+
+    .marketplace-filter-group:nth-child(3),
+    .marketplace-filter-group:nth-child(4) {
+        display:none;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:auto;
+    }
+
+    .marketplace-filter-btn,
+    .marketplace-reset-btn {
+        padding:0 7px;
+    }
+
+    .marketplace-card {
+        min-height:250px;
+    }
+
+    .marketplace-card-image {
+        height:90px;
+    }
+
+    .marketplace-card-body h3 {
+        font-size:11px;
+    }
+
+    .request-tools {
+        grid-template-columns:minmax(0,1fr) 95px;
+        gap:6px;
+    }
+
+    .mission-card {
+        grid-template-columns:minmax(0,1fr) 76px 14px;
+        padding:12px 10px;
+    }
+
+    .mission-card-info {
+        padding-left:0;
+    }
+
+    .mission-card-info h2 {
+        font-size:14px;
+    }
+
+    .mission-card-info p {
+        font-size:8px;
+    }
+
+    .mission-card-right {
+        width:76px;
+    }
+
+    .my-mission-status {
+        min-height:30px;
+        font-size:8px;
+    }
+
+    .reward-page-layout {
+        grid-template-columns:minmax(0,1fr) 125px;
+        gap:6px;
+    }
+
+    .reward-point-box,
+    .reward-tier-box {
+        padding:8px;
+    }
+
+    .reward-point-box h3,
+    .reward-tier-box h3 {
+        font-size:10px;
+    }
+
+    .reward-point-box > strong {
+        font-size:20px;
+    }
+
+    .reward-tier-icon {
+        width:40px;
+        height:40px;
+    }
+
+    .reward-tier-icon img {
+        width:28px!important;
+        height:28px!important;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .reward-tabs {
+        overflow-x:auto;
+    }
+
+    .reward-tab {
+        padding:9px 10px;
+        font-size:10px;
+        white-space:nowrap;
+    }
+
+    .badge-side-area {
+        grid-template-columns:1fr;
+    }
+
+    .badge-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .badge-card {
+        min-height:130px;
+        padding:9px 6px;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE LAYOUT UPDATE
+   Dashboard / Marketplace / Mission / Rewards
+========================================================= */
+
+@media (max-width:900px) {
+
+    /* -------------------------
+       Main Dashboard Quick Cards
+       2 cards in one row
+    ------------------------- */
+    .main-quick-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:12px;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        grid-column:auto;
+        width:100%;
+        height:auto;
+        min-height:260px;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        height:48px;
+        padding:0 14px;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        font-size:16px;
+    }
+
+
+    /* -------------------------
+       Marketplace Filter
+       Put filter controls in 2 lines
+    ------------------------- */
+    .marketplace-filter-form {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px 10px;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:1/-1;
+        justify-content:flex-end;
+    }
+
+    .marketplace-filter-btn,
+    .marketplace-reset-btn {
+        min-width:80px;
+    }
+
+
+    /* -------------------------
+       Mission Dashboard
+       Smaller Join Mission text
+    ------------------------- */
+    .join-mission-btn {
+        padding:7px 6px;
+        font-size:9px;
+        line-height:1.2;
+        white-space:nowrap;
+    }
+
+
+    /* -------------------------
+       Rewards Layout
+       Same structure style as Badge page
+       EcoPoints on top
+       Rewards left
+       Tier right
+    ------------------------- */
+    .reward-page-layout {
+        display:grid;
+        grid-template-columns:minmax(0,1fr) 190px;
+        gap:12px;
+        align-items:start;
+    }
+
+    .reward-side-area {
+        display:contents;
+    }
+
+    .reward-point-box {
+        grid-column:1/-1;
+        grid-row:1;
+        text-align:left;
+        padding:14px 16px;
+    }
+
+    .reward-point-box h3 {
+        margin-bottom:8px;
+        font-size:13px;
+    }
+
+    .reward-point-box > strong {
+        display:inline-block;
+        margin-right:8px;
+        font-size:26px;
+    }
+
+    .reward-point-box > span {
+        display:inline-block;
+        font-size:9px;
+    }
+
+    .reward-point-box p {
+        margin-top:5px;
+        font-size:10px;
+    }
+
+    .reward-main-area {
+        grid-column:1;
+        grid-row:2;
+        min-width:0;
+    }
+
+    .reward-tier-box {
+        grid-column:2;
+        grid-row:2;
+        padding:14px;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+        padding:10px;
+    }
+
+    .reward-card {
+        min-height:0;
+        padding:9px;
+    }
+
+    .reward-card-info h3 {
+        font-size:11px;
+    }
+
+    .reward-description {
+        font-size:8px;
+    }
+
+    .reward-tier-info {
+        grid-template-columns:1fr;
+    }
+}
+
+
+@media (max-width:700px) {
+
+    /* Main Dashboard remains 2 cards per row */
+    .main-quick-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        min-height:230px;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        padding:0 10px;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        font-size:13px;
+    }
+
+    .main-quick-grid .dashboard-card-header a {
+        font-size:9px;
+    }
+
+
+    /* Marketplace filter remains 2 columns / 2 lines */
+    .marketplace-filter-form {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .marketplace-filter-group:nth-child(3),
+    .marketplace-filter-group:nth-child(4) {
+        display:flex;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:1/-1;
+    }
+
+
+    /* Mission */
+    .join-mission-btn {
+        font-size:8px;
+        padding:6px 4px;
+    }
+
+
+    /* Rewards: EcoPoints top, rewards and tier below */
+    .reward-page-layout {
+        grid-template-columns:minmax(0,1fr) 150px;
+        gap:8px;
+    }
+
+    .reward-point-box {
+        grid-column:1/-1;
+        grid-row:1;
+    }
+
+    .reward-main-area {
+        grid-column:1;
+        grid-row:2;
+    }
+
+    .reward-tier-box {
+        grid-column:2;
+        grid-row:2;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:7px;
+        padding:8px;
+    }
+
+    .reward-tier-box {
+        padding:10px;
+    }
+
+    .reward-tier-icon {
+        width:44px;
+        height:44px;
+    }
+
+    .reward-tier-icon img {
+        width:30px!important;
+        height:30px!important;
+    }
+
+    .reward-tier-name {
+        font-size:10px;
+    }
+
+    .reward-tier-description {
+        font-size:7px;
+    }
+
+    .reward-tier-info span {
+        font-size:7px;
+    }
+
+    .reward-tier-info strong {
+        font-size:9px;
+    }
+}
+
+
+@media (max-width:500px) {
+
+    /* Dashboard: still 2 cards per row */
+    .main-quick-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:7px;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        min-height:210px;
+    }
+
+    /* Marketplace filter: 2 columns, compact */
+    .marketplace-filter-form {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:7px;
+    }
+
+    .marketplace-filter-buttons {
+        grid-column:1/-1;
+        justify-content:flex-end;
+    }
+
+    /* Rewards keep badge-style arrangement */
+    .reward-page-layout {
+        grid-template-columns:minmax(0,1fr) 120px;
+        gap:6px;
+    }
+
+    .reward-point-box {
+        padding:10px;
+    }
+
+    .reward-point-box > strong {
+        font-size:21px;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:6px;
+        padding:6px;
+    }
+
+    .reward-card {
+        padding:7px 5px;
+    }
+
+    .reward-image {
+        max-width:60px;
+        max-height:60px;
+    }
+
+    .reward-tier-box {
+        padding:8px 6px;
+    }
+}
+
+/* =========================================================
+   REWARD RESPONSIVE - TIER BELOW, NOT SIDE
+   Similar to Badge Progress layout
+========================================================= */
+
+@media (max-width:900px) {
+
+    .reward-page-layout {
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .reward-side-area {
+        display:contents;
+    }
+
+    /* My EcoPoints full width at the top */
+    .reward-point-box {
+        order:1;
+        width:100%;
+        box-sizing:border-box;
+        text-align:center;
+        padding:16px;
+    }
+
+    .reward-point-box h3 {
+        text-align:left;
+        margin-bottom:12px;
+    }
+
+    .reward-point-box > strong {
+        display:block;
+        margin:0;
+        font-size:28px;
+    }
+
+    .reward-point-box > span {
+        display:block;
+        margin-top:3px;
+    }
+
+    .reward-point-box p {
+        margin-top:8px;
+    }
+
+    /* Reward list below EcoPoints */
+    .reward-main-area {
+        order:2;
+        width:100%;
+        min-width:0;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+    }
+
+    /* My Tier full width below rewards */
+    .reward-tier-box {
+        order:3;
+        width:100%;
+        box-sizing:border-box;
+        padding:16px;
+        text-align:center;
+    }
+
+    .reward-tier-box h3 {
+        text-align:left;
+        margin-bottom:14px;
+    }
+
+    .reward-tier-icon {
+        width:64px;
+        height:64px;
+        margin:0 auto 9px;
+    }
+
+    .reward-tier-icon img {
+        width:44px!important;
+        height:44px!important;
+    }
+
+    .reward-tier-name {
+        font-size:14px;
+    }
+
+    .reward-tier-description {
+        margin:5px 0 13px;
+        font-size:9px;
+    }
+
+    .reward-tier-info {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+        max-width:100%;
+    }
+
+    .reward-tier-info div {
+        padding:9px;
+    }
+
+    .reward-tier-info span {
+        font-size:8px;
+    }
+
+    .reward-tier-info strong {
+        font-size:11px;
+    }
+}
+
+
+@media (max-width:500px) {
+
+    .reward-page-layout {
+        gap:10px;
+    }
+
+    .reward-point-box,
+    .reward-tier-box {
+        padding:14px;
+    }
+
+    .reward-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:7px;
+        padding:7px;
+    }
+
+    .reward-tier-icon {
+        width:56px;
+        height:56px;
+    }
+
+    .reward-tier-icon img {
+        width:38px!important;
+        height:38px!important;
+    }
+
+    .reward-tier-info {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:7px;
+    }
+}
+
+/* =========================================================
+   MAIN DASHBOARD QUICK ACCESS
+   Keep heading in one row, cards in 2 columns / 2 rows
+========================================================= */
+
+@media (max-width:900px) {
+
+    .main-quick-grid {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:12px;
+        align-items:stretch;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        grid-column:auto;
+        width:100%;
+        height:auto;
+        min-height:250px;
+        margin:0;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+        gap:8px;
+        white-space:nowrap;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        margin:0;
+        font-size:15px;
+    }
+
+    .main-quick-grid .dashboard-card-header a {
+        font-size:9px;
+        flex-shrink:0;
+    }
+}
+
+
+@media (max-width:500px) {
+
+    .main-quick-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        min-height:220px;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        padding:0 9px;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        font-size:12px;
+    }
+
+    .main-quick-grid .dashboard-card-header a {
+        font-size:8px;
+    }
+}
+
+/* =========================================================
+   MAIN DASHBOARD QUICK ACCESS - 4 CARDS IN ONE ROW
+========================================================= */
+
+@media (max-width:900px) {
+
+    .main-quick-grid {
+        display:grid;
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        gap:8px;
+        align-items:stretch;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        grid-column:auto;
+        width:100%;
+        min-width:0;
+        height:auto;
+        min-height:220px;
+        margin:0;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        height:42px;
+        padding:0 8px;
+        gap:5px;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        font-size:11px;
+        line-height:1.1;
+        white-space:normal;
+    }
+
+    .main-quick-grid .dashboard-card-header a {
+        font-size:7px;
+        white-space:nowrap;
+    }
+
+    .main-request-quick .recent-request-table {
+        margin:8px;
+    }
+
+    .main-request-quick .recent-request-row {
+        grid-template-columns:1fr;
+        gap:2px;
+        padding:6px;
+        min-height:auto;
+        font-size:8px;
+    }
+
+    .main-request-quick .recent-request-title {
+        display:none;
+    }
+
+    .main-reward-quick .ecopoint-progress {
+        padding:12px 10px;
+    }
+
+    .main-reward-quick .point-top {
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .main-reward-quick .point-top>div:first-child strong {
+        font-size:24px;
+    }
+
+    .main-reward-quick .point-top>div:first-child span {
+        font-size:9px;
+    }
+
+    .main-reward-quick .point-top p {
+        font-size:8px;
+        text-align:left;
+    }
+
+    .main-reward-quick .dashboard-progress {
+        margin-top:12px;
+        height:8px;
+    }
+
+    .main-reward-quick .progress-number {
+        font-size:8px;
+    }
+
+    .main-reward-quick .dashboard-button {
+        margin-top:10px;
+        padding:7px;
+        font-size:8px;
+    }
+
+    .main-mission-quick .mission-preview-item {
+        grid-template-columns:minmax(0,1fr) 45px;
+        gap:5px;
+        padding:7px;
+    }
+
+    .main-mission-quick .mission-preview-info h3 {
+        font-size:9px;
+    }
+
+    .main-mission-quick .mission-preview-info p {
+        font-size:7px;
+    }
+
+    .main-mission-quick .mission-preview-point {
+        width:45px;
+    }
+
+    .main-mission-quick .mission-preview-point strong {
+        font-size:11px;
+    }
+
+    .main-mission-quick .mission-preview-point span {
+        font-size:7px;
+    }
+
+    .main-notification-quick .notification-preview {
+        padding:0 8px;
+    }
+
+    .main-notification-quick .notification-preview-item {
+        grid-template-columns:minmax(0,1fr);
+        gap:2px;
+        padding:6px 0;
+    }
+
+    .main-notification-quick .notification-preview-info h3 {
+        font-size:8px;
+    }
+
+    .main-notification-quick .notification-preview-info p,
+    .main-notification-quick .notification-date {
+        font-size:7px;
+        text-align:left;
+    }
+}
+
+
+@media (max-width:500px) {
+
+    .main-quick-grid {
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        gap:5px;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        min-height:200px;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        padding:0 5px;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        font-size:9px;
+    }
+
+    .main-quick-grid .dashboard-card-header a {
+        font-size:6px;
+    }
+}
+
+/* =========================================================
+   MAIN DASHBOARD FINAL RESPONSIVE ARRANGEMENT
+   Top statistic cards: 2 columns x 2 rows
+   Quick Access cards: 1 column vertically (Y-axis)
+========================================================= */
+
+@media (max-width:900px) {
+
+    /* Top 4 statistic cards = 2 per row */
+    .stats-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+
+    .stat-card {
+        min-height:100px;
+        padding:12px;
+        gap:10px;
+        flex-direction:row;
+        text-align:left;
+    }
+
+    .stat-icon {
+        width:42px;
+        height:42px;
+    }
+
+    .stat-icon img {
+        width:26px;
+        height:26px;
+    }
+
+    .stat-card h2 {
+        font-size:18px;
+    }
+
+    .stat-card p {
+        font-size:10px;
+    }
+
+
+    /* Quick Access = one card per row, stacked vertically */
+    .main-quick-grid {
+        display:grid;
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+    .main-request-quick,
+    .main-reward-quick,
+    .main-mission-quick,
+    .main-notification-quick {
+        grid-column:1;
+        width:100%;
+        min-width:0;
+        height:auto;
+        min-height:0;
+        margin:0;
+    }
+
+    .main-quick-grid .dashboard-card-header {
+        height:50px;
+        padding:0 14px;
+    }
+
+    .main-quick-grid .dashboard-card-header h2 {
+        font-size:16px;
+    }
+
+    .main-quick-grid .dashboard-card-header a {
+        font-size:10px;
+    }
+
+    /* Restore normal content sizing inside vertically stacked cards */
+    .main-request-quick .recent-request-table {
+        margin:12px;
+    }
+
+    .main-request-quick .recent-request-row {
+        display:grid;
+        grid-template-columns:1.7fr 1fr 1fr 1.2fr;
+        gap:0;
+        min-height:40px;
+        padding:0 10px;
+        font-size:10px;
+    }
+
+    .main-request-quick .recent-request-title {
+        display:grid;
+    }
+
+    .main-reward-quick .ecopoint-progress {
+        padding:18px;
+    }
+
+    .main-reward-quick .point-top {
+        flex-direction:row;
+        gap:10px;
+    }
+
+    .main-reward-quick .point-top>div:first-child strong {
+        font-size:32px;
+    }
+
+    .main-reward-quick .point-top>div:first-child span {
+        font-size:11px;
+    }
+
+    .main-reward-quick .point-top p {
+        font-size:10px;
+        text-align:right;
+    }
+
+    .main-mission-quick .mission-preview-item {
+        grid-template-columns:minmax(0,1fr) 60px;
+        gap:10px;
+        padding:9px 14px;
+    }
+
+    .main-mission-quick .mission-preview-info h3 {
+        font-size:11px;
+    }
+
+    .main-mission-quick .mission-preview-info p {
+        font-size:9px;
+    }
+
+    .main-mission-quick .mission-preview-point {
+        width:60px;
+    }
+
+    .main-notification-quick .notification-preview {
+        padding:0 14px;
+    }
+
+    .main-notification-quick .notification-preview-item {
+        grid-template-columns:minmax(0,1fr) 70px;
+        gap:8px;
+        padding:8px 0;
+    }
+
+    .main-notification-quick .notification-preview-info h3 {
+        font-size:10px;
+    }
+
+    .main-notification-quick .notification-preview-info p,
+    .main-notification-quick .notification-date {
+        font-size:8px;
+    }
+}
+
+
+@media (max-width:500px) {
+
+    .stats-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+    }
+
+    .stat-card {
+        min-height:90px;
+        padding:9px;
+        gap:7px;
+    }
+
+    .stat-icon {
+        width:36px;
+        height:36px;
+    }
+
+    .stat-icon img {
+        width:22px;
+        height:22px;
+    }
+
+    .stat-card h2 {
+        font-size:16px;
+    }
+
+    .stat-card p {
+        font-size:9px;
+    }
+
+    .main-quick-grid {
+        grid-template-columns:1fr;
+        gap:9px;
+    }
+}
+
+/* =========================================================
+   MEMBER NOTIFICATIONS - SIMPLE STYLE
+========================================================= */
+
+.member-notification-page .management-heading {
+    margin-bottom:20px;
+}
+
+.member-notification-page .management-heading h1 {
+    margin:0 0 5px;
+    font-size:28px;
+    color:#222;
+}
+
+.member-notification-page .management-heading p {
+    margin:0;
+    font-size:14px;
+    color:#777;
+}
+
+.member-notification-stats {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:16px;
+}
+
+.member-notification-stat-card {
+    padding:18px;
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:10px;
+    color:#222;
+    text-decoration:none;
+}
+
+.member-notification-stat-card h3 {
+    margin:0;
+    font-size:12px;
+    color:#555;
+}
+
+.member-notification-stat-card strong {
+    display:block;
+    margin:6px 0 3px;
+    font-size:26px;
+    color:#159447;
+}
+
+.member-notification-stat-card p {
+    margin:0;
+    font-size:10px;
+    color:#888;
+}
+
+.member-notification-filter,
+.member-notification-card {
+    background:#fff;
+    border:1px solid #7fd09b;
+    border-radius:10px;
+}
+
+.member-notification-filter {
+    padding:16px;
+    margin-bottom:16px;
+}
+
+.member-notification-filter form {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 180px auto;
+    gap:12px;
+    align-items:end;
+}
+
+.member-notification-filter-group label {
+    display:block;
+    margin-bottom:6px;
+    font-size:10px;
+    font-weight:600;
+    color:#444;
+}
+
+.member-notification-filter-group input,
+.member-notification-filter-group select {
+    width:100%;
+    height:40px;
+    padding:0 12px;
+    background:#fff;
+    border:1px solid #ccc;
+    border-radius:7px;
+    box-sizing:border-box;
+    font-family:inherit;
+    font-size:11px;
+    color:#333;
+}
+
+.member-notification-filter-group input:focus,
+.member-notification-filter-group select:focus {
+    outline:none;
+    border-color:#159447;
+}
+
+.member-notification-filter-buttons {
+    display:flex;
+    gap:8px;
+}
+
+.member-notification-filter-btn,
+.member-notification-reset-btn,
+.member-notification-read-all-btn {
+    min-height:38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 14px;
+    border-radius:6px;
+    box-sizing:border-box;
+    font-family:inherit;
+    font-size:10px;
+    font-weight:600;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.member-notification-filter-btn,
+.member-notification-read-all-btn {
+    background:#159447;
+    border:1px solid #159447;
+    color:#fff;
+}
+
+.member-notification-reset-btn {
+    background:#fff;
+    border:1px solid #b7dfc5;
+    color:#333;
+}
+
+.member-notification-card {
+    overflow:hidden;
+}
+
+.member-notification-card-header {
+    min-height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:0 18px;
+    background:#f7fcf9;
+    border-bottom:1px solid #b7dfc5;
+}
+
+.member-notification-card-header h2 {
+    margin:0;
+    font-size:18px;
+    color:#222;
+}
+
+.member-notification-table-wrapper {
+    width:100%;
+    overflow-x:auto;
+}
+
+.member-notification-table {
+    width:100%;
+    border-collapse:collapse;
+}
+
+.member-notification-table th,
+.member-notification-table td {
+    padding:13px 14px;
+    border-bottom:1px solid #e5e5e5;
+    text-align:left;
+    font-size:10px;
+    line-height:1.5;
+    color:#555;
+}
+
+.member-notification-table th {
+    background:#fafafa;
+    font-size:10px;
+    color:#333;
+}
+
+.member-notification-table tr:last-child td {
+    border-bottom:none;
+}
+
+.member-notification-table tr.unread {
+    background:#f5fcf7;
+}
+
+.member-notification-table td strong {
+    color:#222;
+}
+
+.member-notification-status {
+    display:inline-block;
+    padding:4px 8px;
+    background:#f1f1f1;
+    border-radius:6px;
+    font-size:9px;
+    font-weight:700;
+    color:#777;
+}
+
+.member-notification-status.unread {
+    background:#e2f5e8;
+    color:#247a40;
+}
+
+.member-notification-read-btn {
+    width:30px;
+    height:30px;
+    background:#f4fbf6;
+    border:1px solid #b7dfc5;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:700;
+    color:#159447;
+    cursor:pointer;
+}
+
+.member-notification-empty {
+    padding:35px!important;
+    text-align:center!important;
+    color:#888!important;
+}
+
+@media (max-width:700px) {
+    .member-notification-filter form {
+        grid-template-columns:1fr 130px;
+    }
+
+    .member-notification-filter-buttons {
+        grid-column:1/-1;
+        justify-content:flex-end;
+    }
+}
+
+@media (max-width:500px) {
+    .member-notification-page .management-heading h1 {
+        font-size:22px;
+    }
+
+    .member-notification-page .management-heading p {
+        font-size:11px;
+    }
+
+    .member-notification-stats {
+        gap:8px;
+    }
+
+    .member-notification-stat-card {
+        padding:13px;
+    }
+
+    .member-notification-stat-card strong {
+        font-size:21px;
+    }
+
+    .member-notification-filter form {
+        grid-template-columns:1fr;
+    }
+
+    .member-notification-filter-buttons {
+        grid-column:auto;
+    }
+
+    .member-notification-filter-buttons > * {
+        flex:1;
+    }
+
+    .member-notification-card-header {
+        align-items:stretch;
+        flex-direction:column;
+        padding:13px;
+    }
+
+    .member-notification-read-all-btn {
+        width:100%;
+    }
+
+    .member-notification-table thead {
+        display:none;
+    }
+
+    .member-notification-table,
+    .member-notification-table tbody,
+    .member-notification-table tr,
+    .member-notification-table td {
+        display:block;
+        width:100%;
+        box-sizing:border-box;
+    }
+
+    .member-notification-table tr {
+        padding:12px;
+        border-bottom:1px solid #dceee2;
+    }
+
+    .member-notification-table td {
+        display:grid;
+        grid-template-columns:85px minmax(0,1fr);
+        gap:8px;
+        padding:5px 0;
+        border:none;
+        font-size:10px;
+    }
+
+    .member-notification-table td::before {
+        content:attr(data-label);
+        font-weight:700;
+        color:#333;
+    }
+
+    .member-notification-table td.member-notification-empty {
+        display:block;
     }
 }

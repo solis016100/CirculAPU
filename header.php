@@ -32,6 +32,8 @@ if ($role == 'Manager') {
     $notification_url = '/CirculAPU/Manager/manager_notifications.php';
 } elseif ($role == 'Auditor') {
     $notification_url = '/CirculAPU/Auditor/auditor_notification.php';
+}  elseif ($role === 'Member') {
+    $notification_url = '/CirculAPU/Members/member_notifications.php';
 } else {
     $notification_url = '/CirculAPU/notifications.php';
 }
