@@ -167,7 +167,9 @@ try {
         $totalPages = max(1, (int)ceil($total / $perPage));
         $page = min($page, $totalPages); $offset = ($page - 1) * $perPage;
 
-        $order=$pickupOnly?'pickupDate ASC,t.requestDate ASC':($status==='Pending'?"CASE WHEN DATE(pickupDate)=CURDATE() THEN 0 WHEN DATE(pickupDate)=DATE_ADD(CURDATE(),INTERVAL 1 DAY) THEN 1 WHEN DATE(pickupDate)>CURDATE() THEN 2 ELSE 3 END, CASE WHEN DATE(pickupDate)>=CURDATE() THEN DATE(pickupDate) END ASC, t.requestDate ASC":'t.requestDate DESC');
+        $order=$pickupOnly?'pickupDate ASC,t.requestDate ASC':($status==='Pending'?"CASE WHEN DATE(pickupDate)=CURDATE() THEN 0 WHEN DATE(pickupDate)=DATE_ADD(CURDATE(),
+                                                            INTERVAL 1 DAY) THEN 1 WHEN DATE(pickupDate)>CURDATE() THEN 2 ELSE 3 END,
+                                                            CASE WHEN DATE(pickupDate)>=CURDATE() THEN DATE(pickupDate) END ASC, t.requestDate ASC":'t.requestDate DESC');
         $stmt = $conn->prepare("
             SELECT t.transactionID,t.requestDate,t.requestStatus,a.assetName,
                    u.userID requesterID,u.name requesterName,
@@ -206,7 +208,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Management - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .transaction-list-meta{display:flex;align-items:center;gap:10px}
 .transaction-list-meta a{color:var(--primary-color);font-size:13px;font-weight:600;text-decoration:none}
