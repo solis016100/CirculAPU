@@ -16,6 +16,34 @@
     $page=max(1,(int)($_GET['page']??1));
     $limit=8;
 
+    // Total notifications
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS total
+        FROM notification
+        WHERE userID = ?
+    ");
+
+    $stmt->bind_param("s", $uid);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $totalNotifications = $result->fetch_assoc()['total'];
+
+
+    // Unread notifications
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS unread
+        FROM notification
+        WHERE userID = ?
+        AND status = 'Unread'
+    ");
+
+    $stmt->bind_param("s", $uid);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $unreadCount = $result->fetch_assoc()['unread'];
+
     // Change notification status from unread to read
     if(isset($_GET['read']) && empty($_SESSION['simulation_read_only'])){
         $s=$conn->prepare("UPDATE notification SET status='Read' WHERE notificationID=? AND userID=? AND status='Unread'");
@@ -126,22 +154,39 @@
                         <h1>Notification Center</h1>
                         <p>View and manage all system notifications.</p>
                     </div>
-
-                    <!-- Action buttons -->
-                    <div class="notification-actions">
-                        <button type="button" class="notification-action-btn" onclick="act('selected')">
-                            <img src="../assets/icons/mark_as_read.png">Mark Selected as Read
-                        </button>
-
-                        <button type="button" class="notification-action-btn" onclick="act('all')">
-                            <img src="../assets/icons/mark_all_as_read.png">Mark All as Read
-                        </button>
-
-                        <button type="button" class="notification-action-btn" onclick="act('delete')">
-                            <img src="../assets/icons/delete.png">Delete Selected
-                        </button>
-                    </div>
                 </div>
+
+                <section class="stats-grid">
+                    <!-- Total Notifications -->
+                    <a href="auditor_notification.php" class="stat-card">
+                        <div class="stat-content">
+                            <h3>Total Notifications</h3>
+
+                            <strong class="stat-value">
+                                <?= $totalNotifications ?>
+                            </strong>
+
+                            <p class="stat-description">
+                                All auditor notifications
+                            </p>
+                        </div>
+                    </a>
+
+                    <!-- Unread -->
+                    <a href="auditor_notification.php?status=Unread" class="stat-card">
+                        <div class="stat-content">
+                            <h3>Unread</h3>
+
+                            <strong class="stat-value">
+                                <?= $unreadCount ?>
+                            </strong>
+
+                            <p class="stat-description">
+                                Require your attention
+                            </p>
+                        </div>
+                    </a>
+                </section>
 
                 <!-- Filter -->
                 <section class="management-filter">
@@ -187,14 +232,19 @@
         
                 <!-- Notification table -->
                 <section class="management-list">
-                    <div class="management-list-header">
-                        <h2>Notification List</h2>
-                        <strong>Total Records: <?=$total?></strong>
-                    </div>
+                    <form method="POST" id="notificationForm">
+                        <input type="hidden" name="action" id="action">
+                        <div class="management-list-header">
+                            <h2>Notification List</h2>
+                            <button type="button"
+                                    class="management-create-btn"
+                                    onclick="act('all')">
+                                <img src="../assets/icons/mark_as_read.png" alt="">
+                                Mark All as Read
+                            </button>
+                        </div>
 
-                    <div class="management-table-wrapper">
-                        <form method="POST" id="notificationForm">
-                            <input type="hidden" name="action" id="action">
+                        <div class="management-table-wrapper">
                             <table class="management-table notification-table">
                                 <thead>
                                     <tr>
@@ -209,10 +259,14 @@
                                 </thead>
 
                                 <tbody>
-                                    <?php if($rows):$n=$start;foreach($rows as $r): ?>
+                                    <?php if($rows): foreach($rows as $r): ?>
                                     <tr class="<?=$r['status']=='Unread'?'unread':'read'?>">
+
                                         <td>
-                                            <input type="checkbox" name="ids[]" class="notification-checkbox" value="<?=e($r['notificationID'])?>">
+                                            <input type="checkbox"
+                                                name="ids[]"
+                                                class="notification-checkbox"
+                                                value="<?=e($r['notificationID'])?>">
                                         </td>
 
                                         <td>
@@ -240,9 +294,15 @@
                                                 <img src="../assets/icons/view.png" width="18">
                                             </a>
                                         </td>
+
                                     </tr>
-                                    <?php endforeach;else: ?>
-                                        <tr><td colspan="8">No notifications found.</td></tr>
+
+                                    <?php endforeach; else: ?>
+
+                                    <tr>
+                                        <td colspan="7">No notifications found.</td>
+                                    </tr>
+
                                     <?php endif; ?>
                                 </tbody>
                             </table>

@@ -286,7 +286,7 @@
                                 <h2>Notifications</h2>
                             </div>
 
-                            <a href="../notifications.php">View All</a>
+                            <a href="auditor_notification.php">View All</a>
                         </div>
 
                         <div class="notification-list">
