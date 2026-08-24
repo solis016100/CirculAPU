@@ -157,7 +157,7 @@ if (!$assetResult) {
     <title>Assets Marketplace - CirculAPU</title>
 
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="member_new_style.css">
+    <link rel="stylesheet" href="member_style.css">
 
 </head>
 

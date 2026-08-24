@@ -329,7 +329,7 @@ if (isset($_POST['submitAsset'])) {
     <title>List New Asset - CirculAPU</title>
 
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="member_new_style.css">
+    <link rel="stylesheet" href="member_style.css">
 
     <style>
         .required-star{color:#d93025}

@@ -351,7 +351,7 @@ if (isset($_POST['resubmit'])) {
     <title>Modify Asset - CirculAPU</title>
 
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="member_new_style.css">
+    <link rel="stylesheet" href="member_style.css">
 </head>
 
 <body class="role-member">

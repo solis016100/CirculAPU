@@ -225,7 +225,7 @@ if($currentTier){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Member Portal - CirculAPU</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_new_style.css">
+<link rel="stylesheet" href="member_style.css">
 </head>
 
 <body class="role-member">
@@ -237,8 +237,22 @@ if($currentTier){
 
 <main class="page-body">
 
-<h1>Welcome back, <?php echo htmlspecialchars($memberName); ?></h1>
-<p>Here is an overview of the sustainability activities.</p>
+<!-- Dashboard Heading -->
+<div class="member-dashboard-heading">
+    <div>
+        <h1>
+            Welcome back,
+            <?php echo htmlspecialchars($memberName); ?>
+        </h1>
+
+        <p>Here is an overview of the sustainability activities.</p>
+    </div>
+
+    <a href="member_reports.php" class="member-report-btn">
+        <img src="../assets/icons/member-report.png" alt="">
+        Submit Report
+    </a>
+</div> 
 
 <!-- Statistics -->
 <div class="stats-grid">

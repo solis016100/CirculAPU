@@ -92,7 +92,7 @@ try {
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Member Notifications - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="member_new_style.css?v=<?= filemtime(__DIR__ . '/member_new_style.css') ?>">
+    <link rel="stylesheet" href="member_style.css">
 </head>
 <body class="role-member member-notification-page">
 <div class="dashboard-container">
