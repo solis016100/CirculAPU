@@ -21,7 +21,6 @@
     $params = [];
     $types = '';
 
-    /* Search */
     if ($search !== '') {
         $where .= " AND (rr.redemptionID LIKE ? OR rr.userID LIKE ? OR u.name LIKE ? OR rr.rewardID LIKE ? OR r.rewardName LIKE ? OR rr.redemptionDate LIKE ?)";
         $s = "%$search%";
@@ -29,23 +28,18 @@
         $types .= "ssssss";
     }
 
-    /* Reward Name */
     if ($rewardName !== '') {
         $where .= " AND r.rewardName = ?";
         $params[] = $rewardName;
         $types .= "s";
     }
 
-    /* Redemption Date */
     if ($redemptionDate !== '') {
         $where .= " AND DATE(rr.redemptionDate) = ?";
         $params[] = $redemptionDate;
         $types .= "s";
     }
 
-    /* =========================================================
-    REWARD LIST FOR DROPDOWN
-    ========================================================= */
     $rewardList = [];
     $rewardResult = $conn->query("SELECT rewardName FROM rewards ORDER BY rewardName ASC");
 
@@ -53,36 +47,20 @@
         $rewardList[] = $reward['rewardName'];
     }
 
-    /* =========================================================
-    COUNT
-    ========================================================= */
-
     $countSQL = "SELECT COUNT(*) AS total FROM rewardredemption rr LEFT JOIN user u ON rr.userID = u.userID LEFT JOIN rewards r ON rr.rewardID = r.rewardID $where";
-
     $countStmt = $conn->prepare($countSQL);
-
     if ($params) {
         $countStmt->bind_param($types, ...$params);
     }
-
     $countStmt->execute();
 
     $total = $countStmt->get_result()->fetch_assoc()['total'];
-
     $countStmt->close();
 
-    /* =========================================================
-    PAGINATION
-    ========================================================= */
     $pages = max(1, ceil($total / $limit));
-
     $page = min($page, $pages);
-
     $offset = ($page - 1) * $limit;
 
-    /* =========================================================
-    RECORDS
-    ========================================================= */
     $sql = "SELECT rr.redemptionID, rr.userID, u.name AS memberName, rr.rewardID, r.rewardName, rr.redemptionDate FROM rewardredemption rr LEFT JOIN user u ON rr.userID = u.userID LEFT JOIN rewards r ON rr.rewardID = r.rewardID $where ORDER BY rr.redemptionDate DESC LIMIT ? OFFSET ?";
 
     $params[] = $limit;
@@ -90,11 +68,8 @@
     $types .= "ii";
 
     $stmt = $conn->prepare($sql);
-
     $stmt->bind_param($types, ...$params);
-
     $stmt->execute();
-
     $result = $stmt->get_result();
 ?>
 

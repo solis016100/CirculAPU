@@ -16,7 +16,6 @@
     $quantity = "";
     $availability = "Available";
 
-    // Check if there is duplicate reward name
     if (isset($_POST['checkRewardName'])) {
         $rewardName = trim($_POST['rewardName'] ?? '');
         $nameStmt = mysqli_prepare($conn, "SELECT rewardID FROM rewards WHERE LOWER(TRIM(rewardName)) = LOWER(TRIM(?)) LIMIT 1");
@@ -32,7 +31,6 @@
         exit;
     }
 
-    // Generate next reward id
     $nextRewardID = "R001";
     $idQuery = "SELECT rewardID FROM rewards ORDER BY CAST(SUBSTRING(rewardID, 2) AS UNSIGNED) DESC LIMIT 1";
 
@@ -45,7 +43,6 @@
         }
     }
 
-    // Create reward
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rewardName = trim($_POST['rewardName'] ?? '');
         $rewardDescription = trim($_POST['rewardDescription'] ?? '');
@@ -53,7 +50,6 @@
         $quantity = trim($_POST['quantity'] ?? '');
         $availability = trim($_POST['availability'] ?? 'Available');
 
-        // Check Duplicate Name
         $nameStmt = mysqli_prepare($conn, "SELECT rewardID FROM rewards WHERE LOWER(TRIM(rewardName)) = LOWER(TRIM(?)) LIMIT 1");
 
         mysqli_stmt_bind_param($nameStmt, "s", $rewardName);
@@ -70,7 +66,6 @@
         if ($rewardName === '') {
             $errorMessage = "Please enter the reward name.";
         }elseif ($duplicateMessage !== '') {
-            // Stop creation
         }elseif ($rewardDescription === '') {
             $errorMessage = "Please enter the reward description.";
         }elseif ($ecoPointsCost === '') {
@@ -101,7 +96,6 @@
                     mkdir($uploadDirectory, 0755, true);
                 }
 
-                // Generate save file name
                 $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
                 $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', strtolower($rewardName));
@@ -124,9 +118,7 @@
                     if (mysqli_stmt_execute($stmt)) {
                         mysqli_stmt_close($stmt);
 
-                        // Notify members when there is new reward created
                         if ($availability === 'Available') {
-                            /* Get next Notification ID */
                             $notificationResult = mysqli_query($conn, "SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0) + 1 AS nextID FROM notification");
                             
                             $memberResult = mysqli_query($conn, "SELECT userID FROM user WHERE role = 'Member' AND status = 'Active'");
@@ -135,11 +127,9 @@
 
                             $nextNotificationID = (int)$notificationRow['nextID'];
 
-                            /* Notification text */
                             $title = "New Reward Available!";
                             $content = "A new reward \"" . $rewardName . "\" is now available for redemption. " . "It costs " . $ecoPointsCost . " EcoPoints.";
 
-                            /* Alert notification for each member */
                             $notifyStmt = mysqli_prepare($conn, "INSERT INTO notification(notificationID, userID, title, content, status, createdDate) VALUES (?, ?, ?, ?, 'Unread', NOW())");
 
                             while ($member = mysqli_fetch_assoc($memberResult)) {
@@ -155,7 +145,6 @@
                             mysqli_stmt_close($notifyStmt);
                         }
 
-                        // Create System Log
                         $logResult = mysqli_query($conn, "SELECT MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)) + 1 AS nextID FROM systemlog");
                         $logRow = mysqli_fetch_assoc($logResult);
                         $logID = "LOG" . str_pad($logRow['nextID'] ?? 1, 3, "0", STR_PAD_LEFT);
@@ -170,12 +159,10 @@
                             mysqli_stmt_close($logStmt);
                         }
 
-                        // Successfull Creation
                         header("Location: auditor_reward_create.php?created=1");
                         exit();
                     }else {
                         mysqli_stmt_close($stmt);
-                        // Remove uploaded image if database insert fails
                         unlink($targetPath);
                         $errorMessage = "Unable to create the reward.";
                     }

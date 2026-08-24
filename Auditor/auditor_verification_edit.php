@@ -11,21 +11,8 @@
     function createUpdateLog($conn, $userID, $refType, $refID, $description) {
         $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
 
-        $stmt = $conn->prepare("
-            INSERT INTO systemlog
-            (logID, userID, actionType, refType, refID, description)
-            VALUES (?, ?, 'Update', ?, ?, ?)
-        ");
-
-        $stmt->bind_param(
-            "sssss",
-            $logID,
-            $userID,
-            $refType,
-            $refID,
-            $description
-        );
-
+        $stmt = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Update', ?, ?, ?)");
+        $stmt->bind_param("sssss", $logID, $userID, $refType, $refID, $description);
         $stmt->execute();
     }
 
@@ -37,19 +24,11 @@
         exit();
     }
 
-    /* GET RECORD */
-    $q = $conn->prepare("
-        SELECT v.*, u.name AS userName
-        FROM verificationrecords v
-        LEFT JOIN user u ON v.userID = u.userID
-        WHERE v.verificationID = ?
-    ");
-
+    $q = $conn->prepare("SELECT v.*, u.name AS userName FROM verificationrecords v LEFT JOIN user u ON v.userID = u.userID WHERE v.verificationID = ?");
     $q->bind_param("s", $id);
     $q->execute();
 
     $r = $q->get_result()->fetch_assoc();
-
     if (!$r) {
         exit("Record not found.");
     }
@@ -66,13 +45,11 @@
         }
     }
 
-    /* UPDATE */
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $remarks = trim($_POST['remarks'] ?? '');
         $condition = $_POST['condition'] ?? '';
 
         $q = $conn->prepare("UPDATE verificationrecords SET remarks = ? WHERE verificationID = ?");
-
         $q->bind_param("ss", $remarks, $id);
         $q->execute();
 

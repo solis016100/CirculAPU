@@ -12,10 +12,8 @@
 
     $id = $_GET['achieveBadgeID'] ?? '';
 
-    // Delete Badge
     if (isset($_POST['delete_badge'])) {
         $badgeID = $_POST['badgeID'];
-        // Get badge name and icon
         $get = $conn->prepare("SELECT achieveBadgeName, achieveBadgeIcon FROM achievementbadges WHERE achieveBadgeID = ?");
         $get->bind_param("s", $badgeID);
         $get->execute();
@@ -23,29 +21,24 @@
         $get->close();
 
         if ($badgeData) {
-            // Delete Badge
             $delete = $conn->prepare("DELETE FROM achievementbadges WHERE achieveBadgeID = ?");
             $delete->bind_param("s", $badgeID);
 
             if ($delete->execute()) {
-                // Delete Badge Icon
                 if (!empty($badgeData['achieveBadgeIcon']) && file_exists("../assets/images/" . $badgeData['achieveBadgeIcon'])) {
                     unlink("../assets/images/" . $badgeData['achieveBadgeIcon']);
                 }
 
-                // Create System Log ID
                 $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
                 $row = $result->fetch_assoc();
                 $logID = "LOG" . str_pad($row['nextID'], 3, "0", STR_PAD_LEFT);
 
-                // Create System Log
                 $description = "Deleted achievement badge: " . $badgeData['achieveBadgeName'];
                 $log = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Badge', ?, ?) ");
                 $log->bind_param("ssss", $logID, $_SESSION['user_id'],$badgeID,$description);
                 $log->execute();
                 $log->close();
 
-                // Back to Management
                 header("Location: auditor_achievement_badges_management.php?deleted=1");
                 exit();
             }else {

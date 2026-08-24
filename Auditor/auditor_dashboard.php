@@ -4,29 +4,23 @@
     $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin';
     $is_preview = ($_GET['preview'] ?? '') === 'Auditor';
     
-    // Access Control Guard for Sustainability Auditor Role (Allows Admin Preview)
     if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Auditor' && !($is_admin && $is_preview))) {
         header("Location: ../login.php");
         exit();
     }
 
-    // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
-    // Default Dashboard Values
     $pendingAssets = 0;
     $pendingMissions = 0;
     $lowStockRewards = 0;
     $outOfStockRewards = 0;
     $unreadNotifications = 0;
-
     $recentActivities = [];
     $notifications = [];
-
     $databaseError = '';
 
-    // Count Function
     function getCount(mysqli $conn, string $sql): int{
         $result = $conn->query($sql);
         if ($result && ($row = $result->fetch_assoc())){
@@ -35,42 +29,29 @@
         return 0;
     }
 
-    // Connect to Database
     require_once '../db.php';
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
-        // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
-
         if ($is_admin && $is_preview) {
-            $previewUser = $conn->query(
-                "SELECT userID, name FROM user
-                 WHERE role = 'Auditor' AND status = 'Active'
-                 ORDER BY dateCreated ASC, userID ASC LIMIT 1"
-            )->fetch_assoc();
+            $previewUser = $conn->query("SELECT userID, name FROM user WHERE role = 'Auditor' AND status = 'Active' ORDER BY dateCreated ASC, userID ASC LIMIT 1")->fetch_assoc();
             if ($previewUser) {
                 $auditorID = $previewUser['userID'];
                 $auditorName = $previewUser['name'];
-            } else {
+            }else {
                 $auditorName = 'Sustainability Auditor';
             }
         }
 
-
-        // Count pending asset verification
         $pendingAssets = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'Asset'");
 
-        // Count pending mission submission
         $pendingMissions = getCount($conn, "SELECT COUNT(*) AS total FROM verificationrecords WHERE status = 'Pending' AND targetType = 'MissionSubmission'");
 
-        // Count Low Stock Rewards
         $lowStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity > 0 AND quantity < 3;");
 
-        // Count Out of Stock Rewards
         $outOfStockRewards = getCount($conn, "SELECT COUNT(*) AS total FROM rewards WHERE quantity = 0");
 
-        // Count unread notification
         $unreadStatement = $conn->prepare("SELECT COUNT(*) AS total FROM notification WHERE userID = ? AND status = 'Unread'");
         if ($unreadStatement){
             $unreadStatement->bind_param("s", $auditorID);
@@ -82,11 +63,8 @@
             $unreadStatement->close();
         }
 
-        // Recent Activities from SystemLog
         $activitySQL = "SELECT sl.logID, sl.description, sl.actionType, sl.refType, sl.refID, sl.timeLogged, u.name AS performedBy FROM systemlog sl INNER JOIN user u ON sl.userID = u.userID WHERE sl.userID = ? ORDER BY sl.timeLogged DESC LIMIT 7";
-
         $activityStatement = $conn->prepare($activitySQL);
-
         if ($activityStatement) {
             $activityStatement->bind_param("s", $auditorID);
             $activityStatement->execute();
@@ -97,11 +75,7 @@
             $activityStatement->close();
         }
 
-        // Notifications
-        $notificationStatement = $conn->prepare("SELECT notificationID, title, content, status, createdDate
-        FROM notification WHERE userID = ?
-        ORDER BY createdDate DESC
-        LIMIT 3");
+        $notificationStatement = $conn->prepare("SELECT notificationID, title, content, status, createdDate FROM notification WHERE userID = ? ORDER BY createdDate DESC LIMIT 3");
         if ($notificationStatement){
             $notificationStatement->bind_param("s", $auditorID);
             $notificationStatement->execute();
@@ -111,12 +85,9 @@
             }
             $notificationStatement->close();
         }
-
-        // Disconnect Database
         $conn->close();
     }
 
-    // Date Display function
     function formatDashboardDate(?string $date): string{
         if (empty($date)){
             return '-';

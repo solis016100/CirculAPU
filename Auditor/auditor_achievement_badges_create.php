@@ -18,7 +18,6 @@
     $requirementType = "";
     $requirementValue = "";
 
-    // Check Duplicate Badge Name
     if (isset($_POST['checkBadgeName'])) {
         $badgeName = trim($_POST['badgeName'] ?? '');
         $nameStmt = mysqli_prepare($conn, "SELECT achieveBadgeID FROM achievementbadges WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?)) LIMIT 1");
@@ -35,12 +34,10 @@
         exit;
     }
 
-    // Successful Creation Message
     if (isset($_GET['created'])) {
         $successMessage = "Achievement badge created successfully.";
     }
 
-    // Generate Next Badge ID
     $nextBadgeID = "AB001";
     $idQuery = "SELECT achieveBadgeID FROM achievementbadges ORDER BY CAST(SUBSTRING(achieveBadgeID, 3) AS UNSIGNED) DESC LIMIT 1";
 
@@ -53,9 +50,7 @@
         }
     }
 
-    // Create Achievement Badge
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Keep entered values
         $badgeName = trim($_POST['badgeName'] ?? '');
         $badgeDescription = trim($_POST['badgeDescription'] ?? '');
         $requirementType = $_POST['requirementType'] ?? '';
@@ -72,7 +67,6 @@
             $badgeRequirement = '';
         }
 
-        // Check if badge name exist in database
         $nameStmt = mysqli_prepare($conn, "SELECT achieveBadgeID FROM achievementbadges WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?)) LIMIT 1");
 
         mysqli_stmt_bind_param($nameStmt, "s", $badgeName);
@@ -87,11 +81,9 @@
 
         mysqli_stmt_close($nameStmt);
 
-        // Validate Badge Name, description, requirement & image
         if ($badgeName === '') {
             $errorMessage = "Please enter the badge name.";
         }elseif ($duplicateMessage !== '') {
-            // Duplicate badge name - stop badge creation
         }elseif ($badgeDescription === '') {
             $errorMessage = "Please enter the badge description.";
         }elseif ($requirementType === '' || $requirementValue < 1 || $requirementValue > 10000) {
@@ -102,7 +94,6 @@
             $file = $_FILES['badgeIcon'];
             $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-            // Check upload error, file type & file size
             if ($file['error'] !== UPLOAD_ERR_OK) {
                 $errorMessage = "Unable to upload the badge icon.";
             }elseif (!in_array($file['type'], $allowedTypes)) {
@@ -115,30 +106,25 @@
                     mkdir($uploadDirectory, 0755, true);
                 }
 
-                // Generate Safe File Name
                 $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
                 $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', strtolower($badgeName));
                 $fileName = "badge_" . $safeName . "_" . time() . "." . $extension;
                 $targetPath = $uploadDirectory . $fileName;
 
-                // Move Uploaded File
                 if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                     $errorMessage =  "Unable to save the badge icon.";
                 }else {
-                    // Insert Badge Into Database
                     $stmt = mysqli_prepare($conn, "INSERT INTO achievementbadges (achieveBadgeID, achieveBadgeName, achieveBadgeDescription, achieveBadgeRequirement, achieveBadgeIcon) VALUES (?, ?, ?, ?, ?)");
 
                     mysqli_stmt_bind_param($stmt, "sssss", $nextBadgeID, $badgeName, $badgeDescription, $badgeRequirement, $fileName);
 
                     if (mysqli_stmt_execute($stmt)) {
                         mysqli_stmt_close($stmt);
-                        // Get next notification ID
                         $result = mysqli_query($conn, "SELECT COALESCE(MAX(CAST(SUBSTRING(notificationID, 2) AS UNSIGNED)), 0) + 1 AS nextID FROM notification");
 
                         $row = mysqli_fetch_assoc($result);
                         $nextNotificationID = (int)$row['nextID'];
 
-                        // Notify all members
                         $members = mysqli_query($conn, "SELECT userID FROM user WHERE role = 'Member'");
 
                         while ($member = mysqli_fetch_assoc($members)) {
@@ -156,7 +142,6 @@
                             mysqli_stmt_close($notification);
                         }
 
-                        // Create System Log
                         $logResult = mysqli_query($conn, "SELECT MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)) + 1 AS nextID FROM systemlog");
 
                         $logRow = mysqli_fetch_assoc($logResult);
@@ -175,13 +160,11 @@
                             mysqli_stmt_close($logStmt);
                         }
 
-                        // Successful Creation
                         header("Location: auditor_achievement_badges_create.php?created=1");
                         exit();
                     }else {
                         mysqli_stmt_close($stmt);
 
-                        // Remove uploaded image if database insert fails
                         unlink($targetPath);
 
                         $errorMessage = "Unable to create the achievement badge.";

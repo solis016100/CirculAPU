@@ -12,12 +12,7 @@
 
     $id = $_GET['missionID'] ?? '';
 
-    $stmt = $conn->prepare("
-        SELECT missionID, missionName, missionDescription,
-            missionRequirement, ecoPointsReward, status
-        FROM missions
-        WHERE missionID = ?
-    ");
+    $stmt = $conn->prepare("SELECT missionID, missionName, missionDescription, missionRequirement, ecoPointsReward, status FROM missions WHERE missionID = ?");
 
     $stmt->bind_param("s", $id);
     $stmt->execute();
@@ -36,7 +31,6 @@
 
     $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
 
-    /* DELETE MISSION */
     if (isset($_POST['delete_mission'])) {
         $stmt = $conn->prepare("SELECT missionName FROM missions WHERE missionID = ?");
         $stmt->bind_param("s", $id);
@@ -44,35 +38,20 @@
         $mission = $stmt->get_result()->fetch_assoc();
 
         if ($mission) {
-            /* Delete mission */
             $stmt = $conn->prepare("DELETE FROM missions WHERE missionID = ?");
             $stmt->bind_param("s", $id);
             $stmt->execute();
 
-            /* System Log */
-            $result = $conn->query("
-                SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 AS nextID
-                FROM systemlog
-            ");
+            $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 AS nextID FROM systemlog");
 
             $nextID = $result->fetch_assoc()['nextID'];
             $logID = 'LOG' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
 
             $description = "Deleted mission: " . $mission['missionName'];
 
-            $stmt = $conn->prepare("
-                INSERT INTO systemlog
-                (logID, userID, actionType, refType, refID, description)
-                VALUES (?, ?, 'Delete', 'Mission', ?, ?)
-            ");
+            $stmt = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Delete', 'Mission', ?, ?)");
 
-            $stmt->bind_param(
-                "ssss",
-                $logID,
-                $_SESSION['user_id'],
-                $id,
-                $description
-            );
+            $stmt->bind_param("ssss", $logID, $_SESSION['user_id'], $id, $description);
 
             $stmt->execute();
 

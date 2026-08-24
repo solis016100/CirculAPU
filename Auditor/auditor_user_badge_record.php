@@ -40,7 +40,6 @@
 
     $badgeList = $conn->query("SELECT achieveBadgeName FROM achievementbadges ORDER BY achieveBadgeName");
 
-    /* Count */
     $stmt = $conn->prepare("SELECT COUNT(*) total FROM `user achievement badge` uab LEFT JOIN user u ON uab.userID=u.userID LEFT JOIN achievementbadges ab ON uab.achieveBadgeID=ab.achieveBadgeID $where");
     if ($params) $stmt->bind_param($types, ...$params);
     $stmt->execute();
@@ -51,7 +50,6 @@
     $page = min($page, $pages);
     $offset = ($page - 1) * $limit;
 
-    /* Records */
     $sql = "SELECT uab.*, u.name memberName, ab.achieveBadgeName FROM `user achievement badge` uab LEFT JOIN user u ON uab.userID=u.userID LEFT JOIN achievementbadges ab ON uab.achieveBadgeID=ab.achieveBadgeID $where ORDER BY uab.awardedDate DESC LIMIT ? OFFSET ?";
 
     $params[] = $limit;

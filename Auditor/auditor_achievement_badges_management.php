@@ -1,23 +1,19 @@
 <?php
     session_start();
 
-    // Access Control Guard for Sustainability Auditor Role
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
         header("Location: login.php");
         exit();
     }
 
-    // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
-    // Connect to Database
     require_once '../db.php';
 
     $totalBadges = 0;
     $badgeResult = null;
 
-    // Get search and filter values
     $search = trim($_GET['search'] ?? '');
     $badgeFilter = trim($_GET['badge'] ?? '');
 
@@ -30,19 +26,12 @@
     if ($conn->connect_error) {
         $databaseError = "Unable to connect to the database.";
     } else {
-        // Allow database to handle different languages
         $conn->set_charset("utf8mb4");
 
-        // Retrieve achievement badges for filter dropdown
-        $badgeFilterQuery = "
-            SELECT achieveBadgeID, achieveBadgeName
-            FROM achievementbadges
-            ORDER BY achieveBadgeName ASC
-        ";
+        $badgeFilterQuery = "SELECT achieveBadgeID, achieveBadgeName FROM achievementbadges ORDER BY achieveBadgeName ASC";
 
         $badgeFilterResult = mysqli_query($conn, $badgeFilterQuery);
 
-        // Delete Badge
         if (isset($_POST['delete_badge'])) {
             $badgeID = $_POST['badgeID'];
             $get = $conn->prepare("SELECT achieveBadgeName, achieveBadgeIcon FROM achievementbadges WHERE achieveBadgeID = ?");
@@ -59,12 +48,10 @@
                 $delete->bind_param("s", $badgeID);
 
                 if ($delete->execute()) {
-                    // Delete Badge Icon
                     if (!empty($badgeData['achieveBadgeIcon']) && file_exists("../assets/images/" . $badgeData['achieveBadgeIcon'])) {
                         unlink("../assets/images/" . $badgeData['achieveBadgeIcon']);
                     }
 
-                    // System Log
                     $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
 
                     $row = $result->fetch_assoc();
@@ -76,29 +63,24 @@
                     $log->close();
 
                     header("Location: auditor_achievement_badges_management.php?deleted=1");
-
                     exit();
                 }
                 $delete->close();
             }
         }
 
-        // Base query
         $badgeQuery = "SELECT achieveBadgeID, achieveBadgeName, achieveBadgeDescription, achieveBadgeRequirement, achieveBadgeIcon FROM achievementbadges WHERE 1=1";
 
-        // Search
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
             $badgeQuery .= " AND (achieveBadgeName LIKE '%$safeSearch%' OR achieveBadgeRequirement LIKE '%$safeSearch%')";
         }
 
-        // Filter by badge
         if ($badgeFilter !== '') {
             $safeBadgeFilter = mysqli_real_escape_string($conn, $badgeFilter);
             $badgeQuery .= " AND achieveBadgeID = '$safeBadgeFilter'";
         }
 
-        // Total badges records
         $countQuery = "SELECT COUNT(*) AS total FROM achievementbadges WHERE 1=1";
 
         if ($search !== '') {
@@ -116,7 +98,6 @@
 
         $totalPages = max(1, ceil($totalRecords / $perPage));
 
-        // Get current page records
         $badgeQuery .= " ORDER BY achieveBadgeID ASC LIMIT $perPage OFFSET $offset";
         $badgeResult = mysqli_query($conn, $badgeQuery);
         $totalBadges = $totalRecords;
