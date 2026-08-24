@@ -3,6 +3,7 @@ session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Include db.php from parent directory
 require_once '../db.php';
+require_once '../print.php';
 
 // Security: Restrict access strictly to System Administrators
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
@@ -146,19 +147,27 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
                         <h1 class="header-title">System Analytics</h1>
                     </div>
                     
-                    <form method="GET" action="analytics.php" class="analytics-timeframe-form">
-                        <label for="timeframeSelect" class="timeframe-label">Timeframe:</label>
-                        <div class="input-wrapper timeframe-wrapper">
-                            <select name="timeframe" id="timeframeSelect" class="filter-select timeframe-select" onchange="this.form.submit()">
-                                <option value="All Time" <?php echo $timeframe === 'All Time' ? 'selected' : ''; ?>>All Time</option>
-                                <option value="This Month" <?php echo $timeframe === 'This Month' ? 'selected' : ''; ?>>This Month</option>
-                                <option value="This Semester" <?php echo $timeframe === 'This Semester' ? 'selected' : ''; ?>>This Semester</option>
-                                <option value="This Year" <?php echo $timeframe === 'This Year' ? 'selected' : ''; ?>>This Year</option>
-                            </select>
-                            <img src="../assets/icons/calendar.svg" alt="Calendar" class="timeframe-icon">
-                        </div>
-                    </form>
+                    <div class="analytics-header-actions">
+                        <form method="GET" action="analytics.php" class="analytics-timeframe-form">
+                            <label for="timeframeSelect" class="timeframe-label">Timeframe:</label>
+                            <div class="input-wrapper timeframe-wrapper">
+                                <select name="timeframe" id="timeframeSelect" class="filter-select timeframe-select" onchange="this.form.submit()">
+                                    <option value="All Time" <?php echo $timeframe === 'All Time' ? 'selected' : ''; ?>>All Time</option>
+                                    <option value="This Month" <?php echo $timeframe === 'This Month' ? 'selected' : ''; ?>>This Month</option>
+                                    <option value="This Semester" <?php echo $timeframe === 'This Semester' ? 'selected' : ''; ?>>This Semester</option>
+                                    <option value="This Year" <?php echo $timeframe === 'This Year' ? 'selected' : ''; ?>>This Year</option>
+                                </select>
+                                <img src="../assets/icons/calendar.svg" alt="Calendar" class="timeframe-icon">
+                            </div>
+                        </form>
+                        <?php printButton('Print Analytics', '../assets/icons/print.png', 'management-create-btn analytics-print-btn'); ?>
+                    </div>
                 </div>
+
+                <section class="analytics-print-heading" aria-hidden="true">
+                    <h1>CirculAPU System Analytics</h1>
+                    <p>Timeframe: <?php echo htmlspecialchars($timeframe, ENT_QUOTES, 'UTF-8'); ?> · Printed <?php echo date('d M Y, h:i A'); ?></p>
+                </section>
 
                 <!-- Two-Column Analytics Layout Grid -->
                 <div class="analytics-grid-container">

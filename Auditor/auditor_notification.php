@@ -17,7 +17,7 @@
     $limit=8;
 
     // Change notification status from unread to read
-    if(isset($_GET['read'])){
+    if(isset($_GET['read']) && empty($_SESSION['simulation_read_only'])){
         $s=$conn->prepare("UPDATE notification SET status='Read' WHERE notificationID=? AND userID=? AND status='Unread'");
         $s->bind_param('ss',$_GET['read'],$uid);
         $s->execute();

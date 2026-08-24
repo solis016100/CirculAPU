@@ -1,8 +1,12 @@
 <?php
 session_start();
 
-// Access Control Guard for Community Member Role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
+// Access Control Guard for Community Member Role (Allows explicit Admin preview)
+$isAdminPreview = ($_SESSION['user_role'] ?? '') === 'Admin'
+    && ($_GET['preview'] ?? '') === 'Member';
+
+if (!isset($_SESSION['user_id'])
+    || (($_SESSION['user_role'] ?? '') !== 'Member' && !$isAdminPreview)) {
     header("Location: ../login.php");
     exit();
 }
@@ -20,6 +24,26 @@ if ($conn->connect_error) {
 } else {
     // UTF-8 allows the database to handle different languages
     $conn->set_charset("utf8mb4");
+
+    // Keep the authenticated Admin identity unchanged while showing realistic
+    // dashboard data from an active Community Member account.
+    if ($isAdminPreview) {
+        $previewUser = $conn->query(
+            "SELECT userID, name FROM user
+             WHERE role = 'Member' AND status = 'Active'
+             ORDER BY dateCreated ASC, userID ASC LIMIT 1"
+        )->fetch_assoc();
+
+        if ($previewUser) {
+            $memberID = $previewUser['userID'];
+            $memberName = $previewUser['name'];
+            $userID = $memberID;
+        } else {
+            $memberID = '';
+            $memberName = 'Community Member';
+            $userID = '';
+        }
+    }
 }
 
 /* User */

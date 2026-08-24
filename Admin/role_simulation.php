@@ -31,6 +31,11 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') 
             <?php include '../header.php'; ?>
 
             <main class="page-body">
+                <?php if (($_GET['error'] ?? '') === 'no_preview_user'): ?>
+                    <div class="alert alert-error" role="alert">
+                        No active <?php echo htmlspecialchars($_GET['role'] ?? 'selected', ENT_QUOTES, 'UTF-8'); ?> account is available for simulation.
+                    </div>
+                <?php endif; ?>
                 
                 <!-- Page Breadcrumb & Title Bar -->
                 <div class="admin-page-header">
