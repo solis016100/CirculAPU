@@ -226,7 +226,7 @@ $previewURL='manager_reports.php?'.http_build_query($previewQuery);
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title><?=e($title)?> - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .report-tabs{display:flex;gap:0;margin:10px 0 12px}.report-tabs a{padding:8px 14px;border:1px solid #cbd5e1;background:#fff;color:#222;text-decoration:none;font-size:13px}.report-tabs a:first-child{border-radius:6px 0 0 6px}.report-tabs a:last-child{border-radius:0 6px 6px 0}.report-tabs a.active{background:var(--badge-bg);border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
 .report-stats{grid-template-columns:repeat(5,minmax(0,1fr))}

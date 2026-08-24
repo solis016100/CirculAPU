@@ -424,7 +424,7 @@ if($t){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Transaction Details - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 <style>
 .tx-dialog{position:fixed;inset:0;margin:auto;width:min(760px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid #bfe4fb;border-radius:12px;padding:24px}
 .tx-dialog-small{width:min(520px,calc(100% - 32px))}
