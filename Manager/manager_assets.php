@@ -107,17 +107,17 @@ try {
           AND (?='' OR a.categoryID=?)
           AND (?='' OR a.assetCondition=?)
           AND (?='' OR a.availabilityStatus=?)
-          AND ((?<>'') AND a.listingStatus=? OR (?='' AND a.listingStatus<>'Removed'))
+          AND ((?='' AND a.listingStatus<>'Removed') OR a.listingStatus=?)
           AND (?='' OR a.verificationStatus=?)
     ";
 
-    $types = 'ssssssssssssss';
+    $types = 'sssssssssssss';
     $params = [
         $search,$search,$search,
         $category,$category,
         $condition,$condition,
         $availability,$availability,
-        $status,$status,$status,
+        $status,$status,
         $verification,$verification
     ];
 
@@ -172,7 +172,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Management - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_style.css">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 
