@@ -18,7 +18,7 @@ else{$backURL='manager_assets.php'.($back?'?'.$back:'');$backLabel='Asset Manage
 $navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 if(!$id){header('Location: manager_assets.php');exit();}
 
-$conditions=['New','Like New','Good','Fair','Poor'];$asset=null;$categories=[];$error='';$dbError='';$newFile='';
+$asset=null;$categories=[];$error='';$dbError='';$newFile='';
 
 try{
     $c=$conn;$c->set_charset('utf8mb4');
@@ -36,17 +36,14 @@ try{
         $s=$c->prepare("SELECT categoryID,categoryName FROM categories WHERE status='Active' OR categoryID=? ORDER BY categoryName");
         $s->bind_param('s',$asset['categoryID']);$s->execute();$categories=$s->get_result()->fetch_all(MYSQLI_ASSOC);$s->close();
 
-        $locked=true;
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $name=trim($_POST['assetName']??'');$category=trim($_POST['categoryID']??'');
-            $condition=$asset['assetCondition'];
             $description=trim($_POST['description']??'');
 
             if(!$name)$error='Asset Name is required.';
             elseif(strlen($name)>150)$error='Asset Name must not exceed 150 characters.';
             elseif(strlen($description)>255)$error='Description must not exceed 255 characters.';
-            elseif(!in_array($condition,$conditions,true))$error='Please select a valid asset condition.';
 
             if(!$error){
                 $s=$c->prepare("SELECT 1 FROM categories WHERE categoryID=? AND (status='Active' OR categoryID=?) LIMIT 1");
@@ -78,8 +75,8 @@ try{
             if(!$error){
                 $c->begin_transaction();
                 try{
-                    $s=$c->prepare("UPDATE assets SET categoryID=?,assetName=?,description=?,assetCondition=?,imageURL=?,updatedDate=CURRENT_TIMESTAMP WHERE assetID=?");
-                    $s->bind_param('ssssss',$category,$name,$description,$condition,$image,$id);$s->execute();$s->close();
+                    $s=$c->prepare("UPDATE assets SET categoryID=?,assetName=?,description=?,imageURL=?,updatedDate=CURRENT_TIMESTAMP WHERE assetID=?");
+                    $s->bind_param('sssss',$category,$name,$description,$image,$id);$s->execute();$s->close();
 
                     $log=nextID($c,'systemlog','logID','LOG');$text="Updated asset information: $name";
                     $s=$c->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Update','Asset',?,?)");
@@ -93,12 +90,10 @@ try{
             }
 
             $asset['assetName']=$name;$asset['categoryID']=$category;$asset['description']=$description;
-            if(!$locked)$asset['assetCondition']=$condition;
         }
     }
 }catch(Throwable $z){error_log($z->getMessage());$dbError='Unable to process the asset information. Please try again.';}
 
-$locked=(bool)$asset;
 $imagePath='';
 if($asset&&!empty($asset['imageURL'])){
     $url=str_replace('\\','/',trim($asset['imageURL']));
@@ -110,7 +105,7 @@ if($asset&&!empty($asset['imageURL'])){
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Edit Asset - CirculAPU</title>
-<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>"><link rel="stylesheet" href="manager_mobile.css">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="manager_style.css"><link rel="stylesheet" href="manager_mobile.css">
 </head>
 <body class="role-manager">
 <div class="dashboard-container">

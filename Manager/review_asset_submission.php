@@ -17,19 +17,46 @@ function nextID(mysqli $conn, string $table, string $column, string $prefix): st
     $next = (int)$stmt->get_result()->fetch_assoc()['nextID']; $stmt->close();
     return sprintf($prefix . '%03d', $next);
 }
+function notifyUser(mysqli $conn, string $userID, string $title, string $content): void {
+    $notificationID = nextID($conn, 'notification', 'notificationID', 'N');
+    $stmt = $conn->prepare("
+        INSERT INTO notification(notificationID,userID,title,content,status)
+        VALUES (?,?,?,?,'Unread')
+    ");
+    $stmt->bind_param('ssss', $notificationID, $userID, $title, $content);
+    $stmt->execute();
+    $stmt->close();
+}
+
 function imagePath($v): string {
     if (!$v) return '';
     $v = str_replace('\\', '/', trim($v));
     return preg_match('/^https?:\/\//i', $v) ? $v : '../' . ltrim(preg_replace('#^(\.\./)+#', '', $v), '/');
 }
 
-$managerID=$_SESSION['user_id'];
-$assetID=trim($_GET['assetID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
-if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
-elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
-else{$backURL=$back?'manager_assets.php?'.$back:'manager_assets.php?listingStatus=Pending+Review';$backLabel='Asset Management';}
-$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
-if (!$assetID) { header('Location: manager_assets.php'); exit(); }
+$managerID = $_SESSION['user_id'];
+$assetID = trim($_GET['assetID'] ?? '');
+$back = trim($_GET['back'] ?? '');
+$source = $_GET['source'] ?? 'assets';
+
+if ($source === 'reports') {
+    $backURL = 'manager_reports.php' . ($back ? '?' . $back : '');
+    $backLabel = 'Reports';
+} elseif ($source === 'category') {
+    $backURL = 'manager_category_view.php' . ($back ? '?' . $back : '');
+    $backLabel = 'Category Details';
+} else {
+    $backURL = $back ? 'manager_assets.php?' . $back : 'manager_assets.php?listingStatus=Pending+Review';
+    $backLabel = 'Asset Management';
+}
+
+$navParam = (in_array($source, ['reports','category'], true) ? '&source=' . rawurlencode($source) : '')
+          . ($back ? '&back=' . rawurlencode($back) : '');
+
+if (!$assetID) {
+    header('Location: manager_assets.php');
+    exit();
+}
 
 $asset = null;
 $categories = [];
@@ -107,9 +134,8 @@ try {
                 ORDER BY dateCreated ASC,userID ASC
             ");
             $stmt->execute();
-            $auditorRows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $auditorIDs = array_column($stmt->get_result()->fetch_all(MYSQLI_ASSOC), 'userID');
             $stmt->close();
-            $auditorIDs = array_column($auditorRows, 'userID');
             if (!$auditorIDs) $error = 'No active Sustainability Auditor account is available. Please try again after an Auditor is activated.';
         }
 
@@ -155,7 +181,6 @@ try {
                 $stmt->bind_param('sssss', $logID, $managerID, $logAction, $assetID, $logText);
                 $stmt->execute(); $stmt->close();
 
-                $verificationID = '';
                 if ($action === 'verify') {
                     $verificationID = nextID($conn, 'verificationrecords', 'verificationID', 'V');
                     $stmt = $conn->prepare("
@@ -164,35 +189,23 @@ try {
                         VALUES (?,?,NULL,?,'Asset','Pending',NULL,NULL)
                     ");
                     $stmt->bind_param('sss', $verificationID, $asset['ownerID'], $assetID);
-                    $stmt->execute(); $stmt->close();
+                    $stmt->execute();
+                    $stmt->close();
                 }
 
                 if ($action !== 'save') {
-                    $notificationID = nextID($conn, 'notification', 'notificationID', 'N');
                     $title = $action === 'return' ? 'Asset Listing Returned' : 'Asset Sent for Verification';
                     $content = $action === 'return'
                         ? "Your asset listing $assetID ($name) was returned for correction. Reason: $reason"
                         : "Your asset listing $assetID ($name) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.";
-
-                    $stmt = $conn->prepare("
-                        INSERT INTO notification(notificationID,userID,title,content,status)
-                        VALUES (?,?,?,?,'Unread')
-                    ");
-                    $stmt->bind_param('ssss', $notificationID, $asset['ownerID'], $title, $content);
-                    $stmt->execute(); $stmt->close();
+                    notifyUser($conn, $asset['ownerID'], $title, $content);
                 }
 
                 if ($action === 'verify') {
                     $auditorTitle = 'Asset Ready for Verification';
                     $auditorContent = "Asset $assetID ($name), submitted by {$asset['ownerName']} ({$asset['ownerID']}), has passed Resource Manager review and is ready for verification. Verification ID: $verificationID.";
                     foreach ($auditorIDs as $auditorID) {
-                        $auditorNotificationID = nextID($conn, 'notification', 'notificationID', 'N');
-                        $stmt = $conn->prepare("
-                            INSERT INTO notification(notificationID,userID,title,content,status)
-                            VALUES (?,?,?,?,'Unread')
-                        ");
-                        $stmt->bind_param('ssss', $auditorNotificationID, $auditorID, $auditorTitle, $auditorContent);
-                        $stmt->execute(); $stmt->close();
+                        notifyUser($conn, $auditorID, $auditorTitle, $auditorContent);
                     }
                 }
 
@@ -229,7 +242,7 @@ $image = imagePath($asset['imageURL'] ?? '');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Asset Submission - CirculAPU</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="manager_style.css?v=<?=filemtime(__DIR__.'/manager_style.css')?>">
+    <link rel="stylesheet" href="manager_style.css">
     <link rel="stylesheet" href="manager_mobile.css">
 </head>
 

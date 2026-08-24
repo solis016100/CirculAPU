@@ -8,7 +8,6 @@
     require_once '../db.php';
     $conn->set_charset("utf8mb4");
 
-    /* Mission ID */
     $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(missionID,2) AS UNSIGNED)),0)+1 n FROM missions");
     $missionID = 'M' . str_pad($r->fetch_assoc()['n'], 3, '0', STR_PAD_LEFT);
     $error = '';
@@ -18,7 +17,6 @@
         $name = trim($_POST['missionName'] ?? '');
 
         $check = $conn->prepare("SELECT missionID FROM missions WHERE LOWER(TRIM(missionName)) = LOWER(TRIM(?)) LIMIT 1");
-
         $check->bind_param("s", $name);
         $check->execute();
 
@@ -26,7 +24,6 @@
         exit;
     }
 
-    /* Create */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['missionName'] ?? '');
         $desc = trim($_POST['missionDescription'] ?? '');
@@ -44,7 +41,6 @@
                 $s->bind_param("ssssis", $missionID, $name, $desc, $req, $points, $status);
                 $s->execute();
 
-                /* System Log */
                 $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0) + 1 AS n FROM systemlog");
 
                 $logID = 'LOG' . str_pad($r->fetch_assoc()['n'], 3, '0', STR_PAD_LEFT);
@@ -54,7 +50,6 @@
                 $s->bind_param("ssss", $logID, $_SESSION['user_id'], $missionID, $log);
                 $s->execute();
 
-                /* Notify Members only if Active */
                 if ($status === 'Active') {
                     $members = $conn->query("SELECT userID FROM user WHERE role = 'Member'");
 

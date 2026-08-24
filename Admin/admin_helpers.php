@@ -9,6 +9,7 @@ function adminNextIdentifier(mysqli $conn, string $kind): string
         'log' => ['systemlog', 'logID', 'LOG', 4],
         'ecopoint' => ['ecopointstransaction', 'transactionID', 'ET', 3],
         'user' => ['user', 'userID', 'U', 2],
+        'tier' => ['tiers', 'tierID', 'T', 2],
     ];
 
     if (!isset($definitions[$kind])) {

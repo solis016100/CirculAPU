@@ -16,7 +16,6 @@
         exit();
     }
 
-    // Change Badge Icon
     if (isset($_POST['save_changes'], $_FILES['badgeIcon']) && $_FILES['badgeIcon']['error'] !== UPLOAD_ERR_NO_FILE) {
         $file = $_FILES['badgeIcon'];
         $allowed = ['image/jpeg', 'image/png', 'image/webp'];
@@ -40,7 +39,6 @@
         }
     }
 
-    /* Get achievement badge record */
     $stmt = $conn->prepare("SELECT achieveBadgeID, achieveBadgeName, achieveBadgeDescription, achieveBadgeRequirement, achieveBadgeIcon FROM achievementbadges WHERE achieveBadgeID = ?");
 
     $stmt->bind_param("s", $id);
@@ -75,7 +73,6 @@
     $errorMessage = "";
     $successMessage = "";
 
-    /* Update Achievement Badge */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $badgeName = trim($_POST['badgeName'] ?? '');
         $badgeDescription = trim($_POST['badgeDescription'] ?? '');
@@ -103,7 +100,6 @@
         }elseif ($requirementType === '' || $requirementValue < 1 || $requirementValue > 10000){
             $errorMessage = "Please enter a valid requirement.";
         }else {
-            /* Check Duplicate Badge Name */
             $check = $conn->prepare("SELECT achieveBadgeID FROM achievementbadges WHERE LOWER(TRIM(achieveBadgeName)) = LOWER(TRIM(?)) AND achieveBadgeID != ? LIMIT 1");
 
             $check->bind_param("ss", $badgeName, $id);
@@ -115,7 +111,6 @@
                 $icon = $badge['achieveBadgeIcon'];
                 $oldIcon = $icon;
 
-                /* Change Badge Icon */
                 if (isset($_FILES['badgeIcon']) && $_FILES['badgeIcon']['error'] !== UPLOAD_ERR_NO_FILE) {
                     $file = $_FILES['badgeIcon'];
                     $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -136,19 +131,16 @@
                     }
                 }
 
-                /* Update Database */
                 if ($errorMessage === "") {
                     $update = $conn->prepare("UPDATE achievementbadges SET achieveBadgeName = ?, achieveBadgeDescription = ?, achieveBadgeRequirement = ?, achieveBadgeIcon = ? WHERE achieveBadgeID = ?");
 
                     $update->bind_param("sssss", $badgeName, $badgeDescription, $badgeRequirement, $icon, $id);
 
                     if ($update->execute()) {
-                        /* Delete Old Icon */
                         if ($icon != $oldIcon && !empty($oldIcon) && file_exists("../assets/images/" . $oldIcon)) {
                             unlink("../assets/images/" . $oldIcon);
                         }
 
-                        /* Create System Log */
                         $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)),  0) + 1 AS nextID FROM systemlog");
                         $row = $result->fetch_assoc();
                         $logID = "LOG" . str_pad($row['nextID'], 3, "0", STR_PAD_LEFT);
@@ -157,7 +149,6 @@
                         $log->bind_param("ssss", $logID, $_SESSION['user_id'], $id, $logDescription);
                         $log->execute();
 
-                        /* Successful Update */
                         if ($from === 'management') {
                             header("Location: auditor_achievement_badges_management.php?updated=1");
                         }else {

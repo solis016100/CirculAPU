@@ -23,13 +23,7 @@
 
     $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
 
-    /* Get mission record */
-    $stmt = $conn->prepare("
-        SELECT missionID, missionName, missionDescription,
-            missionRequirement, ecoPointsReward, status
-        FROM missions
-        WHERE missionID = ?
-    ");
+    $stmt = $conn->prepare("SELECT missionID, missionName, missionDescription, missionRequirement, ecoPointsReward, status FROM missions WHERE missionID = ?");
     $stmt->bind_param("s", $id);
     $stmt->execute();
 
@@ -40,7 +34,6 @@
         exit();
     }
 
-    /* Update mission */
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $name = trim($_POST['missionName']);
         $points = $_POST['ecoPointsReward'];
@@ -48,46 +41,19 @@
         $description = trim($_POST['missionDescription']);
         $requirement = trim($_POST['missionRequirement']);
 
-        $stmt = $conn->prepare("
-            UPDATE missions
-            SET missionName = ?,
-                missionDescription = ?,
-                missionRequirement = ?,
-                ecoPointsReward = ?,
-                status = ?
-            WHERE missionID = ?
-        ");
+        $stmt = $conn->prepare("UPDATE missions SET missionName = ?, missionDescription = ?, missionRequirement = ?, ecoPointsReward = ?, status = ? WHERE missionID = ?");
 
-        $stmt->bind_param(
-            "sssiss",
-            $name,
-            $description,
-            $requirement,
-            $points,
-            $status,
-            $id
-        );
+        $stmt->bind_param("sssiss", $name, $description, $requirement, $points, $status, $id);
 
         $stmt->execute();
 
-        /* System Log */
         $logID = 'LOG' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         $userID = $_SESSION['user_id'];
         $logDescription = "Updated mission: " . $name;
 
-        $log = $conn->prepare("
-            INSERT INTO systemlog
-            (logID, userID, actionType, refType, refID, description)
-            VALUES (?, ?, 'Update', 'Mission', ?, ?)
-        ");
+        $log = $conn->prepare("INSERT INTO systemlog(logID, userID, actionType, refType, refID, description) VALUES (?, ?, 'Update', 'Mission', ?, ?)");
 
-        $log->bind_param(
-            "ssss",
-            $logID,
-            $userID,
-            $id,
-            $logDescription
-        );
+        $log->bind_param("ssss", $logID, $userID, $id, $logDescription);
 
         $log->execute();
 

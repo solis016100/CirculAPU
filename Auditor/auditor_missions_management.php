@@ -1,7 +1,6 @@
 <?php
     session_start();
 
-    // Access Control Guard for Sustainability Auditor Role
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
         header("Location: login.php");
         exit();
@@ -11,23 +10,18 @@
     require_once '../delete.php';
     require_once '../print.php';
 
-    // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
-    // Connect to Database
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
-        // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
     }
 
     $missionID = $_GET['missionID'] ?? '';
 
-    /* Delete Mission */
     if (isset($_POST['deleteID'])) {
-
         $id = $_POST['deleteID'];
 
         $stmt = $conn->prepare("SELECT missionName FROM missions WHERE missionID = ?");
@@ -36,39 +30,19 @@
         $mission = $stmt->get_result()->fetch_assoc();
 
         if ($mission) {
-
             $stmt = $conn->prepare("DELETE FROM missions WHERE missionID = ?");
             $stmt->bind_param("s", $id);
             $stmt->execute();
 
-            $r = $conn->query("
-                SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 n
-                FROM systemlog
-            ");
+            $r = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID,4) AS UNSIGNED)),0)+1 n FROM systemlog");
 
-            $logID = 'LOG' . str_pad(
-                $r->fetch_assoc()['n'],
-                3,
-                '0',
-                STR_PAD_LEFT
-            );
+            $logID = 'LOG' . str_pad($r->fetch_assoc()['n'], 3, '0', STR_PAD_LEFT);
 
             $description = "Deleted mission: " . $mission['missionName'];
 
-            $log = $conn->prepare("
-                INSERT INTO systemlog
-                (logID,userID,actionType,refType,refID,description)
-                VALUES (?,?,'Delete','Mission',?,?)
-            ");
+            $log = $conn->prepare("INSERT INTO systemlog(logID,userID,actionType,refType,refID,description) VALUES (?,?,'Delete','Mission',?,?)");
 
-            $log->bind_param(
-                "ssss",
-                $logID,
-                $_SESSION['user_id'],
-                $id,
-                $description
-            );
-
+            $log->bind_param("ssss", $logID, $_SESSION['user_id'], $id, $description);
             $log->execute();
 
             header("Location: auditor_missions_management.php?deleted=1");
@@ -76,7 +50,6 @@
         }
     }
 
-    // Get filter values from URL
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $missionName = isset($_GET['missionName']) ? trim($_GET['missionName']) : '';
     $ecoPoints = isset($_GET['ecoPoints']) ? trim($_GET['ecoPoints']) : '';
@@ -84,88 +57,63 @@
 
     $filterQuery = http_build_query(['search' => $search, 'missionName' => $missionName, 'ecoPoints' => $ecoPoints, 'status' => $status]);
 
-    // Store filter conditions
     $conditions = [];
 
-    // Search Mission
     if ($search !== '') {
         $safeSearch = mysqli_real_escape_string($conn, $search);
         $conditions[] = "(missionName LIKE '%$safeSearch%'OR ecoPointsReward LIKE '%$safeSearch%')";
     }
 
-    // Filter by Mission Name
     if ($missionName !== '') {
         $safeMissionName = mysqli_real_escape_string($conn, $missionName);
         $conditions[] = "missionName = '$safeMissionName'";
     }
 
-    // Filter by EcoPoints
     if ($ecoPoints !== '') {
         $safeEcoPoints = (int) $ecoPoints;
         $conditions[] = "ecoPointsReward = $safeEcoPoints";
     }
 
-    // Filter by Status
     if ($status !== '') {
         $safeStatus = mysqli_real_escape_string($conn, $status);
         $conditions[] = "status = '$safeStatus'";
     }
 
-    // Combine all conditions
     $whereClause = '';
     if (!empty($conditions)) {
         $whereClause = "WHERE " . implode(" AND ", $conditions);
     }
 
-
-    // Number of missions displayed per page
     $recordsPerPage = 8;
 
-    // Get current page number
     $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 
-    // Prevent invalid page number
     if ($page < 1) {
         $page = 1;
     }
 
-    // Count total missions
     $countQuery = "SELECT COUNT(*) AS total FROM missions $whereClause";
     $countResult = mysqli_query($conn, $countQuery);
     $countRow = mysqli_fetch_assoc($countResult);
 
     $totalMissions = $countRow['total'];
 
-    // Calculate total pages
-    // ceil = round to nearest whole number
     $totalPages = ceil($totalMissions / $recordsPerPage);
 
-    // Calculate starting record
     $offset = ($page - 1) * $recordsPerPage;
 
-    // Retrieve missions for current page
-    $query = "SELECT missionID, missionName, ecoPointsReward, status
-          FROM missions
-          $whereClause
-          ORDER BY missionID ASC
-          LIMIT $recordsPerPage OFFSET $offset";
+    $query = "SELECT missionID, missionName, ecoPointsReward, status FROM missions $whereClause ORDER BY missionID ASC LIMIT $recordsPerPage OFFSET $offset";
 
     $result = mysqli_query($conn, $query);
 
-
-    // Get Mission Names for dropdown from database
     $missionNameQuery = "SELECT DISTINCT missionName FROM missions ORDER BY missionName ASC";
     $missionNameResult = mysqli_query($conn, $missionNameQuery);
 
-    // Get EcoPoints values for dropdown from database
     $ecoPointsQuery = "SELECT DISTINCT ecoPointsReward FROM missions ORDER BY ecoPointsReward ASC";
     $ecoPointsResult = mysqli_query($conn, $ecoPointsQuery);
 
-    // Get Status values for dropdown from database
     $statusQuery = "SELECT DISTINCT status FROM missions ORDER BY status ASC";
     $statusResult = mysqli_query($conn, $statusQuery);
-
-
 ?>
 
 <!DOCTYPE html>

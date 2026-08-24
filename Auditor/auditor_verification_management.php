@@ -1,53 +1,34 @@
 <?php
     session_start();
-
-    // Access Control Guard for Sustainability Auditor Role
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
         header("Location: login.php");
         exit();
     }
 
-    // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
-    // Default Values
     $verificationRecords = [];
     $databaseError = '';
 
-    // Filter Values
     $search = trim($_GET['search'] ?? '');
     $userFilter = $_GET['user'] ?? '';
     $typeFilter = $_GET['type'] ?? '';
     $statusFilter = $_GET['status'] ?? '';
-
     $page = max(1, (int)($_GET['page'] ?? 1));
     $recordsPerPage = 8;
-
     $filter = http_build_query(['search' => $search, 'user' => $userFilter, 'type' => $typeFilter, 'status' => $statusFilter]);
 
-    // Connect to Database
     require_once '../db.php';
     require_once '../delete.php';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteID'])) {
         $id = $_POST['deleteID'];
-
-        $q = $conn->prepare("
-            DELETE FROM verificationrecords
-            WHERE verificationID = ?
-        ");
-
+        $q = $conn->prepare("DELETE FROM verificationrecords WHERE verificationID = ?");
         $q->bind_param("s", $id);
         $q->execute();
 
-        createDeleteLog(
-            $conn,
-            $_SESSION['user_id'],
-            'Verification',
-            $id,
-            "Deleted verification record: $id"
-        );
+        createDeleteLog($conn, $_SESSION['user_id'], 'Verification', $id, "Deleted verification record: $id");
 
         header("Location: auditor_verification_management.php?deleted=1");
         exit();
@@ -56,30 +37,14 @@
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
-        // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
 
-        // Get all verification records with user name
-        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate, a.assetCondition
-        FROM verificationrecords vr
-        INNER JOIN user u ON vr.userID = u.userID
-        LEFT JOIN assets a
-        ON vr.targetType = 'Asset'
-        AND vr.targetID = a.assetID
-        WHERE 1=1";
+        $sql = "SELECT vr.verificationID, vr.userID, u.name AS userName, vr.targetID, vr.targetType, vr.status, vr.verifiedDate, a.assetCondition FROM verificationrecords vr INNER JOIN user u ON vr.userID = u.userID LEFT JOIN assets a ON vr.targetType = 'Asset' AND vr.targetID = a.assetID WHERE 1=1";
 
-
-        // Search (filter)
         if ($search !== '') {
             $safeSearch = $conn->real_escape_string($search);
-            $sql .= " AND (vr.verificationID LIKE '%$safeSearch%'
-                    OR u.name LIKE '%$safeSearch%'
-                    OR vr.targetType LIKE '%$safeSearch%'
-                    OR vr.status LIKE '%$safeSearch%')";
-        }
+            $sql .= " AND (vr.verificationID LIKE '%$safeSearch%' OR u.name LIKE '%$safeSearch%' OR vr.targetType LIKE '%$safeSearch%' OR vr.status LIKE '%$safeSearch%')";}
 
-
-        // Filter by User
         if ($userFilter !== '') {
             $safeUser = $conn->real_escape_string($userFilter);
             $sql .= " AND vr.userID = '$safeUser'";
@@ -87,10 +52,7 @@
 
         $users = [];
 
-        $userSql = "SELECT DISTINCT u.userID, u.name FROM verificationrecords vr
-                    INNER JOIN user u ON vr.userID = u.userID
-                    ORDER BY u.name ASC";
-
+        $userSql = "SELECT DISTINCT u.userID, u.name FROM verificationrecords vr INNER JOIN user u ON vr.userID = u.userID ORDER BY u.name ASC";
         $userResult = $conn->query($userSql);
 
         if ($userResult) {
@@ -99,35 +61,22 @@
             }
         }
 
-
-        // Filter by Type
         if ($typeFilter !== '') {
             $safeType = $conn->real_escape_string($typeFilter);
             $sql .= " AND vr.targetType = '$safeType'";
         }
 
-
-        // Filter by Status
         if ($statusFilter !== '') {
             $safeStatus = $conn->real_escape_string($statusFilter);
             $sql .= " AND vr.status = '$safeStatus'";
         }
 
         $sql .= " ORDER BY vr.verificationID DESC";
-
-        $countSql = "SELECT COUNT(*) AS total
-             FROM verificationrecords vr
-             INNER JOIN user u ON vr.userID = u.userID
-             WHERE 1=1";
+        $countSql = "SELECT COUNT(*) AS total FROM verificationrecords vr INNER JOIN user u ON vr.userID = u.userID WHERE 1=1";
 
         if ($search !== '') {
             $safeSearch = $conn->real_escape_string($search);
-            $countSql .= " AND (
-                vr.verificationID LIKE '%$safeSearch%'
-                OR u.name LIKE '%$safeSearch%'
-                OR vr.targetType LIKE '%$safeSearch%'
-                OR vr.status LIKE '%$safeSearch%'
-            )";
+            $countSql .= " AND (vr.verificationID LIKE '%$safeSearch%' OR u.name LIKE '%$safeSearch%' OR vr.targetType LIKE '%$safeSearch%' OR vr.status LIKE '%$safeSearch%')";
         }
 
         if ($userFilter !== '') {
@@ -147,42 +96,32 @@
 
         $totalResult = $conn->query($countSql);
         $totalRecords = $totalResult->fetch_assoc()['total'];
-
         $totalPages = max(1, ceil($totalRecords / $recordsPerPage));
-
         if ($page > $totalPages) {
             $page = $totalPages;
         }
 
         $offset = ($page - 1) * $recordsPerPage;
-
         $sql .= " LIMIT $offset, $recordsPerPage";
-
         $result = $conn->query($sql);
-
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $verificationRecords[] = $row;
             }
-        } else {
+        }else {
             $databaseError = "Unable to retrieve verification records.";
         }
-
         $conn->close();
     }
 
-    // Format verification date
     function formatVerificationDate(?string $date): string{
         if (empty($date)){
             return '-';
         }
-
         $timestamp = strtotime($date);
-
         if ($timestamp === false){
             return '-';
         }
-
         return date('d M Y', $timestamp);
     }
 ?>

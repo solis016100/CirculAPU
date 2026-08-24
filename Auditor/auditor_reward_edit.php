@@ -23,9 +23,7 @@
     $errorMessage = "";
     $successMessage = "";
 
-    // Get reward record
     $stmt = $conn->prepare("SELECT rewardID, rewardName, rewardDescription, rewardImage, ecoPointsCost, quantity, availability FROM rewards WHERE rewardID = ?");
-
     $stmt->bind_param("s", $id);
     $stmt->execute();
 
@@ -38,7 +36,6 @@
         exit();
     }
 
-    // Update Reward
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rewardName = trim($_POST['rewardName'] ?? '');
         $rewardDescription = trim($_POST['rewardDescription'] ?? '');
@@ -61,11 +58,9 @@
         }elseif (!in_array($availability, ['Available', 'Unavailable'])) {
             $errorMessage = "Please select a valid availability.";
         }else {
-            // Check duplicate reward name
             $check = $conn->prepare("SELECT rewardID FROM rewards WHERE LOWER(TRIM(rewardName)) = LOWER(TRIM(?)) AND rewardID != ? LIMIT 1");
 
             $check->bind_param("ss", $rewardName, $id);
-
             $check->execute();
 
             if ($check->get_result()->num_rows > 0) {
@@ -75,7 +70,6 @@
                 $image = $oldImage;
                 $newImageUploaded = false;
 
-                // Change reward image
                 if (isset($_FILES['rewardImage']) && $_FILES['rewardImage']['error'] !== UPLOAD_ERR_NO_FILE) {
                     $file = $_FILES['rewardImage'];
                     $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -100,14 +94,12 @@
                     }
                 }
 
-                // Update database
                 if ($errorMessage === '') {
                     $update = $conn->prepare("UPDATE rewards SET rewardName = ?, rewardDescription = ?, rewardImage = ?, ecoPointsCost = ?, quantity = ?, availability = ? WHERE rewardID = ?");
 
                     $ecoPointsCostInt = (int)$ecoPointsCost;
                     $quantityInt = (int)$quantity;
 
-                    /* Automatically make reward unavailable when quantity is 0 */
                     if ($quantityInt === 0) {
                         $availability = 'Unavailable';
                     }
@@ -117,12 +109,10 @@
                     $update->bind_param("sssiiss", $rewardName, $rewardDescription, $image, $ecoPointsCostInt, $quantityInt, $availability, $id);
 
                     if ($update->execute()) {
-                        // Delete ole image
                         if ($newImageUploaded && !empty($oldImage) && $oldImage !== $image && file_exists("../assets/images/" . $oldImage)) {
                             unlink("../assets/images/" . $oldImage);
                         }
 
-                        // Create System Log
                         $result = $conn->query("SELECT COALESCE(MAX(CAST(SUBSTRING(logID, 4) AS UNSIGNED)), 0) + 1 AS nextID FROM systemlog");
 
                         $row = $result->fetch_assoc();
@@ -140,13 +130,10 @@
 
                         $update->close();
 
-                        // Success Updation
                         header("Location: auditor_reward_view.php?rewardID=" . urlencode($id) . "&updated=1");
 
                         exit();
-
                     }else {
-                        // Remove newly uploaded image
                         if ($newImageUploaded && file_exists("../assets/images/" . $image)) {
                             unlink("../assets/images/" . $image);}
 
@@ -158,7 +145,6 @@
             $check->close();
         }
 
-        // Keep Entered Values
         $reward['rewardName'] = $rewardName;
         $reward['rewardDescription'] = $rewardDescription;
         $reward['ecoPointsCost'] = $ecoPointsCost;

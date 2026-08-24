@@ -8,8 +8,9 @@ $bottom_nav_page = basename($_SERVER['PHP_SELF']);
 
 $bottom_nav_items = [
     'Admin' => [
-        ['Dashboard', '/CirculAPU/Admin/admin_dashboard.php', 'dashboard', ['admin_dashboard.php', 'system_logs.php', 'notifications.php']],
+        ['Dashboard', '/CirculAPU/Admin/admin_dashboard.php', 'dashboard', ['admin_dashboard.php', 'system_logs.php', 'admin_notifications.php', 'notifications.php']],
         ['Users', '/CirculAPU/Admin/user_management.php', 'users', ['user_management.php', 'admin_edit_user.php', 'create_dummy_account.php']],
+        ['Tiers', '/CirculAPU/Admin/tiers.php', 'tiers', ['tiers.php']],
         ['Reports', '/CirculAPU/Admin/reports_queue.php', 'report', ['reports_queue.php', 'admin_report_details.php']],
         ['Analytics', '/CirculAPU/Admin/analytics.php', 'analytics', ['analytics.php']],
         ['Simulation', '/CirculAPU/Admin/role_simulation.php', 'simulation', ['role_simulation.php']],
@@ -41,6 +42,7 @@ $bottom_nav_items = [
 $bottom_nav_icons = [
     'dashboard' => '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>',
     'users' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+    'tiers' => '<path d="M12 2l3 6 6.5 1-4.75 4.6 1.1 6.4L12 17l-5.85 3 1.1-6.4L2.5 9 9 8z"></path>',
     'report' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>',
     'analytics' => '<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>',
     'simulation' => '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.17 14H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 10 3.17V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.83 10H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15z"></path>',

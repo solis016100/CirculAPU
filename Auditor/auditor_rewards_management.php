@@ -1,13 +1,11 @@
 <?php
     session_start();
 
-    // Access Control Guard for Sustainability Auditor Role
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
         header("Location: login.php");
         exit();
     }
 
-    // Get Auditor's information from login
     $auditorID= $_SESSION['user_id'];
     $auditorName = $_SESSION['user_name'] ?? 'Auditor';
 
@@ -15,11 +13,9 @@
     require_once '../delete.php';
     require_once '../print.php';
 
-    // Delete reward
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_reward'])) {
         $deleteID = $_POST['rewardID'] ?? '';
         if ($deleteID !== '') {
-            // Get reward information before deleting
             $stmt = $conn->prepare("SELECT rewardName, rewardImage FROM rewards WHERE rewardID = ?");
 
             $stmt->bind_param("s", $deleteID);
@@ -30,7 +26,6 @@
             $stmt->close();
 
             if ($rewardData) {
-                // Delete reward
                 $stmt = $conn->prepare("DELETE FROM rewards WHERE rewardID = ?");
 
                 $stmt->bind_param("s", $deleteID);
@@ -38,15 +33,12 @@
                 if ($stmt->execute()) {
                     $stmt->close();
 
-                    // Delete reward image
                     if (!empty($rewardData['rewardImage']) && file_exists("../assets/images/" . $rewardData['rewardImage'])) {
                         unlink("../assets/images/" . $rewardData['rewardImage']);
                     }
 
-                    // Create Delete System Log
                     createDeleteLog($conn, $_SESSION['user_id'], 'Reward', $deleteID, 'Deleted reward: ' . $rewardData['rewardName']);
 
-                    // Successful delete
                     $returnQuery = $_POST['returnQuery'] ?? '';
                     header("Location: auditor_rewards_management.php?deleted=1" . ($returnQuery !== '' ? '&' . $returnQuery : ''));
                     exit();
@@ -62,111 +54,88 @@
         }
     }
 
-    // Connect to Database
     if ($conn->connect_error){
         $databaseError = "Unable to connect to the database.";
     }else {
-        // (UTF-8) allows the database to handle different languages
         $conn->set_charset("utf8mb4");
 
-        // Get filter values
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
         $rewardName = isset($_GET['rewardName']) ? trim($_GET['rewardName']) : '';
         $ecoPoints = isset($_GET['ecoPoints']) ? trim($_GET['ecoPoints']) : '';
         $quantity = isset($_GET['quantity']) ? trim($_GET['quantity']) : '';
         $availability = isset($_GET['availability']) ? trim($_GET['availability']) : '';
 
-        // Keep current filters when navigating to other pages
         $returnParams = $_GET;
         $returnQuery = http_build_query($returnParams);
 
-        // Number of rewards displayed per page
         $recordsPerPage = 8;
 
-        // Get current page number
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         if ($page < 1) {
             $page = 1;
         }
 
-        // Filter Conditions
         $conditions = [];
 
-        // Search
         if ($search !== '') {
             $safeSearch = mysqli_real_escape_string($conn, $search);
             $conditions[] = "(rewardName LIKE '%$safeSearch%' OR ecoPointsCost LIKE '%$safeSearch%' OR quantity LIKE '%$safeSearch%' OR availability LIKE '%$safeSearch%')";
         }
 
-        // Filter by Reward Name
         if ($rewardName !== '') {
             $safeRewardName = mysqli_real_escape_string($conn, $rewardName);
             $conditions[] = "rewardName = '$safeRewardName'";
         }
 
-        // Filter by EcoPoints Cost
         if ($ecoPoints !== '') {
             $safeEcoPoints = mysqli_real_escape_string($conn, $ecoPoints);
             $conditions[] = "ecoPointsCost = '$safeEcoPoints'";
         }
 
-        // Filter by Quantity
         if ($quantity !== '') {
             if ($quantity === 'low') {
-                // Low Stock = quantity 1 or 2
                 $conditions[] = "quantity > 0 AND quantity < 3";
             }elseif ($quantity === 'out_of_stock') {
-                // Out of Stock = quantity 0
                 $conditions[] = "quantity = 0";
             }else {
-                // Normal quantity filter
                 $safeQuantity = mysqli_real_escape_string($conn, $quantity);
                 $conditions[] = "quantity = '$safeQuantity'";
             }
         }
 
-        // Filter by Availability
         if ($availability !== '') {
             $safeAvailability = mysqli_real_escape_string($conn, $availability);
             $conditions[] = "availability = '$safeAvailability'";
         }
 
-        // Create WHERE clause
         $whereClause = '';
         if (!empty($conditions)) {
             $whereClause = " WHERE " . implode(" AND ", $conditions);
         }
 
-        // Count Filtered Rewards
         $countQuery = "SELECT COUNT(*) AS total FROM rewards $whereClause";
         $countResult = mysqli_query($conn, $countQuery);
         $countRow = mysqli_fetch_assoc($countResult);
         $totalRewards = $countRow['total'];
 
-        // Pagination
         $totalPages = max(1, ceil($totalRewards / $recordsPerPage));
         if ($totalPages > 0 && $page > $totalPages) {
             $page = $totalPages;
         }
         $offset = ($page - 1) * $recordsPerPage;
 
-        // Get Rewards
         $query = "SELECT * FROM rewards $whereClause ORDER BY rewardID ASC LIMIT $recordsPerPage OFFSET $offset";
         $result = mysqli_query($conn, $query);
 
-        // Get Reward Names for Dropdown
         $rewardNameQuery = "SELECT DISTINCT rewardName FROM rewards ORDER BY rewardName ASC";
         $rewardNameResult = mysqli_query($conn, $rewardNameQuery);
 
-        // Get EcoPoints Costs for Dropdown
         $ecoPointsQuery = "SELECT DISTINCT ecoPointsCost FROM rewards ORDER BY ecoPointsCost ASC";
         $ecoPointsResult = mysqli_query($conn, $ecoPointsQuery);
 
-        // Get Quantities for Dropdown
         $quantityQuery = "SELECT DISTINCT quantity FROM rewards ORDER BY quantity ASC";
         $quantityResult = mysqli_query($conn, $quantityQuery);
 
-        // Get Availability for Dropdown
         $availabilityQuery = "SELECT DISTINCT availability FROM rewards ORDER BY availability ASC";
         $availabilityResult = mysqli_query($conn, $availabilityQuery);
     }

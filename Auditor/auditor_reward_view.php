@@ -10,14 +10,12 @@
     require_once '../print.php';
     require_once '../delete.php';
 
-
     $id = $_GET['rewardID'] ?? '';
 
     $returnParams = $_GET;
     unset($returnParams['rewardID'], $returnParams['from'], $returnParams['print']);
     $returnQuery = http_build_query($returnParams);
 
-    /* Get Reward */
     $stmt = mysqli_prepare($conn, "SELECT rewardID, rewardName, rewardDescription, rewardImage, ecoPointsCost, quantity, availability FROM rewards WHERE rewardID = ?");
 
     mysqli_stmt_bind_param($stmt, "s", $id);
@@ -33,7 +31,6 @@
         exit();
     }
 
-    /* Delete Reward */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_reward'])) {
         $deleteID = $_POST['rewardID'] ?? '';
         $deleteStmt = mysqli_prepare($conn, " DELETE FROM rewards WHERE rewardID = ?");

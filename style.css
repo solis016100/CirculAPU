@@ -132,6 +132,7 @@ html, body {
 .header-search-container {
     position: relative;
     width: 320px;
+    z-index: 20;
 }
 
 .header-search-container input {
@@ -153,6 +154,57 @@ html, body {
     height: 18px;
     color: #0f172a;
     pointer-events: none;
+}
+
+.header-search-results {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 0.4rem;
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+}
+
+.header-search-results[hidden] {
+    display: none;
+}
+
+.header-search-result {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 6px;
+    color: #0f172a;
+    text-decoration: none;
+}
+
+.header-search-result:hover,
+.header-search-result.active {
+    background: var(--badge-bg, #f1f5f9);
+}
+
+.header-search-result span {
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.header-search-result small {
+    color: #64748b;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+.header-search-empty {
+    padding: 0.8rem 0.75rem;
+    color: #64748b;
+    font-size: 0.82rem;
+    text-align: center;
 }
 
 /* Right Controls */

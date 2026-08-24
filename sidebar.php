@@ -36,13 +36,17 @@ if ($user_role === 'Admin'
   <nav class="sidebar-nav">
     <?php switch ($user_role): 
       case 'Admin': ?>
-        <a href="/CirculAPU/Admin/admin_dashboard.php" class="nav-item <?php echo in_array($current_page, ['admin_dashboard.php', 'system_logs.php'], true) ? 'active' : ''; ?>">
+        <a href="/CirculAPU/Admin/admin_dashboard.php" class="nav-item <?php echo in_array($current_page, ['admin_dashboard.php', 'system_logs.php', 'admin_notifications.php'], true) ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span class="nav-text">Dashboard</span>
         </a>
         <a href="/CirculAPU/Admin/user_management.php" class="nav-item <?php echo ($current_page == 'user_management.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           <span class="nav-text">User Management</span>
+        </a>
+        <a href="/CirculAPU/Admin/tiers.php" class="nav-item <?php echo ($current_page == 'tiers.php') ? 'active' : ''; ?>">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6.5 1-4.75 4.6 1.1 6.4L12 17l-5.85 3 1.1-6.4L2.5 9 9 8z"></path></svg>
+          <span class="nav-text">Tiers</span>
         </a>
         <a href="/CirculAPU/Admin/reports_queue.php" class="nav-item <?php echo ($current_page == 'reports_queue.php') ? 'active' : ''; ?>">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
