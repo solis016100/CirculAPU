@@ -1,468 +1,243 @@
 <?php
 session_start();
 
-// Access Control Guard for Community Member Role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
-    header("Location: ../login.php");
-    exit();
+/* Member access */
+if (($_SESSION['user_role'] ?? '') !== 'Member' || empty($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
 }
-
-// Get Member's information from login
-$memberID = $_SESSION['user_id'];
-$memberName = $_SESSION['user_name'] ?? 'Member';
-$userID = $memberID;
-
-// Connect to Database
 require_once '../db.php';
-
-if ($conn->connect_error) {
-    $databaseError = "Unable to connect to the database.";
-} else {
-    // UTF-8 allows the database to handle different languages
-    $conn->set_charset("utf8mb4");
+$conn->set_charset('utf8mb4');
+$userID = $_SESSION['user_id'];
+function e($value): string
+{
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-/* User */
-$userResult=$conn->query("
-SELECT name,ecopoint
-FROM user
-WHERE userID='$userID'
-");
-
-$user=$userResult->fetch_assoc();
-$memberName=$user['name']??'Member';
-
-/* Current EcoPoints - can be spent on rewards */
-$currentPoint=$user['ecopoint']??0;
-
-/* Total Earned EcoPoints - used for badge and tier progress */
-$totalEarnedPointResult=$conn->query("
-SELECT COALESCE(SUM(points),0) AS totalEarned
-FROM ecopointstransaction
-WHERE userID='$userID'
-AND transactionType='Earned'
-");
-
-$totalEarnedPointData=$totalEarnedPointResult->fetch_assoc();
-$totalEarnedPoint=$totalEarnedPointData['totalEarned']??0;
-
-/* Request Count
-   Same source as My Request page:
-   Borrow Request = transactionrequests
-   Asset Update   = assets owned by the member
-*/
-$requestResult=$conn->query("
-SELECT
-(SELECT COUNT(*) FROM transactionrequests WHERE requesterID='$userID')
-+
-(SELECT COUNT(*) FROM assets WHERE ownerID='$userID') AS total
-");
-
-$totalRequest=$requestResult->fetch_assoc()['total']??0;
-
-/* Recent Requests
-   Asset Update uses assets.listingStatus so the dashboard
-   shows the same asset information/status as My Request.
-*/
-$requestListResult=$conn->query("
-SELECT
-    a.assetName AS requestName,
-    'Borrow Request' AS requestType,
-    tr.requestStatus AS requestStatus,
-    tr.requestDate AS requestDate
-FROM transactionrequests tr
-INNER JOIN assets a ON tr.assetID=a.assetID
-WHERE tr.requesterID='$userID'
-
-UNION ALL
-
-SELECT
-    a.assetName AS requestName,
-    'Asset Update' AS requestType,
-    a.listingStatus AS requestStatus,
-    a.updatedDate AS requestDate
-FROM assets a
-WHERE a.ownerID='$userID'
-
-ORDER BY requestDate DESC
-LIMIT 4
-");
-
-/* My Missions */
-$missionResult=$conn->query("
-SELECT COUNT(*) AS total
-FROM missionsubmission
-WHERE userID='$userID'
-");
-
-$totalMission=$missionResult->fetch_assoc()['total']??0;
-
-/* Completed Missions For Badge */
-$completedMissionResult=$conn->query("
-SELECT COUNT(*) AS total
-FROM missionsubmission
-WHERE userID='$userID'
-AND submissionStatus IN ('Approved','Verified')
-");
-
-$totalCompletedMission=$completedMissionResult->fetch_assoc()['total']??0;
-
-/* Available Missions */
-$missionListResult=$conn->query("
-SELECT missionName,missionDescription,ecoPointsReward
-FROM missions
-WHERE status='Active'
-ORDER BY missionID ASC
-LIMIT 3
-");
-
-/* Latest Notifications */
-$notificationResult=$conn->query("
-SELECT title,content,status,createdDate
-FROM notification
-WHERE userID='$userID'
-ORDER BY createdDate DESC
-LIMIT 3
-");
-
-/* Completed Exchanges */
-$exchangeResult=$conn->query("
-SELECT COUNT(*) AS total
-FROM transactionrequests
-WHERE requesterID='$userID'
-AND requestStatus='Completed'
-");
-
-$totalExchange=$exchangeResult->fetch_assoc()['total']??0;
-
-/* Badges Earned */
-$totalBadge=0;
-
-/* AB001 - Complete 1 Mission */
-if($totalCompletedMission>=1){
-    $totalBadge++;
+/* Run a query that uses the member ID once. */
+function memberQuery(mysqli $conn, string $sql, string $userID): mysqli_result
+{
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('s', $userID);
+    $stmt->execute();
+    return $stmt->get_result();
 }
 
-/* AB002 - Complete 5 Exchanges */
-if($totalExchange>=5){
-    $totalBadge++;
-}
+/* Load all dashboard totals in one query. */
+$stats = memberQuery($conn, "
+    SELECT u.name,u.ecopoint,
+        (SELECT COALESCE(SUM(points),0) FROM ecopointstransaction
+         WHERE userID=u.userID AND transactionType='Earned') totalEarned,
+        (SELECT COUNT(*) FROM transactionrequests WHERE requesterID=u.userID)
+        + (SELECT COUNT(*) FROM assets WHERE ownerID=u.userID) totalRequest,
+        (SELECT COUNT(*) FROM missionsubmission WHERE userID=u.userID) totalMission,
+        (SELECT COUNT(*) FROM missionsubmission
+         WHERE userID=u.userID AND submissionStatus IN ('Approved','Verified')) totalCompletedMission,
+        (SELECT COUNT(*) FROM transactionrequests
+         WHERE requesterID=u.userID AND requestStatus='Completed') totalExchange
+    FROM user u WHERE u.userID=? LIMIT 1
+", $userID)->fetch_assoc();
+if (!$stats) die('Member not found.');
+$memberName = $stats['name'] ?? 'Member';
+$currentPoint = (int)$stats['ecopoint'];
+$totalEarnedPoint = (int)$stats['totalEarned'];
+$totalRequest = (int)$stats['totalRequest'];
+$totalMission = (int)$stats['totalMission'];
+$totalBadge = ($stats['totalCompletedMission'] >= 1)
+            + ($stats['totalExchange'] >= 5)
+            + ($totalEarnedPoint >= 500);
 
-/* AB003 - Reach 500 Total EcoPoints */
-if($totalEarnedPoint>=500){
-    $totalBadge++;
-}
+/* Recent requests: the UNION query uses the member ID twice. */
+$stmt = $conn->prepare("SELECT a.assetName requestName,'Borrow Request' requestType,
+                              tr.requestStatus,tr.requestDate
+                       FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID
+                       WHERE tr.requesterID=?
+                       UNION ALL
+                       SELECT assetName,'Asset Update',listingStatus,updatedDate
+                       FROM assets WHERE ownerID=?
+                       ORDER BY requestDate DESC LIMIT 4");
+$stmt->bind_param('ss', $userID, $userID);
+$stmt->execute();
+$requests = $stmt->get_result();
+$missions = $conn->query("SELECT missionName,missionDescription,ecoPointsReward
+                           FROM missions WHERE status='Active' ORDER BY missionID LIMIT 3");
+$notifications = memberQuery($conn, "SELECT title,content,status,createdDate
+                                     FROM notification WHERE userID=?
+                                     ORDER BY createdDate DESC LIMIT 3", $userID);
 
-/* Current Tier */
-$tierResult=$conn->query("
-SELECT *
-FROM tiers
-WHERE minimumEcoPoints<=$totalEarnedPoint
-ORDER BY minimumEcoPoints DESC
-LIMIT 1
-");
-
-$currentTier=null;
-
-if($tierResult&&$tierResult->num_rows>0){
-    $currentTier=$tierResult->fetch_assoc();
-}else{
-    /* Fallback to lowest tier in database */
-    $lowestTierResult=$conn->query("
-    SELECT *
-    FROM tiers
-    ORDER BY minimumEcoPoints ASC
-    LIMIT 1
-    ");
-
-    if($lowestTierResult&&$lowestTierResult->num_rows>0){
-        $currentTier=$lowestTierResult->fetch_assoc();
+/* Current and next EcoPoint tiers. */
+$tierStmt = $conn->prepare("SELECT * FROM tiers WHERE minimumEcoPoints<=?
+                            ORDER BY minimumEcoPoints DESC LIMIT 1");
+$tierStmt->bind_param('i', $totalEarnedPoint);
+$tierStmt->execute();
+$currentTier = $tierStmt->get_result()->fetch_assoc()
+            ?? $conn->query('SELECT * FROM tiers ORDER BY minimumEcoPoints LIMIT 1')->fetch_assoc();
+$nextTier = null;
+$progress = 100;
+$pointsLeft = 0;
+if ($currentTier) {
+    $currentMin = (int)$currentTier['minimumEcoPoints'];
+    $tierStmt = $conn->prepare("SELECT * FROM tiers WHERE minimumEcoPoints>?
+                                ORDER BY minimumEcoPoints LIMIT 1");
+    $tierStmt->bind_param('i', $currentMin);
+    $tierStmt->execute();
+    $nextTier = $tierStmt->get_result()->fetch_assoc();
+    if ($nextTier) {
+        $nextMin = (int)$nextTier['minimumEcoPoints'];
+        $progress = max(0, min(100,
+            (($totalEarnedPoint - $currentMin) / max(1, $nextMin - $currentMin)) * 100
+        ));
+        $pointsLeft = max(0, $nextMin - $totalEarnedPoint);
     }
 }
-
-/* Next Tier */
-$nextTier=null;
-$progress=100;
-$pointsLeft=0;
-
-if($currentTier){
-
-    $currentMin=(int)$currentTier['minimumEcoPoints'];
-
-    $nextResult=$conn->query("
-    SELECT *
-    FROM tiers
-    WHERE minimumEcoPoints>$currentMin
-    ORDER BY minimumEcoPoints ASC
-    LIMIT 1
-    ");
-
-    if($nextResult&&$nextResult->num_rows>0){
-
-        $nextTier=$nextResult->fetch_assoc();
-        $nextMin=(int)$nextTier['minimumEcoPoints'];
-
-        if($nextMin>$currentMin){
-            $progress=(($totalEarnedPoint-$currentMin)/($nextMin-$currentMin))*100;
-            $progress=max(0,min(100,$progress));
-        }else{
-            $progress=0;
-        }
-
-        $pointsLeft=max(0,$nextMin-$totalEarnedPoint);
-
-    }else{
-        $progress=100;
-        $pointsLeft=0;
-    }
+$cards = [
+    ['myrequest.png', $totalRequest, 'My Request'],
+    ['mission.png', $totalMission, 'Missions'],
+    ['point.png', $currentPoint, 'EcoPoints'],
+    ['badge.png', $totalBadge, 'Badges Earned']
+];
+function statusClass(string $status): string
+{
+    $class = strtolower(trim($status));
+    return match ($class) {
+        'pending review' => 'pending',
+        'ready for verification' => 'published',
+        'removed' => 'rejected',
+        default => str_replace(' ', '-', $class)
+    };
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Member Portal - CirculAPU</title>
-<link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="member_style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Member Portal - CirculAPU</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="member_styles.css">
 </head>
-
 <body class="role-member">
 <div class="dashboard-container">
-<?php include '../sidebar.php'; ?>
-
-<div class="main-content">
-<?php include '../header.php'; ?>
-
-<main class="page-body">
-
-<!-- Dashboard Heading -->
-<div class="member-dashboard-heading">
-    <div>
-        <h1>
-            Welcome back,
-            <?php echo htmlspecialchars($memberName); ?>
-        </h1>
-
-        <p>Here is an overview of the sustainability activities.</p>
-    </div>
-
-    <a href="member_reports.php" class="member-report-btn">
-        <img src="../assets/icons/member-report.png" alt="">
-        Submit Report
-    </a>
-</div> 
-
-<!-- Statistics -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon">
-            <img src="../assets/icons/myrequest.png" alt="Request">
-        </div>
-        <h2><?php echo $totalRequest; ?></h2>
-        <p>My Request</p>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon">
-            <img src="../assets/icons/mission.png" alt="Mission">
-        </div>
-        <h2><?php echo $totalMission; ?></h2>
-        <p>Missions</p>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon">
-            <img src="../assets/icons/point.png" alt="EcoPoints">
-        </div>
-        <h2><?php echo $currentPoint; ?></h2>
-        <p>EcoPoints</p>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon">
-            <img src="../assets/icons/badge.png" alt="Badge">
-        </div>
-        <h2><?php echo $totalBadge; ?></h2>
-        <p>Badges Earned</p>
-    </div>
-</div>
-
-<!-- Quick Access -->
-<div class="main-quick-grid">
-
-    <!-- Recent Requests -->
-    <div class="dashboard-card main-request-quick">
-        <div class="dashboard-card-header">
-            <h2>My Recent Requests</h2>
-            <a href="member_requests.php">View All</a>
-        </div>
-
-        <div class="recent-request-table">
-            <div class="recent-request-row recent-request-title">
-                <span>Request</span>
-                <span>Type</span>
-                <span>Status</span>
-                <span>Date</span>
-            </div>
-
-            <?php if($requestListResult&&$requestListResult->num_rows>0): ?>
-                <?php while($request=$requestListResult->fetch_assoc()): ?>
-                    <?php
-                    $status=$request['requestStatus'];
-
-                    // Keep the real database status.
-                    // Only normalize the CSS class name.
-                    $statusClass=strtolower(trim($status));
-
-                    if($statusClass==='pending review'){
-                        $statusClass='pending';
-                    }elseif($statusClass==='ready for verification'){
-                        $statusClass='published';
-                    }elseif($statusClass==='removed'){
-                        $statusClass='rejected';
-                    }else{
-                        $statusClass=str_replace(' ','-',$statusClass);
-                    }
-                    ?>
-
-                    <div class="recent-request-row">
-                        <span class="request-name">
-                            <?php echo htmlspecialchars($request['requestName']); ?>
-                        </span>
-
-                        <span>
-                            <?php echo htmlspecialchars($request['requestType']); ?>
-                        </span>
-
-                        <span>
-                            <span class="request-status <?php echo htmlspecialchars($statusClass); ?>">
-                                <?php echo htmlspecialchars($status); ?>
-                            </span>
-                        </span>
-
-                        <span>
-                            <?php echo date("d M Y",strtotime($request['requestDate'])); ?>
-                        </span>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="dashboard-empty">No recent requests found.</div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- EcoPoints Progress -->
-    <div class="dashboard-card main-reward-quick">
-        <div class="dashboard-card-header">
-            <h2>EcoPoints Progress</h2>
-        </div>
-
-        <div class="ecopoint-progress">
-            <div class="point-top">
+    <?php include '../sidebar.php'; ?>
+    <div class="main-content">
+        <?php include '../header.php'; ?>
+        <main class="page-body">
+            <!-- Dashboard heading -->
+            <div class="member-dashboard-heading">
                 <div>
-                    <strong><?php echo $totalEarnedPoint; ?></strong>
-                    <span>Total EcoPoints</span>
+                    <h1>Welcome back, <?= e($memberName) ?></h1>
+                    <p>Here is an overview of the sustainability activities.</p>
                 </div>
-
-                <?php if($nextTier): ?>
-                    <p>
-                        Next: <?php echo htmlspecialchars($nextTier['tierName']); ?><br>
-                        <?php echo $pointsLeft; ?> points to go
-                    </p>
-                <?php else: ?>
-                    <p>Highest tier reached</p>
-                <?php endif; ?>
+                <a href="member_reports.php" class="member-report-btn member-btn secondary">
+                    <img src="../assets/icons/member-report.png" alt=""> Submit Report
+                </a>
             </div>
 
-            <div class="dashboard-progress">
-                <div class="dashboard-progress-bar"
-                style="width:<?php echo $progress; ?>%">
-                </div>
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <?php foreach ($cards as [$icon, $number, $label]): ?>
+                    <div class="stat-card member-card">
+                        <div class="stat-icon"><img src="../assets/icons/<?= $icon ?>" alt=""></div>
+                        <h2><?= $number ?></h2><p><?= $label ?></p>
+                    </div>
+                <?php endforeach; ?>
             </div>
-
-            <span class="progress-number">
-                <?php echo round($progress); ?>%
-            </span>
-
-            <a href="member_rewards.php" class="dashboard-button">
-                View Rewards & Catalog →
-            </a>
-        </div>
-    </div>
-
-    <!-- Available Missions -->
-    <div class="dashboard-card main-mission-quick">
-        <div class="dashboard-card-header">
-            <h2>Available Missions</h2>
-            <a href="member_missions.php">Explore All</a>
-        </div>
-
-        <div class="available-mission-list">
-            <?php if($missionListResult&&$missionListResult->num_rows>0): ?>
-                <?php while($mission=$missionListResult->fetch_assoc()): ?>
-                    <div class="mission-preview-item">
-                        <div class="mission-preview-info">
-                            <h3>
-                                <?php echo htmlspecialchars($mission['missionName']); ?>
-                            </h3>
-
-                            <p>
-                                <?php echo htmlspecialchars($mission['missionDescription']); ?>
-                            </p>
-                        </div>
-
-                        <div class="mission-preview-point">
-                            <strong>
-                                <?php echo $mission['ecoPointsReward']; ?>
-                            </strong>
-                            <span>points</span>
-                        </div>
+            <div class="main-quick-grid">
+                <!-- Recent requests -->
+                <section class="dashboard-card member-card main-request-quick">
+                    <div class="dashboard-card-header member-card-header">
+                        <h2>My Recent Requests</h2><a href="member_requests.php">View All</a>
                     </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="dashboard-empty">No available missions.</div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Notifications -->
-    <div class="dashboard-card main-notification-quick">
-        <div class="dashboard-card-header">
-            <h2>Notifications</h2>
-            <a href="member_notifications.php">View All</a>
-        </div>
-
-        <div class="notification-preview">
-            <?php if($notificationResult&&$notificationResult->num_rows>0): ?>
-                <?php while($notification=$notificationResult->fetch_assoc()): ?>
-                    <div class="notification-preview-item <?php echo strtolower($notification['status']); ?>">
-                        <div class="notification-preview-info">
-                            <h3>
-                                <?php echo htmlspecialchars($notification['title']); ?>
-                            </h3>
-
-                            <p>
-                                <?php echo htmlspecialchars($notification['content']); ?>
-                            </p>
+                    <div class="recent-request-table">
+                        <div class="recent-request-row recent-request-title">
+                            <span>Request</span><span>Type</span><span>Status</span><span>Date</span>
                         </div>
-
-                        <span class="notification-date">
-                            <?php echo date("d M Y",strtotime($notification['createdDate'])); ?>
-                        </span>
+                        <?php if ($requests->num_rows): ?>
+                            <?php while ($request = $requests->fetch_assoc()): ?>
+                                <div class="recent-request-row">
+                                    <span class="request-name"><?= e($request['requestName']) ?></span>
+                                    <span><?= e($request['requestType']) ?></span>
+                                    <span><span class="request-status <?= e(statusClass($request['requestStatus'])) ?>">
+                                        <?= e($request['requestStatus']) ?>
+                                    </span></span>
+                                    <span><?= date('d M Y', strtotime($request['requestDate'])) ?></span>
+                                </div>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <div class="dashboard-empty">No recent requests found.</div>
+                        <?php endif; ?>
                     </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="dashboard-empty">No notifications.</div>
-            <?php endif; ?>
-        </div>
+                </section>
+
+                <!-- EcoPoints progress -->
+                <section class="dashboard-card member-card main-reward-quick">
+                    <div class="dashboard-card-header member-card-header"><h2>EcoPoints Progress</h2></div>
+                    <div class="ecopoint-progress">
+                        <div class="point-top">
+                            <div><strong><?= $totalEarnedPoint ?></strong><span>Total EcoPoints</span></div>
+                            <p><?= $nextTier
+                                ? 'Next: ' . e($nextTier['tierName']) . "<br>$pointsLeft points to go"
+                                : 'Highest tier reached' ?></p>
+                        </div>
+                        <div class="dashboard-progress">
+                            <div class="dashboard-progress-bar" style="width:<?= $progress ?>%"></div>
+                        </div>
+                        <span class="progress-number"><?= round($progress) ?>%</span>
+                        <a href="member_rewards.php" class="dashboard-button member-btn secondary">
+                            View Rewards & Catalog →
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Available missions -->
+                <section class="dashboard-card member-card main-mission-quick">
+                    <div class="dashboard-card-header member-card-header">
+                        <h2>Available Missions</h2><a href="member_missions.php">Explore All</a>
+                    </div>
+                    <div class="available-mission-list">
+                        <?php if ($missions->num_rows): ?>
+                            <?php while ($mission = $missions->fetch_assoc()): ?>
+                                <div class="mission-preview-item">
+                                    <div class="mission-preview-info">
+                                        <h3><?= e($mission['missionName']) ?></h3>
+                                        <p><?= e($mission['missionDescription']) ?></p>
+                                    </div>
+                                    <div class="mission-preview-point">
+                                        <strong><?= (int)$mission['ecoPointsReward'] ?></strong><span>points</span>
+                                    </div>
+                                </div>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <div class="dashboard-empty">No available missions.</div>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
+                <!-- Notifications -->
+                <section class="dashboard-card member-card main-notification-quick">
+                    <div class="dashboard-card-header member-card-header">
+                        <h2>Notifications</h2><a href="member_notifications.php">View All</a>
+                    </div>
+                    <div class="notification-preview">
+                        <?php if ($notifications->num_rows): ?>
+                            <?php while ($note = $notifications->fetch_assoc()): ?>
+                                <div class="notification-preview-item <?= e(strtolower($note['status'])) ?>">
+                                    <div class="notification-preview-info">
+                                        <h3><?= e($note['title']) ?></h3><p><?= e($note['content']) ?></p>
+                                    </div>
+                                    <span class="notification-date">
+                                        <?= date('d M Y', strtotime($note['createdDate'])) ?>
+                                    </span>
+                                </div>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <div class="dashboard-empty">No notifications.</div>
+                        <?php endif; ?>
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
-
-</div>
-
-</main>
-</div>
 </div>
 </body>
 </html>
