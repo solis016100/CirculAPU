@@ -45,12 +45,15 @@ if ($source === 'reports') {
 } elseif ($source === 'category') {
     $backURL = 'manager_category_view.php' . ($back ? '?' . $back : '');
     $backLabel = 'Category Details';
+} elseif ($source === 'notifications') {
+    $backURL = 'manager_notifications.php' . ($back ? '?' . $back : '');
+    $backLabel = 'Notifications';
 } else {
     $backURL = $back ? 'manager_assets.php?' . $back : 'manager_assets.php?listingStatus=Pending+Review';
     $backLabel = 'Asset Management';
 }
 
-$navParam = (in_array($source, ['reports','category'], true) ? '&source=' . rawurlencode($source) : '')
+$navParam = (in_array($source, ['reports','category','notifications'], true) ? '&source=' . rawurlencode($source) : '')
           . ($back ? '&back=' . rawurlencode($back) : '');
 
 if (!$assetID) {

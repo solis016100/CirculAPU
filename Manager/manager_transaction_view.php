@@ -196,8 +196,8 @@ function pickupIssue(mysqli $c,array $t,?array $b,string $status,string $id):str
     $earliest=$pickup;
     $today=date('Y-m-d');
 
-    if($today<$earliest)return 'Pickup is too early. Pickup can be confirmed from '.date('d M Y',strtotime($earliest)).'.';
-    if($today>$return)return 'Pickup cannot be confirmed because the approved borrowing period has already ended.';
+    if($today<$earliest)return 'Pickup is too early. Pickup can only be confirmed on '.date('d M Y',strtotime($earliest)).'.';
+    if($today>$earliest)return 'Pickup cannot be confirmed because the approved pickup date has passed. The reservation will be cancelled automatically by the reservation maintenance process.';
 
     if($t['availabilityStatus']==='Available')
         return 'Pickup cannot be confirmed until the asset enters its 7-day protection period and becomes Reserved.';
@@ -234,9 +234,9 @@ function returnTo(string $url,array $q):never{
 
 $manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$from=$_GET['from']??'';$back=trim($_GET['back']??'');$source=$_GET['source']??'transactions';
 $backStatus=in_array($from,['Pending','Approved','In Progress','Overdue','Completed','Cancelled','Rejected'],true)?$from:($from==='pending'?'Pending':'');
-$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($back?'manager_transactions.php?'.$back:($from==='pickup'?'manager_transactions.php?pickup=1':($backStatus?'manager_transactions.php?requestStatus='.rawurlencode($backStatus):'manager_transactions.php')));
-$backLabel=$source==='reports'?'Reports':'Transaction Management';
-$navParam=($source==='reports'?'&source=reports':'').($back?'&back='.rawurlencode($back):'').($from?'&from='.rawurlencode($from):'');
+$backURL=$source==='reports'?'manager_reports.php'.($back?'?'.$back:''):($source==='notifications'?'manager_notifications.php'.($back?'?'.$back:''):($back?'manager_transactions.php?'.$back:($from==='pickup'?'manager_transactions.php?pickup=1':($backStatus?'manager_transactions.php?requestStatus='.rawurlencode($backStatus):'manager_transactions.php'))));
+$backLabel=$source==='reports'?'Reports':($source==='notifications'?'Notifications':'Transaction Management');
+$navParam=(in_array($source,['reports','notifications'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'').($from?'&from='.rawurlencode($from):'');
 if(!$id){header('Location: manager_transactions.php');exit();}
 
 $t=$b=null;$summary=[];$past=$eco=$logs=$validationChecks=[];$schedule=['issue'=>'','detail'=>'No conflicting approved or active booking detected.','conflict'=>null];$autoRejectReason=$pickupIssue='';$error='';
@@ -381,7 +381,9 @@ try{
                         }
                         logTx($c,$manager,'Update',$id,"Cancelled reservation before pickup. Reason: $remark");
                         notify($c,$t['requesterID'],'Reservation Cancelled',"The reservation for transaction $id was cancelled before pickup. Reason: $remark");
-                        $c->commit();go($id,$navParam);
+                        $c->commit();
+                        if($source==='notifications')returnTo($backURL,['reviewDone'=>'cancel']);
+                        go($id,$navParam);
                     }catch(Throwable $z){$c->rollback();throw $z;}
                 }
             }
@@ -509,14 +511,16 @@ if($t){
 <div class="tx-priority-alert <?=e($requestPriorityClass)?>"><?=e($requestPriorityLabel)?> · This request should be reviewed according to its requested pickup date. Normal approval validation still applies.</div>
 <?php elseif($status==='Completed'):?>
 <div class="alert alert-success"><strong>Completed</strong> · Asset returned <?=e(d($b['actualReturnDate']??null,true))?></div>
+<?php elseif($status==='Approved'&&$pickupDate&&$today>$pickupDate):?>
+<div class="alert alert-error"><strong>Missed Pickup</strong> · The approved pickup date was <?=e(d($pickupDate))?>. Pickup can no longer be confirmed and the reservation will be cancelled automatically by the reservation maintenance process.</div>
 <?php elseif($status==='Approved'&&$t['availabilityStatus']==='Reserved'):?>
-<div class="asset-form-note"><strong>7-Day Protection Active</strong><p>This asset is Reserved for this approved request. Pickup can be confirmed from <?=e(d($pickupDate))?> when the member physically collects the asset.</p></div>
+<div class="asset-form-note"><strong>7-Day Protection Active</strong><p>This asset is Reserved for this approved request. Pickup can be confirmed on <?=e(d($pickupDate))?> when the member physically collects the asset.</p></div>
 <?php elseif($status==='Approved'&&$protectionPending):?>
 <div class="asset-form-note"><strong>Future Reservation Confirmed</strong><p>The asset is not locked early. It remains operationally available until <?=e(d($protectionStarts))?>, when the scheduled protection process will change it to Reserved automatically.</p></div>
 <?php elseif($status==='Approved'&&$pickupIssue):?>
 <div class="asset-form-note"><strong>Reservation Protection Attention</strong><p><?=e($pickupIssue)?></p></div>
 <?php elseif($status==='Approved'):?>
-<div class="asset-form-note"><strong>Pickup Window Open</strong><p>The 7-day protection window is active. Pickup may be confirmed when the member physically collects the asset.</p></div>
+<div class="asset-form-note"><strong>Pickup Day</strong><p>The approved pickup date is today. Pickup may be confirmed when the member physically collects the asset.</p></div>
 <?php else:?>
 <div class="asset-form-note"><strong>Status: <?=e($status)?></strong></div>
 <?php endif;?>

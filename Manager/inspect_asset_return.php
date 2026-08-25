@@ -25,10 +25,13 @@ function notify(mysqli $c,string $uid,string $title,string $text): void {
     $s->bind_param('ssss',$id,$uid,$title,$text);$s->execute();$s->close();
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');
-$backURL='manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=$back?'&back='.rawurlencode($back):'';
-$returnQ=[];if($back)parse_str($back,$returnQ);$returnQ['returnDone']='1';$returnURL='manager_borrowed_assets.php?'.http_build_query($returnQ);
-if(!$id){header('Location: manager_borrowed_assets.php');exit();}
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'returns';
+$notificationURL='manager_notifications.php'.($back?'?'.$back:'');
+$manageReturnsURL='manager_borrowed_assets.php'.($back?'?'.$back:'');
+$backParam=($source==='notifications'?'&source=notifications':'').($back?'&back='.rawurlencode($back):'');
+$returnQ=[];if($back)parse_str($back,$returnQ);$returnQ['returnDone']='1';
+$returnURL=$source==='notifications'?$notificationURL:'manager_borrowed_assets.php?'.http_build_query($returnQ);
+if(!$id){header('Location: '.($source==='notifications'?$notificationURL:'manager_borrowed_assets.php'));exit();}
 
 $conditions=['New','Like New','Good','Fair','Poor'];$t=$b=$upcomingReservation=null;$error='';
 
@@ -61,12 +64,11 @@ try{
         $s->bind_param('ss',$t['assetID'],$id);$s->execute();
         $upcomingReservation=$s->get_result()->fetch_assoc();$s->close();
 
-        $active=$b&&!$b['actualReturnDate']&&(
-            $t['availabilityStatus']==='Borrowed'||
-            in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true)||
-            in_array($t['requestStatus'],['In Progress','Overdue'],true)
-        );
-        if(!$active){header('Location: manager_borrowed_assets.php');exit();}
+        $active=$b
+            && !$b['actualReturnDate']
+            && in_array($b['borrowingStatus'],['Borrowed','Active','Overdue'],true)
+            && in_array($t['requestStatus'],['In Progress','Overdue'],true);
+        if(!$active){header('Location: '.($source==='notifications'?$notificationURL:'manager_borrowed_assets.php'));exit();}
 
         if($_SERVER['REQUEST_METHOD']==='POST'){
             $returned=trim($_POST['returnedCondition']??'');
@@ -114,9 +116,9 @@ try{
                         $s->bind_param('is',$deduct,$t['requesterID']);$s->execute();$s->close();
 
                         $eid=nextID($c,'ecopointstransaction','transactionID','ET');
-                        $points=-$deduct;$type='Spent';$source='BorrowingPenalty';
+                        $points=-$deduct;$type='Spent';$ecoSource='BorrowingPenalty';
                         $s=$c->prepare("INSERT INTO ecopointstransaction(transactionID,userID,points,transactionType,sourceType,referenceID) VALUES (?,?,?,?,?,?)");
-                        $s->bind_param('ssisss',$eid,$t['requesterID'],$points,$type,$source,$id);$s->execute();$s->close();
+                        $s->bind_param('ssisss',$eid,$t['requesterID'],$points,$type,$ecoSource,$id);$s->execute();$s->close();
                     }
 
                     $newBalance=(int)$t['ecopoint']-$deduct;
@@ -152,7 +154,11 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <main class="page-body">
 
 <section class="management-heading">
-<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($backURL)?>">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<?php if($source==='notifications'):?>
+<div class="breadcrumb"><a href="<?=e($notificationURL)?>">Notifications</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<?php else:?>
+<div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($manageReturnsURL)?>">Manage Returns</a><span>›</span><a href="manager_borrowed_asset_view.php?transactionID=<?=e($id)?><?=e($backParam)?>">Borrowed Asset Details</a><span>›</span><span class="breadcrumb-current">Return Inspection</span></div>
+<?php endif;?>
 <h1>Return Inspection</h1><p>Inspect the returned asset before completing the borrowing transaction.</p>
 </section>
 

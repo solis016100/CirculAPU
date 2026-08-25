@@ -32,8 +32,9 @@ $assetID=trim($_GET['assetID']??'');
 $back=trim($_GET['back']??'');$source=$_GET['source']??'assets';
 if($source==='reports'){$backURL='manager_reports.php'.($back?'?'.$back:'');$backLabel='Reports';}
 elseif($source==='category'){$backURL='manager_category_view.php'.($back?'?'.$back:'');$backLabel='Category Details';}
+elseif($source==='notifications'){$backURL='manager_notifications.php'.($back?'?'.$back:'');$backLabel='Notifications';}
 else{$backURL='manager_assets.php'.($back?'?'.$back:'');$backLabel='Asset Management';}
-$navParam=(in_array($source,['reports','category'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
+$navParam=(in_array($source,['reports','category','notifications'],true)?'&source='.rawurlencode($source):'').($back?'&back='.rawurlencode($back):'');
 
 if (!$assetID) {
     header('Location: manager_assets.php');
