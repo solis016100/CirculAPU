@@ -75,7 +75,7 @@
             $activityStatement->close();
         }
 
-        $notificationStatement = $conn->prepare("SELECT notificationID, title, content, status, createdDate FROM notification WHERE userID = ? ORDER BY createdDate DESC LIMIT 3");
+        $notificationStatement = $conn->prepare("SELECT notificationID, title, content, status, createdDate FROM notification WHERE userID = ? ORDER BY createdDate DESC LIMIT 4");
         if ($notificationStatement){
             $notificationStatement->bind_param("s", $auditorID);
             $notificationStatement->execute();
