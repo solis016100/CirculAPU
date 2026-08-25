@@ -306,18 +306,16 @@ if (!$assetResult) {
                                 update the information and resubmit the asset.
                             </p>
                         </div>
-                        <div class="guide-item">
-                            <strong>Pending</strong>
-                            <p>
-                                Your asset verification is still pending.
-                            </p>
-                        </div>
+                       
                         <div class="guide-item">
                             <strong>Pending Review</strong>
                             <p>
-                                Your modified asset has been resubmitted and is waiting
-                                to be reviewed again.
+                                Your request is waiting for approval.
                             </p>
+                        </div>
+                        <div class="guide-item">
+                            <strong>Approved</strong>
+                            <p>Your request has been approved.</p>
                         </div>
                         <div class="guide-item">
                             <strong>Published</strong>
