@@ -57,7 +57,8 @@ $stats = memberQuery($conn, "
          WHERE userID=u.userID AND transactionType='Earned') totalEarned,
         (SELECT COUNT(*) FROM transactionrequests WHERE requesterID=u.userID)
         + (SELECT COUNT(*) FROM assets WHERE ownerID=u.userID) totalRequest,
-        (SELECT COUNT(*) FROM missionsubmission WHERE userID=u.userID) totalMission,
+        (SELECT COUNT(*) FROM missionsubmission
+         WHERE userID=u.userID AND submissionStatus='In Progress') totalMission,
         (SELECT COUNT(*) FROM missionsubmission
          WHERE userID=u.userID AND submissionStatus IN ('Approved','Verified')) totalCompletedMission,
         (SELECT COUNT(*) FROM transactionrequests
