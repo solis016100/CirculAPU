@@ -25,7 +25,7 @@ function logReminder(mysqli $c,string $uid,string $ref,string $text):void{
     $s->bind_param('ssss',$lid,$uid,$ref,$text);$s->execute();$s->close();
 }
 
-$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');$backURL='manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=$back?'&back='.rawurlencode($back):'';
+$manager=$_SESSION['user_id'];$id=trim($_GET['transactionID']??'');$back=trim($_GET['back']??'');$source=$_GET['source']??'returns';$backURL=$source==='notifications'?'manager_notifications.php'.($back?'?'.$back:''):'manager_borrowed_assets.php'.($back?'?'.$back:'');$backParam=($source==='notifications'?'&source=notifications':'').($back?'&back='.rawurlencode($back):'');
 if(!$id){header('Location: manager_borrowed_assets.php');exit();}
 
 $t=null;$b=null;$error='';$remindedToday=false;$reminderCount=0;$lastReminder=null;
@@ -155,7 +155,11 @@ $overdue=$b&&$b['expectedReturnDate']&&date('Y-m-d',strtotime($b['expectedReturn
 <main class="page-body">
 
 <section class="management-heading">
+<?php if($source==='notifications'):?>
+<div class="breadcrumb"><a href="<?=e($backURL)?>">Notifications</a><span>›</span><span class="breadcrumb-current">Borrowed Asset Details</span></div>
+<?php else:?>
 <div class="breadcrumb"><a href="manager_transactions.php">Transaction Management</a><span>›</span><a href="<?=e($backURL)?>">Manage Returns</a><span>›</span><span class="breadcrumb-current">Borrowed Asset Details</span></div>
+<?php endif;?>
 <h1>Borrowed Asset Details</h1><p>Review the active borrowing, send overdue reminders and process the returned asset.</p>
 </section>
 

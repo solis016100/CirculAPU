@@ -72,7 +72,7 @@ try {
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
+             AND DATE(b.borrowDate)>=CURDATE()
              AND a.availabilityStatus<>'Unavailable'
 ) pickup,
             (SELECT COUNT(*) FROM borrowings
@@ -101,7 +101,7 @@ try {
              WHERE t.requestStatus='Approved'
              AND b.actualReturnDate IS NULL
              AND b.borrowingStatus='Approved'
-             AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
+             AND DATE(b.borrowDate)>=CURDATE()
              AND a.availabilityStatus<>'Unavailable'
 
              ORDER BY DATE(b.borrowDate) ASC,t.requestDate ASC
@@ -150,7 +150,7 @@ try {
     if ($pickupOnly) $where[] = "t.requestStatus='Approved' AND a.availabilityStatus<>'Unavailable' AND EXISTS(
         SELECT 1 FROM borrowings b WHERE b.transactionID=t.transactionID
         AND b.actualReturnDate IS NULL AND b.borrowingStatus='Approved'
-        AND CURDATE() BETWEEN DATE(b.borrowDate) AND DATE(b.expectedReturnDate)
+        AND DATE(b.borrowDate)>=CURDATE()
     )";
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -194,7 +194,7 @@ try {
 
 $start = $total ? $offset + 1 : 0;
 $end = min($offset + $perPage, $total);
-$listTitle=$pickupOnly?'Waiting for Pickup Confirmation':($status==='Pending'?'Pending Requests':'Transaction Requests');
+$listTitle=$pickupOnly?'Pickup Reservations':($status==='Pending'?'Pending Requests':'Transaction Requests');
 $resetURL=$pickupOnly?'manager_transactions.php?pickup=1':($status==='Pending'?'manager_transactions.php?requestStatus=Pending':'manager_transactions.php');
 $back=http_build_query(array_filter([
     'search'=>$search,'requestStatus'=>$status,'dateFrom'=>$dateFrom,'dateTo'=>$dateTo,
@@ -244,7 +244,7 @@ $backParam=$back?'&back='.rawurlencode($back):'';
 <?php if($nextPickup):?>
 <a href="manager_transactions.php?pickup=1" class="management-create-btn">
 <img src="../assets/icons/borrowed-assets.png" alt="">
-Waiting for Pickup Confirmation (<?=$stats['pickup']?>)
+Pickup Reservations (<?=$stats['pickup']?>)
 </a>
 <?php endif;?>
 </div>
@@ -306,7 +306,8 @@ Waiting for Pickup Confirmation (<?=$stats['pickup']?>)
 <?php if(!$transactions):?>
 <div class="mobile-empty-card">No transaction requests found.</div>
 <?php else:foreach($transactions as $t):
-$displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']);
+$pickupDay=$t['pickupDate']&&strtotime($t['pickupDate'])?date('Y-m-d',strtotime($t['pickupDate'])):'';
+$displayStatus=$pickupOnly?($pickupDay===date('Y-m-d')?'Awaiting Pickup':'Upcoming Pickup'):($t['isOverdue']?'Overdue':$t['requestStatus']);
 [$priorityLabel,$priorityClass]=pickupPriority($t['pickupDate'],$t['requestStatus']);?>
 <article class="mobile-transaction-card">
 <div class="mobile-transaction-top">
@@ -328,7 +329,7 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 
 <div class="mobile-card-actions">
 <a class="primary" href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?><?=$pickupOnly?'&from=pickup':($status?'&from='.rawurlencode($status):'')?><?=$backParam?>">
-<?=$pickupOnly?'Confirm Pickup':($t['requestStatus']==='Pending'?'Review Request':'View Details')?>
+<?=$pickupOnly?($pickupDay===date('Y-m-d')?'Confirm Pickup':'View Reservation'):($t['requestStatus']==='Pending'?'Review Request':'View Details')?>
 </a>
 </div>
 </article>
@@ -387,7 +388,7 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 <tbody>
 <?php if (!$transactions): ?>
 <tr><td colspan="8" class="management-empty-state">No transaction requests found.</td></tr>
-<?php else: foreach ($transactions as $i => $t): $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requestStatus']); [$priorityLabel,$priorityClass]=pickupPriority($t['pickupDate'],$t['requestStatus']); ?>
+<?php else: foreach ($transactions as $i => $t): $pickupDay=$t['pickupDate']&&strtotime($t['pickupDate'])?date('Y-m-d',strtotime($t['pickupDate'])):''; $displayStatus=$pickupOnly?($pickupDay===date('Y-m-d')?'Awaiting Pickup':'Upcoming Pickup'):($t['isOverdue']?'Overdue':$t['requestStatus']); [$priorityLabel,$priorityClass]=pickupPriority($t['pickupDate'],$t['requestStatus']); ?>
 <tr>
 <td><?= $offset + $i + 1 ?></td>
 <td><strong><?= e($t['transactionID']) ?></strong></td>
@@ -398,7 +399,7 @@ $displayStatus=$pickupOnly?'Awaiting Pickup':($t['isOverdue']?'Overdue':$t['requ
 <td><?= e(showDate($t['dueDate'])) ?></td>
 <td>
 <?php if($pickupOnly||$status==='Pending'):?>
-<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>&from=<?=rawurlencode($pickupOnly?'pickup':$status)?><?=$backParam?>" class="queue-action-link"><?=$pickupOnly?'Confirm Pickup':'Review Request'?></a>
+<a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?>&from=<?=rawurlencode($pickupOnly?'pickup':$status)?><?=$backParam?>" class="queue-action-link"><?=$pickupOnly?($pickupDay===date('Y-m-d')?'Confirm Pickup':'View Reservation'):'Review Request'?></a>
 <?php else:?>
 <a href="manager_transaction_view.php?transactionID=<?=e($t['transactionID'])?><?=$status?'&from='.rawurlencode($status):''?><?=$backParam?>" class="management-action-btn"
 title="<?=$t['requestStatus']==='Pending'?'Review Transaction Request':'View Transaction Details'?>">
@@ -436,14 +437,14 @@ title="<?=$t['requestStatus']==='Pending'?'Review Transaction Request':'View Tra
 </div>
 
 <?php if($nextPickup):?>
-<p style="margin-top:12px">There <?=$stats['pickup']===1?'is':'are'?> still <strong><?=$stats['pickup']?></strong> reservation<?=$stats['pickup']===1?'':'s'?> waiting for pickup confirmation.</p>
+<p style="margin-top:12px">There <?=$stats['pickup']===1?'is':'are'?> still <strong><?=$stats['pickup']?></strong> pickup reservation<?=$stats['pickup']===1?'':'s'?> scheduled for today or a future date.</p>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="pickupDoneDialog.close()">Done</button>
 <button type="button" class="category-form-submit"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">Confirm Next Pickup</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">View Next Reservation</button>
 </div>
 <?php else:?>
-<p style="margin-top:12px">There are no more reservations waiting for pickup confirmation.</p>
+<p style="margin-top:12px">There are no more pickup reservations scheduled for today or a future date.</p>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-submit" onclick="pickupDoneDialog.close()">Done</button>
 </div>
@@ -465,7 +466,7 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPic
 <button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
 <?php if($nextPickup):?>
 <button type="button" class="category-form-back"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">Process Pickups (<?=$stats['pickup']?>)</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">View Pickup Reservations (<?=$stats['pickup']?>)</button>
 <?php endif;?>
 <button type="button" class="category-form-submit"
 onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPending)?>&from=pending'">Review Next Request</button>
@@ -473,11 +474,11 @@ onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPen
 <?php else:?>
 <p style="margin-top:12px">There are no more pending requests to review.</p>
 <?php if($nextPickup):?>
-<p style="margin-top:12px"><strong><?=$stats['pickup']?></strong> approved reservation<?=$stats['pickup']===1?' is':'s are'?> waiting for pickup confirmation.</p>
+<p style="margin-top:12px"><strong><?=$stats['pickup']?></strong> approved pickup reservation<?=$stats['pickup']===1?' is':'s are'?> scheduled for today or a future date.</p>
 <div class="flow-dialog-actions">
 <button type="button" class="category-form-back" onclick="nextRequestDialog.close()">Done</button>
 <button type="button" class="category-form-submit"
-onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">Confirm Pickups</button>
+onclick="location.href='manager_transaction_view.php?transactionID=<?=e($nextPickup)?>&from=pickup'">View Pickup Reservations</button>
 </div>
 <?php else:?>
 <div class="flow-dialog-actions">

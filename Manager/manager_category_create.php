@@ -110,6 +110,8 @@ try {
 </section>
 
 <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
+<div id="clearFormNotice" class="alert alert-success" hidden>Form cleared. Category Name and Category Icon are required before creating a category.</div>
+<div id="createFormNotice" class="alert alert-error" hidden></div>
 
 <section class="content-card category-form-card">
 <form method="POST" id="categoryForm">
@@ -201,15 +203,55 @@ try {
 </div>
 </dialog>
 
+<dialog id="clearFormConfirm" class="flow-dialog">
+<h2>Clear Category Form?</h2>
+<p>All information entered on this form will be removed.</p>
+
+<div class="flow-dialog-summary">
+    <div><strong>Category Name</strong><span id="clearCategoryName">-</span></div>
+    <div><strong>Selected Icon</strong><span id="clearCategoryIcon">-</span></div>
+    <div><strong>Status</strong><span id="clearCategoryStatus">Active</span></div>
+</div>
+
+<div class="flow-dialog-actions">
+    <button type="button" class="category-form-back" onclick="clearFormConfirm.close()">No, Keep Details</button>
+    <button type="button" class="category-form-submit" onclick="confirmClearForm()">Yes, Clear Form</button>
+</div>
+</dialog>
+
 <script>
-const form=document.getElementById('categoryForm'), nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), statusInput=document.getElementById('status'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), placeholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription');
+const form=document.getElementById('categoryForm'), nameInput=document.getElementById('categoryName'), descInput=document.getElementById('description'), statusInput=document.getElementById('status'), selectedIcon=document.getElementById('selectedIcon'), previewIcon=document.getElementById('previewIcon'), placeholder=document.getElementById('iconPlaceholder'), previewName=document.getElementById('previewName'), previewDescription=document.getElementById('previewDescription'), clearNotice=document.getElementById('clearFormNotice'), createNotice=document.getElementById('createFormNotice');
 
 function openCategoryConfirm(){
-    if(!form.checkValidity()){form.reportValidity();return}
-
+    const name=nameInput.value.trim();
     const icon=form.querySelector('input[name="categoryIcon"]:checked');
-    confirmCategoryName.textContent=nameInput.value.trim();
-    confirmCategoryIcon.textContent=icon?.closest('label')?.title||'-';
+
+    createNotice.hidden=true;
+
+    if(!name){
+        createNotice.textContent='Please enter a Category Name before creating the category.';
+        createNotice.hidden=false;
+        nameInput.focus();
+        createNotice.scrollIntoView({behavior:'smooth',block:'center'});
+        return;
+    }
+
+    if(!icon){
+        createNotice.textContent='Please select a Category Icon before creating the category.';
+        createNotice.hidden=false;
+        document.querySelector('.category-icon-panel')?.scrollIntoView({behavior:'smooth',block:'center'});
+        return;
+    }
+
+    if(!form.checkValidity()){
+        createNotice.textContent='Please complete all required fields before creating the category.';
+        createNotice.hidden=false;
+        form.reportValidity();
+        return;
+    }
+
+    confirmCategoryName.textContent=name;
+    confirmCategoryIcon.textContent=icon.closest('label')?.title||'-';
     confirmCategoryStatus.textContent=statusInput.value;
     confirmCategoryDescription.textContent=descInput.value.trim()||'-';
     categoryConfirm.showModal();
@@ -231,12 +273,42 @@ nameInput.addEventListener('input',()=>previewName.textContent=nameInput.value.t
 descInput.addEventListener('input',()=>previewDescription.textContent=descInput.value.trim()||'Category description will appear here.');
 
 document.getElementById('clearForm').addEventListener('click',()=>{
-    form.reset(); nameInput.value=''; descInput.value=''; statusInput.value='Active';
+    const icon=form.querySelector('input[name="categoryIcon"]:checked');
+    const hasDetails=nameInput.value.trim()!==''||descInput.value.trim()!==''||icon!==null||statusInput.value!=='Active';
+
+    if(!hasDetails){
+        clearNotice.textContent='The form is already empty. Category Name and Category Icon are required before creating a category.';
+        clearNotice.hidden=false;
+        nameInput.focus();
+        return;
+    }
+
+    clearCategoryName.textContent=nameInput.value.trim()||'-';
+    clearCategoryIcon.textContent=icon?.closest('label')?.title||'-';
+    clearCategoryStatus.textContent=statusInput.value;
+    clearFormConfirm.showModal();
+});
+
+function confirmClearForm(){
+    form.reset();
+    nameInput.value='';
+    descInput.value='';
+    statusInput.value='Active';
     document.querySelectorAll('input[name="categoryIcon"]').forEach(x=>x.checked=false);
     document.querySelectorAll('.category-icon-option').forEach(x=>x.classList.remove('selected'));
-    selectedIcon.hidden=previewIcon.hidden=true; placeholder.hidden=false;
-    previewName.textContent='Category Name'; previewDescription.textContent='Category description will appear here.';
-});
+    selectedIcon.hidden=previewIcon.hidden=true;
+    selectedIcon.src=previewIcon.src='';
+    placeholder.hidden=false;
+    previewName.textContent='Category Name';
+    previewDescription.textContent='Category description will appear here.';
+    clearFormConfirm.close();
+    clearNotice.textContent='Form cleared. Category Name and Category Icon are required before creating a category.';
+    clearNotice.hidden=false;
+    nameInput.focus();
+}
+
+[nameInput,descInput,statusInput].forEach(x=>x.addEventListener('input',()=>{clearNotice.hidden=true;createNotice.hidden=true}));
+document.querySelectorAll('input[name="categoryIcon"]').forEach(x=>x.addEventListener('change',()=>{clearNotice.hidden=true;createNotice.hidden=true}));
 </script>
 </body>
 </html>

@@ -129,8 +129,8 @@ try {
                              WHERE tr.requestStatus='Approved'
                                AND b.borrowingStatus='Approved'
                                AND b.actualReturnDate IS NULL
-                               AND DATE(b.expectedReturnDate) < CURDATE()
-                             ORDER BY DATE(b.expectedReturnDate) ASC,tr.transactionID ASC")
+                               AND DATE(b.borrowDate) < CURDATE()
+                             ORDER BY DATE(b.borrowDate) ASC,tr.transactionID ASC")
                      ->fetch_all(MYSQLI_ASSOC);
 
     foreach ($expiredRows as $r) {
@@ -145,7 +145,7 @@ try {
         try {
             $s = $c->prepare("SELECT tr.requestStatus,tr.managerRemark,tr.requesterID,
                                      a.availabilityStatus,
-                                     b.borrowingStatus,b.actualReturnDate,b.expectedReturnDate
+                                     b.borrowingStatus,b.actualReturnDate,b.borrowDate,b.expectedReturnDate
                               FROM transactionrequests tr
                               JOIN borrowings b ON b.transactionID=tr.transactionID
                               JOIN assets a ON a.assetID=tr.assetID
@@ -156,13 +156,13 @@ try {
             $s->close();
 
             $today = date('Y-m-d');
-            $expectedReturn = !empty($fresh['expectedReturnDate']) ? date('Y-m-d', strtotime($fresh['expectedReturnDate'])) : '';
+            $pickupDate = !empty($fresh['borrowDate']) ? date('Y-m-d', strtotime($fresh['borrowDate'])) : '';
             $stillExpired = $fresh
                 && $fresh['requestStatus'] === 'Approved'
                 && $fresh['borrowingStatus'] === 'Approved'
                 && empty($fresh['actualReturnDate'])
-                && $expectedReturn !== ''
-                && $expectedReturn < $today;
+                && $pickupDate !== ''
+                && $pickupDate < $today;
 
             if (!$stillExpired) {
                 $c->rollback();
@@ -170,7 +170,7 @@ try {
                 continue;
             }
 
-            $autoReason = 'System: Reservation expired automatically because pickup was not confirmed before the approved borrowing period ended.';
+            $autoReason = 'System: Reservation cancelled automatically because the approved pickup date passed without pickup confirmation.';
             $remark = trim((string)($fresh['managerRemark'] ?? ''));
             $newRemark = substr(trim($remark . ($remark !== '' ? ' ' : '') . $autoReason), 0, 255);
 
@@ -204,14 +204,14 @@ try {
                             $r['assetID'],
                             'Reserved',
                             'Available',
-                            "Expired no-show reservation {$r['transactionID']} released automatically"
+                            "Missed-pickup reservation {$r['transactionID']} released automatically"
                         );
                         $releasedCount++;
                     }
                 }
             }
 
-            $logText = "Approved reservation expired without pickup for {$r['assetName']}; transaction automatically cancelled";
+            $logText = "Approved pickup was missed for {$r['assetName']}; transaction automatically cancelled";
             if ($availability === 'Reserved' && $nextProtected) {
                 $logText .= "; asset remains Reserved for protected reservation {$nextProtected['transactionID']}";
             } elseif ($availability === 'Reserved') {
@@ -224,13 +224,19 @@ try {
             addNotification(
                 $c,
                 $fresh['requesterID'],
-                'Reservation Expired',
-                "Your approved reservation {$r['transactionID']} for {$r['assetName']} expired because pickup was not confirmed before the approved borrowing period ended. Please submit a new request if you still need the asset."
+                'Reservation Cancelled',
+                "Your approved reservation {$r['transactionID']} for {$r['assetName']} was automatically cancelled because pickup was not confirmed on " . date('d M Y', strtotime($fresh['borrowDate'])) . ". Please submit a new request if you still need the asset."
+            );
+            addNotification(
+                $c,
+                $managerID,
+                'Reservation Auto-Cancelled',
+                "Transaction {$r['transactionID']}: The approved pickup for {$r['assetName']} on " . date('d M Y', strtotime($fresh['borrowDate'])) . " passed without pickup confirmation. The reservation was automatically cancelled."
             );
 
             $c->commit();
             $expiredCount++;
-            echo "Expired {$r['transactionID']} for {$r['assetID']}.\n";
+            echo "Cancelled missed pickup {$r['transactionID']} for {$r['assetID']}.\n";
         } catch (Throwable $e) {
             try { $c->rollback(); } catch (Throwable $ignore) {}
             throw $e;
@@ -339,7 +345,7 @@ try {
         }
     }
 
-    echo "Done. Reserved: $reservedCount; expired/no-show: $expiredCount; released: $releasedCount; attention notifications: $attentionCount; skipped/no change: $skippedCount.\n";
+    echo "Done. Reserved: $reservedCount; missed-pickup cancellations: $expiredCount; released: $releasedCount; attention notifications: $attentionCount; skipped/no change: $skippedCount.\n";
 } catch (Throwable $e) {
     fwrite(STDERR, "Reservation maintenance sync failed: {$e->getMessage()}\n");
     exit(1);
