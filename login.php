@@ -100,10 +100,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
 
-            // Verify password (supports plain text fallback, password_verify, or default 'password123')
-            if ($user_password === 'password123' || 
-                password_verify($user_password, $user['password']) || 
+            // Verify the password stored for this account. Plain-text comparison is
+            // retained temporarily for legacy records and upgraded after login.
+            $uses_password_hash = password_get_info($user['password'])['algo'] !== null;
+            if (password_verify($user_password, $user['password']) ||
                 $user_password === $user['password']) {
+
+                if (!$uses_password_hash || password_needs_rehash($user['password'], PASSWORD_DEFAULT)) {
+                    $upgraded_password = password_hash($user_password, PASSWORD_DEFAULT);
+                    $password_stmt = $conn->prepare('UPDATE User SET password = ? WHERE userID = ?');
+                    $password_stmt->bind_param('ss', $upgraded_password, $user['userID']);
+                    $password_stmt->execute();
+                    $password_stmt->close();
+                }
 
                 // Set all session variables
                 $_SESSION['user_id']    = $user['userID'];
