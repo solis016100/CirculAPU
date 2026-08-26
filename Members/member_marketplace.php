@@ -61,8 +61,6 @@ ON a.ownerID = u.userID
 WHERE a.availabilityStatus = 'Available'
 AND a.listingStatus = 'Published'
 AND a.verificationStatus = 'Approved'
-
-/* Do Not Show Own Assets */
 AND a.ownerID <> '$safeMemberID'
 ";
 

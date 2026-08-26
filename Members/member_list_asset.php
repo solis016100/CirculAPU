@@ -132,28 +132,15 @@ if (isset($_POST['submitAsset'])) {
                 $conn->query("
                 INSERT INTO assets
                 (
-                    assetID,
-                    ownerID,
-                    categoryID,
-                    assetName,
-                    description,
-                    assetCondition,
-                    imageURL,
-                    availabilityStatus,
-                    listingStatus,
-                    createdDate,
-                    updatedDate,
-                    verificationStatus
+                    assetID,ownerID,categoryID,assetName,
+                    description,assetCondition,imageURL,
+                    availabilityStatus,listingStatus,
+                    createdDate,updatedDate,verificationStatus
                 )
                 VALUES
                 (
-                    '$assetID',
-                    '$userID',
-                    '$categorySafe',
-                    '$assetNameSafe',
-                    '$descriptionSafe',
-                    '$conditionSafe',
-                    '$imageSafe',
+                    '$assetID','$userID','$categorySafe','$assetNameSafe',
+                    '$descriptionSafe','$conditionSafe','$imageSafe',
                     'Unavailable',
                     'Pending Review',
                     NOW(),

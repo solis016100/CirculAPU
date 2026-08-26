@@ -959,3 +959,81 @@ MEMBER REPORTS / COMPLAINTS .member-report-page{min-width:0;}
 .member-btn.secondary:hover{background:#f4fbf6;color:#159447;opacity:1;}
 .member-btn:disabled,.member-btn.disabled{background:#eee;border-color:#ccc;color:#999;cursor:not-allowed;}
 
+/* Notification Statistics - Mobile */
+@media (max-width:700px) {
+    .member-notification-page .page-body {
+        padding-left:12px;
+        padding-right:12px;
+    }
+
+    .member-notification-stats {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+        margin:12px 0;
+    }
+
+    .member-notification-stat-card {
+        width:100%;
+        min-width:0;
+        min-height:84px;
+        padding:10px;
+        border:1px solid #777;
+        border-radius:5px;
+        box-sizing:border-box;
+        color:#222;
+    }
+
+    .member-notification-stat-card h3 {
+        margin:0 0 5px;
+        font-size:15px;
+        line-height:1.2;
+    }
+
+    .member-notification-stat-card strong {
+        display:block;
+        margin:0;
+        font-size:18px;
+        line-height:1.1;
+        color: #159447;
+    }
+
+    .member-notification-stat-card p {
+        display:none;
+    }
+
+    .member-notification-filter,
+    .member-notification-card {
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #777;
+        border-radius:5px;
+        box-sizing:border-box;
+    }
+
+    .member-notification-filter {
+        padding:10px;
+    }
+
+    .member-notification-filter form {
+        grid-template-columns:1fr;
+        gap:9px;
+    }
+
+    .member-notification-card-header {
+        align-items:center;
+        flex-direction:row;
+        padding:10px;
+    }
+
+    .member-notification-card-header h2 {
+        font-size:16px;
+    }
+
+    .member-notification-read-all-btn {
+        min-height:30px;
+        padding:5px 8px;
+        font-size:9px;
+    }
+}
+

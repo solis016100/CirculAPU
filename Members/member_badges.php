@@ -1,15 +1,22 @@
 <?php
 session_start();
-//Member Access
-$conn=new mysqli("localhost","root","","circulapu_db");
-if($conn->connect_error){
-    die("Database Connection Failed: ".$conn->connect_error);
-}
-if(!isset($_SESSION['user_id'])||$_SESSION['user_role']!=='Member'){
+
+/* Member Access */
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
-$userID=$_SESSION['user_id'];
+
+$userID = $_SESSION['user_id'];
+
+/* Connect Database */
+require_once '../db.php';
+
+if ($conn->connect_error) {
+    die("Database Connection Failed: " . $conn->connect_error);
+}
+
+$conn->set_charset("utf8mb4");
 
 /* Get Total EcoPoints = all Earned EcoPoints */
 $pointQuery="
@@ -219,15 +226,17 @@ $isEarned=in_array($badgeID,$earnedBadges);
         <h3>How to Earn Badges</h3>
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Complete 1 sustainability mission</p>
+            <p>Join sustainability missions and submit your proof.</p>
         </div>
+    
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Complete 5 successful exchanges</p>
+            <p>Complete borrowing activities and return assets on time.</p>
         </div>
+
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Reach 500 total EcoPoints</p>
+            <p>Collect EcoPoints from approved sustainability activities.</p>
         </div>
     </div>
 </div>
@@ -340,15 +349,15 @@ $isEarned=in_array($badgeID,$earnedBadges);
         <h3>How to Earn Badges</h3>
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Complete 1 sustainability mission</p>
+            <p>Join sustainability missions and submit your proof.</p>
         </div>
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Complete 5 successful exchanges</p>
+            <p>Complete borrowing activities and return assets on time.</p>
         </div>
         <div class="badge-guide-item">
             <span>✓</span>
-            <p>Reach 500 total EcoPoints</p>
+            <p>Collect EcoPoints from approved sustainability activities.</p>
         </div>
     </div>
 </div>
