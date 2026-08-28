@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 25, 2026 at 11:34 AM
+-- Generation Time: Aug 28, 2026 at 03:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `circulapu_db`
 --
+CREATE DATABASE IF NOT EXISTS `circulapu_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `circulapu_db`;
 
 -- --------------------------------------------------------
 
@@ -40,9 +42,16 @@ CREATE TABLE `achievementbadges` (
 --
 
 INSERT INTO `achievementbadges` (`achieveBadgeID`, `achieveBadgeName`, `achieveBadgeDescription`, `achieveBadgeRequirement`, `achieveBadgeIcon`) VALUES
-('AB001', 'First Recycling Mission', 'Awarded for completing your first green campus mission', 'Complete 1 mission', 'badge_first_mission.png'),
-('AB002', 'Master Trader', 'Awarded for successfully exchanging 5 items', 'Complete 5 exchanges', 'badge_master_trader.png'),
-('AB003', 'Eco Pioneer', 'Earned 500 total EcoPoints', 'Reach 500 EcoPoints', 'badge_pioneer.png');
+('AB001', 'First Step', 'Completed a first sustainability mission.', 'Complete 1 approved mission', 'badge_first_step.png'),
+('AB002', 'Mission Explorer', 'Completed five sustainability missions.', 'Complete 5 approved missions', 'badge_mission_explorer.png'),
+('AB003', 'Mission Master', 'Completed ten sustainability missions.', 'Complete 10 approved missions', 'badge_mission_master.png'),
+('AB004', 'Eco Beginner', 'Earned the first 100 EcoPoints.', 'Reach 100 EcoPoints', 'badge_eco_beginner.png'),
+('AB005', 'Eco Champion', 'Built a balance of 500 EcoPoints.', 'Reach 500 EcoPoints', 'badge_eco_champion.png'),
+('AB006', 'Green Legend', 'Reached 1,000 EcoPoints through sustainable activity.', 'Reach 1,000 EcoPoints', 'badge_green_legend.png'),
+('AB007', 'Reuse Starter', 'Published three reusable assets.', 'Publish 3 approved assets', 'badge_reuse_starter.png'),
+('AB008', 'Reliable Borrower', 'Completed five asset loans responsibly.', 'Complete 5 borrowings', 'badge_reliable_borrower.png'),
+('AB009', 'Reward Collector', 'Redeemed three sustainability rewards.', 'Redeem 3 rewards', 'badge_reward_collector.png'),
+('AB010', 'Community Helper', 'Received recognition for sharing useful resources.', 'Complete 10 community exchanges', 'badge_community_helper.png');
 
 -- --------------------------------------------------------
 
@@ -70,49 +79,30 @@ CREATE TABLE `assets` (
 --
 
 INSERT INTO `assets` (`assetID`, `ownerID`, `categoryID`, `assetName`, `description`, `assetCondition`, `imageURL`, `availabilityStatus`, `listingStatus`, `createdDate`, `updatedDate`, `verificationStatus`) VALUES
-('A001', 'U004', 'C001', 'Dell Wireless Mouse', 'Compact wireless mouse for daily use.', 'Good', 'uploads/assets/mouse.jpg', 'Available', 'Removed', '2026-07-27 07:01:16', '2026-08-11 15:23:23', 'Approved'),
-('A002', 'U005', 'C002', 'Java Programming Textbook', '8th Edition Java reference guide in good condition', 'Good', 'uploads/assets/book.jpg', 'Available', 'Published', '2026-07-27 07:01:16', '2026-08-13 15:48:20', 'Approved'),
-('A003', 'U004', 'C001', 'USB-C Fast Charger', 'Original 65W USB-C power brick.', 'Good', 'uploads/assets/charger.jpg', 'Unavailable', 'Removed', '2026-07-27 07:01:16', '2026-08-11 15:23:23', 'Pending'),
-('A004', 'U002', 'C001', 'Portable HDMI adapter', 'Compact HDMI adapter for presentations and daily use.', 'Good', 'assets/managerfile/ast004_1786360473.jpg', 'Available', 'Removed', '2026-08-10 11:12:08', '2026-08-11 15:23:23', 'Pending'),
-('A005', 'U004', 'C001', 'Wireless Keyboard', 'Compact wireless keyboard suitable for study and office use.', 'Good', 'assets/managerfile/mouse.jpg', 'Unavailable', 'Removed', '2026-08-10 15:26:22', '2026-08-11 15:23:23', 'Pending'),
-('A006', 'U005', 'C002', 'Data Structures Textbook', 'Reference textbook covering data structures and algorithms.', 'Like New', 'assets/managerfile/book.jpg', 'Unavailable', 'Pending Review', '2026-08-10 15:26:22', '2026-08-25 05:57:26', 'Pending'),
-('A007', 'U004', 'C001', 'USB-C Charging Cable', 'One metre USB-C charging cable in good working condition.', 'Good', 'assets/managerfile/charger.jpg', 'Unavailable', 'Removed', '2026-08-10 15:26:22', '2026-08-14 10:54:59', 'Pending'),
-('A008', 'U005', 'C002', 'Scientific Calculator', 'Scientific calculator suitable for university mathematics subjects.', 'Good', 'assets/managerfile/mouse.jpg', 'Unavailable', 'Ready for Verification', '2026-08-10 15:26:22', '2026-08-13 13:00:48', 'Pending'),
-('A960', 'U004', 'C001', 'Wireless Mouse', 'Compact wireless mouse suitable for study and office use.', 'Good', NULL, 'Unavailable', 'Ready for Verification', '2026-08-19 15:16:50', '2026-08-19 15:18:22', 'Approved'),
-('A961', 'U004', 'C001', 'Laptop Cooling Pad', 'Portable cooling pad for laptops with adjustable stand.', 'Like New', NULL, 'Unavailable', 'Ready for Verification', '2026-08-19 15:16:50', '2026-08-19 15:22:44', 'Pending'),
-('A962', 'U004', 'C001', 'USB Webcam', 'USB webcam suitable for online classes and video meetings.', 'Good', NULL, 'Unavailable', 'Ready for Verification', '2026-08-19 15:16:50', '2026-08-19 15:22:48', 'Pending'),
-('A963', 'U004', 'C001', 'Portable Bluetooth Speaker', 'Small portable speaker suitable for events and group activities.', 'Fair', NULL, 'Unavailable', 'Ready for Verification', '2026-08-19 15:16:50', '2026-08-19 15:22:51', 'Pending'),
-('A964', 'U004', 'C001', 'Scientific Calculator', 'Scientific calculator suitable for mathematics and engineering subjects.', 'Like New', NULL, 'Unavailable', 'Draft', '2026-08-19 15:16:50', '2026-08-19 15:19:34', 'Pending'),
-('A965', 'U004', 'C001', 'USB-C Adapter', 'Multi-port USB-C adapter with USB and HDMI connections.', 'Good', NULL, 'Unavailable', 'Pending Review', '2026-08-19 15:16:50', NULL, 'Pending'),
-('A966', 'U004', 'C001', 'Portable Power Bank', 'Rechargeable portable power bank for mobile devices.', 'Fair', NULL, 'Unavailable', 'Pending Review', '2026-08-19 15:16:50', NULL, 'Pending'),
-('A967', 'U004', 'C001', 'External Keyboard', 'Full-size external keyboard suitable for computer laboratory or study use.', 'Good', NULL, 'Unavailable', 'Pending Review', '2026-08-19 15:16:50', NULL, 'Pending'),
-('A970', 'U004', 'C001', 'Wireless Presentation Mouse', 'Compact wireless mouse suitable for presentations, study sessions and daily campus use.', 'Good', 'uploads/assets/mouse.jpg', 'Unavailable', 'Pending Review', '2026-08-24 08:19:17', NULL, 'Pending'),
-('A971', 'U005', 'C002', 'Operating Systems Reference Book', 'Well-kept reference book for operating systems concepts and coursework revision.', 'Like New', 'uploads/assets/book.jpg', 'Unavailable', 'Ready for Verification', '2026-08-23 08:19:17', '2026-08-24 08:19:17', 'Pending'),
-('A972', 'U005', 'C001', 'Wireless Optical Mouse', 'Reliable wireless optical mouse for laptop and desktop use.', 'Good', 'uploads/assets/mouse.jpg', 'Reserved', 'Published', '2026-08-13 08:19:17', '2026-08-25 08:20:19', 'Approved'),
-('A973', 'U004', 'C001', '65W USB-C Charger', 'USB-C fast charger suitable for compatible laptops, tablets and mobile devices.', 'Like New', 'uploads/assets/charger.jpg', 'Reserved', 'Published', '2026-08-10 08:19:17', '2026-08-25 08:20:33', 'Approved'),
-('A974', 'U005', 'C002', 'Database Systems Textbook', 'Reference textbook covering database design, SQL and relational database concepts.', 'Good', 'uploads/assets/book.jpg', 'Available', 'Published', '2026-08-07 08:19:17', '2026-08-14 08:19:17', 'Approved'),
-('A975', 'U005', 'C001', 'Portable USB-C Charger', 'Portable USB-C charger prepared and reserved for an approved campus borrowing.', 'Good', 'uploads/assets/charger.jpg', 'Reserved', 'Published', '2026-08-05 08:19:17', '2026-08-25 08:19:17', 'Approved'),
-('A976', 'U004', 'C002', 'Software Engineering Textbook', 'Software engineering reference textbook in excellent condition for coursework use.', 'Like New', 'uploads/assets/book.jpg', 'Reserved', 'Published', '2026-08-04 08:19:17', '2026-08-25 08:19:17', 'Approved'),
-('A977', 'U004', 'C001', 'USB-C Charging Cable', 'Durable USB-C charging cable available for short-term campus borrowing.', 'Good', 'uploads/assets/charger.jpg', 'Available', 'Published', '2026-08-09 08:19:17', '2026-08-16 08:19:17', 'Approved'),
-('A978', 'U004', 'C001', 'Bluetooth Wireless Mouse', 'Bluetooth mouse currently on loan to a community member.', 'Good', 'uploads/assets/mouse.jpg', 'Borrowed', 'Published', '2026-07-31 08:19:17', '2026-08-23 08:19:17', 'Approved'),
-('A979', 'U005', 'C002', 'Data Structures Reference Book', 'Reference book currently borrowed and awaiting an overdue return.', 'Good', 'uploads/assets/book.jpg', 'Borrowed', 'Published', '2026-07-26 08:19:17', '2026-08-17 08:19:17', 'Approved'),
-('A980', 'U004', 'C002', 'Programming Fundamentals Textbook', 'Introductory programming textbook previously borrowed and returned successfully.', 'Like New', 'uploads/assets/book.jpg', 'Available', 'Published', '2026-07-21 08:19:17', '2026-08-20 08:19:17', 'Approved'),
-('A981', 'U005', 'C001', 'USB-C Fast Charger', 'Compact fast charger with a completed historical borrowing request.', 'Good', 'assets/managerfile/a981_1787648187.jpg', 'Available', 'Published', '2026-07-28 08:19:17', '2026-08-25 08:56:27', 'Approved'),
-('A982', 'U004', 'C002', 'Computer Networks Textbook', 'Computer networking reference textbook with a cancelled reservation history.', 'Good', 'uploads/assets/book.jpg', 'Available', 'Published', '2026-07-24 08:19:17', '2026-08-18 08:19:17', 'Approved'),
-('A983', 'U005', 'C001', 'Sealed USB-C Cable', 'New reusable cable with no active reservation; suitable for the soft-removal demonstration.', 'New', 'uploads/assets/charger.jpg', 'Available', 'Published', '2026-08-13 08:41:37', NULL, 'Approved'),
-('A984', 'U004', 'C889', 'Legacy VGA Adapter', 'Historical accessory rejected because its condition is unsuitable for circulation.', 'Poor', 'assets/icons/category-electronics.png', 'Unavailable', 'Rejected', '2026-07-31 08:41:37', '2026-08-05 08:41:37', 'Rejected'),
-('A985', 'U005', 'C003', 'Portable Whiteboard', 'Manager-readable listing in the Approved stage for status-filter and report screenshots.', 'Fair', 'assets/icons/category-studyequipment.png', 'Unavailable', 'Approved', '2026-08-17 08:41:37', '2026-08-20 08:41:37', 'Approved'),
-('A986', 'U004', 'C001', 'USB-C Multiport Hub', 'Recent Community Member submission waiting for Resource Manager review.', 'Good', 'assets/managerfile/a981_1787648187.jpg', 'Unavailable', 'Draft', '2026-08-25 08:40:37', '2026-08-25 09:26:52', 'Pending'),
-('A987', 'U005', 'C002', 'Scientific Calculator', 'Second recent submission available for review, correction or verification workflow screenshots.', 'Like New', 'assets/managerfile/scientificcalc.jpg', 'Unavailable', 'Ready for Verification', '2026-08-25 08:38:37', '2026-08-25 09:33:13', 'Pending'),
-('A988', 'U005', 'C001', 'HDMI Presentation Adapter', 'Published and verified asset linked to a valid pending request with pickup today.', 'Good', 'assets/icons/category-electronics.png', 'Available', 'Published', '2026-08-16 08:41:37', NULL, 'Approved'),
-('A989', 'U004', 'C002', 'Algorithms Reference Book', 'Published and verified asset linked to a pending request with pickup tomorrow.', 'Like New', 'uploads/assets/book.jpg', 'Available', 'Published', '2026-08-15 08:41:37', NULL, 'Approved'),
-('A990', 'U005', 'C001', 'USB Webcam', 'Published and verified asset linked to a pending request whose pickup date has passed.', 'Good', 'assets/icons/category-electronics.png', 'Available', 'Published', '2026-08-14 08:41:37', NULL, 'Approved'),
-('A991', 'U005', 'C887', 'Portable Projector', 'Approved protected reservation waiting for physical pickup confirmation.', 'Good', 'assets/icons/category-electronics.png', 'Reserved', 'Published', '2026-08-10 08:41:37', '2026-08-25 08:41:37', 'Approved'),
-('A992', 'U005', 'C003', 'Adjustable Laptop Stand', 'Approved future reservation outside the seven-day protection window, so the asset remains available.', 'Like New', 'assets/icons/category-furniture.png', 'Available', 'Published', '2026-08-09 08:41:37', NULL, 'Approved'),
-('A993', 'U005', 'C002', 'Graphic Calculator', 'Currently borrowed asset that is still within its expected return period.', 'Good', 'assets/icons/category-studyequipment.png', 'Borrowed', 'Published', '2026-08-07 08:41:37', '2026-08-25 08:41:37', 'Approved'),
-('A994', 'U005', 'C002', 'Database Revision Book', 'Currently borrowed asset with a date-derived overdue return.', 'Fair', 'uploads/assets/book.jpg', 'Borrowed', 'Published', '2026-08-05 08:41:37', '2026-08-25 08:41:37', 'Approved'),
-('A995', 'U004', 'C887', 'Shared Camera Tripod', 'Current borrowing with another approved reservation already inside its seven-day protection period.', 'Good', 'assets/icons/category-others.png', 'Borrowed', 'Published', '2026-08-03 08:41:37', '2026-08-25 08:41:37', 'Approved'),
-('A996', 'U004', 'C889', 'Retired Mouse Pad', 'Soft-removed historical listing retained for audit and inactive-category linkage.', 'Fair', 'assets/icons/category-others.png', 'Unavailable', 'Removed', '2026-07-21 08:41:37', '2026-08-10 08:41:37', 'Approved');
+('A001', 'U007', 'C001', 'Casio Scientific Calculator', 'Reliable calculator suitable for mathematics and engineering classes.', 'Good', 'uploads/assets/calculator.jpg', 'Available', 'Published', '2026-05-02 01:00:00', '2026-05-03 06:00:00', 'Approved'),
+('A002', 'U008', 'C002', 'Database Systems Textbook', 'Database design and SQL reference book with light annotations.', 'Good', 'uploads/assets/database_book.jpg', 'Borrowed', 'Published', '2026-05-04 03:00:00', '2026-08-20 02:00:00', 'Approved'),
+('A003', 'U009', 'C001', '65W USB-C Charger', 'Universal USB-C laptop charger with a two-metre cable.', 'Like New', 'uploads/assets/usb_charger.jpg', 'Reserved', 'Published', '2026-05-08 05:00:00', '2026-08-26 08:00:00', 'Approved'),
+('A004', 'U010', 'C004', 'Badminton Racket Set', 'Two rackets and a reusable carry case.', 'Good', 'uploads/assets/badminton_racket.jpg', 'Available', 'Published', '2026-05-12 02:00:00', '2026-05-13 07:00:00', 'Approved'),
+('A005', 'U011', 'C003', 'LED Study Lamp', 'Adjustable lamp with three brightness settings.', 'Good', 'uploads/assets/study_lamp.jpg', 'Unavailable', 'Rejected', '2026-05-15 08:00:00', '2026-05-16 03:00:00', 'Rejected'),
+('A006', 'U012', 'C005', 'Phone Tripod', 'Compact tripod with Bluetooth shutter remote.', 'Like New', 'uploads/assets/phone_tripod.jpg', 'Available', 'Published', '2026-05-20 01:30:00', '2026-05-21 04:00:00', 'Approved'),
+('A007', 'U013', 'C002', 'Academic Writing Guide', 'A practical guide to citations, structure, and academic style.', 'Good', 'uploads/assets/writing_guide.jpg', 'Unavailable', 'Ready for Verification', '2026-08-24 02:00:00', '2026-08-25 01:00:00', 'Pending'),
+('A008', 'U007', 'C008', 'Precision Screwdriver Kit', 'Twenty-four-bit repair kit for electronics and small appliances.', 'Like New', 'uploads/assets/screwdriver_kit.jpg', 'Available', 'Published', '2026-06-01 05:00:00', '2026-06-02 02:00:00', 'Approved'),
+('A009', 'U008', 'C009', 'Reusable Meal Container Set', 'Three food-safe containers with secure lids.', 'Good', 'uploads/assets/container_set.jpg', 'Borrowed', 'Published', '2026-06-04 07:00:00', '2026-08-10 01:00:00', 'Approved'),
+('A010', 'U009', 'C006', 'Four-Socket Extension Lead', 'Surge-protected extension lead for student events.', 'Good', 'uploads/assets/extension_lead.jpg', 'Available', 'Published', '2026-06-07 01:00:00', '2026-06-08 06:00:00', 'Approved'),
+('A011', 'U010', 'C007', 'Black Formal Blazer', 'Medium-size blazer suitable for presentations and interviews.', 'Good', 'uploads/assets/formal_blazer.jpg', 'Available', 'Published', '2026-06-10 04:00:00', '2026-06-11 07:00:00', 'Approved'),
+('A012', 'U011', 'C001', 'Wireless Presentation Clicker', 'USB presentation remote with laser pointer.', 'Good', 'uploads/assets/presentation_clicker.jpg', 'Reserved', 'Published', '2026-06-14 01:00:00', '2026-08-27 06:00:00', 'Approved'),
+('A013', 'U012', 'C004', 'Yoga Mat', 'Clean non-slip exercise mat with carrying strap.', 'Like New', 'uploads/assets/yoga_mat.jpg', 'Available', 'Published', '2026-06-18 03:00:00', '2026-06-19 02:00:00', 'Approved'),
+('A014', 'U013', 'C005', 'A3 Cutting Mat', 'Self-healing cutting mat for design projects.', 'Good', 'uploads/assets/cutting_mat.jpg', 'Unavailable', 'Pending Review', '2026-08-27 03:00:00', NULL, 'Pending'),
+('A015', 'U007', 'C002', 'Discrete Mathematics Notes', 'Organised revision notes covering core discrete mathematics topics.', 'Good', 'uploads/assets/discrete_math_notes.jpg', 'Available', 'Published', '2026-07-02 06:00:00', '2026-07-03 05:00:00', 'Approved'),
+('A016', 'U008', 'C003', 'Foldable Laptop Table', 'Portable table for study use in dorm rooms.', 'Fair', 'uploads/assets/laptop_table.jpg', 'Available', 'Published', '2026-07-05 02:00:00', '2026-07-06 01:00:00', 'Approved'),
+('A017', 'U009', 'C005', 'USB Condenser Microphone', 'Entry-level microphone for podcasts and presentations.', 'Good', 'uploads/assets/usb_microphone.jpg', 'Borrowed', 'Published', '2026-07-08 08:00:00', '2026-08-15 04:00:00', 'Approved'),
+('A018', 'U010', 'C006', 'Reusable Event Bunting', 'Ten metres of washable fabric bunting.', 'Like New', 'uploads/assets/event_bunting.jpg', 'Available', 'Published', '2026-07-12 01:00:00', '2026-07-13 03:00:00', 'Approved'),
+('A019', 'U011', 'C008', 'Bicycle Repair Pump', 'Portable floor pump with multiple valve adapters.', 'Good', 'uploads/assets/bicycle_pump.jpg', 'Available', 'Published', '2026-07-17 05:30:00', '2026-07-18 02:30:00', 'Approved'),
+('A020', 'U012', 'C001', 'HDMI Adapter Set', 'USB-C and Mini DisplayPort adapters for classroom displays.', 'Good', 'uploads/assets/hdmi_adapters.jpg', 'Unavailable', 'Ready for Verification', '2026-08-23 07:00:00', '2026-08-24 02:00:00', 'Pending'),
+('A021', 'U013', 'C004', 'Resistance Band Set', 'Five resistance bands with different strength levels.', 'New', 'uploads/assets/resistance_bands.jpg', 'Available', 'Published', '2026-07-24 02:00:00', '2026-07-25 01:00:00', 'Approved'),
+('A022', 'U007', 'C009', 'Insulated Flask', 'One-litre stainless steel flask for group activities.', 'Good', 'uploads/assets/insulated_flask.jpg', 'Available', 'Published', '2026-07-29 04:00:00', '2026-07-30 03:00:00', 'Approved'),
+('A023', 'U008', 'C007', 'Graduation Gown', 'Clean medium-size gown for photography sessions.', 'Good', 'uploads/assets/graduation_gown.jpg', 'Unavailable', 'Draft', '2026-08-27 09:00:00', NULL, 'Pending'),
+('A024', 'U009', 'C003', 'Damaged Electric Kettle', 'Kettle submitted with a loose power connector.', 'Poor', 'uploads/assets/electric_kettle.jpg', 'Unavailable', 'Rejected', '2026-08-18 02:00:00', '2026-08-19 06:00:00', 'Rejected');
 
 -- --------------------------------------------------------
 
@@ -135,16 +125,34 @@ CREATE TABLE `assetstatushistory` (
 --
 
 INSERT INTO `assetstatushistory` (`historyID`, `assetID`, `updatedBy`, `oldAvailabilityStatus`, `newAvailabilityStatus`, `statusChangeReason`, `updatedDate`) VALUES
-('H001', 'A002', 'U002', 'Available', 'Borrowed', 'Approved borrow request TR001', '2026-07-27 07:01:17'),
-('H002', 'A007', 'U002', 'Unavailable', 'Available', 'Availability updated during asset review.', '2026-08-11 12:36:39'),
-('H003', 'A007', 'U002', 'Available', 'Unavailable', 'Availability updated during asset review.', '2026-08-11 12:53:57'),
-('H896', 'A002', 'U002', 'Borrowed', 'Available', 'Return inspection completed for TR001', '2026-08-13 15:48:20'),
-('H897', 'A972', 'U002', 'Available', 'Reserved', '7-day reservation protection activated for request TR970', '2026-08-25 08:20:19'),
-('H898', 'A973', 'U002', 'Available', 'Reserved', '7-day reservation protection activated for request TR971', '2026-08-25 08:20:33'),
-('H899', 'A991', 'U002', 'Available', 'Reserved', '7-day reservation protection activated for request TR984.', '2026-08-25 08:33:37'),
-('H900', 'A993', 'U002', 'Reserved', 'Borrowed', 'Pickup confirmed for transaction TR986.', '2026-08-22 08:41:37'),
-('H901', 'A994', 'U002', 'Reserved', 'Borrowed', 'Pickup confirmed for transaction TR987.', '2026-08-15 08:41:37'),
-('H902', 'A995', 'U002', 'Reserved', 'Borrowed', 'Pickup confirmed for transaction TR988.', '2026-08-19 08:41:37');
+('H001', 'A001', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-05-03 06:00:00'),
+('H002', 'A002', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-05-05 04:00:00'),
+('H003', 'A002', 'U003', 'Available', 'Reserved', 'Borrowing request approved.', '2026-08-20 01:30:00'),
+('H004', 'A002', 'U003', 'Reserved', 'Borrowed', 'Borrower pickup confirmed.', '2026-08-20 02:00:00'),
+('H005', 'A003', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-05-09 02:00:00'),
+('H006', 'A003', 'U003', 'Available', 'Reserved', 'Asset reserved for approved request.', '2026-08-26 08:00:00'),
+('H007', 'A004', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-05-13 07:00:00'),
+('H008', 'A005', 'U006', 'Unavailable', 'Unavailable', 'Listing rejected for safety reasons.', '2026-05-16 03:00:00'),
+('H009', 'A006', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-05-21 04:00:00'),
+('H010', 'A008', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-06-02 02:00:00'),
+('H011', 'A009', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-06-05 06:00:00'),
+('H012', 'A009', 'U003', 'Available', 'Reserved', 'Borrowing request approved.', '2026-08-10 02:30:00'),
+('H013', 'A009', 'U003', 'Reserved', 'Borrowed', 'Borrower pickup confirmed.', '2026-08-10 03:00:00'),
+('H014', 'A010', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-06-08 06:00:00'),
+('H015', 'A011', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-06-11 07:00:00'),
+('H016', 'A012', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-06-15 05:00:00'),
+('H017', 'A012', 'U004', 'Available', 'Reserved', 'Asset reserved for approved request.', '2026-08-27 06:00:00'),
+('H018', 'A013', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-06-19 02:00:00'),
+('H019', 'A015', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-03 05:00:00'),
+('H020', 'A016', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-06 01:00:00'),
+('H021', 'A017', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-09 06:00:00'),
+('H022', 'A017', 'U004', 'Available', 'Reserved', 'Borrowing request approved.', '2026-08-15 03:30:00'),
+('H023', 'A017', 'U004', 'Reserved', 'Borrowed', 'Borrower pickup confirmed.', '2026-08-15 04:00:00'),
+('H024', 'A018', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-13 03:00:00'),
+('H025', 'A019', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-18 02:30:00'),
+('H026', 'A021', 'U006', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-25 01:00:00'),
+('H027', 'A022', 'U005', 'Unavailable', 'Available', 'Asset approved and published.', '2026-07-30 03:00:00'),
+('H028', 'A024', 'U006', 'Unavailable', 'Unavailable', 'Listing rejected due to electrical risk.', '2026-08-19 06:00:00');
 
 -- --------------------------------------------------------
 
@@ -168,27 +176,24 @@ CREATE TABLE `borrowings` (
 --
 
 INSERT INTO `borrowings` (`borrowID`, `assetID`, `borrowerID`, `transactionID`, `borrowDate`, `expectedReturnDate`, `actualReturnDate`, `borrowingStatus`) VALUES
-('B001', 'A002', 'U004', 'TR001', '2026-07-27 07:01:17', '2026-08-10 04:00:00', '2026-08-13 23:48:20', 'Completed'),
-('B970', 'A972', 'U004', 'TR970', '2026-08-25 07:00:00', '2026-08-28 00:00:00', NULL, 'Approved'),
-('B971', 'A973', 'U005', 'TR971', '2026-08-26 02:00:00', '2026-08-29 00:00:00', NULL, 'Approved'),
-('B972', 'A974', 'U004', 'TR972', '2026-08-29 02:00:00', '2026-09-02 00:00:00', NULL, 'Pending'),
-('B973', 'A975', 'U004', 'TR973', '2026-08-25 03:00:00', '2026-08-30 00:00:00', NULL, 'Approved'),
-('B974', 'A976', 'U005', 'TR974', '2026-08-28 02:00:00', '2026-09-02 00:00:00', NULL, 'Approved'),
-('B975', 'A977', 'U005', 'TR975', '2026-09-04 02:00:00', '2026-09-08 00:00:00', NULL, 'Approved'),
-('B976', 'A978', 'U005', 'TR976', '2026-08-23 02:00:00', '2026-08-28 00:00:00', NULL, 'Borrowed'),
-('B977', 'A979', 'U006', 'TR977', '2026-08-17 02:00:00', '2026-08-24 00:00:00', NULL, 'Overdue'),
-('B978', 'A980', 'U006', 'TR978', '2026-08-15 02:00:00', '2026-08-21 00:00:00', '2026-08-20 15:00:00', 'Completed'),
-('B979', 'A981', 'U004', 'TR979', '2026-08-27 02:00:00', '2026-08-31 00:00:00', NULL, 'Cancelled'),
-('B980', 'A982', 'U005', 'TR980', '2026-08-31 02:00:00', '2026-09-04 00:00:00', NULL, 'Cancelled'),
-('B981', 'A988', 'U004', 'TR981', '2026-08-25 07:00:00', '2026-09-01 00:00:00', NULL, 'Pending'),
-('B982', 'A989', 'U005', 'TR982', '2026-08-26 02:00:00', '2026-09-02 00:00:00', NULL, 'Pending'),
-('B983', 'A990', 'U004', 'TR983', '2026-08-23 16:00:00', '2026-08-30 00:00:00', NULL, 'Pending'),
-('B984', 'A991', 'U004', 'TR984', '2026-08-25 06:00:00', '2026-08-29 00:00:00', NULL, 'Approved'),
-('B985', 'A992', 'U990', 'TR985', '2026-09-05 16:00:00', '2026-09-13 00:00:00', NULL, 'Approved'),
-('B986', 'A993', 'U004', 'TR986', '2026-08-22 16:00:00', '2026-08-28 00:00:00', NULL, 'Borrowed'),
-('B987', 'A994', 'U990', 'TR987', '2026-08-14 16:00:00', '2026-08-23 00:00:00', NULL, 'Borrowed'),
-('B988', 'A995', 'U991', 'TR988', '2026-08-19 16:00:00', '2026-08-26 00:00:00', NULL, 'Borrowed'),
-('B989', 'A995', 'U991', 'TR989', '2026-08-27 16:00:00', '2026-09-04 00:00:00', NULL, 'Approved');
+('B001', 'A001', 'U008', 'TR001', '2026-06-04 01:00:00', '2026-06-11 17:00:00', '2026-06-11 14:00:00', 'Completed'),
+('B002', 'A004', 'U009', 'TR002', '2026-06-11 01:00:00', '2026-06-18 17:00:00', '2026-06-18 16:00:00', 'Completed'),
+('B003', 'A006', 'U010', 'TR003', '2026-06-21 02:00:00', '2026-06-24 17:00:00', '2026-06-24 15:00:00', 'Completed'),
+('B004', 'A008', 'U011', 'TR004', '2026-07-02 01:00:00', '2026-07-05 17:00:00', '2026-07-05 12:00:00', 'Completed'),
+('B005', 'A010', 'U012', 'TR005', '2026-07-09 00:00:00', '2026-07-11 18:00:00', '2026-07-11 16:00:00', 'Completed'),
+('B006', 'A013', 'U007', 'TR006', '2026-07-16 02:00:00', '2026-07-20 17:00:00', '2026-07-20 13:00:00', 'Completed'),
+('B007', 'A002', 'U009', 'TR007', '2026-08-20 02:00:00', '2026-09-03 17:00:00', NULL, 'Borrowed'),
+('B008', 'A009', 'U011', 'TR008', '2026-08-10 03:00:00', '2026-08-17 17:00:00', NULL, 'Overdue'),
+('B009', 'A017', 'U013', 'TR009', '2026-08-15 04:00:00', '2026-08-30 17:00:00', NULL, 'Borrowed'),
+('B010', 'A003', 'U010', 'TR010', '2026-08-29 02:00:00', '2026-09-05 17:00:00', NULL, 'Approved'),
+('B011', 'A012', 'U008', 'TR011', '2026-08-31 01:00:00', '2026-09-02 17:00:00', NULL, 'Approved'),
+('B012', 'A016', 'U013', 'TR012', '2026-09-01 01:00:00', '2026-09-08 17:00:00', NULL, 'Pending'),
+('B013', 'A019', 'U007', 'TR013', '2026-08-30 02:00:00', '2026-08-31 17:00:00', NULL, 'Pending'),
+('B014', 'A021', 'U012', 'TR014', '2026-08-27 01:00:00', '2026-09-03 17:00:00', NULL, 'Cancelled'),
+('B015', 'A022', 'U011', 'TR015', '2026-08-26 01:00:00', '2026-09-01 17:00:00', NULL, 'Cancelled'),
+('B016', 'A015', 'U010', 'TR016', '2026-05-21 01:00:00', '2026-05-28 17:00:00', '2026-05-27 15:00:00', 'Completed'),
+('B017', 'A018', 'U008', 'TR017', '2026-07-23 01:00:00', '2026-07-25 18:00:00', '2026-07-25 17:00:00', 'Completed'),
+('B018', 'A011', 'U009', 'TR018', '2026-09-02 01:00:00', '2026-09-05 17:00:00', NULL, 'Pending');
 
 -- --------------------------------------------------------
 
@@ -210,15 +215,16 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`categoryID`, `categoryName`, `description`, `categoryIcon`, `status`, `createdDate`) VALUES
-('C001', 'Electronics', 'Laptops, chargers, phones, and hardware accessories', 'assets/icons/category-electronics.png', 'Active', '2026-07-27 07:01:16'),
-('C002', 'Books & Stationery', 'Textbooks, revision guides, and note pads', 'assets/icons/category-books.png', 'Active', '2026-07-27 07:01:16'),
-('C003', 'Household & Living', 'Dorm essentials, mini kettles, and lamps', 'assets/icons/category-furniture.png', 'Active', '2026-07-27 07:01:16'),
-('C004', 'Sports Equipment', 'Rackets, balls, and athletic gear', 'assets/icons/category-sports.png', 'Active', '2026-07-27 07:01:16'),
-('C885', 'book', 'this book is for everyone', 'assets/icons/category-books.png', 'Active', '2026-08-13 14:51:42'),
-('C886', 'sport', 'sportsss', 'assets/icons/category-sports.png', 'Active', '2026-08-13 14:57:53'),
-('C887', 'Creative & Media', 'Reusable media and presentation equipment for campus activities.', 'assets/icons/category-music.png', 'Active', '2026-08-22 08:41:37'),
-('C888', 'Event Supplies', 'Reusable supplies for student events and campus activities.', 'assets/icons/category-others.png', 'Active', '2026-08-23 08:41:37'),
-('C889', 'Archived Accessories', 'Inactive category retained because historical asset records are linked to it.', 'assets/icons/category-electronics.png', 'Inactive', '2026-07-26 08:41:37');
+('C001', 'Electronics', 'Laptops, chargers, calculators, and useful electronic accessories.', 'assets/icons/category-electronics.png', 'Active', '2026-01-05 02:00:00'),
+('C002', 'Books & Stationery', 'Textbooks, reference books, notebooks, and study supplies.', 'assets/icons/category-books.png', 'Active', '2026-01-05 02:05:00'),
+('C003', 'Household & Living', 'Safe and reusable essentials for dormitory and daily living.', 'assets/icons/category-furniture.png', 'Active', '2026-01-05 02:10:00'),
+('C004', 'Sports Equipment', 'Rackets, balls, fitness accessories, and outdoor equipment.', 'assets/icons/category-sports.png', 'Active', '2026-01-05 02:15:00'),
+('C005', 'Creative & Media', 'Cameras, tripods, drawing tools, and media production equipment.', 'assets/icons/category-music.png', 'Active', '2026-01-05 02:20:00'),
+('C006', 'Event Supplies', 'Reusable decorations, signs, extension leads, and event equipment.', 'assets/icons/category-others.png', 'Active', '2026-01-05 02:25:00'),
+('C007', 'Clothing & Accessories', 'Clean reusable clothing, formal wear, and practical accessories.', 'assets/icons/category-others.png', 'Active', '2026-01-05 02:30:00'),
+('C008', 'Tools & Repair', 'Basic hand tools and repair kits for responsible maintenance.', 'assets/icons/category-others.png', 'Active', '2026-01-05 02:35:00'),
+('C009', 'Kitchen & Dining', 'Reusable containers, utensils, and small dining accessories.', 'assets/icons/category-furniture.png', 'Active', '2026-01-05 02:40:00'),
+('C010', 'Legacy Accessories', 'Archived category retained for historical reporting.', 'assets/icons/category-others.png', 'Inactive', '2026-01-05 02:45:00');
 
 -- --------------------------------------------------------
 
@@ -241,17 +247,41 @@ CREATE TABLE `ecopointstransaction` (
 --
 
 INSERT INTO `ecopointstransaction` (`transactionID`, `userID`, `points`, `transactionType`, `sourceType`, `referenceID`, `transactionDate`) VALUES
-('ET001', 'U004', 50, 'Earned', 'Mission', 'MS001', '2026-07-27 07:01:17'),
-('ET002', 'U004', -100, 'Spent', 'RewardRedemption', 'RR001', '2026-07-27 07:01:17'),
-('ET003', 'U003', 100, 'Earned', 'Exchange', 'AST001', '2026-07-27 07:01:17'),
-('ET884', 'U004', -5, 'Spent', 'BorrowingPenalty', 'TR001', '2026-08-13 15:48:20'),
-('ET889', 'U004', 50, 'Earned', 'Mission', 'M001', '2026-08-19 14:44:37'),
-('ET890', 'U004', 100, 'Earned', 'Mission', 'M002', '2026-08-19 14:45:53'),
-('ET891', 'U004', 123, 'Earned', 'Mission', 'M004', '2026-08-20 06:18:11'),
-('ET892', 'U005', 50, 'Earned', 'Mission', 'MS001', '2026-08-25 06:01:56'),
-('ET893', 'U004', 100, 'Earned', 'Mission', 'MS002', '2026-08-25 06:36:19'),
-('ET894', 'U004', 123, 'Earned', 'Mission', 'MS004', '2026-08-25 06:36:19'),
-('ET895', 'U990', 50, 'Earned', 'Mission', 'MS001', '2026-08-05 08:41:37');
+('ET001', 'U007', 50, 'Earned', 'Mission', 'MS001', '2026-05-05 07:05:00'),
+('ET002', 'U007', 100, 'Earned', 'Mission', 'MS002', '2026-05-18 08:05:00'),
+('ET003', 'U007', 100, 'Earned', 'Mission', 'MS003', '2026-06-02 06:05:00'),
+('ET004', 'U007', 100, 'Earned', 'Mission', 'MS004', '2026-07-10 09:05:00'),
+('ET005', 'U007', 120, 'Earned', 'Borrowing', 'TR006', '2026-07-20 05:05:00'),
+('ET006', 'U007', -250, 'Spent', 'RewardRedemption', 'RR001', '2026-07-22 02:00:00'),
+('ET007', 'U008', 50, 'Earned', 'Mission', 'MS005', '2026-05-07 07:05:00'),
+('ET008', 'U008', 50, 'Earned', 'Mission', 'MS006', '2026-05-22 09:05:00'),
+('ET009', 'U008', 75, 'Earned', 'Mission', 'MS007', '2026-06-09 02:05:00'),
+('ET010', 'U008', 80, 'Earned', 'Borrowing', 'TR001', '2026-06-11 06:05:00'),
+('ET011', 'U008', -100, 'Spent', 'RewardRedemption', 'RR002', '2026-06-15 02:00:00'),
+('ET012', 'U008', -150, 'Spent', 'RewardRedemption', 'RR003', '2026-07-02 03:00:00'),
+('ET013', 'U009', 150, 'Earned', 'Mission', 'MS009', '2026-06-01 08:05:00'),
+('ET014', 'U009', 80, 'Earned', 'Borrowing', 'TR002', '2026-06-18 08:05:00'),
+('ET015', 'U009', -100, 'Spent', 'RewardRedemption', 'RR004', '2026-07-01 04:00:00'),
+('ET016', 'U010', 50, 'Earned', 'Mission', 'MS012', '2026-04-20 06:05:00'),
+('ET017', 'U010', 100, 'Earned', 'Mission', 'MS013', '2026-05-02 08:05:00'),
+('ET018', 'U010', 150, 'Earned', 'Mission', 'MS014', '2026-05-16 06:05:00'),
+('ET019', 'U010', 100, 'Earned', 'Mission', 'MS015', '2026-06-04 09:05:00'),
+('ET020', 'U010', 100, 'Earned', 'Mission', 'MS016', '2026-06-21 06:05:00'),
+('ET021', 'U010', 100, 'Earned', 'Mission', 'MS017', '2026-07-12 09:05:00'),
+('ET022', 'U010', 80, 'Earned', 'Borrowing', 'TR003', '2026-06-24 07:05:00'),
+('ET023', 'U010', 80, 'Earned', 'Borrowing', 'TR016', '2026-05-27 07:05:00'),
+('ET024', 'U010', -250, 'Spent', 'RewardRedemption', 'RR005', '2026-07-20 02:00:00'),
+('ET025', 'U010', -200, 'Spent', 'RewardRedemption', 'RR006', '2026-08-01 01:00:00'),
+('ET026', 'U011', 50, 'Earned', 'Mission', 'MS018', '2026-06-09 07:05:00'),
+('ET027', 'U011', 80, 'Earned', 'Borrowing', 'TR004', '2026-07-05 04:05:00'),
+('ET028', 'U011', -100, 'Spent', 'RewardRedemption', 'RR007', '2026-07-10 06:00:00'),
+('ET029', 'U012', 50, 'Earned', 'Mission', 'MS020', '2026-05-11 07:05:00'),
+('ET030', 'U012', 75, 'Earned', 'Mission', 'MS021', '2026-06-13 09:05:00'),
+('ET031', 'U012', 75, 'Earned', 'Mission', 'MS022', '2026-07-06 08:05:00'),
+('ET032', 'U012', 80, 'Earned', 'Borrowing', 'TR005', '2026-07-11 08:05:00'),
+('ET033', 'U012', -180, 'Spent', 'RewardRedemption', 'RR008', '2026-07-15 03:00:00'),
+('ET034', 'U013', 50, 'Earned', 'Mission', 'MS023', '2026-07-15 09:05:00'),
+('ET035', 'U013', -100, 'Spent', 'RewardRedemption', 'RR009', '2026-07-20 04:00:00');
 
 -- --------------------------------------------------------
 
@@ -273,15 +303,18 @@ CREATE TABLE `missions` (
 --
 
 INSERT INTO `missions` (`missionID`, `missionName`, `missionDescription`, `missionRequirement`, `ecoPointsReward`, `status`) VALUES
-('M001', 'Bring Your Own Bottle', 'Use a reusable water bottle on campus for a week', 'Upload photo of bottle at APU refill station', 50, 'Inactive'),
-('M002', 'E-Waste Recycling Drive', 'Drop off old electronics or batteries at the hub', 'Upload photo of items dropped at recycling bin', 100, 'Active'),
-('M003', 'Campus Eco-Clean Walk', 'Participate in the weekly campus litter collection', 'Upload selfie at event check-in point', 150, 'Active'),
-('M004', 'aava', 'adfdghj', 'dfgh', 123, 'Active'),
-('M005', 'ccc', 'azsxcvgb', 'zxcfvgbhn', 225, 'Inactive'),
-('M006', 'E-Waste Recycling Drive', 'avdv', 'a', 212, 'Inactive'),
-('M007', 'dsf', 'asdf', 'asdf', 134, 'Inactive'),
-('M008', 'daad', 'sdassads', 'asda', 122, 'Active'),
-('M009', 'saca', 'adgfghmjh', 'dfgghj', 23, 'Active');
+('M001', 'Bring Your Own Bottle', 'Use a reusable water bottle on campus.', 'Upload a photo at an APU refill station', 50, 'Active'),
+('M002', 'E-Waste Recycling Drive', 'Dispose of batteries or electronics responsibly.', 'Upload a photo at an approved e-waste point', 100, 'Active'),
+('M003', 'Campus Clean Walk', 'Collect litter while walking around campus.', 'Upload before-and-after cleanup evidence', 150, 'Active'),
+('M004', 'Reusable Bag Day', 'Avoid disposable shopping bags for one day.', 'Upload a photo of your reusable bag in use', 50, 'Active'),
+('M005', 'Paperless Study Day', 'Complete a full study day using digital materials.', 'Upload a screenshot of digital notes', 75, 'Active'),
+('M006', 'Donate an Item', 'Give a usable item a second life through donation.', 'Upload a photo and donation confirmation', 100, 'Active'),
+('M007', 'Green Transport Day', 'Travel using public transport, cycling, or walking.', 'Upload a ticket or activity screenshot', 100, 'Active'),
+('M008', 'Zero Food Waste Meal', 'Finish a meal without wasting edible food.', 'Upload meal photos before and after', 75, 'Active'),
+('M009', 'Reusable Container Challenge', 'Use a reusable container for takeaway food.', 'Upload a photo of the container in use', 75, 'Active'),
+('M010', 'Share a Green Tip', 'Share a practical sustainability tip with the community.', 'Upload a screenshot of your published tip', 100, 'Active'),
+('M011', 'Switch Off and Save', 'Reduce unnecessary electricity use in a shared space.', 'Upload evidence of lights or equipment switched off', 60, 'Active'),
+('M012', 'Old Clothes Swap', 'Exchange wearable clothing instead of discarding it.', 'Upload a photo from a verified clothing swap', 120, 'Inactive');
 
 -- --------------------------------------------------------
 
@@ -303,13 +336,30 @@ CREATE TABLE `missionsubmission` (
 --
 
 INSERT INTO `missionsubmission` (`submissionID`, `userID`, `missionID`, `evidencePath`, `submissionDate`, `submissionStatus`) VALUES
-('MS001', 'U005', 'M001', 'uploads/submissions/U005_M001_1787150024.png', '2026-08-19 14:33:44', 'Approved'),
-('MS002', 'U004', 'M002', 'uploads/submissions/U004_M002_1787150732.png', '2026-08-19 14:45:32', 'Approved'),
-('MS003', 'U004', 'M003', 'uploads/submissions/U004_M003_1787154917.png', '2026-08-19 15:55:17', 'Rejected'),
-('MS004', 'U004', 'M004', 'uploads/submissions/U004_M004_1787206665.png', '2026-08-20 06:17:45', 'Approved'),
-('S001', 'U004', 'M001', 'uploads/submissions/ms1_proof.jpg', '2026-07-27 07:01:16', ''),
-('S002', 'U005', 'M002', 'uploads/submissions/ms2_proof.jpg', '2026-07-27 07:01:16', 'Pending'),
-('S003', 'U004', 'M008', 'uploads/submissions/U004_M008_1787639877.png', '2026-08-25 06:37:57', 'Pending');
+('MS001', 'U007', 'M001', 'uploads/submissions/U007_M001.jpg', '2026-05-05 01:00:00', 'Approved'),
+('MS002', 'U007', 'M002', 'uploads/submissions/U007_M002.jpg', '2026-05-18 03:00:00', 'Approved'),
+('MS003', 'U007', 'M007', 'uploads/submissions/U007_M007.jpg', '2026-06-02 00:30:00', 'Approved'),
+('MS004', 'U007', 'M010', 'uploads/submissions/U007_M010.jpg', '2026-07-10 05:00:00', 'Approved'),
+('MS005', 'U008', 'M001', 'uploads/submissions/U008_M001.jpg', '2026-05-07 02:00:00', 'Approved'),
+('MS006', 'U008', 'M004', 'uploads/submissions/U008_M004.jpg', '2026-05-22 06:00:00', 'Approved'),
+('MS007', 'U008', 'M005', 'uploads/submissions/U008_M005.jpg', '2026-06-08 08:00:00', 'Approved'),
+('MS008', 'U008', 'M008', 'uploads/submissions/U008_M008.jpg', '2026-08-27 03:00:00', 'Pending'),
+('MS009', 'U009', 'M003', 'uploads/submissions/U009_M003.jpg', '2026-06-01 01:30:00', 'Approved'),
+('MS010', 'U009', 'M006', 'uploads/submissions/U009_M006.jpg', '2026-06-18 04:00:00', 'Rejected'),
+('MS011', 'U009', 'M011', 'uploads/submissions/U009_M011.jpg', '2026-08-26 09:00:00', 'Pending'),
+('MS012', 'U010', 'M001', 'uploads/submissions/U010_M001.jpg', '2026-04-20 00:00:00', 'Approved'),
+('MS013', 'U010', 'M002', 'uploads/submissions/U010_M002.jpg', '2026-05-02 02:00:00', 'Approved'),
+('MS014', 'U010', 'M003', 'uploads/submissions/U010_M003.jpg', '2026-05-16 01:00:00', 'Approved'),
+('MS015', 'U010', 'M006', 'uploads/submissions/U010_M006.jpg', '2026-06-04 06:00:00', 'Approved'),
+('MS016', 'U010', 'M007', 'uploads/submissions/U010_M007.jpg', '2026-06-21 00:00:00', 'Approved'),
+('MS017', 'U010', 'M010', 'uploads/submissions/U010_M010.jpg', '2026-07-12 07:00:00', 'Approved'),
+('MS018', 'U011', 'M004', 'uploads/submissions/U011_M004.jpg', '2026-06-09 03:00:00', 'Approved'),
+('MS019', 'U011', 'M009', 'uploads/submissions/U011_M009.jpg', '2026-08-25 04:00:00', 'Rejected'),
+('MS020', 'U012', 'M001', 'uploads/submissions/U012_M001.jpg', '2026-05-11 01:00:00', 'Approved'),
+('MS021', 'U012', 'M005', 'uploads/submissions/U012_M005.jpg', '2026-06-13 05:00:00', 'Approved'),
+('MS022', 'U012', 'M008', 'uploads/submissions/U012_M008.jpg', '2026-07-06 04:00:00', 'Approved'),
+('MS023', 'U013', 'M004', 'uploads/submissions/U013_M004.jpg', '2026-07-15 07:00:00', 'Approved'),
+('MS024', 'U013', 'M011', 'uploads/submissions/U013_M011.jpg', '2026-08-28 00:30:00', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -331,73 +381,46 @@ CREATE TABLE `notification` (
 --
 
 INSERT INTO `notification` (`notificationID`, `userID`, `title`, `content`, `status`, `createdDate`) VALUES
-('N001', 'U004', 'Mission Approved!', 'Your submission for Bring Your Own Bottle was approved. +50 EcoPoints awarded.', 'Unread', '2026-07-27 07:01:17'),
-('N002', 'U005', 'Borrow Request Update', 'Your request to borrow Java Programming Textbook has been approved.', 'Read', '2026-07-27 07:01:17'),
-('N003', 'U004', 'Asset Listing Returned', 'Your asset listing AST003 (USB-C Fast Charger) was returned for correction.', 'Unread', '2026-08-10 14:49:36'),
-('N004', 'U004', 'Asset Sent for Verification', 'Your asset listing AST003 (USB-C Fast Charger) has been sent for Sustainability Auditor verification.', 'Unread', '2026-08-10 14:56:31'),
-('N005', 'U004', 'Asset Listing Returned', 'Your asset AST005 was returned for correction. Reason: please give a clearer image', 'Unread', '2026-08-10 15:28:23'),
-('N006', 'U003', 'New Verification Request', 'A new mission submission is waiting for your verification.', 'Unread', '2026-08-19 02:00:00'),
-('N007', 'U003', 'Mission Submission', 'A new mission submission has been submitted for verification.', 'Unread', '2026-08-19 01:30:00'),
-('N008', 'U003', 'Low Reward Stock', 'The stock quantity of a reward is running low.', 'Unread', '2026-08-18 07:20:00'),
-('N009', 'U003', 'Verification Completed', 'Mission submission S001 has been successfully verified.', 'Read', '2026-08-18 03:45:00'),
-('N010', 'U003', 'System Maintenance', 'Scheduled system maintenance will take place on 20 August 2026.', 'Read', '2026-08-17 08:00:00'),
-('N1006', 'U004', 'New Mission Available!', 'A new mission \"asd\" is available. Complete it to earn 12 EcoPoints.', 'Unread', '2026-08-19 15:51:15'),
-('N1007', 'U005', 'New Mission Available!', 'A new mission \"asd\" is available. Complete it to earn 12 EcoPoints.', 'Unread', '2026-08-19 15:51:15'),
-('N1008', 'U006', 'New Mission Available!', 'A new mission \"asd\" is available. Complete it to earn 12 EcoPoints.', 'Unread', '2026-08-19 15:51:15'),
-('N1029', 'U004', 'New Reward Available!', 'A new reward \"qweqwe\" is now available for redemption. It costs 1000 EcoPoints.', 'Unread', '2026-08-19 15:54:55'),
-('N1030', 'U005', 'New Reward Available!', 'A new reward \"qweqwe\" is now available for redemption. It costs 1000 EcoPoints.', 'Unread', '2026-08-19 15:54:55'),
-('N1031', 'U006', 'New Reward Available!', 'A new reward \"qweqwe\" is now available for redemption. It costs 1000 EcoPoints.', 'Unread', '2026-08-19 15:54:55'),
-('N1052', 'U004', 'Mission Rejected', 'Your mission \"Campus Eco-Clean Walk\" has been rejected by the auditor. Please check the remarks.', 'Unread', '2026-08-19 15:55:59'),
-('N1053', 'U004', 'New Mission Available!', 'A new mission \"saca\" is available. Complete it to earn 23 EcoPoints.', 'Unread', '2026-08-20 06:10:49'),
-('N1054', 'U005', 'New Mission Available!', 'A new mission \"saca\" is available. Complete it to earn 23 EcoPoints.', 'Unread', '2026-08-20 06:10:49'),
-('N1055', 'U006', 'New Mission Available!', 'A new mission \"saca\" is available. Complete it to earn 23 EcoPoints.', 'Unread', '2026-08-20 06:10:49'),
-('N1076', 'U004', 'Mission Approved!', 'Your mission \"aava\" has been approved by the auditor.', 'Unread', '2026-08-20 06:18:11'),
-('N1077', 'U004', 'New Reward Available!', 'A new reward \"adfaf\" is now available for redemption. It costs 213 EcoPoints.', 'Unread', '2026-08-20 07:23:17'),
-('N1078', 'U005', 'New Reward Available!', 'A new reward \"adfaf\" is now available for redemption. It costs 213 EcoPoints.', 'Unread', '2026-08-20 07:23:17'),
-('N1079', 'U006', 'New Reward Available!', 'A new reward \"adfaf\" is now available for redemption. It costs 213 EcoPoints.', 'Unread', '2026-08-20 07:23:17'),
-('N1100', 'U005', 'Asset Resubmitted Successfully', 'Your asset Data Structures Textbook (A006) has been resubmitted successfully and is pending manager review.', 'Unread', '2026-08-25 05:57:26'),
-('N1101', 'U002', 'Asset Resubmitted for Review', 'Teo Miao Miao (U005) resubmitted Data Structures Textbook (A006). The asset is pending review.', 'Read', '2026-08-25 05:57:26'),
-('N1102', 'U001', 'New Member Complaint', 'Report R001 was submitted by member U004.', 'Read', '2026-08-25 06:34:48'),
-('N1103', 'U004', 'Complaint Submitted', 'Your complaint R001 was submitted successfully and is waiting for administrator review.', 'Unread', '2026-08-25 06:34:48'),
-('N1108', 'U003', 'Mission Completed', 'Tan Miao Miao completed daad (M008). Mission ready for approval.', 'Read', '2026-08-25 06:37:57'),
-('N1109', 'U004', 'Mission Submitted Successfully', 'Your proof for daad (M008) is waiting for auditor approval.', 'Unread', '2026-08-25 06:37:57'),
-('N1110', 'U004', 'Reservation Confirmed', 'Your request TR970 for Wireless Optical Mouse was approved. Pickup: 25 Aug 2026. Return by: 28 Aug 2026. Reservation protection begins 18 Aug 2026.', 'Unread', '2026-08-25 08:20:19'),
-('N1111', 'U005', 'Reservation Confirmed', 'Your request TR971 for 65W USB-C Charger was approved. Pickup: 26 Aug 2026. Return by: 29 Aug 2026. Reservation protection begins 19 Aug 2026.', 'Unread', '2026-08-25 08:20:33'),
-('N1120', 'U002', 'New Asset Listing Submission', 'Asset A986 (USB-C Multiport Hub) is waiting for Resource Manager review.', 'Unread', '2026-08-25 08:40:37'),
-('N1121', 'U002', 'Urgent Borrowing Request', 'Transaction TR981 for HDMI Presentation Adapter has pickup scheduled for today.', 'Unread', '2026-08-25 08:39:37'),
-('N1122', 'U002', 'Overdue Return Alert', 'Transaction TR987 for Database Revision Book is overdue and has not been returned.', 'Unread', '2026-08-25 08:38:37'),
-('N1123', 'U002', 'Reservation Protection Attention', 'Transaction TR984 for Portable Projector is protected and waiting for pickup confirmation.', 'Read', '2026-08-25 08:37:37'),
-('N1124', 'U002', 'Report Data Updated', 'New transaction and asset activity is available for Resource Manager reporting.', 'Unread', '2026-08-25 08:36:37'),
-('N1125', 'U990', 'Overdue Asset Return Reminder', 'Transaction TR987: Your borrowed asset Database Revision Book is overdue. Please return the asset as soon as possible.', 'Unread', '2026-08-24 08:41:37'),
-('N1126', 'U004', 'Asset Listing Returned', 'Your asset listing A986 (USB-C Multiport Hub) was returned for correction. Reason: Information incomplete', 'Unread', '2026-08-25 09:26:52'),
-('N1127', 'U005', 'Asset Sent for Verification', 'Your asset listing A987 (Scientific Calculator) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.', 'Unread', '2026-08-25 09:33:13'),
-('N1128', 'U003', 'Asset Ready for Verification', 'Asset A987 (Scientific Calculator), submitted by Teo Miao Miao (U005), has passed Resource Manager review and is ready for verification. Verification ID: V997.', 'Unread', '2026-08-25 09:33:13'),
-('N885', 'U005', 'Asset Sent for Verification', 'Asset A008 has been sent for Sustainability Auditor verification.', 'Unread', '2026-08-13 13:00:48'),
-('N888', 'U005', 'Borrowing Request Rejected', 'Your request TR002 for Dell Wireless Mouse was rejected. Reason: dont have pickup date and request date', 'Unread', '2026-08-13 15:12:34'),
-('N903', 'U004', 'Asset Return Completed', 'Return for Java Programming Textbook completed. Returned condition: Good. Asset status: Available. 5 EcoPoints were deducted. New balance: 295. Reason: damange a little', 'Unread', '2026-08-13 15:48:20'),
-('N924', 'U004', 'Mission Approved!', 'Your mission \"Bring Your Own Bottle\" has been approved by the auditor.', 'Unread', '2026-08-19 14:44:37'),
-('N925', 'U004', 'Mission Approved!', 'Your mission \"E-Waste Recycling Drive\" has been approved by the auditor.', 'Unread', '2026-08-19 14:45:53'),
-('N926', 'U004', 'New Achievement Badge!', 'A new badge \"dfbdgfh\" is now available. Requirement: Get 12 approved assets', 'Unread', '2026-08-19 14:57:37'),
-('N927', 'U005', 'New Achievement Badge!', 'A new badge \"dfbdgfh\" is now available. Requirement: Get 12 approved assets', 'Unread', '2026-08-19 14:57:37'),
-('N928', 'U006', 'New Achievement Badge!', 'A new badge \"dfbdgfh\" is now available. Requirement: Get 12 approved assets', 'Unread', '2026-08-19 14:57:37'),
-('N949', 'U004', 'Asset Sent for Verification', 'Your asset listing A960 (Wireless Mouse) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.', 'Unread', '2026-08-19 15:17:15'),
-('N950', 'U003', 'Asset Ready for Verification', 'Asset A960 (Wireless Mouse), submitted by Tan Miao Miao (U004), has passed Resource Manager review and is ready for verification. Verification ID: V008.', 'Read', '2026-08-19 15:17:15'),
-('N951', 'U004', 'Asset Approved!', 'Your asset \"Wireless Mouse\" has been approved by the auditor.', 'Unread', '2026-08-19 15:18:22'),
-('N952', 'U004', 'Asset Listing Returned', 'Your asset listing A964 (Scientific Calculator) was returned for correction. Reason: svsv', 'Unread', '2026-08-19 15:19:34'),
-('N954', 'U004', 'Asset Sent for Verification', 'Your asset listing A961 (Laptop Cooling Pad) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.', 'Unread', '2026-08-19 15:22:44'),
-('N955', 'U003', 'Asset Ready for Verification', 'Asset A961 (Laptop Cooling Pad), submitted by Tan Miao Miao (U004), has passed Resource Manager review and is ready for verification. Verification ID: V009.', 'Read', '2026-08-19 15:22:44'),
-('N956', 'U004', 'Asset Sent for Verification', 'Your asset listing A962 (USB Webcam) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.', 'Unread', '2026-08-19 15:22:48'),
-('N957', 'U003', 'Asset Ready for Verification', 'Asset A962 (USB Webcam), submitted by Tan Miao Miao (U004), has passed Resource Manager review and is ready for verification. Verification ID: V010.', 'Read', '2026-08-19 15:22:48'),
-('N958', 'U004', 'Asset Sent for Verification', 'Your asset listing A963 (Portable Bluetooth Speaker) passed Resource Manager review and has been sent to the Sustainability Auditor for verification.', 'Unread', '2026-08-19 15:22:51'),
-('N959', 'U003', 'Asset Ready for Verification', 'Asset A963 (Portable Bluetooth Speaker), submitted by Tan Miao Miao (U004), has passed Resource Manager review and is ready for verification. Verification ID: V011.', 'Read', '2026-08-19 15:22:51'),
-('N960', 'U004', 'New Mission Available!', 'A new mission \"aava\" is available. Complete it to earn 123 EcoPoints.', 'Unread', '2026-08-19 15:26:43'),
-('N961', 'U005', 'New Mission Available!', 'A new mission \"aava\" is available. Complete it to earn 123 EcoPoints.', 'Unread', '2026-08-19 15:26:43'),
-('N962', 'U006', 'New Mission Available!', 'A new mission \"aava\" is available. Complete it to earn 123 EcoPoints.', 'Unread', '2026-08-19 15:26:43'),
-('N983', 'U004', 'New Mission Available!', 'A new mission \"daad\" is available. Complete it to earn 122 EcoPoints.', 'Unread', '2026-08-19 15:34:04'),
-('N984', 'U005', 'New Mission Available!', 'A new mission \"daad\" is available. Complete it to earn 122 EcoPoints.', 'Unread', '2026-08-19 15:34:04'),
-('N985', 'U006', 'New Mission Available!', 'A new mission \"daad\" is available. Complete it to earn 122 EcoPoints.', 'Unread', '2026-08-19 15:34:04'),
-('NOT006', 'U005', 'Asset Listing Returned', 'Your asset AST006 (Data Structures Textbook) was returned for correction. Reason: explain furtherr', 'Unread', '2026-08-10 15:39:17'),
-('NOT007', 'U004', 'Asset Sent for Verification', 'Asset AST007 has been sent for Sustainability Auditor verification.', 'Unread', '2026-08-11 13:19:16');
+('N001', 'U003', 'New borrowing request', 'TR012 is waiting for manager review.', 'Unread', '2026-08-27 02:00:00'),
+('N002', 'U003', 'New borrowing request', 'TR013 is waiting for manager review.', 'Unread', '2026-08-27 04:30:00'),
+('N003', 'U004', 'New borrowing request', 'TR018 is waiting for manager review.', 'Unread', '2026-08-28 00:00:00'),
+('N004', 'U005', 'Asset ready for verification', 'A007 has passed manager review.', 'Unread', '2026-08-25 01:00:00'),
+('N005', 'U006', 'Asset ready for verification', 'A020 has passed manager review.', 'Read', '2026-08-24 02:00:00'),
+('N006', 'U005', 'Mission evidence submitted', 'MS008 is waiting for verification.', 'Unread', '2026-08-27 03:00:00'),
+('N007', 'U006', 'Mission evidence submitted', 'MS011 is waiting for verification.', 'Unread', '2026-08-26 09:00:00'),
+('N008', 'U005', 'Mission evidence submitted', 'MS024 is waiting for verification.', 'Unread', '2026-08-28 00:30:00'),
+('N009', 'U007', 'Reward redeemed', 'Your Reusable Water Bottle redemption was recorded.', 'Read', '2026-07-22 02:00:00'),
+('N010', 'U008', 'Borrowing completed', 'The calculator loan was completed successfully.', 'Read', '2026-06-11 06:00:00'),
+('N011', 'U009', 'Request approved', 'Database Systems Textbook is ready and on loan.', 'Read', '2026-08-20 02:00:00'),
+('N012', 'U010', 'Pickup scheduled', 'USB-C Charger is reserved for pickup.', 'Unread', '2026-08-26 08:00:00'),
+('N013', 'U011', 'Overdue reminder', 'Reusable Meal Container Set is overdue. Please return it promptly.', 'Unread', '2026-08-18 01:00:00'),
+('N014', 'U012', 'Request rejected', 'Your Resistance Band Set request was not approved.', 'Read', '2026-08-26 07:00:00'),
+('N015', 'U013', 'Asset sent for verification', 'Academic Writing Guide is awaiting auditor review.', 'Unread', '2026-08-25 01:00:00'),
+('N016', 'U007', 'Badge awarded', 'You earned the Reward Collector badge.', 'Unread', '2026-08-08 07:10:00'),
+('N017', 'U008', 'Badge awarded', 'You earned the Eco Beginner badge.', 'Read', '2026-06-09 02:10:00'),
+('N018', 'U009', 'Mission approved', 'Campus Clean Walk was approved for 150 EcoPoints.', 'Read', '2026-06-01 08:05:00'),
+('N019', 'U010', 'Tier upgraded', 'You reached the Eco Legend tier.', 'Unread', '2026-08-01 01:15:00'),
+('N020', 'U011', 'Mission rejected', 'Reusable Container Challenge evidence needs improvement.', 'Unread', '2026-08-25 08:00:00'),
+('N021', 'U012', 'Reward redeemed', 'Your Eco Shopping Bag redemption was recorded.', 'Read', '2026-07-15 03:00:00'),
+('N022', 'U013', 'Mission approved', 'Reusable Bag Day was approved for 50 EcoPoints.', 'Read', '2026-07-15 09:05:00'),
+('N023', 'U001', 'New report submitted', 'REP002 is waiting in the reports queue.', 'Unread', '2026-08-26 01:00:00'),
+('N024', 'U002', 'New report submitted', 'REP003 is waiting in the reports queue.', 'Unread', '2026-08-28 00:00:00'),
+('N025', 'U001', 'Report requires review', 'REP006 concerns a pending asset verification.', 'Unread', '2026-08-27 02:00:00'),
+('N026', 'U003', 'Asset listing submitted', 'A014 is waiting for initial manager review.', 'Unread', '2026-08-27 03:00:00'),
+('N027', 'U004', 'Asset listing submitted', 'A023 remains a draft and needs no action yet.', 'Read', '2026-08-27 09:00:00'),
+('N028', 'U007', 'New mission available', 'Switch Off and Save is available for 60 EcoPoints.', 'Unread', '2026-08-01 02:00:00'),
+('N029', 'U008', 'New mission available', 'Switch Off and Save is available for 60 EcoPoints.', 'Read', '2026-08-01 02:00:00'),
+('N030', 'U009', 'New mission available', 'Switch Off and Save is available for 60 EcoPoints.', 'Unread', '2026-08-01 02:00:00'),
+('N031', 'U010', 'New reward available', 'The Seedling Starter Kit is now available.', 'Read', '2026-08-02 02:00:00'),
+('N032', 'U011', 'New reward available', 'The Seedling Starter Kit is now available.', 'Unread', '2026-08-02 02:00:00'),
+('N033', 'U012', 'New reward available', 'The Seedling Starter Kit is now available.', 'Unread', '2026-08-02 02:00:00'),
+('N034', 'U013', 'Request cancelled', 'Your flask request TR015 was cancelled.', 'Read', '2026-08-25 06:00:00'),
+('N035', 'U003', 'Overdue asset', 'TR008 is overdue and needs follow-up.', 'Unread', '2026-08-18 01:00:00'),
+('N036', 'U004', 'Upcoming pickup', 'TR010 is scheduled for pickup on 29 August.', 'Read', '2026-08-27 01:00:00'),
+('N037', 'U005', 'Report escalation', 'REP001 references a rejected mission verification.', 'Read', '2026-06-19 01:00:00'),
+('N038', 'U006', 'Report escalation', 'REP008 requests clarification on an asset rejection.', 'Unread', '2026-08-20 07:00:00'),
+('N039', 'U007', 'Asset approved', 'Your Insulated Flask listing is published.', 'Read', '2026-07-30 03:00:00'),
+('N040', 'U012', 'Asset pending verification', 'HDMI Adapter Set is awaiting auditor review.', 'Unread', '2026-08-24 02:00:00');
 
 -- --------------------------------------------------------
 
@@ -420,7 +443,14 @@ CREATE TABLE `report` (
 --
 
 INSERT INTO `report` (`reportID`, `reporterID`, `verificationID`, `reason`, `evidenceImage`, `status`, `timeCreated`) VALUES
-('R001', 'U004', 'V012', 'cannot use', NULL, 'Pending', '2026-08-25 06:34:48');
+('REP001', 'U009', 'V019', 'The donation evidence was rejected; requester asks for a second review.', 'uploads/reports/rep001.jpg', 'Under Investigation', '2026-06-19 01:00:00'),
+('REP002', 'U011', 'V028', 'Member submitted clearer evidence for the reusable container mission.', 'uploads/reports/rep002.jpg', 'Pending', '2026-08-26 01:00:00'),
+('REP003', 'U013', 'V007', 'Asset verification has remained pending longer than expected.', NULL, 'Pending', '2026-08-28 00:00:00'),
+('REP004', 'U007', 'V003', 'Charger listing description may not identify the correct connector standard.', 'uploads/reports/rep004.jpg', 'Resolved', '2026-07-01 04:00:00'),
+('REP005', 'U008', 'V002', 'Textbook condition changed after the latest return.', 'uploads/reports/rep005.jpg', 'Under Investigation', '2026-08-22 06:00:00'),
+('REP006', 'U012', 'V008', 'HDMI adapter verification needs an update before an upcoming event.', NULL, 'Pending', '2026-08-27 02:00:00'),
+('REP007', 'U010', 'V005', 'Rejected lamp remains visible in historical search results.', 'uploads/reports/rep007.jpg', 'Resolved', '2026-06-01 03:00:00'),
+('REP008', 'U013', 'V009', 'Requesting clarification on the electrical safety rejection.', 'uploads/reports/rep008.jpg', 'Pending', '2026-08-20 07:00:00');
 
 -- --------------------------------------------------------
 
@@ -440,8 +470,21 @@ CREATE TABLE `rewardredemption` (
 --
 
 INSERT INTO `rewardredemption` (`redemptionID`, `userID`, `rewardID`, `redemptionDate`) VALUES
-('RR001', 'U004', 'R001', '2026-07-27 07:01:16'),
-('RR002', 'U003', 'R002', '2026-07-27 07:01:16');
+('RR001', 'U007', 'R003', '2026-07-22 02:00:00'),
+('RR002', 'U008', 'R001', '2026-06-15 02:00:00'),
+('RR003', 'U008', 'R004', '2026-07-02 03:00:00'),
+('RR004', 'U009', 'R001', '2026-07-01 04:00:00'),
+('RR005', 'U010', 'R009', '2026-07-20 02:00:00'),
+('RR006', 'U010', 'R002', '2026-08-01 01:00:00'),
+('RR007', 'U011', 'R001', '2026-07-10 06:00:00'),
+('RR008', 'U012', 'R007', '2026-07-15 03:00:00'),
+('RR009', 'U013', 'R001', '2026-07-20 04:00:00'),
+('RR010', 'U007', 'R004', '2026-08-02 02:00:00'),
+('RR011', 'U007', 'R005', '2026-08-08 07:00:00'),
+('RR012', 'U010', 'R010', '2026-08-10 03:00:00'),
+('RR013', 'U012', 'R004', '2026-08-12 05:00:00'),
+('RR014', 'U008', 'R007', '2026-08-16 02:00:00'),
+('RR015', 'U009', 'R004', '2026-08-18 01:00:00');
 
 -- --------------------------------------------------------
 
@@ -464,12 +507,16 @@ CREATE TABLE `rewards` (
 --
 
 INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `rewardImage`, `ecoPointsCost`, `quantity`, `availability`) VALUES
-('R001', 'Campus Cafe RM5 Voucher', 'Redeemable at APU main cafeteria food stalls', 'campus_cafe_rm5.png', 100, 0, 'Available'),
-('R002', 'CirculAPU Tote Bag', 'Eco-friendly canvas bag with official logo', 'circulapu_tote_bag.png', 200, 1, 'Available'),
-('R003', 'APU Parking Pass (1 Day)', 'Single-day parking pass waiver for campus garage', 'apu_parking_pass.png', 300, 5, 'Available'),
-('R004', 'e', 'dw', 'reward_e_1787154866.png', 12, 12, 'Unavailable'),
-('R005', 'qweqwe', '1wee', 'reward_qweqwe_1787154895.png', 1000, 12, 'Available'),
-('R006', 'adfaf', 'adfsdf', 'reward_adfaf_1787210597.png', 213, 123, 'Available');
+('R001', 'Campus Cafe RM5 Voucher', 'RM5 discount at participating campus cafes.', 'reward_cafe_rm5.png', 100, 42, 'Available'),
+('R002', 'CirculAPU Tote Bag', 'Durable reusable tote bag with CirculAPU branding.', 'reward_tote_bag.png', 200, 24, 'Available'),
+('R003', 'Reusable Water Bottle', 'BPA-free bottle for daily campus use.', 'reward_water_bottle.png', 250, 18, 'Available'),
+('R004', 'Recycled Notebook', 'Notebook produced with recycled paper.', 'reward_notebook.png', 150, 31, 'Available'),
+('R005', 'Reusable Coffee Cup', 'Leak-resistant cup for hot and cold beverages.', 'reward_coffee_cup.png', 200, 16, 'Available'),
+('R006', 'APU Stationery Set', 'A study set made with lower-impact materials.', 'reward_stationery.png', 350, 0, 'Unavailable'),
+('R007', 'Eco Shopping Bag', 'Foldable shopping bag for everyday errands.', 'reward_shopping_bag.png', 180, 27, 'Available'),
+('R008', 'Reusable Lunch Box', 'Food-safe lunch box that replaces disposable packaging.', 'reward_lunch_box.png', 220, 13, 'Available'),
+('R009', 'Campus Cafe RM10 Voucher', 'RM10 discount at participating campus cafes.', 'reward_cafe_rm10.png', 250, 15, 'Available'),
+('R010', 'Seedling Starter Kit', 'A compact herb-growing kit for beginners.', 'reward_seedling_kit.png', 300, 9, 'Available');
 
 -- --------------------------------------------------------
 
@@ -492,145 +539,48 @@ CREATE TABLE `systemlog` (
 --
 
 INSERT INTO `systemlog` (`logID`, `userID`, `actionType`, `refType`, `refID`, `description`, `timeLogged`) VALUES
-('LOG001', 'U001', 'Create', 'Category', NULL, 'Created new system category: Electronics', '2026-07-27 07:01:17'),
-('LOG002', 'U001', 'Update', 'User', 'U004', 'Adjusted EcoPoints balance for user U004 (+50)', '2026-07-27 07:01:17'),
-('LOG003', 'U001', 'Update', 'User', 'U006', 'Updated account status for user U006 to Suspended', '2026-07-27 07:01:17'),
-('LOG004', 'U002', 'Update', 'Asset', 'AST001', 'Updated asset listing: Dell Wireless Mouse', '2026-08-10 10:37:48'),
-('LOG005', 'U002', 'Update', 'Asset', 'AST001', 'Updated asset listing: Dell Wireless Mouse', '2026-08-10 10:38:13'),
-('LOG006', 'U002', 'Create', 'Asset', 'AST004', 'Created asset listing: Portable HDMI adapter', '2026-08-10 11:12:08'),
-('LOG007', 'U002', 'Update', 'Asset', 'AST004', 'Updated asset listing: Portable HDMI adapter', '2026-08-10 11:14:18'),
-('LOG008', 'U002', 'Update', 'Asset', 'AST004', 'Updated asset listing: Portable HDMI adapter', '2026-08-10 11:14:33'),
-('LOG009', 'U002', 'Delete', 'Asset', 'AST004', 'Removed asset listing: Portable HDMI adapter', '2026-08-10 13:53:33'),
-('LOG010', 'U002', 'Update', 'Asset', 'AST003', 'Updated asset submission during review: USB-C Fast Charger', '2026-08-10 14:48:02'),
-('LOG011', 'U002', 'Update', 'Asset', 'AST003', 'Returned asset listing for correction: USB-C Fast Charger', '2026-08-10 14:49:36'),
-('LOG012', 'U002', 'Update', 'Asset', 'AST003', 'Sent asset listing for verification: USB-C Fast Charger', '2026-08-10 14:56:31'),
-('LOG013', 'U002', 'Update', 'Asset', 'AST005', 'Returned AST005 for correction. Reason: please give a clearer image', '2026-08-10 15:28:23'),
-('LOG014', 'U002', 'Update', 'Asset', 'AST006', 'Returned AST006 for correction. Reason: explain furtherr', '2026-08-10 15:39:17'),
-('LOG015', 'U002', 'Delete', 'Asset', 'AST005', 'Removed asset listing: Wireless Keyboard', '2026-08-10 15:45:15'),
-('LOG016', 'U002', 'Delete', 'Asset', 'AST001', 'Removed asset listing: Dell Wireless Mouse', '2026-08-11 12:07:18'),
-('LOG017', 'U002', 'Delete', 'Asset', 'AST003', 'Removed asset listing: USB-C Fast Charger', '2026-08-11 12:21:00'),
-('LOG018', 'U002', 'Update', 'Asset', 'AST006', 'Updated asset information: Data Structures Textbook', '2026-08-11 12:27:00'),
-('LOG019', 'U002', 'Update', 'Asset', 'AST006', 'Updated asset information: Data Structures Textbook', '2026-08-11 12:27:07'),
-('LOG020', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:27:14'),
-('LOG021', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:27:21'),
-('LOG022', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:36:39'),
-('LOG023', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:53:57'),
-('LOG024', 'U002', 'Update', 'Asset', 'AST007', 'Updated asset submission during review: USB-C Charging Cable', '2026-08-11 12:54:01'),
-('LOG025', 'U002', 'Submit', 'Asset', 'AST007', 'Sent asset listing for verification: USB-C Charging Cable', '2026-08-11 13:19:16'),
-('LOG026', 'U003', 'Delete', 'Verification', 'V003', 'Deleted verification record: V003', '2026-08-11 16:35:32'),
-('LOG028', 'U003', 'Update', 'Verification', 'V006', 'Verification V006 was Approved', '2026-08-12 03:28:48'),
-('LOG1000', 'U003', 'Approve', 'Verification', 'V008', 'Approved verification V008', '2026-08-19 15:18:22'),
-('LOG1001', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 15:18:56'),
-('LOG1002', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 15:19:09'),
-('LOG1003', 'U002', 'Update', 'Asset', 'A964', 'Returned A964 for correction. Reason: svsv', '2026-08-19 15:19:34'),
-('LOG1004', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 15:19:43'),
-('LOG1005', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:19:55'),
-('LOG1006', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 15:20:25'),
-('LOG1008', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:22:14'),
-('LOG1009', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 15:22:36'),
-('LOG1010', 'U002', 'Submit', 'Asset', 'A961', 'Sent asset listing for verification: Laptop Cooling Pad', '2026-08-19 15:22:44'),
-('LOG1011', 'U002', 'Submit', 'Asset', 'A962', 'Sent asset listing for verification: USB Webcam', '2026-08-19 15:22:48'),
-('LOG1012', 'U002', 'Submit', 'Asset', 'A963', 'Sent asset listing for verification: Portable Bluetooth Speaker', '2026-08-19 15:22:51'),
-('LOG1013', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:22:59'),
-('LOG1014', 'U003', 'Create', 'Mission', 'M004', 'Created new mission: aava', '2026-08-19 15:26:43'),
-('LOG1015', 'U003', 'Create', 'Mission', 'M005', 'Created new mission: ccc', '2026-08-19 15:26:58'),
-('LOG1016', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 15:27:09'),
-('LOG1017', 'U006', 'Login', 'User', 'U006', 'Logged in to system', '2026-08-19 15:27:21'),
-('LOG1018', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:27:55'),
-('LOG1019', 'U003', 'Create', 'Mission', 'M006', 'Created new mission: E-Waste Recycling Drive', '2026-08-19 15:28:24'),
-('LOG1020', 'U003', 'Create', 'Mission', 'M007', 'Created new mission: dsf', '2026-08-19 15:33:33'),
-('LOG1021', 'U003', 'Create', 'Mission', 'M008', 'Created new mission: daad', '2026-08-19 15:34:04'),
-('LOG1022', 'U003', 'Create', 'Mission', 'M009', 'Created new mission: asd', '2026-08-19 15:51:15'),
-('LOG1023', 'U003', 'Delete', 'Mission', 'M009', 'Deleted mission: asd', '2026-08-19 15:53:49'),
-('LOG1024', 'U003', 'Create', 'Reward', 'R004', 'Created reward: e', '2026-08-19 15:54:26'),
-('LOG1025', 'U003', 'Create', 'Reward', 'R005', 'Created reward: qweqwe', '2026-08-19 15:54:55'),
-('LOG1026', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 15:55:02'),
-('LOG1027', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:55:24'),
-('LOG1028', 'U003', 'Reject', 'Verification', 'V012', 'Rejected verification V012', '2026-08-19 15:55:59'),
-('LOG1029', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 15:56:18'),
-('LOG1030', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:56:32'),
-('LOG1031', 'U003', 'Update', 'Reward', 'R001', 'Updated reward: Campus Cafe RM5 Voucher', '2026-08-19 16:01:02'),
-('LOG1032', 'U003', 'Update', 'Reward', 'R002', 'Updated reward: CirculAPU Tote Bag', '2026-08-19 16:01:13'),
-('LOG1033', 'U003', 'Delete', 'Badge', 'AB004', 'Deleted achievement badge: dfbdgfh', '2026-08-19 16:22:28'),
-('LOG1034', 'U003', 'Create', 'Mission', 'M009', 'Created new mission: saca', '2026-08-20 06:10:49'),
-('LOG1035', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-20 06:14:45'),
-('LOG1036', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-20 06:17:59'),
-('LOG1037', 'U003', 'Approve', 'Verification', 'V013', 'Approved verification V013', '2026-08-20 06:18:11'),
-('LOG1038', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-20 06:18:25'),
-('LOG1039', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-20 07:22:58'),
-('LOG1040', 'U003', 'Create', 'Reward', 'R006', 'Created reward: adfaf', '2026-08-20 07:23:17'),
-('LOG1041', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-20 07:23:25'),
-('LOG1042', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-25 06:34:28'),
-('LOG1043', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-25 06:53:38'),
-('LOG1044', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-25 07:06:56'),
-('LOG1045', 'U001', 'Login', 'User', 'U001', 'Logged in to system', '2026-08-25 07:08:24'),
-('LOG1046', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-25 07:10:43'),
-('LOG1047', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-25 07:14:19'),
-('LOG1050', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-25 07:21:28'),
-('LOG1051', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-25 07:29:41'),
-('LOG1052', 'U002', 'Approve', 'Transaction', 'TR970', 'Approved borrowing request for Wireless Optical Mouse; asset reserved inside the 7-day protection window', '2026-08-25 08:20:19'),
-('LOG1053', 'U002', 'Approve', 'Transaction', 'TR971', 'Approved borrowing request for 65W USB-C Charger; asset reserved inside the 7-day protection window', '2026-08-25 08:20:33'),
-('LOG1060', 'U002', 'Update', 'Asset', 'A986', 'Reviewed incoming asset information for USB-C Multiport Hub.', '2026-08-25 08:40:37'),
-('LOG1061', 'U002', 'Create', 'Category', 'C887', 'Created category: Creative & Media.', '2026-08-25 08:39:37'),
-('LOG1062', 'U002', 'Approve', 'Transaction', 'TR984', 'Approved borrowing request for Portable Projector; reservation protection is active.', '2026-08-25 08:38:37'),
-('LOG1063', 'U002', 'Assign', 'Transaction', 'TR986', 'Pickup confirmed; borrowing started for Graphic Calculator.', '2026-08-25 08:37:37'),
-('LOG1064', 'U002', 'Update', 'Borrowing', 'B987', 'Overdue borrowing identified for Database Revision Book.', '2026-08-25 08:36:37'),
-('LOG1065', 'U002', 'Approve', 'Transaction', 'TR985', 'Approved future reservation for Adjustable Laptop Stand; asset remains Available before protection starts.', '2026-08-24 08:41:37'),
-('LOG1066', 'U002', 'Approve', 'Transaction', 'TR989', 'Approved upcoming reservation for Shared Camera Tripod.', '2026-08-24 08:41:37'),
-('LOG1067', 'U002', 'Update', 'Asset', 'A983', 'Confirmed Sealed USB-C Cable is eligible for normal listing management.', '2026-08-23 08:41:37'),
-('LOG1068', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-25 08:49:37'),
-('LOG1069', 'U002', 'Update', 'Asset', 'A981', 'Updated asset information: USB-C Fast Charger', '2026-08-25 08:56:27'),
-('LOG1070', 'U002', 'Update', 'Asset', 'A986', 'Returned A986 for correction. Reason: Information incomplete', '2026-08-25 09:26:52'),
-('LOG1071', 'U002', 'Submit', 'Asset', 'A987', 'Sent asset listing for verification: Scientific Calculator', '2026-08-25 09:33:13'),
-('LOG145', 'U003', 'Update', 'Mission', 'M001', 'Updated mission: Bring Your Own Bottle', '2026-08-19 15:28:09'),
-('LOG365', 'U003', 'Update', 'Verification', 'V006', 'Updated verification record: V006', '2026-08-12 09:59:28'),
-('LOG381', 'U003', 'Update', 'Verification', 'V004', 'Updated verification record: V004', '2026-08-11 17:22:34'),
-('LOG462', 'U003', 'Update', 'Verification', 'V004', 'Verification V004 was Approved', '2026-08-11 17:21:54'),
-('LOG463', 'U003', 'Delete', 'Verification', 'V007', 'Deleted verification record: V007', '2026-08-12 03:31:42'),
-('LOG882', 'U003', 'Update', 'Verification', 'V004', 'Updated verification remarks: V004', '2026-08-12 10:09:42'),
-('LOG883', 'U002', 'Create', 'Category', 'C005', 'Created category: Game', '2026-08-13 03:05:47'),
-('LOG884', 'U002', 'Delete', 'Category', 'C005', 'Permanently deleted category: Game', '2026-08-13 03:06:00'),
-('LOG885', 'U003', 'Create', 'Mission', 'M010', 'Created new mission: wefw', '2026-08-13 04:17:00'),
-('LOG886', 'U003', 'Create', 'Mission', 'M011', 'Created new mission: wqf', '2026-08-13 04:26:18'),
-('LOG887', 'U003', 'Create', 'Mission', 'M012', 'Created new mission: 2q3werty', '2026-08-13 04:43:10'),
-('LOG899', 'U002', 'Submit', 'Asset', 'A008', 'Sent asset listing for verification: Scientific Calculator', '2026-08-13 13:00:48'),
-('LOG909', 'U002', 'Create', 'Category', 'C885', 'Created category: book', '2026-08-13 14:51:42'),
-('LOG910', 'U002', 'Create', 'Category', 'C886', 'Created category: hhh', '2026-08-13 14:51:54'),
-('LOG911', 'U002', 'Update', 'Category', 'C886', 'Deactivated category: hhh', '2026-08-13 14:56:04'),
-('LOG912', 'U002', 'Delete', 'Category', 'C886', 'Permanently deleted category: hhh', '2026-08-13 14:56:40'),
-('LOG913', 'U002', 'Update', 'Category', 'C885', 'Deactivated category: book', '2026-08-13 14:56:59'),
-('LOG914', 'U002', 'Update', 'Category', 'C885', 'Updated category: book', '2026-08-13 14:57:15'),
-('LOG915', 'U002', 'Create', 'Category', 'C886', 'Created category: sport', '2026-08-13 14:57:53'),
-('LOG916', 'U002', 'Update', 'Category', 'C886', 'Deactivated category: sport', '2026-08-13 14:58:24'),
-('LOG918', 'U002', 'Update', 'Category', 'C886', 'Reactivated category: sport', '2026-08-13 15:01:04'),
-('LOG920', 'U002', 'Update', 'Category', 'C886', 'Updated category: sport', '2026-08-13 15:03:01'),
-('LOG921', 'U002', 'Reject', 'Transaction', 'TR002', 'Rejected borrowing request for Dell Wireless Mouse. Reason: dont have pickup date and request date', '2026-08-13 15:12:34'),
-('LOG936', 'U002', 'Update', 'Transaction', 'TR001', 'Return completed for Java Programming Textbook: Like New → Good; asset Available; deducted 5 EcoPoints (new balance: 295). Reason: damange a little; returned overdue.', '2026-08-13 15:48:20'),
-('LOG954', 'U002', 'Delete', 'Asset', 'A007', 'Removed asset listing: USB-C Charging Cable', '2026-08-14 10:54:59'),
-('LOG975', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-17 13:15:36'),
-('LOG976', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 14:28:41'),
-('LOG978', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 14:30:29'),
-('LOG979', 'U005', 'Login', 'User', 'U005', 'Logged in to system', '2026-08-19 14:31:46'),
-('LOG980', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 14:33:03'),
-('LOG981', 'U005', 'Login', 'User', 'U005', 'Logged in to system', '2026-08-19 14:33:29'),
-('LOG982', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 14:33:51'),
-('LOG983', 'U003', 'Approve', 'Verification', 'V001', 'Approved verification V001', '2026-08-19 14:44:37'),
-('LOG984', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 14:44:48'),
-('LOG985', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 14:45:41'),
-('LOG986', 'U003', 'Approve', 'Verification', 'V007', 'Approved verification V007', '2026-08-19 14:45:53'),
-('LOG987', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 14:46:02'),
-('LOG988', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 14:48:24'),
-('LOG989', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 14:56:15'),
-('LOG990', 'U003', 'Create', 'Badge', 'AB004', 'Created achievement badge: dfbdgfh', '2026-08-19 14:57:37'),
-('LOG991', 'U004', 'Login', 'User', 'U004', 'Logged in to system', '2026-08-19 14:57:47'),
-('LOG992', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 14:58:01'),
-('LOG993', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 14:59:53'),
-('LOG994', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 15:07:57'),
-('LOG995', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:10:16'),
-('LOG996', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 15:17:06'),
-('LOG997', 'U002', 'Submit', 'Asset', 'A960', 'Sent asset listing for verification: Wireless Mouse', '2026-08-19 15:17:15'),
-('LOG998', 'U002', 'Login', 'User', 'U002', 'Logged in to system', '2026-08-19 15:17:25'),
-('LOG999', 'U003', 'Login', 'User', 'U003', 'Logged in to system', '2026-08-19 15:17:35');
+('LOG001', 'U007', 'Create', 'Asset', 'A001', 'Created asset listing Casio Scientific Calculator.', '2026-05-02 01:00:00'),
+('LOG002', 'U005', 'Approve', 'Verification', 'V001', 'Approved calculator asset verification.', '2026-05-03 06:00:00'),
+('LOG003', 'U008', 'Create', 'Asset', 'A002', 'Created asset listing Database Systems Textbook.', '2026-05-04 03:00:00'),
+('LOG004', 'U005', 'Approve', 'Verification', 'V002', 'Approved textbook asset verification.', '2026-05-05 04:00:00'),
+('LOG005', 'U011', 'Create', 'Asset', 'A005', 'Created asset listing LED Study Lamp.', '2026-05-15 08:00:00'),
+('LOG006', 'U006', 'Reject', 'Verification', 'V005', 'Rejected unsafe study lamp listing.', '2026-05-16 03:00:00'),
+('LOG007', 'U007', 'Submit', 'Mission', 'MS001', 'Submitted Bring Your Own Bottle evidence.', '2026-05-05 01:00:00'),
+('LOG008', 'U005', 'Approve', 'Verification', 'V010', 'Approved mission submission MS001.', '2026-05-05 07:00:00'),
+('LOG009', 'U009', 'Submit', 'Mission', 'MS010', 'Submitted Donate an Item evidence.', '2026-06-18 04:00:00'),
+('LOG010', 'U005', 'Reject', 'Verification', 'V019', 'Rejected mismatched donation evidence.', '2026-06-18 08:00:00'),
+('LOG011', 'U003', 'Approve', 'Transaction', 'TR001', 'Approved calculator borrowing request.', '2026-06-03 06:00:00'),
+('LOG012', 'U003', 'Update', 'Borrowing', 'B001', 'Confirmed calculator pickup.', '2026-06-04 01:00:00'),
+('LOG013', 'U003', 'Update', 'Borrowing', 'B001', 'Completed calculator return inspection.', '2026-06-11 06:00:00'),
+('LOG014', 'U004', 'Approve', 'Transaction', 'TR007', 'Approved textbook borrowing request.', '2026-08-20 02:00:00'),
+('LOG015', 'U004', 'Update', 'Borrowing', 'B007', 'Confirmed textbook pickup.', '2026-08-20 02:00:00'),
+('LOG016', 'U003', 'Update', 'Borrowing', 'B008', 'Marked meal container borrowing overdue.', '2026-08-18 01:00:00'),
+('LOG017', 'U007', 'Redeem', 'Reward', 'RR001', 'Redeemed Reusable Water Bottle.', '2026-07-22 02:00:00'),
+('LOG018', 'U008', 'Redeem', 'Reward', 'RR002', 'Redeemed Campus Cafe RM5 Voucher.', '2026-06-15 02:00:00'),
+('LOG019', 'U010', 'Redeem', 'Reward', 'RR005', 'Redeemed Campus Cafe RM10 Voucher.', '2026-07-20 02:00:00'),
+('LOG020', 'U012', 'Redeem', 'Reward', 'RR008', 'Redeemed Eco Shopping Bag.', '2026-07-15 03:00:00'),
+('LOG021', 'U001', 'Assign', 'Tier', 'UT001', 'Assigned Sustainability Leader tier to U007.', '2026-08-01 01:00:00'),
+('LOG022', 'U001', 'Assign', 'Tier', 'UT004', 'Assigned Eco Legend tier to U010.', '2026-08-01 01:15:00'),
+('LOG023', 'U005', 'Assign', 'Badge', 'UAB006', 'Awarded Reward Collector badge to U007.', '2026-08-08 07:10:00'),
+('LOG024', 'U006', 'Assign', 'Badge', 'UAB016', 'Awarded Green Legend badge to U010.', '2026-07-12 09:10:00'),
+('LOG025', 'U013', 'Create', 'Asset', 'A014', 'Created A3 Cutting Mat listing.', '2026-08-27 03:00:00'),
+('LOG026', 'U012', 'Submit', 'Asset', 'A020', 'Submitted HDMI Adapter Set for verification.', '2026-08-24 02:00:00'),
+('LOG027', 'U006', 'Reject', 'Verification', 'V009', 'Rejected unsafe electric kettle listing.', '2026-08-19 06:00:00'),
+('LOG028', 'U009', 'Create', 'Transaction', 'TR007', 'Requested Database Systems Textbook.', '2026-08-20 00:30:00'),
+('LOG029', 'U013', 'Create', 'Transaction', 'TR012', 'Requested Foldable Laptop Table.', '2026-08-27 02:00:00'),
+('LOG030', 'U007', 'Create', 'Transaction', 'TR013', 'Requested Bicycle Repair Pump.', '2026-08-27 04:30:00'),
+('LOG031', 'U012', 'Create', 'Transaction', 'TR014', 'Requested Resistance Band Set.', '2026-08-26 03:00:00'),
+('LOG032', 'U004', 'Reject', 'Transaction', 'TR014', 'Rejected request due to active loan limit.', '2026-08-26 07:00:00'),
+('LOG033', 'U011', 'Update', 'Transaction', 'TR015', 'Cancelled Insulated Flask request.', '2026-08-25 06:00:00'),
+('LOG034', 'U009', 'Create', 'Verification', 'V019', 'Escalated rejected mission verification through report REP001.', '2026-06-19 01:00:00'),
+('LOG035', 'U011', 'Create', 'Verification', 'V028', 'Submitted clearer mission evidence through report REP002.', '2026-08-26 01:00:00'),
+('LOG036', 'U001', 'Update', 'Verification', 'V003', 'Resolved charger verification report REP004.', '2026-07-02 02:00:00'),
+('LOG037', 'U005', 'Login', 'User', 'U005', 'Auditor logged in successfully.', '2026-08-28 00:10:00'),
+('LOG038', 'U003', 'Login', 'User', 'U003', 'Manager logged in successfully.', '2026-08-28 00:15:00'),
+('LOG039', 'U001', 'Login', 'User', 'U001', 'Administrator logged in successfully.', '2026-08-28 00:20:00'),
+('LOG040', 'U007', 'Login', 'User', 'U007', 'Member logged in successfully.', '2026-08-28 00:25:00'),
+('LOG041', 'U001', 'Login', 'User', 'U001', 'Logged in to system', '2026-08-28 13:46:22'),
+('LOG042', 'U008', 'Login', 'User', 'U008', 'Logged in to system', '2026-08-28 13:51:59');
 
 -- --------------------------------------------------------
 
@@ -651,11 +601,11 @@ CREATE TABLE `tiers` (
 --
 
 INSERT INTO `tiers` (`tierID`, `tierName`, `tierDescription`, `tierIcon`, `minimumEcoPoints`) VALUES
-('T001', 'Eco Beginner', 'Starting milestone for new sustainability participants', 'eco_beginner.png', 0),
-('T002', 'Green Enthusiast', 'Active participant contributing to campus recycling', 'green_enthusiast.png', 100),
-('T003', 'Eco Champion', 'High-impact user making frequent asset exchanges', 'eco_champion.png', 300),
-('T004', 'Sustainability Leader', 'Top tier user leading campus eco-initiatives', 'sustainability_leader.png', 600),
-('T005', 'Eco Legend', 'Highest tier for exceptional and consistent sustainability participation.', 'eco_legend.png', 1000);
+('T001', 'Eco Beginner', 'Starting tier for members beginning their sustainability journey.', 'eco_beginner.png', 0),
+('T002', 'Green Enthusiast', 'For members showing regular sustainable participation.', 'green_enthusiast.png', 100),
+('T003', 'Eco Champion', 'For active members making a measurable campus impact.', 'eco_champion.png', 300),
+('T004', 'Sustainability Leader', 'For members consistently leading by example.', 'sustainability_leader.png', 600),
+('T005', 'Eco Legend', 'The highest recognition for exceptional long-term impact.', 'eco_legend.png', 1000);
 
 -- --------------------------------------------------------
 
@@ -679,28 +629,24 @@ CREATE TABLE `transactionrequests` (
 --
 
 INSERT INTO `transactionrequests` (`transactionID`, `assetID`, `requesterID`, `requestDate`, `requestStatus`, `managerRemark`, `decisionDate`, `requestMessage`) VALUES
-('TR001', 'A002', 'U004', '2026-07-27 07:01:17', 'Completed', 'Request granted for 14-day study period.', '2026-07-27 07:01:17', 'Hi, I need this textbook for my upcoming exam week.'),
-('TR002', 'A001', 'U005', '2026-07-27 07:01:17', 'Rejected', 'dont have pickup date and request date', '2026-08-13 15:12:34', 'Can I borrow this mouse for a few days?'),
-('TR970', 'A972', 'U004', '2026-08-25 06:19:17', 'Approved', '', '2026-08-25 08:20:19', 'I need the mouse for a presentation session today.'),
-('TR971', 'A973', 'U005', '2026-08-25 04:19:17', 'Approved', '', '2026-08-25 08:20:33', 'I would like to borrow the charger for tomorrow.'),
-('TR972', 'A974', 'U004', '2026-08-24 08:19:17', 'Pending', NULL, NULL, 'I need the textbook for revision later this week.'),
-('TR973', 'A975', 'U004', '2026-08-24 08:19:17', 'Approved', 'Borrowing request approved. Asset reserved for pickup.', '2026-08-25 05:19:17', 'I would like to collect the charger today for coursework use.'),
-('TR974', 'A976', 'U005', '2026-08-23 08:19:17', 'Approved', 'Borrowing request approved within the reservation protection period.', '2026-08-24 08:19:17', 'I need the textbook for my software engineering assignment.'),
-('TR975', 'A977', 'U005', '2026-08-23 08:19:17', 'Approved', 'Future borrowing request approved.', '2026-08-24 08:19:17', 'I would like to reserve the charging cable for next week.'),
-('TR976', 'A978', 'U005', '2026-08-20 08:19:17', 'In Progress', 'Pickup confirmed and borrowing started.', '2026-08-22 08:19:17', 'I need the mouse for several study sessions.'),
-('TR977', 'A979', 'U006', '2026-08-13 08:19:17', 'Overdue', 'Borrowing is overdue and awaiting return.', '2026-08-15 08:19:17', 'I need the reference book for my data structures revision.'),
-('TR978', 'A980', 'U006', '2026-08-10 08:19:17', 'Completed', 'Asset returned in good condition.', '2026-08-11 08:19:17', 'I would like to borrow this textbook for revision.'),
-('TR979', 'A981', 'U004', '2026-08-16 08:19:17', 'Rejected', 'Request was no longer required by the member.', '2026-08-17 08:19:17', 'I may need the charger for a short study session.'),
-('TR980', 'A982', 'U005', '2026-08-17 08:19:17', 'Cancelled', 'Reservation cancelled at the member request.', '2026-08-18 08:19:17', 'I would like to reserve this textbook for next week.'),
-('TR981', 'A988', 'U004', '2026-08-25 08:39:37', 'Pending', NULL, NULL, 'I need the adapter for a presentation today.'),
-('TR982', 'A989', 'U005', '2026-08-25 08:37:37', 'Pending', NULL, NULL, 'I need the reference book for tomorrow study session.'),
-('TR983', 'A990', 'U004', '2026-08-25 08:35:37', 'Pending', NULL, NULL, 'The requested pickup date has already passed.'),
-('TR984', 'A991', 'U004', '2026-08-24 08:41:37', 'Approved', 'Borrowing request approved and protected for pickup.', '2026-08-25 08:33:37', 'I need the projector for a campus presentation.'),
-('TR985', 'A992', 'U990', '2026-08-23 08:41:37', 'Approved', 'Future reservation confirmed outside the protection period.', '2026-08-24 08:41:37', 'I would like to reserve the laptop stand for a future study session.'),
-('TR986', 'A993', 'U004', '2026-08-21 08:41:37', 'In Progress', 'Pickup confirmed and borrowing started.', '2026-08-22 08:41:37', 'I need the calculator for coursework.'),
-('TR987', 'A994', 'U990', '2026-08-13 08:41:37', 'In Progress', 'Pickup confirmed; return is now overdue.', '2026-08-15 08:41:37', 'I need the book for database revision.'),
-('TR988', 'A995', 'U991', '2026-08-18 08:41:37', 'In Progress', 'Current borrowing is active.', '2026-08-19 08:41:37', 'I need the tripod for a media project.'),
-('TR989', 'A995', 'U991', '2026-08-23 08:41:37', 'Approved', 'Upcoming protected reservation confirmed.', '2026-08-24 08:41:37', 'I need the tripod again for the next project session.');
+('TR001', 'A001', 'U008', '2026-06-03 01:00:00', 'Completed', 'Approved for a one-week coursework loan.', '2026-06-03 06:00:00', 'Needed for a statistics assessment.'),
+('TR002', 'A004', 'U009', '2026-06-10 02:00:00', 'Completed', 'Returned in good condition.', '2026-06-10 07:00:00', 'Requested for sports club practice.'),
+('TR003', 'A006', 'U010', '2026-06-20 03:00:00', 'Completed', 'Loan completed successfully.', '2026-06-20 08:00:00', 'Needed to record a group presentation.'),
+('TR004', 'A008', 'U011', '2026-07-01 01:30:00', 'Completed', 'Repair kit returned with all pieces.', '2026-07-01 04:00:00', 'Needed for a laptop repair.'),
+('TR005', 'A010', 'U012', '2026-07-08 06:00:00', 'Completed', 'Approved for society event use.', '2026-07-08 08:00:00', 'Needed for a sustainability booth.'),
+('TR006', 'A013', 'U007', '2026-07-15 02:00:00', 'Completed', 'Completed without issue.', '2026-07-15 05:00:00', 'Requested for a wellness workshop.'),
+('TR007', 'A002', 'U009', '2026-08-20 00:30:00', 'In Progress', 'Collected and currently on loan.', '2026-08-20 02:00:00', 'Needed for database revision.'),
+('TR008', 'A009', 'U011', '2026-08-10 01:00:00', 'Overdue', 'Return reminder sent to borrower.', '2026-08-10 03:00:00', 'Requested for a zero-waste event.'),
+('TR009', 'A017', 'U013', '2026-08-15 02:00:00', 'In Progress', 'Microphone collected by borrower.', '2026-08-15 04:00:00', 'Needed for a student podcast recording.'),
+('TR010', 'A003', 'U010', '2026-08-26 04:00:00', 'Approved', 'Reserved for pickup on 29 August.', '2026-08-26 08:00:00', 'My laptop charger stopped working.'),
+('TR011', 'A012', 'U008', '2026-08-27 01:00:00', 'Approved', 'Reserved for presentation day.', '2026-08-27 06:00:00', 'Needed for my final-year presentation.'),
+('TR012', 'A016', 'U013', '2026-08-27 02:00:00', 'Pending', NULL, NULL, 'I need a temporary study table.'),
+('TR013', 'A019', 'U007', '2026-08-27 04:30:00', 'Pending', NULL, NULL, 'My bicycle tyre needs inflation.'),
+('TR014', 'A021', 'U012', '2026-08-26 03:00:00', 'Rejected', 'Member already had the maximum number of active loans.', '2026-08-26 07:00:00', 'Requested for weekend exercise.'),
+('TR015', 'A022', 'U011', '2026-08-25 05:00:00', 'Cancelled', 'Cancelled by requester before approval.', NULL, 'Needed for an outdoor club trip.'),
+('TR016', 'A015', 'U010', '2026-05-20 02:00:00', 'Completed', 'Notes returned on time.', '2026-05-20 05:00:00', 'Needed for examination revision.'),
+('TR017', 'A018', 'U008', '2026-07-22 01:00:00', 'Completed', 'Event supplies returned clean.', '2026-07-22 03:00:00', 'Needed for a student club fair.'),
+('TR018', 'A011', 'U009', '2026-08-28 00:00:00', 'Pending', NULL, NULL, 'Needed for an internship interview.');
 
 -- --------------------------------------------------------
 
@@ -724,14 +670,21 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`userID`, `name`, `email`, `password`, `role`, `status`, `ecopoint`, `dateCreated`) VALUES
-('U001', 'Lee Miao Miao', 'admin@mail.apu.edu.my', 'password123', 'Admin', 'Active', 6070, '2026-07-27 07:01:16'),
-('U002', 'Lim Miao Miao', 'manager@mail.apu.edu.my', 'password123', 'Manager', 'Active', 120, '2026-07-27 07:01:16'),
-('U003', 'Ooi Mian Miao', 'auditor@mail.apu.edu.my', 'password123', 'Auditor', 'Active', 450, '2026-07-27 07:01:16'),
-('U004', 'Tan Miao Miao', 'tan@mail.apu.edu.my', 'password123', 'Member', 'Active', 123, '2026-07-27 07:01:16'),
-('U005', 'Teo Miao Miao', 'teo@mail.apu.edu.my', 'password123', 'Member', 'Active', 85, '2026-07-27 07:01:16'),
-('U006', 'Jia Qi Lim', 'limjiaqi735@gmail.com', '$2y$10$PQIKXR2iwXQnxpG0wMksXuX6Jr1FfQmWQfP7dBfBcsUQWuuPiNzFK', 'Member', 'Active', 0, '2026-07-28 05:57:29'),
-('U990', 'Aisha Rahman', 'aisha.manual@apu.edu.my', 'password123', 'Member', 'Active', 250, '2026-05-27 08:41:37'),
-('U991', 'Daniel Lee', 'daniel.manual@apu.edu.my', 'password123', 'Member', 'Active', 180, '2026-06-06 08:41:37');
+('U001', 'Alicia Tan', 'admin@apu.edu.my', 'P@ssw0rd!23', 'Admin', 'Active', 0, '2026-01-05 01:00:00'),
+('U002', 'Daniel Lee', 'admin2@apu.edu.my', 'P@ssw0rd!23', 'Admin', 'Active', 0, '2026-02-03 02:00:00'),
+('U003', 'Farah Ahmad', 'manager@apu.edu.my', 'P@ssw0rd!23', 'Manager', 'Active', 0, '2026-01-08 01:30:00'),
+('U004', 'Marcus Wong', 'manager2@apu.edu.my', 'P@ssw0rd!23', 'Manager', 'Active', 0, '2026-03-02 03:00:00'),
+('U005', 'Nur Aisyah', 'auditor@apu.edu.my', 'P@ssw0rd!23', 'Auditor', 'Active', 0, '2026-01-10 00:45:00'),
+('U006', 'Jason Lim', 'auditor2@apu.edu.my', 'P@ssw0rd!23', 'Auditor', 'Active', 0, '2026-04-14 06:00:00'),
+('U007', 'Amir Hakim', 'amir@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 720, '2026-02-01 01:15:00'),
+('U008', 'Mei Xin', 'meixin@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 480, '2026-02-12 02:20:00'),
+('U009', 'Raj Kumar', 'raj@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 315, '2026-03-05 04:00:00'),
+('U010', 'Siti Hawa', 'sitihawa@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 1080, '2026-03-20 07:10:00'),
+('U011', 'Ethan Goh', 'ethan@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 165, '2026-04-09 03:40:00'),
+('U012', 'Priya Nair', 'priya@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 590, '2026-05-01 05:20:00'),
+('U013', 'Adam Chen', 'adam@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 90, '2026-05-18 08:00:00'),
+('U014', 'Nadia Yusuf', 'nadia@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Suspended', 230, '2026-06-11 01:50:00'),
+('U015', 'Kelvin Ong', 'kelvin@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Deleted', 0, '2026-06-30 09:00:00');
 
 -- --------------------------------------------------------
 
@@ -751,9 +704,28 @@ CREATE TABLE `user achievement badge` (
 --
 
 INSERT INTO `user achievement badge` (`userBadgeID`, `userID`, `achieveBadgeID`, `awardedDate`) VALUES
-('UAB001', 'U004', 'AB001', '2026-07-27 07:01:16'),
-('UAB002', 'U003', 'AB001', '2026-07-27 07:01:16'),
-('UAB003', 'U001', 'AB003', '2026-07-27 07:01:16');
+('UAB001', 'U007', 'AB001', '2026-05-05 07:10:00'),
+('UAB002', 'U007', 'AB002', '2026-07-20 05:10:00'),
+('UAB003', 'U007', 'AB004', '2026-05-18 08:10:00'),
+('UAB004', 'U007', 'AB005', '2026-07-20 05:10:00'),
+('UAB005', 'U007', 'AB007', '2026-07-30 03:10:00'),
+('UAB006', 'U007', 'AB009', '2026-08-08 07:10:00'),
+('UAB007', 'U008', 'AB001', '2026-05-07 07:10:00'),
+('UAB008', 'U008', 'AB004', '2026-06-09 02:10:00'),
+('UAB009', 'U008', 'AB009', '2026-08-16 02:10:00'),
+('UAB010', 'U009', 'AB001', '2026-06-01 08:10:00'),
+('UAB011', 'U009', 'AB004', '2026-06-01 08:10:00'),
+('UAB012', 'U010', 'AB001', '2026-04-20 06:10:00'),
+('UAB013', 'U010', 'AB002', '2026-06-21 06:10:00'),
+('UAB014', 'U010', 'AB004', '2026-05-02 08:10:00'),
+('UAB015', 'U010', 'AB005', '2026-06-21 06:10:00'),
+('UAB016', 'U010', 'AB006', '2026-07-12 09:10:00'),
+('UAB017', 'U011', 'AB001', '2026-06-09 07:10:00'),
+('UAB018', 'U011', 'AB004', '2026-07-05 04:10:00'),
+('UAB019', 'U012', 'AB001', '2026-05-11 07:10:00'),
+('UAB020', 'U012', 'AB004', '2026-06-13 09:10:00'),
+('UAB021', 'U012', 'AB005', '2026-08-12 05:10:00'),
+('UAB022', 'U013', 'AB001', '2026-07-15 09:10:00');
 
 -- --------------------------------------------------------
 
@@ -773,11 +745,15 @@ CREATE TABLE `usertier` (
 --
 
 INSERT INTO `usertier` (`userTierID`, `userID`, `tierID`, `assignedDate`) VALUES
-('UT001', 'U001', 'T004', '2026-07-27 07:01:16'),
-('UT002', 'U003', 'T003', '2026-07-27 07:01:16'),
-('UT003', 'U004', 'T002', '2026-07-27 07:01:16'),
-('UT004', 'U005', 'T001', '2026-07-27 07:01:16'),
-('UT006', 'U006', 'T001', '2026-07-28 05:57:29');
+('UT001', 'U007', 'T004', '2026-08-01 01:00:00'),
+('UT002', 'U008', 'T003', '2026-08-01 01:05:00'),
+('UT003', 'U009', 'T003', '2026-08-01 01:10:00'),
+('UT004', 'U010', 'T005', '2026-08-01 01:15:00'),
+('UT005', 'U011', 'T002', '2026-08-01 01:20:00'),
+('UT006', 'U012', 'T003', '2026-08-01 01:25:00'),
+('UT007', 'U013', 'T001', '2026-08-01 01:30:00'),
+('UT008', 'U014', 'T002', '2026-08-01 01:35:00'),
+('UT009', 'U015', 'T001', '2026-08-01 01:40:00');
 
 -- --------------------------------------------------------
 
@@ -801,46 +777,39 @@ CREATE TABLE `verificationrecords` (
 --
 
 INSERT INTO `verificationrecords` (`verificationID`, `userID`, `verifiedBy`, `targetID`, `targetType`, `status`, `remarks`, `verifiedDate`) VALUES
-('V001', 'U004', 'U003', 'MS001', 'MissionSubmission', 'Approved', 'cdwc', '2026-08-19 14:44:37'),
-('V002', 'U004', 'U003', 'A001', 'Asset', 'Approved', 'Asset condition verified in person.', '2026-07-27 07:03:20'),
-('V004', 'U005', 'U003', 'A002', 'Asset', 'Approved', 'In a very good conditions.', '2026-08-11 17:19:49'),
-('V005', 'U006', NULL, 'A003', 'Asset', 'Pending', NULL, NULL),
-('V006', 'U005', 'U003', 'A004', 'Asset', 'Rejected', 'Execllent', '2026-08-12 03:28:48'),
-('V007', 'U004', 'U003', 'MS002', 'MissionSubmission', 'Approved', 'dqw', '2026-08-19 14:45:53'),
-('V008', 'U004', 'U003', 'A960', 'Asset', 'Approved', 'dxfgfhjk', '2026-08-19 15:18:22'),
-('V009', 'U004', NULL, 'A961', 'Asset', 'Pending', NULL, NULL),
-('V010', 'U004', NULL, 'A962', 'Asset', 'Pending', NULL, NULL),
-('V011', 'U004', NULL, 'A963', 'Asset', 'Pending', NULL, NULL),
-('V012', 'U004', 'U003', 'MS003', 'MissionSubmission', 'Rejected', 'wewee', '2026-08-19 15:55:59'),
-('V013', 'U004', 'U003', 'MS004', 'MissionSubmission', 'Approved', 'eee', '2026-08-20 06:18:11'),
-('V015', 'U004', NULL, 'S003', 'MissionSubmission', 'Pending', NULL, '2026-08-25 06:37:57'),
-('V971', 'U005', NULL, 'A971', 'Asset', 'Pending', NULL, NULL),
-('V972', 'U005', 'U003', 'A972', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-17 08:19:17'),
-('V973', 'U004', 'U003', 'A973', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-15 08:19:17'),
-('V974', 'U005', 'U003', 'A974', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-14 08:19:17'),
-('V975', 'U005', 'U003', 'A975', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-13 08:19:17'),
-('V976', 'U004', 'U003', 'A976', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-12 08:19:17'),
-('V977', 'U004', 'U003', 'A977', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-16 08:19:17'),
-('V978', 'U004', 'U003', 'A978', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-11 08:19:17'),
-('V979', 'U005', 'U003', 'A979', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-10 08:19:17'),
-('V980', 'U004', 'U003', 'A980', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-09 08:19:17'),
-('V981', 'U005', 'U003', 'A981', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-13 08:19:17'),
-('V982', 'U004', 'U003', 'A982', 'Asset', 'Approved', 'Asset condition and listing details verified.', '2026-08-12 08:19:17'),
-('V983', 'U005', 'U003', 'A983', 'Asset', 'Approved', 'Condition verified and suitable for circulation.', '2026-08-15 08:41:37'),
-('V984', 'U004', 'U003', 'A984', 'Asset', 'Rejected', 'Condition does not meet circulation requirements.', '2026-08-05 08:41:37'),
-('V985', 'U005', 'U003', 'A985', 'Asset', 'Approved', 'Asset details and condition verified.', '2026-08-20 08:41:37'),
-('V986', 'U004', NULL, 'A986', 'Asset', 'Pending', NULL, NULL),
-('V987', 'U005', NULL, 'A987', 'Asset', 'Pending', NULL, NULL),
-('V988', 'U005', 'U003', 'A988', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-17 08:41:37'),
-('V989', 'U004', 'U003', 'A989', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-17 08:41:37'),
-('V990', 'U005', 'U003', 'A990', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-17 08:41:37'),
-('V991', 'U005', 'U003', 'A991', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-16 08:41:37'),
-('V992', 'U005', 'U003', 'A992', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-16 08:41:37'),
-('V993', 'U005', 'U003', 'A993', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-15 08:41:37'),
-('V994', 'U005', 'U003', 'A994', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-13 08:41:37'),
-('V995', 'U004', 'U003', 'A995', 'Asset', 'Approved', 'Asset verified for borrowing.', '2026-08-13 08:41:37'),
-('V996', 'U004', 'U003', 'A996', 'Asset', 'Approved', 'Historical asset verification retained.', '2026-08-05 08:41:37'),
-('V997', 'U005', NULL, 'A987', 'Asset', 'Pending', NULL, NULL);
+('V001', 'U007', 'U005', 'A001', 'Asset', 'Approved', 'Item tested and listing details confirmed.', '2026-05-03 06:00:00'),
+('V002', 'U008', 'U005', 'A002', 'Asset', 'Approved', 'Book condition matches the listing.', '2026-05-05 04:00:00'),
+('V003', 'U009', 'U006', 'A003', 'Asset', 'Approved', 'Charger passed a basic functionality check.', '2026-05-09 02:00:00'),
+('V004', 'U010', 'U005', 'A004', 'Asset', 'Approved', 'Both rackets are safe and usable.', '2026-05-13 07:00:00'),
+('V005', 'U011', 'U006', 'A005', 'Asset', 'Rejected', 'Power cable damage makes this unsafe to circulate.', '2026-05-16 03:00:00'),
+('V006', 'U012', 'U005', 'A006', 'Asset', 'Approved', 'Tripod and remote are functional.', '2026-05-21 04:00:00'),
+('V007', 'U013', NULL, 'A007', 'Asset', 'Pending', NULL, NULL),
+('V008', 'U012', NULL, 'A020', 'Asset', 'Pending', NULL, NULL),
+('V009', 'U009', 'U006', 'A024', 'Asset', 'Rejected', 'Loose connector poses an electrical safety risk.', '2026-08-19 06:00:00'),
+('V010', 'U007', 'U005', 'MS001', 'MissionSubmission', 'Approved', 'Reusable bottle evidence is clear.', '2026-05-05 07:00:00'),
+('V011', 'U007', 'U006', 'MS002', 'MissionSubmission', 'Approved', 'Approved e-waste point is visible.', '2026-05-18 08:00:00'),
+('V012', 'U007', 'U005', 'MS003', 'MissionSubmission', 'Approved', 'Public transport evidence verified.', '2026-06-02 06:00:00'),
+('V013', 'U007', 'U006', 'MS004', 'MissionSubmission', 'Approved', 'Published sustainability tip verified.', '2026-07-10 09:00:00'),
+('V014', 'U008', 'U005', 'MS005', 'MissionSubmission', 'Approved', 'Bottle use at refill station verified.', '2026-05-07 07:00:00'),
+('V015', 'U008', 'U006', 'MS006', 'MissionSubmission', 'Approved', 'Reusable bag is clearly in use.', '2026-05-22 09:00:00'),
+('V016', 'U008', 'U005', 'MS007', 'MissionSubmission', 'Approved', 'Digital study materials verified.', '2026-06-09 02:00:00'),
+('V017', 'U008', NULL, 'MS008', 'MissionSubmission', 'Pending', NULL, NULL),
+('V018', 'U009', 'U006', 'MS009', 'MissionSubmission', 'Approved', 'Cleanup evidence is complete.', '2026-06-01 08:00:00'),
+('V019', 'U009', 'U005', 'MS010', 'MissionSubmission', 'Rejected', 'Donation receipt does not match the submitted item.', '2026-06-18 08:00:00'),
+('V020', 'U009', NULL, 'MS011', 'MissionSubmission', 'Pending', NULL, NULL),
+('V021', 'U010', 'U005', 'MS012', 'MissionSubmission', 'Approved', 'Reusable bottle evidence verified.', '2026-04-20 06:00:00'),
+('V022', 'U010', 'U006', 'MS013', 'MissionSubmission', 'Approved', 'E-waste drop-off evidence verified.', '2026-05-02 08:00:00'),
+('V023', 'U010', 'U005', 'MS014', 'MissionSubmission', 'Approved', 'Campus cleanup activity verified.', '2026-05-16 06:00:00'),
+('V024', 'U010', 'U006', 'MS015', 'MissionSubmission', 'Approved', 'Donation confirmation verified.', '2026-06-04 09:00:00'),
+('V025', 'U010', 'U005', 'MS016', 'MissionSubmission', 'Approved', 'Green transport trip verified.', '2026-06-21 06:00:00'),
+('V026', 'U010', 'U006', 'MS017', 'MissionSubmission', 'Approved', 'Community tip publication verified.', '2026-07-12 09:00:00'),
+('V027', 'U011', 'U005', 'MS018', 'MissionSubmission', 'Approved', 'Reusable bag evidence verified.', '2026-06-09 07:00:00'),
+('V028', 'U011', 'U006', 'MS019', 'MissionSubmission', 'Rejected', 'Container is not visible in the submitted image.', '2026-08-25 08:00:00'),
+('V029', 'U012', 'U005', 'MS020', 'MissionSubmission', 'Approved', 'Bottle evidence verified.', '2026-05-11 07:00:00'),
+('V030', 'U012', 'U006', 'MS021', 'MissionSubmission', 'Approved', 'Paperless study evidence verified.', '2026-06-13 09:00:00'),
+('V031', 'U012', 'U005', 'MS022', 'MissionSubmission', 'Approved', 'Food waste evidence verified.', '2026-07-06 08:00:00'),
+('V032', 'U013', 'U006', 'MS023', 'MissionSubmission', 'Approved', 'Reusable bag use verified.', '2026-07-15 09:00:00'),
+('V033', 'U013', NULL, 'MS024', 'MissionSubmission', 'Pending', NULL, NULL);
 
 --
 -- Indexes for dumped tables
