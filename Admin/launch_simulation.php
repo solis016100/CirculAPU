@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Full role simulation starts from an authenticated Admin account.
+ 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
@@ -41,8 +41,8 @@ if (!$preview_user) {
     exit();
 }
 
-// Preserve the complete authenticated identity so exiting simulation restores
-// the Admin session exactly as it was.
+ 
+ 
 $_SESSION['simulation_admin_session'] = [
     'user_id' => $_SESSION['user_id'],
     'user_name' => $_SESSION['user_name'] ?? 'Admin',

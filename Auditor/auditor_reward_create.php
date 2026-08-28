@@ -189,7 +189,7 @@
             <?php include '../header.php'; ?>
             <main class="page-body">
                 <section class="management-heading">
-                    <!-- Breadcrumb -->
+                     
                     <div class="breadcrumb">
                         <a href="auditor_rewards_management.php">Rewards Management</a> &gt;
                         <span class="breadcrumb-current">Create New Reward</span>
@@ -205,17 +205,17 @@
                     </div>
                 <?php endif; ?>
 
-                <!-- Green bar showing Success Creation -->
+                 
                 <?php if (isset($_GET['created'])): ?>
                     <div class="alert alert-success">
                         Reward created successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Create reward -->
+                 
                 <form method="POST" enctype="multipart/form-data" id="rewardForm" class="content-card mission-create-card">
                     <div class="mission-create-body">
-                        <!-- Reward ID -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="rewardID">
                                 Reward ID
@@ -223,7 +223,7 @@
                             <input type="text" id="rewardID" value="<?php echo htmlspecialchars($nextRewardID); ?>" readonly>
                         </div>
 
-                        <!-- Reward Name -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="rewardName">
                                 Reward Name
@@ -232,7 +232,7 @@
                             <input type="text" id="rewardName" name="rewardName" maxlength="100" placeholder="Enter reward name" value="<?php echo htmlspecialchars($rewardName); ?>" required>
                         </div>
 
-                        <!-- Reward Description -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="rewardDescription">
                                 Description
@@ -241,7 +241,7 @@
                             <textarea id="rewardDescription" name="rewardDescription" rows="5" maxlength="500" placeholder="Enter reward description" required><?php echo htmlspecialchars($rewardDescription); ?></textarea>
                         </div>
 
-                        <!-- EcoPoints Cost -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="ecoPointsCost">
                                 EcoPoints Cost
@@ -250,7 +250,7 @@
                             <input type="number" id="ecoPointsCost" name="ecoPointsCost" min="0" max="1000" placeholder="Enter EcoPoints cost" value="<?php echo htmlspecialchars($ecoPointsCost); ?>" required>
                         </div>
 
-                        <!-- Quantity -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="quantity">
                                 Quantity
@@ -259,7 +259,7 @@
                             <input type="number" id="quantity" name="quantity" min="0" step="1" placeholder="Enter reward quantity" value="<?php echo htmlspecialchars($quantity); ?>" required>
                         </div>
 
-                        <!-- Availability -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="availability">
                                 Availability
@@ -275,7 +275,7 @@
                             </select>
                         </div>
 
-                        <!-- Reward Image -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="rewardImage">
                                 Reward Image
@@ -291,20 +291,20 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
+                     
                     <div class="auditor-create-actions">
-                        <!-- Back -->
+                         
                         <a href="auditor_rewards_management.php" class="auditor-back-btn">
                             Back
                         </a>
 
-                        <!-- Clear -->
+                         
                         <button type="reset" class="auditor-management-detail-action">
                             <img src="../assets/icons/reset.png" alt="">
                             Clear
                         </button>
 
-                        <!-- Create -->
+                         
                         <button type="button" id="createRewardButton" class="auditor-management-detail-action auditor-create-btn">
                             <img src="../assets/icons/create.png" alt="">
                             Create Reward
@@ -315,13 +315,13 @@
         </div>
     </div>
 
-    <!-- Confirmation Pop Out Message -->
+     
     <div id="createRewardPopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Reward Creation Confirmation</h2>
             <p>Are you sure you want to create this reward with these details?</p>
 
-            <!-- Reward Summary Pop out -->
+             
             <div class="auditor-summary">
                 <div>
                     <strong>Reward ID</strong>
@@ -361,7 +361,7 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+             
             <div class="auditor-popout-actions">
                 <button type="button" id="cancelCreateReward">
                     No
@@ -374,7 +374,7 @@
         </div>
     </div>
 
-    <!-- Duplicate Reward Name -->
+     
     <div id="duplicateRewardPopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Duplicate Reward Name</h2>
@@ -388,7 +388,7 @@
         </div>
     </div>
 
-    <!-- Create another reward -->
+     
     <?php if (isset($_GET['created'])): ?>
         <div id="createAnotherPopout" class="auditor-popout">
             <div class="auditor-popout-box">
@@ -408,7 +408,7 @@
         </div>
     <?php endif; ?>
 
-    <!-- Success Creation of Reward -->
+     
     <div id="successPopout" class="auditor-popout">
         <div class="auditor-popout-box success-box">
             <h2>Reward Created Successfully!</h2>
@@ -435,27 +435,27 @@
         const duplicateRewardPopout = document.getElementById('duplicateRewardPopout');
         const duplicateRewardOK = document.getElementById('duplicateRewardOK');
 
-        // Confirmation Pop Out
+
         createRewardButton.addEventListener('click', function () {
             if (!rewardForm.checkValidity()) {
                 rewardForm.reportValidity();
                 return;
             }
 
-            /* Check duplicate reward name */
+             
             const formData = new FormData();
             formData.append('checkRewardName', '1');
 
             formData.append('rewardName', document.getElementById('rewardName').value);
 
             fetch('auditor_reward_create.php', {method: 'POST', body: formData}) . then(response => response.text()) . then(result => {
-                /* Duplicate */
+                 
                 if (result.trim() === 'exists') {
                     duplicateRewardPopout . classList . add('show');
                     return;
                 }
 
-                /* Display Reward Information */
+                 
                 document.getElementById('confirmRewardID').textContent = document.getElementById('rewardID').value;
                 document.getElementById('confirmRewardName').textContent = document.getElementById('rewardName').value;
                 document.getElementById('confirmRewardDescription').textContent = document.getElementById('rewardDescription').value;
@@ -463,7 +463,7 @@
                 document.getElementById('confirmQuantity').textContent = document.getElementById('quantity').value;
                 document.getElementById('confirmAvailability').textContent = document.getElementById('availability').value;
 
-                /* Display Reward Image */
+                 
                 const rewardImage = document.getElementById('rewardImage');
                 const confirmRewardImage = document.getElementById('confirmRewardImage');
                 if (rewardImage.files.length > 0) {
@@ -472,7 +472,7 @@
                     confirmRewardImage.removeAttribute('src');
                 }
 
-                /* Show Confirmation */
+                 
                 createRewardPopout.classList.add('show');
             })
 
@@ -482,7 +482,7 @@
         }
     );
 
-        // Action Buttons
+
         cancelCreateReward.addEventListener('click', function () {
             createRewardPopout . classList . remove('show');
         });
@@ -491,7 +491,7 @@
             rewardForm. submit();
         });
 
-        // Duplicate Reward Name Popup
+
         duplicateRewardOK.addEventListener('click', function () {
             duplicateRewardPopout . classList . remove('show');
             document.getElementById('rewardName').focus();

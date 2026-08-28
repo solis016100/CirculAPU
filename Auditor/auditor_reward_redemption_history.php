@@ -90,7 +90,7 @@
             <?php include '../header.php'; ?>
             <main class="page-body auditor-management-detail-page redemption-history-page">
 
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_rewards_management.php">
                         Reward Management
@@ -107,7 +107,7 @@
 
                 <div class="management-filter">
                     <form method="GET" class="management-filter-form">
-                        <!-- Search Reward -->
+                         
                         <div class="management-filter-group search">
                             <label for="search">Search History</label>
                             <div class="management-search-input">
@@ -115,7 +115,7 @@
                                 <input type="text" id="search" name="search" placeholder="Search by reward name or redemption date." value="<?php echo htmlspecialchars($search); ?>">
                             </div>
                         </div>
-                        <!-- Reward Name -->
+                         
                         <div class="management-filter-group">
                             <label for="Reward Name">
                                 Reward Name
@@ -132,7 +132,7 @@
                             </select>
                         </div>
 
-                        <!-- Redemption Date -->
+                         
                         <div class="management-filter-group">
                             <label for="redemptionDate">
                                 Redemption Date
@@ -140,14 +140,14 @@
                             <input type="date" id="redemptionDate" name="redemptionDate" value="<?php echo htmlspecialchars($redemptionDate); ?>">
                         </div>
 
-                        <!-- Filter -->
+                         
                         <div class="management-filter-buttons">
                             <button type="submit" class="management-filter-btn">
                                 <img src="../assets/icons/filter.png" alt="Filter">
                                 Filter
                             </button>
 
-                            <!-- Reset -->
+                             
                             <a href="auditor_reward_redemption_history.php" class="management-reset-btn">
                                 <img src="../assets/icons/reset.png" alt="Reset">
                                 Reset
@@ -157,7 +157,7 @@
                 </div>
 
                 <div class="management-list">
-                    <!-- Table Headings -->
+                     
                     <div class="management-list-header">
                         <h2>Reward Redemption</h2>
                         <p>Total Redemptions: <?php echo $total; ?></p>
@@ -215,7 +215,7 @@
 
                         <div class="pagination">
                             <?php $paginationParams = $_GET; ?>
-                            <!-- Previous -->
+                             
                             <?php if ($page > 1): ?>
                                 <?php $paginationParams['page'] = $page - 1; ?>
                                 <a href="?<?php echo http_build_query($paginationParams);?>">
@@ -227,7 +227,7 @@
                                 </a>
                             <?php endif; ?>
 
-                            <!-- Page Numbers -->
+                             
                             <?php for ($i = 1; $i <= $pages; $i++): ?>
                                 <?php $paginationParams['page'] = $i; ?>
                                 <a href="?<?php echo http_build_query($paginationParams);?>" class="<?php echo $i == $page ? 'active' : ''; ?>">
@@ -235,7 +235,7 @@
                                 </a>
                             <?php endfor; ?>
 
-                            <!-- Next -->
+                             
                             <?php if ($page < $pages): ?>
                                 <?php $paginationParams['page'] = $page + 1; ?>
                                 <a href="?<?php echo http_build_query($paginationParams);?>">

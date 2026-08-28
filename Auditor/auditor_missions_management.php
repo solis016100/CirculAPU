@@ -148,25 +148,25 @@
                         </a>
                     </div>
 
-                    <!-- Green bar showing Success Creation -->
+                     
                     <?php if (isset($_GET['created'])): ?>
                         <div class="alert alert-success">
                             Mission created successfully.
                         </div>
                     <?php endif; ?>
 
-                    <!-- Green bar showing Success Deletion -->
+                     
                     <?php if (isset($_GET['deleted'])): ?>
                         <div class="alert alert-success">
                             Mission deleted successfully.
                         </div>
                     <?php endif; ?>
 
-                    <!-- Search and Filter -->
+                     
                     <div class="management-filter">
                         <form method="GET" action="auditor_missions_management.php">
 
-                            <!-- Search Mission -->
+                             
                             <div class="management-filter-group search">
                                 <label for="search">Search Mission</label>
                                 <div class="management-search-input">
@@ -182,7 +182,7 @@
                             </div>
 
 
-                            <!-- Filter by Mission Name -->
+                             
                             <div class="management-filter-group">
                                 <label for="missionName">Mission Name</label>
                                 <select id="missionName" name="missionName">
@@ -203,7 +203,7 @@
                             </div>
 
 
-                            <!-- Filter by EcoPoints -->
+                             
                             <div class="management-filter-group">
                                 <label for="ecoPoints">EcoPoints Awarded</label>
                                 <select id="ecoPoints" name="ecoPoints">
@@ -224,7 +224,7 @@
                             </div>
 
 
-                            <!-- Filter by Status -->
+                             
                             <div class="management-filter-group">
                                 <label for="status">Status</label>
                                 <select id="status" name="status">
@@ -245,7 +245,7 @@
                             </div>
 
 
-                            <!-- Filter Buttons -->
+                             
                             <div class="management-filter-buttons">
                                 <button type="submit" class="management-filter-btn">
                                     <img src="../assets/icons/filter.png" alt="Filter">
@@ -260,7 +260,7 @@
                         </form>
                     </div>
 
-                    <!-- Mission Table Header -->
+                     
                     <div class="management-list">
                         <div class="management-list-header">
                             <h2>Mission List</h2>
@@ -316,7 +316,7 @@
                                 </tbody>
                             </table>
 
-                            <!-- Automatic Page Buttons -->
+                             
                             <?php
                                 if ($totalMissions > 0) {
                                     $startRecord = $offset + 1;
@@ -335,7 +335,7 @@
                                     </p>
 
                                     <?php
-                                        // Keep filter values when changing pages
+                                         
                                         $paginationParams = [];
 
                                         if ($search !== '') {
@@ -356,7 +356,7 @@
                                     ?>
 
                                     <div class="pagination">
-                                        <!-- Previous -->
+                                         
                                         <?php if ($page > 1) {
                                             $previousParams = $paginationParams;
                                             $previousParams['page'] = $page - 1;
@@ -366,7 +366,7 @@
                                             </a>
                                         <?php } ?>
 
-                                        <!-- Page Numbers -->
+                                         
                                         <?php for ($i = 1; $i <= $totalPages; $i++) {
                                             $pageParams = $paginationParams;
                                             $pageParams['page'] = $i;
@@ -380,7 +380,7 @@
 
                                         <?php } ?>
 
-                                        <!-- Next -->
+                                         
                                         <?php if ($page < $totalPages) {
                                             $nextParams = $paginationParams;
                                             $nextParams['page'] = $page + 1;

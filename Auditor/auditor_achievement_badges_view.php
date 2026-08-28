@@ -78,7 +78,7 @@
             <?php include '../header.php'; ?>
             <main class="page-body auditor-management-detail-page">
 
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_achievement_badges_management.php">
                         Achievement Badge Management
@@ -88,19 +88,19 @@
 
                 <h1>Achievement Badge Details</h1>
 
-                <!-- Green bar showing Success Updation -->
+                 
                 <?php if (isset($_GET['updated'])): ?>
                     <div class="alert alert-success">
                         Achievement Badge updated successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Badge Details -->
+                 
                 <form method="POST" enctype="multipart/form-data">
                     <div class="management-view-card">
-                        <!-- Badge Information -->
+                         
                         <div class="management-view-body">
-                            <!-- Badge ID -->
+                             
                             <div class="auditor-management-detail-row">
                                 <label>Badge ID</label>
                                 <div class="auditor-management-detail-value">
@@ -108,7 +108,7 @@
                                 </div>
                             </div>
 
-                            <!-- Badge Name -->
+                             
                             <div class="auditor-management-detail-row">
                                 <label>Badge Name</label>
                                 <div class="auditor-management-detail-value">
@@ -116,7 +116,7 @@
                                 </div>
                             </div>
 
-                            <!-- Badge Icon -->
+                             
                             <div class="auditor-management-detail-row">
                                 <label>Badge Icon</label>
                                 <div class="badge-edit-icon">
@@ -129,7 +129,7 @@
                                 </div>
                             </div>
 
-                            <!-- Description -->
+                             
                             <div class="auditor-management-detail-row">
                                 <label>Description</label>
                                 <div class="auditor-management-detail-value remarks">
@@ -137,7 +137,7 @@
                                 </div>
                             </div>
 
-                            <!-- Requirement -->
+                             
                             <div class="auditor-management-detail-row">
                                 <label>Requirement</label>
                                 <div class="auditor-management-detail-value remarks">
@@ -147,27 +147,27 @@
                         </div>
 
 
-                        <!-- Action Buttons -->
+                         
                         <div class="auditor-management-detail-side">
-                            <!-- Edit -->
+                             
                             <a href="auditor_achievement_badges_edit.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>" class="auditor-management-detail-action">
                                 <img src="../assets/icons/edit.png" alt="Edit">
                                 Edit
                             </a>
 
-                            <!-- Print -->
+                             
                             <a href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&print=1" class="auditor-management-detail-action">
                                 <img src="../assets/icons/print.png" alt="Print">
                                 Print
                             </a>
 
-                            <!-- Delete -->
+                             
                             <button type="button" class="auditor-management-detail-action delete" onclick="openDeletePopout()">
                                 <img src="../assets/icons/delete.png" alt="Delete">
                                 Delete
                             </button>
 
-                            <!-- Back Button -->
+                             
                             <div class="auditor-management-detail-back">
                                 <a href="auditor_achievement_badges_management.php?search=<?= urlencode($_GET['search'] ?? '') ?>&badge=<?= urlencode($_GET['badge'] ?? '') ?>&page=<?= urlencode($_GET['page'] ?? 1) ?>">
                                     Back
@@ -180,7 +180,7 @@
         </div>
     </div>
 
-    <!-- Print -->
+     
     <?php if (isset($_GET['print']) && $_GET['print'] == '1'): ?>
         <script>
             window.onload = function() {
@@ -194,7 +194,7 @@
         </script>
     <?php endif; ?>
 
-    <!-- Delete Popout -->
+     
     <div id="deletePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Delete Achievement Badge Confirmation</h2>
@@ -234,7 +234,7 @@
 
     </script>
 
-    <!-- Badge Image Pop Out -->
+     
     <div id="badgeImagePopout" class="image-popout" onclick="closeBadgeImage()">
         <span class="image-popout-close" onclick="event.stopPropagation(); closeBadgeImage();">
             &times;

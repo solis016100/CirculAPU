@@ -1,17 +1,17 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-// Include db.php from parent directory
+ 
 require_once '../db.php';
 require_once 'admin_helpers.php';
 
-// Security: Restrict access strictly to System Administrators
+ 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
-// Get User ID from GET request
+ 
 $user_id = trim($_GET['id'] ?? '');
 
 if (empty($user_id)) {
@@ -24,7 +24,7 @@ $message_type = '';
 $allowed_roles = ['Member', 'Auditor', 'Manager', 'Admin'];
 $allowed_statuses = ['Active', 'Suspended'];
 
-// Handle Form Submission (Save Changes)
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_changes'])) {
     $name = trim($_POST['name'] ?? '');
     $role = trim($_POST['role'] ?? '');
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_changes'])) {
     }
 }
 
-// Fetch Current User Details
+ 
 $sql = "SELECT * FROM user WHERE userID = ? AND status != 'Deleted'";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $user_id);
@@ -148,7 +148,7 @@ if ($result->num_rows === 0) {
 $user = $result->fetch_assoc();
 $stmt->close();
 
-// Fetch Count of Listed Assets owned by this user
+ 
 $asset_sql = "SELECT COUNT(*) as asset_count FROM assets WHERE ownerID = ? AND listingStatus != 'Removed'";
 $stmt_asset = $conn->prepare($asset_sql);
 $stmt_asset->bind_param("s", $user_id);
@@ -171,25 +171,25 @@ if (($_GET['updated'] ?? '') === '1') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Details - CirculAPU</title>
-    <!-- Primary Global Stylesheet -->
+     
     <link rel="stylesheet" href="../style.css">
-    <!-- Secondary Admin Stylesheet -->
+     
     <link rel="stylesheet" href="admin_style.css">
 </head>
 <body class="role-admin">
     <div class="dashboard-container">
         
-        <!-- Reusable Sidebar Component from parent directory -->
+         
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <!-- Global Header Component from parent directory -->
+             
             <?php include '../header.php'; ?>
 
             <main class="page-body">
                 
-                <!-- Page Breadcrumb & Title Bar -->
+                 
                 <div class="admin-page-header">
                     <div>
                         <p class="header-breadcrumb">User Management &gt; User Details</p>
@@ -203,12 +203,12 @@ if (($_GET['updated'] ?? '') === '1') {
                     </div>
                 <?php endif; ?>
 
-                <!-- User Details Form Container -->
+                 
                 <div class="content-card edit-user-card">
                     <form method="POST" action="admin_edit_user.php?id=<?php echo urlencode($user_id); ?>" id="editUserForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(adminCsrfToken()); ?>">
                         
-                        <!-- User ID Field (Uneditable - Gray) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">User ID</label>
                             <div class="edit-field-input-box uneditable">
@@ -216,7 +216,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Name Field (Editable - White) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Name</label>
                             <div class="edit-field-input-box editable">
@@ -224,7 +224,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Role Field -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Role</label>
                             <div class="edit-field-input-box <?php echo $user_id === $_SESSION['user_id'] ? 'uneditable' : 'editable'; ?>">
@@ -242,7 +242,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Status Buttons (Active = Green, Suspended = Red) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Status</label>
                             <div class="status-toggle-group">
@@ -256,7 +256,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Eco Points Field (Editable - White with Controls) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Eco Points</label>
                             <div class="ecopoint-input-container editable">
@@ -272,7 +272,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Date Joined Field (Uneditable - Gray) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Date Joined</label>
                             <div class="edit-field-input-box uneditable">
@@ -280,7 +280,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Listed Asset Count Field (Uneditable - Gray) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Listed Asset</label>
                             <div class="edit-field-input-box uneditable">
@@ -288,7 +288,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Email Field (Editable - White) -->
+                         
                         <div class="edit-field-row">
                             <label class="edit-field-label">Email</label>
                             <div class="edit-field-input-box editable">
@@ -296,7 +296,7 @@ if (($_GET['updated'] ?? '') === '1') {
                             </div>
                         </div>
 
-                        <!-- Bottom Form Buttons -->
+                         
                         <div class="edit-form-footer">
                             <button type="submit" name="save_changes" class="btn-save-changes">
                                 <img src="../assets/icons/save.svg" alt="Save">
@@ -314,7 +314,7 @@ if (($_GET['updated'] ?? '') === '1') {
         </div>
     </div>
 
-    <!-- Interactive Control Scripts -->
+     
     <script>
         function setStatus(statusValue) {
             document.getElementById('statusInput').value = statusValue;

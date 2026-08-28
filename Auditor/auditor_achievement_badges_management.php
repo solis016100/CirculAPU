@@ -138,31 +138,31 @@
                         </div>
                     </div>
 
-                    <!-- Green bar showing Success Creation -->
+                     
                     <?php if (isset($_GET['created'])): ?>
                         <div class="alert alert-success">
                             Achievement badge created successfully.
                         </div>
                     <?php endif; ?>
 
-                    <!-- Green bar showing Success Delete -->
+                     
                     <?php if (isset($_GET['deleted'])): ?>
                         <div class="alert alert-success">
                             Achievement badge deleted successfully.
                         </div>
                     <?php endif; ?>
 
-                    <!-- Green bar showing Success Updation -->
+                     
                     <?php if (isset($_GET['updated'])): ?>
                         <div class="alert alert-success">
                             Achievement Badge updated successfully.
                         </div>
                     <?php endif; ?>
 
-                    <!-- Search and Filter -->
+                     
                     <div class="management-filter">
                         <form method="GET" action="auditor_achievement_badges_management.php">
-                            <!-- Search Achievement Badges -->
+                             
                             <div class="management-filter-group search">
                                 <label for="search">Search Achievement Badges</label>
                                 <div class="management-search-input">
@@ -171,7 +171,7 @@
                                 </div>
                             </div>
 
-                            <!-- Filter by Badge Name -->
+                             
                             <div class="management-filter-group">
                                 <label for="badge">Badge Name</label>
                                 <select id="badge" name="badge">
@@ -184,7 +184,7 @@
                                 </select>
                             </div>
 
-                            <!-- Filter Buttons -->
+                             
                             <div class="management-filter-buttons">
                                 <button type="submit" class="management-filter-btn">
                                     <img src="../assets/icons/filter.png" alt="Filter">
@@ -199,7 +199,7 @@
                         </form>
                     </div>
 
-                    <!-- Achievement Badges List -->
+                     
                     <div class="management-list">
                         <div class="management-list-header">
                             <h2>Achievement Badges List</h2>
@@ -209,7 +209,7 @@
                             </p>
                         </div>
 
-                        <!-- Achievement Badge Table -->
+                         
                         <div class="management-table-wrapper">
                             <table class="management-table badge-table">
                                 <thead>
@@ -227,42 +227,42 @@
                                     <?php if (isset($badgeResult) && $badgeResult->num_rows > 0): ?>
                                         <?php $number = $offset + 1; while ($badge = $badgeResult->fetch_assoc()): ?>
                                             <tr ondblclick="window.location.href='auditor_achievement_badges_view.php?achieveBadgeID=<?= urlencode($badge['achieveBadgeID']) ?>&from=management&<?= $badgeFilterURL ?>'">
-                                                <!-- Number -->
+                                                 
                                                 <td><?php echo $number; ?></td>
 
-                                                <!-- Badge ID -->
+                                                 
                                                 <td><?php echo htmlspecialchars($badge['achieveBadgeID']); ?></td>
 
-                                                <!-- Badge Icon -->
+                                                 
                                                 <td>
                                                     <img src="../assets/images/<?php echo htmlspecialchars($badge['achieveBadgeIcon']); ?>" alt="<?php echo htmlspecialchars($badge['achieveBadgeName']); ?>" class="management-table-image">
                                                 </td>
 
-                                                <!-- Badge Name -->
+                                                 
                                                 <td><?php echo htmlspecialchars($badge['achieveBadgeName']); ?></td>
 
-                                                <!-- Requirement -->
+                                                 
                                                 <td><?php echo htmlspecialchars($badge['achieveBadgeRequirement']); ?></td>
 
-                                                <!-- Actions -->
+                                                 
                                                 <td>
                                                     <div class="management-actions">
-                                                        <!-- View -->
+                                                         
                                                         <a href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>"class="management-action-btn" title="View">
                                                             <img src="../assets/icons/view.png" alt="View">
                                                         </a>
 
-                                                        <!-- Edit -->
+                                                         
                                                         <a href="auditor_achievement_badges_edit.php?badgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&from=management" class="management-action-btn" title="Edit">
                                                             <img src="../assets/icons/edit.png" alt="Edit">
                                                         </a>
 
-                                                        <!-- Print -->
+                                                         
                                                         <a href="auditor_achievement_badges_view.php?achieveBadgeID=<?php echo urlencode($badge['achieveBadgeID']); ?>&print=1&from=management" class="management-action-btn" title="Print">
                                                             <img src="../assets/icons/print.png" alt="Print">
                                                         </a>
 
-                                                        <!-- Delete -->
+                                                         
                                                         <button type="button" class="management-action-btn delete" title="Delete" onclick="openDeletePopout('<?php echo htmlspecialchars($badge['achieveBadgeID']); ?>')">
                                                             <img src="../assets/icons/delete.png" alt="Delete">
                                                         </button>
@@ -283,7 +283,7 @@
                             </table>
                         </div>
 
-                        <!-- Table Footer -->
+                         
                         <div class="management-table-footer">
                             <p>
                                 Showing <?php echo $totalRecords > 0 ? $offset + 1 : 0; ?>
@@ -325,7 +325,7 @@
         </div>
     </div>
 
-    <!-- Delete Popout -->
+     
     <div id="deletePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Delete Achievement Badge</h2>

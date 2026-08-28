@@ -1,28 +1,28 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-// Include db.php from parent directory
+ 
 require_once '../db.php';
 
-// Security: Restrict access strictly to System Administrators
+ 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
-// Initialize Filter Variables
+ 
 $search = trim($_GET['search'] ?? '');
 $status_filter = trim($_GET['status'] ?? '');
 $date_filter = $_GET['date_reported'] ?? '';
 if (!in_array($status_filter, ['Pending', 'Resolved'], true)) $status_filter = '';
 
-// Pagination Setup
+ 
 $limit = 8;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
-// Base SQL Query joining report and user tables
+ 
 $sql = "SELECT r.*, u.name AS reporterName, v.targetType, v.targetID
         FROM report r 
         LEFT JOIN user u ON r.reporterID = u.userID
@@ -38,7 +38,7 @@ $count_sql = "SELECT COUNT(*) as total
 $params = [];
 $types = "";
 
-// Apply Dynamic Filters
+ 
 if (!empty($search)) {
     $sql .= " AND (r.reportID LIKE ? OR r.reporterID LIKE ? OR u.name LIKE ? OR r.verificationID LIKE ?
                     OR v.targetType LIKE ? OR v.targetID LIKE ? OR r.reason LIKE ?)";
@@ -63,7 +63,7 @@ if (!empty($date_filter)) {
     $types .= "s";
 }
 
-// Get Total Records for Pagination
+ 
 $stmt_count = $conn->prepare($count_sql);
 if (!empty($params)) {
     $stmt_count->bind_param($types, ...$params);
@@ -75,13 +75,13 @@ $stmt_count->close();
 $page = min($page, $total_pages);
 $offset = ($page - 1) * $limit;
 
-// Append Ordering and Pagination Limits
+ 
 $sql .= " ORDER BY r.timeCreated DESC LIMIT ? OFFSET ?";
 $params[] = $limit;
 $params[] = $offset;
 $types .= "ii";
 
-// Fetch Report Records
+ 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
@@ -107,25 +107,25 @@ function reportQueueUrl(int $target_page): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports Queue Dashboard - CirculAPU</title>
-    <!-- Primary Global Stylesheet -->
+     
     <link rel="stylesheet" href="../style.css">
-    <!-- Secondary Admin Stylesheet -->
+     
     <link rel="stylesheet" href="admin_style.css">
 </head>
 <body class="role-admin">
     <div class="dashboard-container">
         
-        <!-- Reusable Sidebar Component from parent directory -->
+         
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <!-- Global Header Component from parent directory -->
+             
             <?php include '../header.php'; ?>
 
             <main class="page-body">
                 
-                <!-- Page Breadcrumb & Title Bar -->
+                 
                 <div class="admin-page-header">
                     <div>
                         <p class="header-breadcrumb">Reports Queue</p>
@@ -133,7 +133,7 @@ function reportQueueUrl(int $target_page): string {
                     </div>
                 </div>
 
-                <!-- Search and Filter Bar -->
+                 
                 <div class="content-card admin-filter-card">
                     <form method="GET" action="reports_queue.php" class="admin-filter-form">
                         
@@ -170,7 +170,7 @@ function reportQueueUrl(int $target_page): string {
                     </form>
                 </div>
 
-                <!-- Reports Data Table -->
+                 
                 <div class="content-card admin-table-card">
                     <div class="table-header-bar">
                         <h2>Report List</h2>
@@ -218,7 +218,7 @@ function reportQueueUrl(int $target_page): string {
                         </tbody>
                     </table>
 
-                    <!-- Pagination Navigation -->
+                     
                     <div class="admin-pagination-footer">
                         <span class="pagination-info">
                             Showing <?php echo ($total_reports > 0) ? $offset + 1 : 0; ?> to <?php echo min($offset + $limit, $total_reports); ?> of <?php echo $total_reports; ?> reports

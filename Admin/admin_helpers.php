@@ -1,8 +1,8 @@
 <?php
 
-/**
- * Generate the next identifier for the small set of Admin-managed string keys.
- */
+
+
+
 function adminNextIdentifier(mysqli $conn, string $kind): string
 {
     $definitions = [

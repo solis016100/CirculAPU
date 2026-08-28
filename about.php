@@ -1,13 +1,13 @@
 <?php
 session_start();
 
-// Ensure user is logged in
+ 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: /CirculAPU/login.php");
     exit();
 }
 
-// Dynamically set the theme class based on the logged-in user's role
+ 
 $theme_class = 'role-' . strtolower($_SESSION['user_role']);
 $user_role_display = htmlspecialchars($_SESSION['user_role']);
 ?>

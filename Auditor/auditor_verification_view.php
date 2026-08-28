@@ -275,7 +275,7 @@
         <div class="main-content">
             <?php include '../header.php'; ?>
             <main class="page-body auditor-management-detail-page">
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_verification_management.php">
                         Verification Management
@@ -286,14 +286,14 @@
 
                 <h1>Verification Record Details</h1>
 
-                <!-- Green Bar showing Success Updation -->
+                 
                 <?php if (isset($_GET['success'])): ?>
                     <div class="alert alert-success">
                         Verification updated successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Green Bar showing Success Verification -->
+                 
                 <?php if (isset($_GET['verified'])): ?>
                     <div class="alert alert-success">
                         Verification verified successfully.
@@ -302,7 +302,7 @@
 
                 <div class="management-view-card">
                     <div class="management-view-body">
-                        <!-- Verification ID -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Verification ID</label>
                             <div class="auditor-management-detail-value">
@@ -310,7 +310,7 @@
                             </div>
                         </div>
 
-                        <!-- User -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>User</label>
                             <div class="auditor-management-detail-value">
@@ -319,7 +319,7 @@
                             </div>
                         </div>
 
-                        <!-- Target Type -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Target Type</label>
                             <div class="auditor-management-detail-value">
@@ -327,7 +327,7 @@
                             </div>
                         </div>
 
-                        <!-- Target ID -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Target ID</label>
                             <div class="auditor-management-detail-value">
@@ -335,7 +335,7 @@
                             </div>
                         </div>
 
-                        <!-- Target Name -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>
                                 <?= $targetType == 'Asset' ? 'Asset Name' : 'Mission Name' ?>
@@ -345,7 +345,7 @@
                             </div>
                         </div>
 
-                        <!-- Asset Only -->
+                         
                         <?php if ($targetType == 'Asset'): ?>
                             <div class="auditor-management-detail-row">
                                 <label>Category</label>
@@ -364,7 +364,7 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Status -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Status</label>
                             <div class="auditor-management-detail-value">
@@ -374,7 +374,7 @@
                             </div>
                         </div>
 
-                        <!-- Remarks -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Remarks</label>
                             <div class="auditor-management-detail-value remarks">
@@ -382,7 +382,7 @@
                             </div>
                         </div>
 
-                        <!-- Submission Date -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Submission Date</label>
                             <div class="auditor-management-detail-value">
@@ -390,7 +390,7 @@
                             </div>
                         </div>
 
-                        <!-- Verified Date -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Verified Date</label>
                             <div class="auditor-management-detail-value">
@@ -398,7 +398,7 @@
                             </div>
                         </div>
 
-                        <!-- Verified By -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Verified By</label>
                             <div class="auditor-management-detail-value">
@@ -412,9 +412,9 @@
                         </div>
                     </div>
 
-                    <!-- Right side details -->
+                     
                     <div class="auditor-management-detail-side">
-                        <!-- Uploaded Image -->
+                         
                         <h2>Uploaded Image</h2>
                         <?php if ($image): ?>
                             <div class="auditor-management-detail-image">
@@ -430,7 +430,7 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Approve / Reject Buttons -->
+                         
                         <?php if ($verification['status'] == 'Pending'): ?>
                             <div class="auditor-management-decision">
                                 <button type="button" class="auditor-management-approve" onclick="openDecisionPopout('approve')">
@@ -447,7 +447,7 @@
 
                         <div class="auditor-management-divider"></div>
 
-                        <!-- Print -->
+                         
                         <?php if (isset($_GET['print'])): ?>
                             <script>
                                 window.addEventListener('afterprint', function () {
@@ -462,19 +462,19 @@
 
                         <?php printButton('Print', '../assets/icons/print.png', 'auditor-management-detail-action');?>
 
-                        <!-- Edit -->
+                         
                         <a href="auditor_verification_edit.php?verificationID=<?= urlencode($id) ?>&from=view" class="auditor-management-detail-action" title="Edit">
                             <img src="../assets/icons/edit.png" alt="Edit">
                             Edit
                         </a>
 
-                        <!-- Delete -->
+                         
                         <button type="button" class="auditor-management-detail-action delete" onclick="openDeletePopout()">
                             <img src="../assets/icons/delete.png" alt="">
                             Delete
                         </button>
 
-                        <!-- Back -->
+                         
                         <div class="auditor-management-detail-back">
                             <a href="auditor_verification_management.php?<?= $filterQuery ?>">
                                 Back
@@ -486,7 +486,7 @@
         </div>
     </div>
 
-    <!-- Print -->
+     
     <?php if (isset($_GET['print']) && $_GET['print'] == '1'): ?>
         <script>
             window.onload = function () {
@@ -499,7 +499,7 @@
         </script>
     <?php endif; ?>
 
-    <!-- Image Popout -->
+     
     <div id="imagePopout" class="image-popout" onclick="closeImage()">
         <span class="image-popout-close" onclick="event.stopPropagation(); closeImage()">
             &times;
@@ -507,7 +507,7 @@
         <img id="popoutImage" src="" alt="Evidence" onclick="event.stopPropagation();">
     </div>
 
-    <!-- Delete Popout -->
+     
     <div id="deletePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Delete Verification Confirmation</h2>
@@ -526,7 +526,7 @@
         </div>
     </div>
 
-    <!-- Approve / Reject Confirmation Popout -->
+     
     <div id="decisionPopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2 id="decisionTitle">Approve Verification</h2>

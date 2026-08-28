@@ -37,8 +37,8 @@ if ($is_admin_preview || $is_legacy_simulation):
         </script>
     <?php elseif ($is_legacy_simulation): ?>
         <script>
-            // Navigation and GET filters remain usable. Any action that could
-            // change data is blocked while the Admin is simulating a role.
+
+
             document.addEventListener('submit', (event) => {
                 const method = (event.target.method || 'get').toLowerCase();
                 if (method !== 'get') {

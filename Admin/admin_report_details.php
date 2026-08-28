@@ -1,17 +1,17 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-// Include db.php from parent directory
+ 
 require_once '../db.php';
 require_once 'admin_helpers.php';
 
-// Security: Restrict access strictly to System Administrators
+ 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
-// Get Report ID from GET parameter
+ 
 $report_id = trim($_GET['id'] ?? '');
 
 if (empty($report_id)) {
@@ -22,7 +22,7 @@ if (empty($report_id)) {
 $message = '';
 $message_type = '';
 
-// Handle the two requested resolution paths. Under Investigation is intentionally omitted.
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resolution = $_POST['resolution'] ?? '';
 
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          WHERE assetID = ? AND listingStatus != 'Removed'"
                     );
                 } else {
-                    // Soft purge keeps transaction history intact while removing the asset from active listings.
+                     
                     $target_stmt = $conn->prepare(
                         "UPDATE assets
                          SET verificationStatus = 'Rejected', listingStatus = 'Removed',
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch Report Metadata and Details
+ 
 $sql = "SELECT r.*, u.name AS reporterName, u.userID AS reporterUID,
                v.verifiedBy, v.targetType, v.targetID, v.status AS verificationStatus,
                v.remarks AS verificationRemarks, auditor.name AS auditorName
@@ -195,25 +195,25 @@ if ($evidence_path !== '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Details - CirculAPU</title>
-    <!-- Primary Global Stylesheet -->
+     
     <link rel="stylesheet" href="../style.css">
-    <!-- Secondary Admin Stylesheet -->
+     
     <link rel="stylesheet" href="admin_style.css">
 </head>
 <body class="role-admin">
     <div class="dashboard-container">
         
-        <!-- Reusable Sidebar Component from parent directory -->
+         
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <!-- Global Header Component from parent directory -->
+             
             <?php include '../header.php'; ?>
 
             <main class="page-body">
                 
-                <!-- Page Breadcrumb & Title Bar -->
+                 
                 <div class="admin-page-header">
                     <div>
                         <p class="header-breadcrumb">Reports Queue &gt; Report Details</p>
@@ -227,10 +227,10 @@ if ($evidence_path !== '') {
                     </div>
                 <?php endif; ?>
 
-                <!-- Report Details Container -->
+                 
                 <div class="report-details-container">
                     
-                    <!-- Report Metadata Section -->
+                     
                     <div class="report-card">
                         <h2 class="report-card-title">Report Metadata</h2>
                         <div class="metadata-grid">
@@ -255,7 +255,7 @@ if ($evidence_path !== '') {
                         </div>
                     </div>
 
-                    <!-- Dispute Statement & Evidence Section -->
+                     
                     <div class="report-card evidence-card">
                         <h2 class="report-card-title">Dispute Statement &amp; Evidence</h2>
                         <div class="evidence-statement-box">
@@ -272,7 +272,7 @@ if ($evidence_path !== '') {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Moderation Actions Footer -->
+                     
                     <form method="POST" action="admin_report_details.php?id=<?php echo urlencode($report_id); ?>" class="report-actions-footer">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(adminCsrfToken()); ?>">
                         <div class="action-btn-group">

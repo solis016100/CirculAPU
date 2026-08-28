@@ -1,29 +1,29 @@
 <?php
 session_start();
 
-// Access Control Guard for Community Member Role
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-// Get Member's information from login
+ 
 $memberID = $_SESSION['user_id'];
 $memberName = $_SESSION['user_name'] ?? 'Member';
 $userID = $memberID;
 
-// Connect to Database
+ 
 require_once '../db.php';
 if ($conn->connect_error) {
     $databaseError = "Unable to connect to the database.";
 } else {
-    // UTF-8 allows the database to handle different languages
+     
     $conn->set_charset("utf8mb4");
 }
 $message = "";
 $messageType = "";
 
-// Get Asset ID
+ 
 $assetID = $_GET['id'] ?? '';
 if ($assetID == '') {
     header("Location: member_requests.php");
@@ -31,7 +31,7 @@ if ($assetID == '') {
 }
 $assetID = $conn->real_escape_string($assetID);
 
-/* Get Asset Information */
+ 
 $assetQuery = "
 SELECT
     assetID,
@@ -55,12 +55,12 @@ if (!$assetResult || $assetResult->num_rows == 0) {
 }
 $asset = $assetResult->fetch_assoc();
 
-// Only Draft asset can be modified
+ 
 if ($asset['listingStatus'] != 'Draft') {
     die("Only assets with Draft status can be modified.");
 }
 
-/* Get Categories */
+ 
 $categoryQuery = "
 SELECT categoryID, categoryName
 FROM categories
@@ -68,7 +68,7 @@ ORDER BY categoryName ASC
 ";
 $categoryResult = $conn->query($categoryQuery);
 
-/* Generate Notification ID */
+ 
 function generateNotificationID($conn) {
     $result = $conn->query("
     SELECT MAX(
@@ -86,7 +86,7 @@ function generateNotificationID($conn) {
     return "N" . str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Resubmit Asset */
+ 
 if (isset($_POST['resubmit'])) {
     $assetName = trim($_POST['assetName'] ?? '');
     $categoryID = $_POST['categoryID'] ?? '';
@@ -107,7 +107,7 @@ if (isset($_POST['resubmit'])) {
         $description = $conn->real_escape_string($description);
         $imageURL = $asset['imageURL'];
 
-        // Upload New Image If User Selected One
+         
         if (!empty($_FILES['assetImage']['name'])) {
             $uploadFolder = "../uploads/assets/";
             if (!is_dir($uploadFolder)) {
@@ -137,7 +137,7 @@ if (isset($_POST['resubmit'])) {
             $conn->begin_transaction();
             try {
 
-                /* Update Asset */
+                 
                 $updateQuery = "
                 UPDATE assets
                 SET
@@ -157,7 +157,7 @@ if (isset($_POST['resubmit'])) {
                     throw new Exception("Unable to update asset: " . $conn->error);
                 }
 
-                /* Get Existing Verification Record */
+                 
                 $verificationCheck = $conn->query("
                 SELECT verificationID
                 FROM verificationrecords
@@ -167,8 +167,8 @@ if (isset($_POST['resubmit'])) {
                 LIMIT 1
                 ");
 
-                /* Update Existing Verification Record If It Exists
-                   Do not insert a new verification record during resubmit. */
+                
+
                 if ($verificationCheck && $verificationCheck->num_rows > 0) {
                     $verificationData = $verificationCheck->fetch_assoc();
                     $verificationID = $conn->real_escape_string(
@@ -191,7 +191,7 @@ if (isset($_POST['resubmit'])) {
                     }
                 }
 
-                /* Get Latest Member Name */
+                 
                 $latestMemberName = $memberName;
                 $memberResult = $conn->query("
                 SELECT name
@@ -204,7 +204,7 @@ if (isset($_POST['resubmit'])) {
                     $latestMemberName = $memberData['name'];
                 }
 
-                /* Send Notification To Member */
+                 
                 $memberNotificationID = generateNotificationID($conn);
                 $memberTitle = "Asset Resubmitted Successfully";
                 $memberContent =
@@ -226,7 +226,7 @@ if (isset($_POST['resubmit'])) {
                     );
                 }
 
-                /* Send Notification To Active Manager(s) */
+                 
                 $managerResult = $conn->query("
                 SELECT userID
                 FROM user
@@ -308,7 +308,7 @@ if (isset($_POST['resubmit'])) {
                 <h2>Asset Information</h2>
                 <div class="asset-form-grid">
 
-                    <!-- Asset Name -->
+                     
                     <div class="asset-form-group">
                         <label>Asset Name</label>
                         <input
@@ -319,7 +319,7 @@ if (isset($_POST['resubmit'])) {
                         >
                     </div>
 
-                    <!-- Category -->
+                     
                     <div class="asset-form-group">
                         <label>Category</label>
                         <select name="categoryID" required>
@@ -337,7 +337,7 @@ if (isset($_POST['resubmit'])) {
                         </select>
                     </div>
 
-                    <!-- Condition -->
+                     
                     <div class="asset-form-group">
                         <label>Condition</label>
                         <select name="assetCondition" required>
@@ -362,7 +362,7 @@ if (isset($_POST['resubmit'])) {
                     </div>
                 </div>
 
-                <!-- Description -->
+                 
                 <div class="asset-form-group asset-description-group">
                     <label>Description</label>
                     <textarea
@@ -372,11 +372,11 @@ if (isset($_POST['resubmit'])) {
                     ><?php echo htmlspecialchars($asset['description']); ?></textarea>
                 </div>
 
-                <!-- Asset Image -->
+                 
                 <div class="asset-image-section">
                     <label>Asset Image</label>
 
-                    <!-- Previous / Current Image -->
+                     
                     <?php if (!empty($asset['imageURL'])): ?>
                         <p class="current-image-text">Current Image</p>
                         <div class="asset-current-image" id="currentImageBox">
@@ -387,7 +387,7 @@ if (isset($_POST['resubmit'])) {
                         </div>
                     <?php endif; ?>
 
-                    <!-- New Image Preview -->
+                     
                     <div id="newImageArea" style="display:none;">
                         <p class="current-image-text">New Image Preview</p>
                         <div class="asset-current-image">
@@ -395,7 +395,7 @@ if (isset($_POST['resubmit'])) {
                         </div>
                     </div>
 
-                    <!-- Replace Image -->
+                     
                     <div class="asset-upload-box">
                         <input
                             type="file"
@@ -419,7 +419,7 @@ if (isset($_POST['resubmit'])) {
                     </div>
                 </div>
 
-                <!-- Current Status -->
+                 
                 <div class="asset-resubmit-status">
                     <div>
                         <span>Listing Status</span>
@@ -431,7 +431,7 @@ if (isset($_POST['resubmit'])) {
                     </div>
                 </div>
 
-                <!-- Buttons -->
+                 
                 <div class="asset-form-actions">
                     <a href="member_requests.php" class="asset-cancel-btn member-btn secondary">
                         Cancel

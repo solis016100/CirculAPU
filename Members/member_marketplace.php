@@ -1,30 +1,30 @@
 <?php
 session_start();
 
-/* Member Access */
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-/* Member Information */
+ 
 $memberID = $_SESSION['user_id'];
 $memberName = $_SESSION['user_name'] ?? 'Member';
 
-/* Database */
+ 
 require_once '../db.php';
 if ($conn->connect_error) {
     die("Database Connection Failed: " . $conn->connect_error);
 }
 $conn->set_charset("utf8mb4");
 
-/* Get Filter Values */
+ 
 $search = trim($_GET['search'] ?? '');
 $category = $_GET['category'] ?? '';
 $condition = $_GET['condition'] ?? '';
 $sort = $_GET['sort'] ?? 'latest';
 
-/* Get Categories */
+ 
 $categoryQuery = "
 SELECT
     categoryID,
@@ -34,10 +34,10 @@ ORDER BY categoryName ASC
 ";
 $categoryResult = $conn->query($categoryQuery);
 
-/* Safe Member ID */
+ 
 $safeMemberID = $conn->real_escape_string($memberID);
 
-/* Get Marketplace Assets */
+ 
 $assetQuery = "
 SELECT
     a.assetID,
@@ -64,7 +64,7 @@ AND a.verificationStatus = 'Approved'
 AND a.ownerID <> '$safeMemberID'
 ";
 
-/* Search Asset */
+ 
 if ($search != '') {
     $safeSearch = $conn->real_escape_string($search);
     $assetQuery .= "
@@ -76,7 +76,7 @@ if ($search != '') {
     ";
 }
 
-/* Category Filter */
+ 
 if ($category != '') {
     $safeCategory = $conn->real_escape_string($category);
     $assetQuery .= "
@@ -84,7 +84,7 @@ if ($category != '') {
     ";
 }
 
-/* Condition Filter */
+ 
 if ($condition != '') {
     $safeCondition = $conn->real_escape_string($condition);
     $assetQuery .= "
@@ -92,7 +92,7 @@ if ($condition != '') {
     ";
 }
 
-/* Sort Assets */
+ 
 if ($sort == 'name') {
     $assetQuery .= "
     ORDER BY a.assetName ASC
@@ -126,15 +126,15 @@ if (!$assetResult) {
 <body class="role-member">
 <div class="dashboard-container">
 
-    <!-- Sidebar -->
+     
     <?php include '../sidebar.php'; ?>
     <div class="main-content">
 
-        <!-- Header -->
+         
         <?php include '../header.php'; ?>
         <main class="page-body">
 
-            <!-- Page Header -->
+             
             <div class="marketplace-header">
                 <div>
                     <h1>
@@ -152,14 +152,14 @@ if (!$assetResult) {
                 </a>
             </div>
 
-            <!-- Search and Filter -->
+             
             <div class="marketplace-filter-box">
                 <form
                     method="GET"
                     class="marketplace-filter-form"
                 >
 
-                    <!-- Search -->
+                     
                     <div
                         class="marketplace-filter-group marketplace-search"
                     >
@@ -174,7 +174,7 @@ if (!$assetResult) {
                         >
                     </div>
 
-                    <!-- Category -->
+                     
                     <div class="marketplace-filter-group">
                         <label>
                             Category
@@ -219,7 +219,7 @@ if (!$assetResult) {
                         </select>
                     </div>
 
-                    <!-- Condition -->
+                     
                     <div class="marketplace-filter-group">
                         <label>
                             Condition
@@ -271,7 +271,7 @@ if (!$assetResult) {
                         </select>
                     </div>
 
-                    <!-- Sort -->
+                     
                     <div class="marketplace-filter-group">
                         <label>
                             Sort By
@@ -310,7 +310,7 @@ if (!$assetResult) {
                         </select>
                     </div>
 
-                    <!-- Buttons -->
+                     
                     <div class="marketplace-filter-buttons">
                         <button
                             type="submit"
@@ -328,7 +328,7 @@ if (!$assetResult) {
                 </form>
             </div>
 
-            <!-- Result Header -->
+             
             <div class="marketplace-result-header">
                 <h2>
                     Available Assets
@@ -341,7 +341,7 @@ if (!$assetResult) {
                 </span>
             </div>
 
-            <!-- Asset Cards -->
+             
             <div class="marketplace-grid">
                 <?php if ($assetResult->num_rows > 0): ?>
                     <?php
@@ -352,7 +352,7 @@ if (!$assetResult) {
                     ?>
                         <div class="marketplace-card member-card">
 
-                            <!-- Asset Image -->
+                             
                             <div class="marketplace-card-image">
                                 <?php
                                 if (!empty($asset['imageURL'])):
@@ -376,7 +376,7 @@ if (!$assetResult) {
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Asset Information -->
+                             
                             <div class="marketplace-card-body">
                                 <span class="marketplace-category">
                                     <?php
@@ -451,7 +451,7 @@ if (!$assetResult) {
                                     </div>
                                 </div>
 
-                                <!-- View Details -->
+                                 
                                 <a
                                     href="member_asset_details.php?id=<?php
                                     echo urlencode(

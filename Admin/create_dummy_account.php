@@ -1,11 +1,11 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-// Include central db.php from parent directory
+ 
 require_once '../db.php';
 require_once 'admin_helpers.php';
 
-// Security: Restrict access strictly to System Administrators
+ 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
@@ -21,7 +21,7 @@ if (isset($_GET['created']) && preg_match('/^U\d+$/', $_GET['created'])) {
     $message_type = 'success';
 }
 
-// Handle Form Submission
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
     $name = trim($_POST['name'] ?? '');
     $role = trim($_POST['role'] ?? '');
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
     $ecopoint = (int)($_POST['ecopoint'] ?? 0);
     $email = trim($_POST['email'] ?? '');
 
-    // Form Validation
+     
     if (!adminVerifyCsrfToken($_POST['csrf_token'] ?? '')) {
         $message = 'Your session expired. Refresh the page and try again.';
         $message_type = 'error';
@@ -102,25 +102,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Dummy Account - CirculAPU</title>
-    <!-- Primary Global Stylesheet -->
+     
     <link rel="stylesheet" href="../style.css">
-    <!-- Secondary Admin Stylesheet -->
+     
     <link rel="stylesheet" href="admin_style.css">
 </head>
 <body class="role-admin">
     <div class="dashboard-container">
         
-        <!-- Reusable Sidebar Component from parent directory -->
+         
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <!-- Global Header Component from parent directory -->
+             
             <?php include '../header.php'; ?>
 
             <main class="page-body">
                 
-                <!-- Page Breadcrumb & Title Bar -->
+                 
                 <div class="admin-page-header">
                     <div>
                         <p class="header-breadcrumb">User Management &gt; New Dummy Account</p>
@@ -135,12 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                 <?php endif; ?>
 
                 <div class="create-account-wrapper">
-                    <!-- User Details Form -->
+                     
                     <div class="content-card edit-user-card" style="margin: 0;">
                         <form method="POST" action="create_dummy_account.php" id="createDummyForm">
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(adminCsrfToken()); ?>">
                             
-                            <!-- User ID (Uneditable - Auto Generated) -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">User ID</label>
                                 <div class="edit-field-input-box uneditable">
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Name Field (Required) -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Name *</label>
                                 <div class="edit-field-input-box editable">
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Role Field (Required Dropdown) -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Role *</label>
                                 <div class="edit-field-input-box editable">
@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Status Buttons (Active = Green, Suspended = Red) -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Status</label>
                                 <div class="status-toggle-group">
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Eco Points Field with Increment/Decrement Controls -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Eco Points *</label>
                                 <div class="ecopoint-input-container editable">
@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Date Joined (Uneditable - Auto Generated) -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Date Joined</label>
                                 <div class="edit-field-input-box uneditable">
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Listed assets are derived from the assets table -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Listed Asset</label>
                                 <div class="edit-field-input-box uneditable">
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Email Field (Required) -->
+                             
                             <div class="edit-field-row">
                                 <label class="edit-field-label">Email *</label>
                                 <div class="edit-field-input-box editable">
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                                 </div>
                             </div>
 
-                            <!-- Action Buttons -->
+                             
                             <div class="edit-form-footer">
                                 <div style="display: flex; gap: 12px;">
                                     <button type="submit" name="save_account" class="btn-save-changes">
@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                         </form>
                     </div>
 
-                    <!-- Side Note Card (Wireframe exact match) -->
+                     
                     <div class="note-box">
                         <strong class="note-title">Note:</strong>
                         <p class="note-text">Fields marked with * are required.</p>

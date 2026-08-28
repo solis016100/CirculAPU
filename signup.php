@@ -10,7 +10,7 @@ if (file_exists('PHPMailer/src/Exception.php')) {
     require 'PHPMailer/src/SMTP.php';
 }
 
-// 1. AJAX HANDLER: SEND OTP TO GMAIL
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_otp') {
     header('Content-Type: application/json');
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'leegynpaul123456@gmail.com'; // Your Gmail address
-        $mail->Password   = 'simwhsbszxrwmatu';               // Your App Password
+        $mail->Username   = 'leegynpaul123456@gmail.com';  
+        $mail->Password   = 'simwhsbszxrwmatu';                
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
@@ -72,10 +72,10 @@ $name = isset($_POST['name']) ? trim($_POST['name']) : '';
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
 $verification_code = isset($_POST['verification_code']) ? trim($_POST['verification_code']) : '';
 
-// 2. FORM SUBMISSION HANDLERS
+ 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Step 1 -> Step 2 Validation
+     
     if (isset($_POST['go_to_step2'])) {
         if (empty($name) || empty($email) || empty($verification_code)) {
             $error_message = "Please fill in all required fields including the verification code.";
@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Final Registration Submission (Step 2)
+     
     if (isset($_POST['signup'])) {
         $user_password = $_POST['password'];
         $confirm_password = $_POST['confirm_password'];

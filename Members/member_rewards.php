@@ -1,29 +1,29 @@
 <?php
 session_start();
 
-// Access Control Guard for Community Member Role
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-// Get Member's information from login
+ 
 $memberID = $_SESSION['user_id'];
 $memberName = $_SESSION['user_name'] ?? 'Member';
 $userID = $memberID;
 
-// Connect to Database
+ 
 require_once '../db.php';
 if ($conn->connect_error) {
     $databaseError = "Unable to connect to the database.";
 } else {
-    // UTF-8 allows the database to handle different languages
+     
     $conn->set_charset("utf8mb4");
 }
 $message = "";
 $messageType = "";
 
-/* Get Current EcoPoints */
+ 
 $pointQuery="
 SELECT ecopoint
 FROM user
@@ -33,7 +33,7 @@ $pointResult=$conn->query($pointQuery);
 $pointData=$pointResult->fetch_assoc();
 $currentPoints=$pointData['ecopoint']??0;
 
-/* Get Total EcoPoints */
+ 
 $earnedPointQuery = "
 SELECT COALESCE(SUM(points),0) AS totalEarned
 FROM ecopointstransaction
@@ -44,7 +44,7 @@ $earnedPointResult = $conn->query($earnedPointQuery);
 $earnedPointData = $earnedPointResult->fetch_assoc();
 $totalEarnedPoints = $earnedPointData['totalEarned'] ?? 0;
 
-/* Get Current Tier Based On Total Earned EcoPoints */
+ 
 $tierQuery="
 SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
@@ -56,7 +56,7 @@ $tierResult=$conn->query($tierQuery);
 if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }else{
-    /* Fallback to the lowest tier from database */
+     
     $lowestTierResult=$conn->query("
     SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
     FROM tiers
@@ -76,7 +76,7 @@ if($tierResult&&$tierResult->num_rows>0){
     }
 }
 
-/* Generate EcoPoint Transaction ID */
+ 
 function generateEcoPointTransactionID($conn){
     $result=$conn->query("
     SELECT transactionID
@@ -94,7 +94,7 @@ function generateEcoPointTransactionID($conn){
     return "ET".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Generate Notification ID */
+ 
 function generateNotificationID($conn){
     $result=$conn->query("
     SELECT MAX(
@@ -112,7 +112,7 @@ function generateNotificationID($conn){
     return "N".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Generate User Badge ID */
+ 
 function generateUserBadgeID($conn){
     $result=$conn->query("
     SELECT MAX(
@@ -130,10 +130,10 @@ function generateUserBadgeID($conn){
     return "UAB".str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Check Reward Redemption Badge */
+ 
 function checkRewardRedeemBadge($conn,$userID){
 
-    /* Get Rewards Redeemed Badge */
+     
     $badgeResult=$conn->query("
     SELECT
         achieveBadgeID,
@@ -151,13 +151,13 @@ function checkRewardRedeemBadge($conn,$userID){
     $badgeName=$badge['achieveBadgeName'];
     $requirement=$badge['achieveBadgeRequirement'];
 
-    /* Get Required Redeem Number From Requirement */
+     
     preg_match('/(\d+)/',$requirement,$matches);
     $requiredRedeem=isset($matches[1])
         ? (int)$matches[1]
         : 1;
 
-    /* Count Member Reward Redemptions */
+     
     $redeemCountResult=$conn->query("
     SELECT COUNT(*) AS totalRedeemed
     FROM rewardredemption
@@ -171,7 +171,7 @@ function checkRewardRedeemBadge($conn,$userID){
     $redeemCountData=$redeemCountResult->fetch_assoc();
     $totalRedeemed=(int)($redeemCountData['totalRedeemed']??0);
 
-    /* Check Member Already Has Badge */
+     
     $earnedResult=$conn->query("
     SELECT userBadgeID
     FROM `user achievement badge`
@@ -183,7 +183,7 @@ function checkRewardRedeemBadge($conn,$userID){
         return;
     }
 
-    /* Award Badge When Requirement Is Met */
+     
     if($totalRedeemed>=$requiredRedeem){
         $userBadgeID=generateUserBadgeID($conn);
         $awardBadgeQuery="
@@ -198,7 +198,7 @@ function checkRewardRedeemBadge($conn,$userID){
             );
         }
 
-        /* Notify Member About New Badge */
+         
         $notificationID=generateNotificationID($conn);
         $notificationTitle="New Badge Earned";
         $notificationContent=
@@ -222,7 +222,7 @@ function checkRewardRedeemBadge($conn,$userID){
     }
 }
 
-/* Redeem Reward */
+ 
 if(isset($_POST['redeem'])){
     $rewardID=$conn->real_escape_string($_POST['rewardID']);
     $rewardQuery="
@@ -242,7 +242,7 @@ if(isset($_POST['redeem'])){
         }else{
             $cost=$reward['ecoPointsCost'];
 
-            /* Generate Redemption ID */
+             
             $idQuery="
             SELECT redemptionID
             FROM rewardredemption
@@ -259,21 +259,21 @@ if(isset($_POST['redeem'])){
             $redemptionID="RR".str_pad($number,3,"0",STR_PAD_LEFT);
             $conn->begin_transaction();
             try{
-                /* Deduct EcoPoints */
+                 
                 $conn->query("
                 UPDATE user
                 SET ecopoint=ecopoint-$cost
                 WHERE userID='$userID'
                 ");
 
-                /* Reduce Reward Stock */
+                 
                 $conn->query("
                 UPDATE rewards
                 SET quantity=quantity-1
                 WHERE rewardID='$rewardID'
                 ");
 
-                /* Save Redemption History */
+                 
                 $redemptionQuery="
                 INSERT INTO rewardredemption
                 (redemptionID,userID,rewardID,redemptionDate)
@@ -286,10 +286,10 @@ if(isset($_POST['redeem'])){
                     );
                 }
 
-                /* Check Reward Redemption Badge */
+                 
                 checkRewardRedeemBadge($conn,$userID);
 
-                /* Save EcoPoint Transaction */
+                 
                 $transactionID=generateEcoPointTransactionID($conn);
                 $conn->query("
                 INSERT INTO ecopointstransaction
@@ -298,7 +298,7 @@ if(isset($_POST['redeem'])){
                 ('$transactionID','$userID',-$cost,'Spent','RewardRedemption','$redemptionID',NOW())
                 ");
 
-                /* Set Unavailable When Stock Is Empty */
+                 
                 $conn->query("
                 UPDATE rewards
                 SET availability='Unavailable'
@@ -306,7 +306,7 @@ if(isset($_POST['redeem'])){
                 AND quantity<=0
                 ");
 
-                /* Get Member Name */
+                 
                 $memberResult=$conn->query("
                 SELECT name
                 FROM user
@@ -319,7 +319,7 @@ if(isset($_POST['redeem'])){
                     $redeemMemberName=$memberData['name'];
                 }
 
-                /* Notify Member */
+                 
                 $memberNotificationID=generateNotificationID($conn);
                 $memberNotificationTitle="Reward Redeemed Successfully";
                 $memberNotificationContent=
@@ -343,7 +343,7 @@ if(isset($_POST['redeem'])){
                     );
                 }
 
-                /* Notify Active Auditors */
+                 
                 $auditorResult=$conn->query("
                 SELECT userID
                 FROM user
@@ -391,7 +391,7 @@ if(isset($_POST['redeem'])){
     }
 }
 
-/* Refresh Current Points */
+ 
 $currentPointResult=$conn->query("
 SELECT ecopoint
 FROM user
@@ -402,7 +402,7 @@ if($currentPointResult&&$currentPointResult->num_rows>0){
     $currentPoints=(int)($currentPointData['ecopoint']??0);
 }
 
-/* Refresh Current Tier */
+ 
 $tierQuery="
 SELECT tierID,tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
@@ -415,7 +415,7 @@ if($tierResult&&$tierResult->num_rows>0){
     $tier=$tierResult->fetch_assoc();
 }
 
-/* Get Next Tier Based On Total Earned EcoPoints */
+ 
 $nextTierQuery="
 SELECT tierID,tierName,minimumEcoPoints
 FROM tiers
@@ -432,7 +432,7 @@ if($nextTierResult&&$nextTierResult->num_rows>0){
     $pointsToNextTier=0;
 }
 
-/* Get Rewards */
+ 
 $rewardQuery="
 SELECT *
 FROM rewards
@@ -440,7 +440,7 @@ ORDER BY rewardID ASC
 ";
 $rewardResult=$conn->query($rewardQuery);
 
-/* Redemption History */
+ 
 $historyQuery="
 SELECT r.rewardName,r.ecoPointsCost,rr.redemptionDate
 FROM rewardredemption rr
@@ -478,7 +478,7 @@ $historyResult=$conn->query($historyQuery);
 <div class="reward-page-layout">
     <div class="reward-main-area">
 
-        <!-- Reward Tabs -->
+         
         <div class="reward-tabs">
             <button class="reward-tab active" onclick="openRewardTab('rewardList',this)">
                 Redeem Rewards
@@ -488,7 +488,7 @@ $historyResult=$conn->query($historyQuery);
             </button>
         </div>
 
-        <!-- Redeem Rewards -->
+         
         <div id="rewardList" class="reward-tab-content active">
             <div class="reward-grid">
             <?php if($rewardResult&&$rewardResult->num_rows>0): ?>
@@ -519,7 +519,7 @@ $historyResult=$conn->query($historyQuery);
                             <?php echo htmlspecialchars($reward['rewardDescription']); ?>
                         </p>
 
-                        <!-- Only Show EcoPoints -->
+                         
                         <div class="reward-card-details">
                             <div>
                                 <span>EcoPoints Required</span>
@@ -527,7 +527,7 @@ $historyResult=$conn->query($historyQuery);
                             </div>
                         </div>
 
-                        <!-- Reward Status -->
+                         
                         <?php if(!$inStock): ?>
                             <span class="reward-status unavailable">
                                 Not Available
@@ -562,7 +562,7 @@ $historyResult=$conn->query($historyQuery);
             </div>
         </div>
 
-        <!-- Redemption History -->
+         
         <div id="rewardHistory" class="reward-tab-content">
             <div class="reward-history-box">
                 <table class="reward-history-table">
@@ -601,10 +601,10 @@ $historyResult=$conn->query($historyQuery);
         </div>
     </div>
 
-    <!-- Right Side -->
+     
     <div class="reward-side-area">
 
-        <!-- EcoPoints -->
+         
         <div class="reward-point-box">
             <h3>My EcoPoints</h3>
             <strong><?php echo $currentPoints; ?></strong>
@@ -615,7 +615,7 @@ $historyResult=$conn->query($historyQuery);
             </p>
         </div>
 
-        <!-- User Tier -->
+         
         <div class="reward-tier-box">
             <h3>My Tier</h3>
             <div class="reward-tier-icon">
@@ -649,7 +649,7 @@ $historyResult=$conn->query($historyQuery);
 </div>
 </div>
 
-<!-- Redeem Confirmation Modal -->
+ 
 <div id="redeemConfirmModal" class="redeem-confirm-modal">
     <div class="redeem-confirm-box">
         <div class="redeem-confirm-icon">?</div>
@@ -672,7 +672,7 @@ $historyResult=$conn->query($historyQuery);
     </div>
 </div>
 
-<!-- Reward Image Preview Modal -->
+ 
 <div id="rewardImageModal" class="reward-image-modal" onclick="closeRewardImage(event)">
     <button type="button" class="reward-image-close" onclick="closeRewardImage()">×</button>
     <div class="reward-image-modal-content">

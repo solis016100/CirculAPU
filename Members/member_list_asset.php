@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Access Control Guard for Community Member Role
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
@@ -15,14 +15,14 @@ $conn->set_charset("utf8mb4");
 $message = "";
 $messageType = "";
 
-/* Get Categories */
+ 
 $categoryResult = $conn->query("
 SELECT categoryID, categoryName
 FROM categories
 ORDER BY categoryName ASC
 ");
 
-/* Generate Asset ID */
+ 
 function generateAssetID($conn) {
     $result = $conn->query("
     SELECT assetID
@@ -40,7 +40,7 @@ function generateAssetID($conn) {
     return "A" . str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Generate Verification ID */
+ 
 function generateVerificationID($conn) {
     $result = $conn->query("
     SELECT verificationID
@@ -58,7 +58,7 @@ function generateVerificationID($conn) {
     return "V" . str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Generate Notification ID */
+ 
 function generateNotificationID($conn) {
     $result = $conn->query("
     SELECT notificationID
@@ -77,7 +77,7 @@ function generateNotificationID($conn) {
     return "N" . str_pad($number,3,"0",STR_PAD_LEFT);
 }
 
-/* Submit New Asset */
+ 
 if (isset($_POST['submitAsset'])) {
     $assetName = trim($_POST['assetName'] ?? '');
     $categoryID = trim($_POST['categoryID'] ?? '');
@@ -128,7 +128,7 @@ if (isset($_POST['submitAsset'])) {
             $conn->begin_transaction();
             try {
 
-                /* Save Asset */
+                 
                 $conn->query("
                 INSERT INTO assets
                 (
@@ -149,7 +149,7 @@ if (isset($_POST['submitAsset'])) {
                 )
                 ");
 
-                /* Create Verification Record */
+                 
                 $conn->query("
                 INSERT INTO verificationrecords
                 (
@@ -175,7 +175,7 @@ if (isset($_POST['submitAsset'])) {
                 )
                 ");
 
-                /* Get Member Name */
+                 
                 $memberResult = $conn->query("
                 SELECT name
                 FROM user
@@ -188,7 +188,7 @@ if (isset($_POST['submitAsset'])) {
                     $memberName = $memberData['name'];
                 }
 
-                /* Send Notification To Manager */
+                 
                 $managerResult = $conn->query("
                 SELECT userID
                 FROM user
@@ -223,7 +223,7 @@ if (isset($_POST['submitAsset'])) {
                     }
                 }
 
-                /* Send Notification To Member */
+                 
                 $memberNotificationID =
                     generateNotificationID($conn);
                 $memberTitle =

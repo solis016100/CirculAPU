@@ -10,7 +10,7 @@ if (file_exists('PHPMailer/src/Exception.php')) {
     require 'PHPMailer/src/SMTP.php';
 }
 
-// 1. AJAX HANDLER: SEND RESET OTP TO USER'S GMAIL
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_reset_otp') {
     header('Content-Type: application/json');
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->close();
     $conn->close();
 
-    // Generate 6-digit Reset OTP
+     
     $otp = rand(100000, 999999);
     $_SESSION['reset_otp'] = (string)$otp;
     $_SESSION['reset_email'] = $email;
@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'leegynpaul123456@gmail.com'; // Your Gmail address
-        $mail->Password   = 'simwhsbszxrwmatu';               // Your App Password
+        $mail->Username   = 'leegynpaul123456@gmail.com';  
+        $mail->Password   = 'simwhsbszxrwmatu';                
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
@@ -84,10 +84,10 @@ $step = isset($_POST['step']) ? (int)$_POST['step'] : 1;
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
 $verification_code = isset($_POST['verification_code']) ? trim($_POST['verification_code']) : '';
 
-// 2. FORM SUBMISSION HANDLERS
+ 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Step 1 -> Step 2 Validation
+     
     if (isset($_POST['go_to_step2'])) {
         if (empty($email) || empty($verification_code)) {
             $error_message = "Please fill in your email and the verification code.";
@@ -96,12 +96,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error_message = "Invalid or expired verification code.";
             $step = 1;
         } else {
-            // OTP is valid! Proceed to Step 2
+             
             $step = 2;
         }
     }
 
-    // Final Reset Submission (Step 2)
+     
     if (isset($_POST['reset_password'])) {
         $new_password = $_POST['new_password'];
         $confirm_password = $_POST['confirm_password'];
@@ -119,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error_message = "Password does not meet all security requirements.";
             $step = 2;
         } else {
-            // Direct MySQLi connection without db.php
+             
             $conn = new mysqli("localhost", "root", "", "circulapu_db");
 
             if ($conn->connect_error) {

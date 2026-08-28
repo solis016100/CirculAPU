@@ -149,35 +149,35 @@
             <main class="page-body auditor-verification-page">
 
 
-                <!-- Page Heading -->
+                 
                 <section class="management-heading">
                     <h1>Verification Management Dashboard</h1>
                     <p>Manage all verification records on the platform</p>
                 </section>
 
 
-                <!-- Database Error -->
+                 
                 <?php if (!empty($databaseError)): ?>
                     <div class="auditor-error-message">
                         <?php echo htmlspecialchars($databaseError); ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Green bar showing Success Deletion -->
+                 
                 <?php if (isset($_GET['deleted'])): ?>
                     <div class="alert alert-success">
                         Verification record deleted successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Green Bar showing Success Updation -->
+                 
                 <?php if (isset($_GET['success'])): ?>
                     <div class="alert alert-success">
                         Verification updated successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Search and Filter -->
+                 
                 <div class="management-filter">
                     <form method="get" action="auditor_verification_management.php">
                         <div class="management-filter-group search">
@@ -185,7 +185,7 @@
                             <input type="text" id="verificationSearch" name="search" value="<?php echo htmlspecialchars($search); ?>"placeholder="Search by verifiction id, user, type, status...">
                         </div>
 
-                        <!-- Filter by User -->
+                         
                         <div class="management-filter-group">
                             <label for="userFilter">User</label>
                             <select id="userFilter" name="user">
@@ -199,7 +199,7 @@
                             </select>
                         </div>
 
-                        <!-- Filter by Type of verification record -->
+                         
                         <div class="management-filter-group">
                             <label for="typeFilter">Type</label>
                             <select id="typeFilter" name="type">
@@ -217,7 +217,7 @@
                             </select>
                         </div>
 
-                        <!-- Filter by Status -->
+                         
                         <div class="management-filter-group">
                             <label for="statusFilter">Status</label>
                             <select id="statusFilter" name="status">
@@ -239,7 +239,7 @@
                             </select>
                         </div>
 
-                        <!-- Filter buttons - Filter/Reset -->
+                         
                         <div class="management-filter-buttons">
                             <button type="submit" class="management-filter-btn">
                                 <img src="../assets/icons/filter.png" alt="Filter">
@@ -254,7 +254,7 @@
                 </div>
 
 
-                <!-- Verification Record List -->
+                 
                 <section class="management-list">
                     <div class="management-list-header">
                         <h2>Verification Record List</h2>
@@ -389,7 +389,7 @@
                         </table>
                     </div>
 
-                    <!-- Temporary Footer for verification table -->
+                     
                     <div class="management-table-footer">
                         <div class="showing-records">
                             <?php if ($totalRecords > 0) {

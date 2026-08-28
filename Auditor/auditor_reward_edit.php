@@ -179,7 +179,7 @@
 
                 <h1>Edit Reward Details</h1>
 
-                <!-- Error Message -->
+                 
                 <?php if ($errorMessage): ?>
                     <div class="management-error-message">
                         <?php echo htmlspecialchars($errorMessage); ?>
@@ -188,19 +188,19 @@
 
                 <section class="auditor-management-edit-card">
                     <form method="POST" enctype="multipart/form-data" class="auditor-management-edit-form">
-                        <!-- Reward ID -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>Reward ID</label>
                             <input value="<?php echo htmlspecialchars($reward['rewardID']); ?>" readonly>
                         </div>
 
-                        <!-- Reward Name -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>Reward Name</label>
                             <input type="text" name="rewardName" value="<?php echo htmlspecialchars($reward['rewardName']); ?>" required>
                         </div>
 
-                        <!-- Reward Image -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>Reward Image</label>
                             <div class="badge-edit-icon">
@@ -213,25 +213,25 @@
                             </div>
                         </div>
 
-                        <!-- Description -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>Description</label>
                             <textarea name="rewardDescription" required><?php echo htmlspecialchars($reward['rewardDescription']); ?></textarea>
                         </div>
 
-                        <!-- EcoPoints Cost -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>EcoPoints Cost</label>
                             <input type="number" name="ecoPointsCost" min="0" value="<?php echo htmlspecialchars($reward['ecoPointsCost']); ?>" required>
                         </div>
 
-                        <!-- Quantity -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>Quantity</label>
                             <input type="number" name="quantity" min="0" value="<?php echo htmlspecialchars($reward['quantity']); ?>" required>
                         </div>
 
-                        <!-- Availability -->
+                         
                         <div class="auditor-management-edit-row">
                             <label>Availability</label>
                             <select name="availability" required>
@@ -245,7 +245,7 @@
                             </select>
                         </div>
 
-                        <!-- Action Buttons -->
+                         
                         <div class="auditor-management-edit-actions">
                             <a href="<?php if ($from === 'view') {echo 'auditor_reward_view.php?rewardID=' . urlencode($id); if ($returnQuery !== '') {echo '&' . htmlspecialchars($returnQuery);}}else {echo 'auditor_rewards_management.php'; if ($returnQuery !== '') {echo '?' . htmlspecialchars($returnQuery);}}?>">
                                 Cancel

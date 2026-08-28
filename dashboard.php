@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Redirect to login if user is not authenticated
+ 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
 
 $role = $_SESSION['user_role'];
 
-// Route based on User Role
+ 
 switch ($role) {
     case 'Admin':
         header("Location: Admin/admin_dashboard.php");

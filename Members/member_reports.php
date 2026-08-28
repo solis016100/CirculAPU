@@ -184,7 +184,7 @@ try {
                 $notificationStmt->close();
             }
 
-            /* Confirm the submission to the Member. */
+             
             $memberNotificationID = nextID($conn, 'notification', 'notificationID', 'N');
             $memberNotificationTitle = 'Complaint Submitted';
             $memberNotificationContent = "Your complaint {$reportID} was submitted successfully and is waiting for administrator review.";

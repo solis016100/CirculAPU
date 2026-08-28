@@ -79,7 +79,7 @@
             <?php include '../header.php'; ?>
             <main class="page-body auditor-management-detail-page redemption-history-page">
 
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_achievement_badges_management.php">
                         Achievement Badges Management
@@ -96,7 +96,7 @@
 
                 <div class="management-filter">
                     <form method="GET" class="management-filter-form">
-                        <!-- Search Reward -->
+                         
                         <div class="management-filter-group search">
                             <label>Search User Badge Records</label>
                             <div class="management-search-input">
@@ -105,7 +105,7 @@
                             </div>
                         </div>
 
-                        <!-- Badge Name -->
+                         
                         <div class="management-filter-group">
                             <label>Badge Name</label>
                             <select name="badgeName">
@@ -119,21 +119,21 @@
                             </select>
                         </div>
 
-                        <!-- Awarded Date -->
+                         
                         <div class="management-filter-group">
                             <label>Awarded Date</label>
                             <input type="date" name="awardedDate"
                             value="<?= htmlspecialchars($awardedDate) ?>">
                         </div>
 
-                        <!-- Filter -->
+                         
                         <div class="management-filter-buttons">
                             <button type="submit" class="management-filter-btn">
                                 <img src="../assets/icons/filter.png" alt="Filter">
                                 Filter
                             </button>
 
-                            <!-- Reset -->
+                             
                             <a href="auditor_user_badge_record.php" class="management-reset-btn">
                                 <img src="../assets/icons/reset.png" alt="Reset">
                                 Reset
@@ -143,7 +143,7 @@
                 </div>
 
                 <div class="management-list">
-                    <!-- Table Headings -->
+                     
                     <div class="management-list-header">
                         <h2>User Badges</h2>
                         <p>Total User Badges: <?php echo $total; ?></p>

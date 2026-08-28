@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-/* Member Access */
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
 
 $userID = $_SESSION['user_id'];
 
-/* Connect Database */
+ 
 require_once '../db.php';
 
 if ($conn->connect_error) {
@@ -18,7 +18,7 @@ if ($conn->connect_error) {
 
 $conn->set_charset("utf8mb4");
 
-/* Get Total EcoPoints = all Earned EcoPoints */
+ 
 $pointQuery="
 SELECT COALESCE(SUM(points),0) AS totalPoints
 FROM ecopointstransaction
@@ -29,7 +29,7 @@ $pointResult=$conn->query($pointQuery);
 $pointData=$pointResult->fetch_assoc();
 $totalPoints=(int)($pointData['totalPoints']??0);
 
-/* Get Current Tier Based On Total EcoPoints Only */
+ 
 $tierQuery="
 SELECT tierName,tierDescription,tierIcon,minimumEcoPoints
 FROM tiers
@@ -49,7 +49,7 @@ if($tierResult&&$tierResult->num_rows>0){
     $tierIcon="icon_tier1.png";
 }
 
-/* Get Next Tier Based On Total EcoPoints Only */
+ 
 $nextTierQuery="
 SELECT tierName,minimumEcoPoints
 FROM tiers
@@ -66,7 +66,7 @@ if($nextTierResult&&$nextTierResult->num_rows>0){
     $pointsToNextTier=0;
 }
 
-/* Get All Badges */
+ 
 $badgeQuery="
 SELECT achieveBadgeID,achieveBadgeName,achieveBadgeDescription,
 achieveBadgeRequirement,achieveBadgeIcon
@@ -79,9 +79,9 @@ while($badge=$badgeResult->fetch_assoc()){
     $badges[]=$badge;
 }
 
-/* Get Member Progress For Badge Requirements */
+ 
 
-/* Completed Missions */
+ 
 $completedMissionQuery="
 SELECT COUNT(*) AS total
 FROM missionsubmission
@@ -95,7 +95,7 @@ if($completedMissionResult){
     $totalCompletedMission=(int)($completedMissionData['total']??0);
 }
 
-/* Completed Exchanges */
+ 
 $completedExchangeQuery="
 SELECT COUNT(*) AS total
 FROM transactionrequests
@@ -109,7 +109,7 @@ if($completedExchangeResult){
     $totalCompletedExchange=(int)($completedExchangeData['total']??0);
 }
 
-/* Calculate Earned Badges */
+ 
 $earnedBadges=[];
 foreach($badges as $badge){
     $badgeID=$badge['achieveBadgeID'];
@@ -124,12 +124,12 @@ foreach($badges as $badge){
     }
 }
 
-/* Badge Count */
+ 
 $totalBadge=count($badges);
 $earnedCount=count($earnedBadges);
 $lockedCount=$totalBadge-$earnedCount;
 
-/* Selected Badge */
+ 
 $selectedBadge=null;
 if(isset($_GET['badge'])){
     $selectedID=$_GET['badge'];
@@ -162,7 +162,7 @@ $badgeID=$selectedBadge['achieveBadgeID'];
 $isEarned=in_array($badgeID,$earnedBadges);
 ?>
 
-<!-- Badge Details -->
+ 
 <div class="badge-detail-top">
     <div>
         <h1>Badge Details</h1>
@@ -199,7 +199,7 @@ $isEarned=in_array($badgeID,$earnedBadges);
     </div>
 </div>
 
-<!-- Right Side -->
+ 
 <div class="badge-side-area">
     <div class="badge-progress-box">
         <h3>Your Progress</h3>
@@ -242,14 +242,14 @@ $isEarned=in_array($badgeID,$earnedBadges);
 </div>
 </div>
 
-<!-- Badge Zoom -->
+ 
 <div id="badgeImageModal" class="badge-image-modal" onclick="closeBadgeImage()">
     <span class="badge-image-close">&times;</span>
     <img id="badgeLargeImage" src="" alt="Badge" onclick="event.stopPropagation()">
 </div>
 <?php else: ?>
 
-<!-- Badge Dashboard -->
+ 
 <div class="badge-page-header">
     <h1>Achievement Badges</h1>
     <p>Earn badges by completing missions and making contributions.</p>
@@ -257,7 +257,7 @@ $isEarned=in_array($badgeID,$earnedBadges);
 <div class="badge-page-layout">
 <div class="badge-main-area">
 
-    <!-- Badge Progress -->
+     
     <div class="badge-summary-card member-card">
         <h3>Your Badge Progress</h3>
         <div class="badge-summary-grid">
@@ -280,14 +280,14 @@ $isEarned=in_array($badgeID,$earnedBadges);
         </div>
     </div>
 
-    <!-- Badge Tabs -->
+     
     <div class="badge-tabs">
         <button class="badge-tab active" onclick="filterBadges('all',this)">All Badges</button>
         <button class="badge-tab" onclick="filterBadges('earned',this)">Earned</button>
         <button class="badge-tab" onclick="filterBadges('locked',this)">Locked</button>
     </div>
 
-    <!-- Badge Cards -->
+     
     <div class="badge-grid">
     <?php foreach($badges as $badge): ?>
     <?php
@@ -322,7 +322,7 @@ $isEarned=in_array($badgeID,$earnedBadges);
     </div>
 </div>
 
-<!-- Right Side -->
+ 
 <div class="badge-side-area">
     <div class="badge-progress-box">
         <h3>Your Progress</h3>

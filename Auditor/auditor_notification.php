@@ -16,7 +16,7 @@
     $page=max(1,(int)($_GET['page']??1));
     $limit=8;
 
-    // Total notifications
+     
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS total
         FROM notification
@@ -30,7 +30,7 @@
     $totalNotifications = $result->fetch_assoc()['total'];
 
 
-    // Unread notifications
+     
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS unread
         FROM notification
@@ -44,7 +44,7 @@
     $result = $stmt->get_result();
     $unreadCount = $result->fetch_assoc()['unread'];
 
-    // Change notification status from unread to read
+     
     if(isset($_GET['read']) && empty($_SESSION['simulation_read_only'])){
         $s=$conn->prepare("UPDATE notification SET status='Read' WHERE notificationID=? AND userID=? AND status='Unread'");
         $s->bind_param('ss',$_GET['read'],$uid);
@@ -56,7 +56,7 @@
         exit;
     }
 
-    // Action Buttons
+     
     if($_SERVER['REQUEST_METHOD']=='POST'){
         $a=$_POST['action']??'';
 
@@ -79,19 +79,19 @@
     }
 
 
-    // Notification records
+     
     $s=$conn->prepare("SELECT notificationID,title,content,status,createdDate FROM notification WHERE userID=? ORDER BY createdDate DESC");
     $s->bind_param('s',$uid);$s->execute();
     $data=$s->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    // Related to
+     
     $r=$conn->query("SELECT assetID id,assetName name,'Verification' type FROM assets
         UNION ALL SELECT missionID,missionName,'Mission' FROM missions
         UNION ALL SELECT rewardID,rewardName,'Reward' FROM rewards
         UNION ALL SELECT achieveBadgeID,achieveBadgeName,'Badge' FROM achievementbadges");
     $related=$r->fetch_all(MYSQLI_ASSOC);
 
-    // Type & Related to
+     
     foreach($data as &$n){
         $text=$n['title'].' '.$n['content']; $n['type']='System'; $n['related']='-';
 
@@ -107,14 +107,14 @@
     }
     unset($n);
 
-    // Filter
+     
     $data=array_values(array_filter($data,function($n)use($search,$type,$status){
         if($type&&$n['type']!=$type)return false;
         if($status&&$n['status']!=$status)return false;
         return !$search||stripos($n['title'].' '.$n['content'].' '.$n['type'].' '.$n['related'],$search)!==false;
     }));
 
-    // Pagination
+     
     $total=count($data);
     $pages=max(1,ceil($total/$limit));
     $page=min($page,$pages);
@@ -140,7 +140,7 @@
         <div class="main-content">
             <?php include '../header.php'; ?>
             <main class="page-body auditor-notification-page">
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_dashboard.php">
                         Sustainability Auditor Dashboard
@@ -157,7 +157,7 @@
                 </div>
 
                 <section class="stats-grid">
-                    <!-- Total Notifications -->
+                     
                     <a href="auditor_notification.php" class="stat-card">
                         <div class="stat-content">
                             <h3>Total Notifications</h3>
@@ -172,7 +172,7 @@
                         </div>
                     </a>
 
-                    <!-- Unread -->
+                     
                     <a href="auditor_notification.php?status=Unread" class="stat-card">
                         <div class="stat-content">
                             <h3>Unread</h3>
@@ -188,7 +188,7 @@
                     </a>
                 </section>
 
-                <!-- Filter -->
+                 
                 <section class="management-filter">
                     <form method="GET">
                         <div class="management-filter-group search">
@@ -230,7 +230,7 @@
                     </form>
                 </section>
         
-                <!-- Notification table -->
+                 
                 <section class="management-list">
                     <form method="POST" id="notificationForm">
                         <input type="hidden" name="action" id="action">
@@ -307,7 +307,7 @@
                                 </tbody>
                             </table>
 
-                            <!-- Automatic Page Number -->
+                             
                             <?php
                                 if ($total > 0) {
                                     $startRecord = ($page - 1) * $limit + 1;
@@ -331,19 +331,19 @@
                                 </p>
 
                                 <div class="pagination">
-                                    <!-- Previous -->
+                                     
                                     <?php if ($page > 1):$paginationParams['page'] = $page - 1;?>
                                         <a href="?<?= http_build_query($paginationParams) ?>">&lt;</a>
                                     <?php endif; ?>
 
-                                    <!-- Page Numbers -->
+                                     
                                     <?php for ($i = 1; $i <= $pages; $i++):$paginationParams['page'] = $i;?>
                                         <a href="?<?= http_build_query($paginationParams) ?>" class="<?= $i == $page ? 'active' : '' ?>">
                                             <?= $i ?>
                                         </a>
                                     <?php endfor; ?>
 
-                                    <!-- Next -->
+                                     
                                     <?php if ($page < $pages):$paginationParams['page'] = $page + 1;?>
                                         <a href="?<?= http_build_query($paginationParams) ?>">&gt;</a>
                                     <?php endif; ?>

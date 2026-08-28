@@ -121,7 +121,7 @@
             <?php include '../header.php'; ?>
 
             <main class="page-body auditor-dashboard-page">
-                <!-- Welcome Back -->
+                 
                 <section class="dashboard-welcome">
                     <div>
                         <h1>
@@ -135,7 +135,7 @@
                     </div>
                 </section>
 
-                <!-- Database Error Message -->
+                 
                 <?php if (!empty($databaseError)): ?>
                     <div class="auditor-error-message">
                         <?php
@@ -144,9 +144,9 @@
                     </div>
                 <?php endif; ?>
 
-                <!-- Overview Cards-->
+                 
                 <section class="stats-grid" aria-label="Auditor Dashboard Statistics">
-                    <!-- Pending Asset Verification -->
+                     
                     <a href="auditor_verification_management.php?type=Asset&status=Pending" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/pendingVerification.png" alt="Pending Verification">
@@ -160,7 +160,7 @@
                         </div>
                     </a>
 
-                    <!-- Pending Mission Verifications -->
+                     
                     <a href="auditor_verification_management.php?type=MissionSubmission&status=Pending" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/pendingMission.png" alt="Pending Mission">
@@ -174,7 +174,7 @@
                         </div>
                     </a>
 
-                    <!-- Low Stock Rewards -->
+                     
                     <a href="auditor_rewards_management.php?quantity=low" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/low-stock.png" alt="lowStock">
@@ -188,7 +188,7 @@
                         </div>
                     </a>
 
-                    <!-- Out of Stock Rewards -->
+                     
                     <a href="auditor_rewards_management.php?quantity=out_of_stock" class="stat-card">
                         <div class="stat-icon">
                             <img src="../assets/icons/out-of-stock.png" alt="OutofStock">
@@ -204,7 +204,7 @@
                 </section>
                 
                 <section class="dashboard-lower-grid">
-                    <!-- Recent Activities -->
+                     
                     <article class="content-card">
                         <div class="card-header">
                             <div>
@@ -233,14 +233,14 @@
                                     <?php else: ?>
                                         <?php foreach ($recentActivities as $activity): ?>
                                             <tr>
-                                                <!-- Activity -->
+                                                 
                                                 <td class="activity-description">
                                                     <?php
                                                         echo htmlspecialchars($activity['description']);
                                                     ?>
                                                 </td>
 
-                                                <!-- Related To -->
+                                                 
                                                 <td>
                                                     <div class="auditor-reference">
                                                         <strong>
@@ -261,7 +261,7 @@
                                                     </div>
                                                 </td>
 
-                                                <!-- Date -->
+                                                 
                                                 <td>
                                                     <?php
                                                         echo htmlspecialchars(
@@ -279,7 +279,7 @@
                         </div>
                     </article>
 
-                    <!-- Notification Panel -->
+                     
                     <article class="content-card">
                         <div class="card-header">
                             <div>
