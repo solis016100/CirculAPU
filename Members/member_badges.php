@@ -79,8 +79,6 @@ while($badge=$badgeResult->fetch_assoc()){
     $badges[]=$badge;
 }
 
-/* Get Member Progress For Badge Requirements */
-
 /* Completed Missions */
 $completedMissionQuery="
 SELECT COUNT(*) AS total
