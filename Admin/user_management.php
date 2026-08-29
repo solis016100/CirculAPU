@@ -1,17 +1,17 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-// Include db.php from parent directory
+ 
 require_once '../db.php';
 require_once 'admin_helpers.php';
 
-// Security: Restrict access strictly to System Administrators
+ 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: ../login.php");
     exit();
 }
 
-// Initialize Filter Variables
+ 
 $search = trim($_GET['search'] ?? '');
 $status_filter = trim($_GET['status'] ?? '');
 $role_filter = trim($_GET['role'] ?? '');
@@ -21,19 +21,19 @@ $allowed_roles = ['Admin', 'Manager', 'Auditor', 'Member'];
 if (!in_array($status_filter, $allowed_statuses, true)) $status_filter = '';
 if (!in_array($role_filter, $allowed_roles, true)) $role_filter = '';
 
-// Pagination Setup
+ 
 $limit = 8;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
-// Base SQL Queries (Using `user` table from schema)
+ 
 $sql = "SELECT * FROM user WHERE status != 'Deleted'";
 $count_sql = "SELECT COUNT(*) as total FROM user WHERE status != 'Deleted'";
 $params = [];
 $types = "";
 
-// Apply Dynamic Filters
+ 
 if (!empty($search)) {
     $sql .= " AND (name LIKE ? OR email LIKE ? OR userID LIKE ?)";
     $count_sql .= " AND (name LIKE ? OR email LIKE ? OR userID LIKE ?)";
@@ -60,7 +60,7 @@ if (!empty($date_filter)) {
     $types .= "s";
 }
 
-// Get Total Records for Pagination
+ 
 $stmt_count = $conn->prepare($count_sql);
 if (!empty($params)) {
     $stmt_count->bind_param($types, ...$params);
@@ -72,13 +72,13 @@ $stmt_count->close();
 $page = min($page, $total_pages);
 $offset = ($page - 1) * $limit;
 
-// Append Ordering and Pagination Limits
+ 
 $sql .= " ORDER BY dateCreated DESC LIMIT ? OFFSET ?";
 $params[] = $limit;
 $params[] = $offset;
 $types .= "ii";
 
-// Fetch User Data
+ 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
@@ -114,28 +114,28 @@ $notice = $_GET['notice'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management Dashboard - CirculAPU</title>
-    <!-- Primary Global Stylesheet -->
+     
     <link rel="stylesheet" href="../style.css">
-    <!-- Secondary Admin Stylesheet -->
+     
     <link rel="stylesheet" href="admin_style.css">
 </head>
 <body class="role-admin">
     <div class="dashboard-container">
         
-        <!-- Reusable Sidebar Component from parent directory -->
+         
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <!-- Global Header Component from parent directory -->
+             
             <?php include '../header.php'; ?>
 
             <main class="page-body">
                 
-                <!-- Page Breadcrumb & Title Bar -->
+                 
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">User Management</p>
+                        <p class="breadcrumb">User Management</p>
                         <h1 class="header-title">User Management Dashboard</h1>
                         <p class="header-subtitle">Manage all existing users listed on the platform</p>
                     </div>
@@ -153,7 +153,7 @@ $notice = $_GET['notice'] ?? '';
                     <div class="alert alert-error" style="margin-bottom: 20px;">The user status could not be updated.</div>
                 <?php endif; ?>
 
-                <!-- Search and Filter Bar -->
+                 
                 <div class="content-card admin-filter-card">
                     <form method="GET" action="user_management.php" class="admin-filter-form">
                         
@@ -201,7 +201,7 @@ $notice = $_GET['notice'] ?? '';
                     </form>
                 </div>
 
-                <!-- User Data Table -->
+                 
                 <div class="content-card admin-table-card">
                     <div class="table-header-bar">
                         <h2>User List</h2>
@@ -240,7 +240,7 @@ $notice = $_GET['notice'] ?? '';
                                         </td>
                                         <td><?php echo date('j M Y', strtotime($user['dateCreated'])); ?></td>
                                         <td>
-                                            <!-- Edit User Button -->
+                                             
                                             <a href="admin_edit_user.php?id=<?php echo urlencode($user['userID']); ?>" title="Edit User" class="action-icon edit-icon">
                                                 <img src="../assets/icons/edit.png" alt="Edit">
                                             </a>
@@ -265,7 +265,7 @@ $notice = $_GET['notice'] ?? '';
                         </tbody>
                     </table>
 
-                    <!-- Pagination Navigation -->
+                     
                     <div class="admin-pagination-footer">
                         <span class="pagination-info">
                             Showing <?php echo ($total_users > 0) ? $offset + 1 : 0; ?> to <?php echo min($offset + $limit, $total_users); ?> of <?php echo $total_users; ?> users

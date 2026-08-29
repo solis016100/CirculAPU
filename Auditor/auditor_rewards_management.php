@@ -156,7 +156,7 @@
         <div class="main-content">
             <?php include '../header.php'; ?>
             <main class="page-body auditor-reward-page">
-                <!-- Page Title -->
+                 
                 <div class="management-heading management-heading-action">
                     <div class="management-heading-text">
                         <h1>Reward Management</h1>
@@ -176,31 +176,31 @@
                     </div>
                 </div>
 
-                <!-- Green bar showing Success Creation -->
+                 
                 <?php if (isset($_GET['created'])): ?>
                     <div class="alert alert-success">
                         Reward created successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Green bar showing Success Delete -->
+                 
                 <?php if (isset($_GET['deleted'])): ?>
                     <div class="alert alert-success">
                         Reward deleted successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Green bar showing Success Updation -->
+                 
                 <?php if (isset($_GET['updated'])): ?>
                     <div class="alert alert-success">
                         Reward updated successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Search and Filter -->
+                 
                 <div class="management-filter">
                     <form method="GET" action="auditor_rewards_management.php">
-                        <!-- Search Reward -->
+                         
                         <div class="management-filter-group search">
                             <label for="search">Search Reward</label>
                             <div class="management-search-input">
@@ -209,7 +209,7 @@
                             </div>
                         </div>
 
-                        <!-- Filter by Reward Name -->
+                         
                         <div class="management-filter-group">
                             <label for="rewardName">Reward Name</label>
                             <select id="rewardName" name="rewardName">
@@ -222,7 +222,7 @@
                             </select>
                         </div>
 
-                        <!-- Filter by EcoPoints -->
+                         
                         <div class="management-filter-group">
                             <label for="ecoPoints">EcoPoints Cost</label>
                             <select id="ecoPoints" name="ecoPoints">
@@ -235,24 +235,24 @@
                             </select>
                         </div>
 
-                        <!-- Filter by Quantity -->
+                         
                         <div class="management-filter-group">
                             <label for="quantity">Quantity</label>
                             <select id="quantity" name="quantity">
                                 <option value="">All Quantity</option>
-                                <!-- Low Stock -->
+                                 
                                 <option value="low"
                                     <?php echo ($quantity === 'low') ? 'selected' : ''; ?>>
                                     Low Stock (1-2)
                                 </option>
 
-                                <!-- Out of Stock -->
+                                 
                                 <option value="out_of_stock"
                                     <?php echo ($quantity === 'out_of_stock') ? 'selected' : ''; ?>>
                                     Out of Stock (0)
                                 </option>
 
-                                <!-- Individual Quantities -->
+                                 
                                 <?php while ($row = mysqli_fetch_assoc($quantityResult)) { ?>
                                     <option value="<?php echo htmlspecialchars($row['quantity']); ?>"
                                         <?php if ($quantity == $row['quantity']) { echo 'selected';}?>
@@ -263,7 +263,7 @@
                             </select>
                         </div>
 
-                        <!-- Filter by Availability -->
+                         
                         <div class="management-filter-group">
                             <label for="availability">Availability</label>
                             <select id="availability" name="availability">
@@ -276,7 +276,7 @@
                             </select>
                         </div>
 
-                        <!-- Filter & Reset Buttons -->
+                         
                         <div class="management-filter-buttons">
                             <button type="submit" class="management-filter-btn">
                                 <img src="../assets/icons/filter.png" alt="Filter">
@@ -291,15 +291,15 @@
                     </form>
                 </div>
 
-                <!-- Reward List -->
+                 
                 <div class="management-list">
-                    <!-- Table Headings -->
+                     
                     <div class="management-list-header">
                         <h2>Reward List</h2>
                         <p>Total Rewards: <?php echo $totalRewards; ?></p>
                     </div>
 
-                    <!-- Reward List Table -->
+                     
                     <div class="management-table-wrapper">
                         <table class="management-table reward-table">
                             <thead>
@@ -353,25 +353,25 @@
                                             </span>
                                         </td>
 
-                                        <!-- Action Icons -->
+                                         
                                         <td>
                                             <div class="management-actions">
-                                                <!-- View -->
+                                                 
                                                 <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&from=management&<?php echo htmlspecialchars($returnQuery); ?>" class="management-action-btn" title="View Reward">
                                                     <img src="../assets/icons/view.png" alt="View">
                                                 </a>
 
-                                                <!-- Edit -->
+                                                 
                                                 <a href="auditor_reward_edit.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&from=management&<?php echo htmlspecialchars($returnQuery); ?>" class="management-action-btn" title="Edit Reward">
                                                     <img src="../assets/icons/edit.png" alt="Edit">
                                                 </a>
 
-                                                <!-- Print -->
+                                                 
                                                 <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($row['rewardID']); ?>&print=1&from=management&<?php echo htmlspecialchars($returnQuery); ?>" class="management-action-btn" title="Print Reward">
                                                     <img src="../assets/icons/print.png" alt="Print">
                                                 </a>
 
-                                                <!-- Delete -->
+                                                 
                                                 <button type="button" class="management-action-btn delete" title="Delete" onclick="openDeletePopout('<?php echo htmlspecialchars($row['rewardID']); ?>')">
                                                     <img src="../assets/icons/delete.png" alt="Delete">
                                                 </button>
@@ -383,9 +383,9 @@
                         </table>
                     </div>
 
-                    <!-- Table Footer -->
+                     
                     <div class="management-table-footer">
-                        <!-- Showing Records -->
+                         
                         <p>
                             Showing <?php echo $totalRewards > 0 ? $offset + 1 : 0; ?>
                             to <?php echo min($offset + $recordsPerPage, $totalRewards); ?>
@@ -393,11 +393,11 @@
                             entries
                         </p>
 
-                        <!-- Pagination -->
+                         
                         <div class="pagination">
                             <?php $paginationParams = $_GET;?>
 
-                            <!-- Previous -->
+                             
                             <?php if ($page > 1): ?>
                                 <?php $paginationParams['page'] = $page - 1; ?>
                                 <a href="?<?php echo http_build_query($paginationParams); ?>">
@@ -409,7 +409,7 @@
                                 </a>
                             <?php endif; ?>
 
-                            <!-- Page Numbers -->
+                             
                             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                                 <?php $paginationParams['page'] = $i; ?>
                                 <a href="?<?php echo http_build_query($paginationParams); ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
@@ -417,7 +417,7 @@
                                 </a>
                             <?php endfor; ?>
 
-                            <!-- Next -->
+                             
                             <?php if ($page < $totalPages): ?>
                                 <?php $paginationParams['page'] = $page + 1; ?>
                                 <a href="?<?php echo http_build_query($paginationParams); ?>">
@@ -435,7 +435,7 @@
         </div>
     </div>
 
-    <!-- Delete Popout -->
+     
     <div id="deletePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Delete Reward</h2>

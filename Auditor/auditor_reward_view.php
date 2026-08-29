@@ -62,7 +62,7 @@
             <?php include '../header.php'; ?>
             <main class="page-body auditor-management-detail-page">
 
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_rewards_management.php">
                         Reward Management
@@ -72,18 +72,18 @@
 
                 <h1>Reward Details</h1>
 
-                <!-- Green bar showing Success Updation -->
+                 
                 <?php if (isset($_GET['updated'])): ?>
                     <div class="alert alert-success">
                         Reward updated successfully.
                     </div>
                 <?php endif; ?>
 
-                <!-- Reward Details -->
+                 
                 <div class="management-view-card">
-                    <!-- Reward Information -->
+                     
                     <div class="management-view-body">
-                        <!-- Reward ID -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Reward ID</label>
                             <div class="auditor-management-detail-value">
@@ -91,7 +91,7 @@
                             </div>
                         </div>
 
-                        <!-- Reward Name -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Reward Name</label>
                             <div class="auditor-management-detail-value">
@@ -99,7 +99,7 @@
                             </div>
                         </div>
 
-                        <!-- Reward Image -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Reward Image</label>
                                 <div class="badge-edit-icon">
@@ -121,7 +121,7 @@
                                 </div>
                         </div>
 
-                        <!-- Description -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Description</label>
                             <div class="auditor-management-detail-value remarks">
@@ -129,7 +129,7 @@
                             </div>
                         </div>
 
-                        <!-- EcoPoints Cost -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>EcoPoints Cost</label>
                             <div class="auditor-management-detail-value">
@@ -138,7 +138,7 @@
                             </div>
                         </div>
 
-                        <!-- Quantity -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Quantity</label>
                             <div class="auditor-management-detail-value">
@@ -146,7 +146,7 @@
                             </div>
                         </div>
 
-                        <!-- Availability -->
+                         
                         <div class="auditor-management-detail-row">
                             <label>Availability</label>
                             <div class="auditor-management-detail-value" >
@@ -159,27 +159,27 @@
                         </div>
                     </div>
 
-                    <!-- Right Side Actions -->
+                     
                     <div class="auditor-management-detail-side">
-                        <!-- Edit -->
+                         
                         <a href="auditor_reward_edit.php?rewardID=<?php echo urlencode($reward['rewardID']); ?>&from=view" class="auditor-management-detail-action">
                             <img src="../assets/icons/edit.png" alt="Edit">
                             Edit
                         </a>
 
-                        <!-- Print -->
+                         
                         <a href="auditor_reward_view.php?rewardID=<?php echo urlencode($reward['rewardID']); ?>&print=1&from=view" class="auditor-management-detail-action">
                             <img src="../assets/icons/print.png" alt="Print">
                             Print
                         </a>
 
-                        <!-- Delete -->
+                         
                         <button type="button" class="auditor-management-detail-action delete" onclick="openDeletePopout()">
                             <img src="../assets/icons/delete.png" alt="Delete">
                             Delete
                         </button>
 
-                        <!-- Back -->
+                         
                         <div class="auditor-management-detail-back">
                             <a href="auditor_rewards_management.php<?php echo $returnQuery !== '' ? '?' . htmlspecialchars($returnQuery) : '';?>">
                                 Back
@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <!-- Print -->
+     
     <?php if (isset($_GET['print']) && $_GET['print'] === '1'): ?>
         <script>
             window.onload = function() {
@@ -208,7 +208,7 @@
         </script>
     <?php endif; ?>
 
-    <!-- Delete Popout -->
+     
     <div id="deletePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Delete Reward Confirmation</h2>
@@ -248,7 +248,7 @@
 
     </script>
 
-    <!-- Reward Image Pop Out -->
+     
     <div id="rewardImagePopout" class="image-popout" onclick="closeRewardImage()">
         <span class="image-popout-close" onclick="event.stopPropagation(); closeRewardImage();">
             &times;

@@ -2,10 +2,10 @@
 session_start();
 require_once 'db.php';
 
-/**
- * Record a successful authentication and return the database timestamp used.
- * Logging failures must not prevent an otherwise valid login.
- */
+
+
+
+
 function recordSuccessfulLogin(mysqli $conn, string $userID): ?string
 {
     for ($attempt = 0; $attempt < 3; $attempt++) {
@@ -33,7 +33,7 @@ function recordSuccessfulLogin(mysqli $conn, string $userID): ?string
 
             return $loginTime;
         } catch (Throwable $exception) {
-            // A simultaneous login can claim the same generated ID; retry it.
+             
             if ($attempt === 2) {
                 error_log('Unable to record login activity: ' . $exception->getMessage());
             }
@@ -43,7 +43,7 @@ function recordSuccessfulLogin(mysqli $conn, string $userID): ?string
     return null;
 }
 
-// 1. AUTO-LOGIN CHECK VIA "REMEMBER ME" COOKIES
+ 
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
     $_SESSION['user_id']    = $_COOKIE['remember_user_id'];
     $_SESSION['user_name']  = $_COOKIE['remember_user_name']  ?? 'User';
@@ -52,7 +52,7 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
 
     $rememberConn = new mysqli("localhost", "root", "", "circulapu_db");
     if (!$rememberConn->connect_error) {
-        // Fallback: If email cookie was missing, query database using stored user ID
+         
         if (empty($_SESSION['user_email'])) {
             $stmt = $rememberConn->prepare("SELECT email FROM User WHERE userID = ?");
             $stmt->bind_param("s", $_SESSION['user_id']);
@@ -60,7 +60,7 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
             $res = $stmt->get_result();
             if ($row = $res->fetch_assoc()) {
                 $_SESSION['user_email'] = $row['email'];
-                // Set missing cookie for future visits
+                 
                 setcookie('remember_user_email', $row['email'], time() + (86400 * 30), "/");
             }
             $stmt->close();
@@ -72,7 +72,7 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_user_id'])) {
     }
 }
 
-// 2. REDIRECT IF ALREADY LOGGED IN
+ 
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit();
@@ -80,7 +80,7 @@ if (isset($_SESSION['user_id'])) {
 
 $error_message = '';
 
-// 3. FORM SUBMISSION (MANUAL LOGIN)
+ 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($conn->connect_error) {
@@ -91,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_password = $_POST['password'];
 
     if (!empty($email) && !empty($user_password)) {
-        // Fetch user ID, name, password, role AND email
+         
         $stmt = $conn->prepare("SELECT userID, name, password, role, email FROM User WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -100,8 +100,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
 
-            // Verify the password stored for this account. Plain-text comparison is
-            // retained temporarily for legacy records and upgraded after login.
+             
+             
             $uses_password_hash = password_get_info($user['password'])['algo'] !== null;
             if (password_verify($user_password, $user['password']) ||
                 $user_password === $user['password']) {
@@ -114,17 +114,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $password_stmt->close();
                 }
 
-                // Set all session variables
+                 
                 $_SESSION['user_id']    = $user['userID'];
                 $_SESSION['user_name']  = $user['name'];
                 $_SESSION['user_role']  = $user['role'];
-                $_SESSION['user_email'] = $user['email']; // Saved directly to active session
+                $_SESSION['user_email'] = $user['email'];  
                 $_SESSION['last_login_at'] = recordSuccessfulLogin($conn, $user['userID'])
                     ?? date('Y-m-d H:i:s');
 
-                // Set 30-day "Remember Me" cookies if box was checked
+                 
                 if (isset($_POST['remember_me'])) {
-                    $cookie_time = time() + (86400 * 30); // 30 Days
+                    $cookie_time = time() + (86400 * 30);  
                     setcookie('remember_user_id',    $user['userID'], $cookie_time, "/");
                     setcookie('remember_user_name',  $user['name'],   $cookie_time, "/");
                     setcookie('remember_user_role',  $user['role'],   $cookie_time, "/");

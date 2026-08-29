@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-/* Member access */
+ 
 if (($_SESSION['user_role'] ?? '') !== 'Member' || empty($_SESSION['user_id'])) {
     header('Location: ../login.php');
     exit;
@@ -16,7 +16,7 @@ function e($value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-/* Generate the next ID, for example TR001, B001 or N001. */
+ 
 function nextID(mysqli $conn, string $table, string $column, string $prefix): string
 {
     $start = strlen($prefix) + 1;
@@ -29,7 +29,7 @@ function nextID(mysqli $conn, string $table, string $column, string $prefix): st
     return $prefix . str_pad($number, 3, '0', STR_PAD_LEFT);
 }
 
-/* Send one notification. */
+ 
 function notify(mysqli $conn, string $userID, string $title, string $content): void
 {
     $notificationID = nextID($conn, 'notification', 'notificationID', 'N');
@@ -46,7 +46,7 @@ if ($assetID === '') {
     exit;
 }
 
-/* Load the selected asset. */
+ 
 $stmt = $conn->prepare(
     "SELECT a.assetID,a.ownerID,a.assetName,a.assetCondition,
             a.listingStatus,a.verificationStatus,c.categoryName,u.name ownerName
@@ -64,7 +64,7 @@ if ($asset['listingStatus'] !== 'Published' || $asset['verificationStatus'] !== 
     die('This asset is not available for borrowing.');
 }
 
-/* Submit request. */
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $borrowDate = trim($_POST['borrowDate'] ?? '');
     $returnDate = trim($_POST['returnDate'] ?? '');
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($returnDate <= $borrowDate) {
         $message = 'Expected return date must be after the borrow date.';
     } else {
-        /* Prevent duplicate active requests. */
+         
         $stmt = $conn->prepare(
             "SELECT 1 FROM transactionrequests
              WHERE assetID=? AND requesterID=?
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param('ssssss', $borrowID, $assetID, $userID, $transactionID, $borrowDate, $returnDate);
                 $stmt->execute();
 
-                /* Notify every active manager. */
+                 
                 $nameStmt = $conn->prepare('SELECT name FROM user WHERE userID=? LIMIT 1');
                 $nameStmt->bind_param('s', $userID);
                 $nameStmt->execute();
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                 }
 
-                /* Confirm submission to the member. */
+                 
                 $period = date('d M Y', strtotime($borrowDate)) . ' to ' . date('d M Y', strtotime($returnDate));
                 notify(
                     $conn,
@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="main-content">
         <?php include '../header.php'; ?>
         <main class="page-body">
-            <!-- Page heading -->
+             
             <div class="borrow-form-header">
                 <div>
                     <h1>Request Form</h1>
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST" class="borrow-form">
                 <input type="hidden" name="assetID" value="<?= e($assetID) ?>">
 
-                <!-- Asset summary -->
+                 
                 <div class="borrow-asset-summary">
                     <?php foreach ([
                         'Asset' => $asset['assetName'],
@@ -187,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Borrow details -->
+                 
                 <section class="borrow-form-section">
                     <h2>Borrow Details</h2>
                     <div class="borrow-date-grid">
@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </section>
 
-                <!-- Terms and conditions -->
+                 
                 <section class="borrow-form-section borrow-terms">
                     <h2>Terms & Conditions</h2>
                     <label><input type="checkbox" name="term1" required> I will return the item on time.</label>
@@ -231,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 <script>
-/* Return date must be later than the borrow date. */
+ 
 const borrowDate = document.querySelector('[name="borrowDate"]');
 const returnDate = document.querySelector('[name="returnDate"]');
 borrowDate.addEventListener('change', () => {

@@ -3,7 +3,7 @@
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-    // Access Control Guard for Sustainability Auditor Role
+     
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Auditor') {
         header('Location: ../login.php');
         exit();
@@ -32,7 +32,7 @@
         return ($labels[$action] ?? $action) . " $ref";
     }
 
-    // Return the icon used for each activity type.
+     
     function activityIcon(string $action): string
     {
         return match ($action) {
@@ -47,12 +47,12 @@
     }
 
 
-    // Filter values
+     
     $search = trim($_GET['search'] ?? '');
     $refType = trim($_GET['refType'] ?? '');
     $actionType = trim($_GET['actionType'] ?? '');
 
-    // Auditor-specific activity types
+     
     $refTypes = [
         'Mission',
         'Reward',
@@ -75,11 +75,11 @@
 
         $conn->set_charset('utf8mb4');
 
-        /*
-        * Retrieve activity records.
-        * LEFT JOIN is used so an activity record can still appear
-        * even if the related user record is unavailable.
-        */
+        
+
+
+
+
         $sql = "
         SELECT
             sl.logID,
@@ -106,7 +106,7 @@
         $types = 's';
         $params = [$auditorID];
 
-        // Search
+         
         if ($search !== '') {
 
             $sql .= "
@@ -137,7 +137,7 @@
             $types .= 'sssssss';
         }
 
-        // Filter by module
+         
         if (in_array($refType, $refTypes, true)) {
 
             $sql .= " AND sl.refType = ?";
@@ -146,7 +146,7 @@
             $types .= 's';
         }
 
-        // Filter by action
+         
         if (in_array($actionType, $actionTypes, true)) {
 
             $sql .= " AND sl.actionType = ?";
@@ -155,7 +155,7 @@
             $types .= 's';
         }
 
-        // Latest activity first
+         
         $sql .= " ORDER BY sl.timeLogged DESC";
 
         $stmt = $conn->prepare($sql);
@@ -218,7 +218,7 @@
 
         <main class="page-body">
 
-            <!-- PAGE HEADING -->
+             
 
             <section class="management-heading">
 
@@ -245,7 +245,7 @@
             </section>
 
 
-            <!-- ERROR -->
+             
 
             <?php if ($error): ?>
 
@@ -256,9 +256,9 @@
             <?php endif; ?>
 
 
-            <!-- ======================================================
-                 MOBILE ACTIVITY VIEW
-                 ====================================================== -->
+            
+
+
 
             <section class="auditor-mobile-recent-activities">
 
@@ -372,7 +372,7 @@
                 </details>
 
 
-                <!-- MOBILE SECTION HEADER -->
+                 
 
                 <div class="auditor-mobile-section-heading">
 
@@ -390,7 +390,7 @@
                 </div>
 
 
-                <!-- MOBILE ACTIVITY CARDS -->
+                 
 
                 <?php if (!$activities): ?>
 
@@ -504,9 +504,9 @@
             </section>
 
 
-            <!-- ======================================================
-                 DESKTOP FILTER
-                 ====================================================== -->
+            
+
+
 
             <section class="management-filter desktop-auditor-activity-filter">
 
@@ -638,9 +638,9 @@
             </section>
 
 
-            <!-- ======================================================
-                 DESKTOP ACTIVITY HISTORY
-                 ====================================================== -->
+            
+
+
 
             <section class="content-card desktop-auditor-activity-history">
 
@@ -695,7 +695,7 @@
 
                                 <tr>
 
-                                    <!-- Activity -->
+                                     
 
                                     <td>
 
@@ -727,7 +727,7 @@
                                     </td>
 
 
-                                    <!-- Reference -->
+                                     
 
                                     <td>
 
@@ -738,7 +738,7 @@
                                     </td>
 
 
-                                    <!-- Performed By -->
+                                     
 
                                     <td>
 
@@ -761,7 +761,7 @@
                                     </td>
 
 
-                                    <!-- Details -->
+                                     
 
                                     <td>
 
@@ -773,7 +773,7 @@
                                     </td>
 
 
-                                    <!-- Date -->
+                                     
 
                                     <td>
 

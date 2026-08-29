@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-/* Member access - also allows Admin preview. */
+ 
 $isAdminPreview = ($_SESSION['user_role'] ?? '') === 'Admin'
     && ($_GET['preview'] ?? '') === 'Member';
 
@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 $conn->set_charset('utf8mb4');
 $userID = $_SESSION['user_id'];
 
-/* Admin preview uses the first active Member account. */
+ 
 if ($isAdminPreview) {
     $previewUser = $conn->query(
         "SELECT userID FROM user
@@ -41,7 +41,7 @@ function e($value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-/* Run a query that uses the member ID once. */
+ 
 function memberQuery(mysqli $conn, string $sql, string $userID): mysqli_result
 {
     $stmt = $conn->prepare($sql);
@@ -50,7 +50,7 @@ function memberQuery(mysqli $conn, string $sql, string $userID): mysqli_result
     return $stmt->get_result();
 }
 
-/* Load all dashboard totals in one query. */
+ 
 $stats = memberQuery($conn, "
     SELECT u.name,u.ecopoint,
         (SELECT COALESCE(SUM(points),0) FROM ecopointstransaction
@@ -74,7 +74,7 @@ $totalBadge = ($stats['totalCompletedMission'] >= 1)
             + ($stats['totalExchange'] >= 5)
             + ($totalEarnedPoint >= 500);
 
-/* Recent requests: the UNION query uses the member ID twice. */
+ 
 $stmt = $conn->prepare("SELECT a.assetName requestName,'Borrow Request' requestType,
                               tr.requestStatus,tr.requestDate
                        FROM transactionrequests tr JOIN assets a ON a.assetID=tr.assetID
@@ -92,7 +92,7 @@ $notifications = memberQuery($conn, "SELECT title,content,status,createdDate
                                      FROM notification WHERE userID=?
                                      ORDER BY createdDate DESC LIMIT 3", $userID);
 
-/* Current and next EcoPoint tiers. */
+ 
 $tierStmt = $conn->prepare("SELECT * FROM tiers WHERE minimumEcoPoints<=?
                             ORDER BY minimumEcoPoints DESC LIMIT 1");
 $tierStmt->bind_param('i', $totalEarnedPoint);
@@ -149,7 +149,7 @@ function statusClass(string $status): string
     <div class="main-content">
         <?php include '../header.php'; ?>
         <main class="page-body">
-            <!-- Dashboard heading -->
+             
             <div class="member-dashboard-heading">
                 <div>
                     <h1>Welcome back, <?= e($memberName) ?></h1>
@@ -160,7 +160,7 @@ function statusClass(string $status): string
                 </a>
             </div>
 
-            <!-- Statistics -->
+             
             <div class="stats-grid">
                 <?php foreach ($cards as [$icon, $number, $label]): ?>
                     <div class="stat-card member-card">
@@ -170,7 +170,7 @@ function statusClass(string $status): string
                 <?php endforeach; ?>
             </div>
             <div class="main-quick-grid">
-                <!-- Recent requests -->
+                 
                 <section class="dashboard-card member-card main-request-quick">
                     <div class="dashboard-card-header member-card-header">
                         <h2>My Recent Requests</h2><a href="member_requests.php">View All</a>
@@ -196,7 +196,7 @@ function statusClass(string $status): string
                     </div>
                 </section>
 
-                <!-- EcoPoints progress -->
+                 
                 <section class="dashboard-card member-card main-reward-quick">
                     <div class="dashboard-card-header member-card-header"><h2>EcoPoints Progress</h2></div>
                     <div class="ecopoint-progress">
@@ -216,7 +216,7 @@ function statusClass(string $status): string
                     </div>
                 </section>
 
-                <!-- Available missions -->
+                 
                 <section class="dashboard-card member-card main-mission-quick">
                     <div class="dashboard-card-header member-card-header">
                         <h2>Available Missions</h2><a href="member_missions.php">Explore All</a>
@@ -240,7 +240,7 @@ function statusClass(string $status): string
                     </div>
                 </section>
 
-                <!-- Notifications -->
+                 
                 <section class="dashboard-card member-card main-notification-quick">
                     <div class="dashboard-card-header member-card-header">
                         <h2>Notifications</h2><a href="member_notifications.php">View All</a>

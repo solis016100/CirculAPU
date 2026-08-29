@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $current_page = basename($_SERVER['PHP_SELF']);
 $user_role    = $_SESSION['user_role'] ?? 'Member';
 
-// An Admin role preview changes navigation presentation only, never permissions.
+ 
 $preview_routes = [
     'Manager' => 'manager_dashboard.php',
     'Auditor' => 'auditor_dashboard.php',
@@ -183,14 +183,14 @@ if ($user_role === 'Admin'
       if (!isMobile()) closeMobileMenu();
     });
 
-    // Restore state from LocalStorage
+
     const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
     if (isCollapsed && !isMobile()) {
       sidebar.classList.add('collapsed');
       if (container) container.classList.add('sidebar-collapsed');
     }
 
-    // Toggle click listener
+
     toggleBtn.addEventListener('click', () => {
       if (isMobile()) {
         closeMobileMenu();

@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
         exit();
     }
 
-    // Generate 6-digit OTP code and store in session
+     
     $otp = rand(100000, 999999);
     $_SESSION['generated_otp'] = $otp;
     $_SESSION['otp_email'] = $email;
@@ -26,23 +26,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
     $mail = new PHPMailer(true);
 
     try {
-        // Server settings
+         
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         
-        // YOUR GMAIL & APP PASSWORD DETAILS
-        $mail->Username   = 'leegynpaul123456@gmail.com'; // <--- Put your Gmail address here
-        $mail->Password   = 'simwhsbszxrwmatu';      // <--- Put your generated App Password here
+         
+        $mail->Username   = 'leegynpaul123456@gmail.com';  
+        $mail->Password   = 'simwhsbszxrwmatu';       
         
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        // Recipients
+         
         $mail->setFrom('your_email@gmail.com', 'CirculAPU Verification');
         $mail->addAddress($email);
 
-        // Content
+         
         $mail->isHTML(true);
         $mail->Subject = 'Your CirculAPU Sign-Up OTP Code';
         $mail->Body    = "

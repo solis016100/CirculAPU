@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-/* Member Access */
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
@@ -13,7 +13,7 @@ if ($conn->connect_error) {
 }
 $conn->set_charset("utf8mb4");
 
-/* Get Asset ID */
+ 
 $assetID = trim($_GET['id'] ?? '');
 if ($assetID == '') {
     header("Location: member_marketplace.php");
@@ -21,7 +21,7 @@ if ($assetID == '') {
 }
 $assetID = $conn->real_escape_string($assetID);
 
-/* Get Asset Details */
+ 
 $assetQuery = "
 SELECT
     a.assetID,
@@ -50,10 +50,10 @@ if (!$assetResult || $assetResult->num_rows == 0) {
 }
 $asset = $assetResult->fetch_assoc();
 
-/* Check Owner */
+ 
 $isOwner = ($asset['ownerID'] == $userID);
 
-/* Check Borrow Availability */
+ 
 $canBorrow =
     !$isOwner &&
     $asset['listingStatus'] == 'Published' &&
@@ -76,7 +76,7 @@ $canBorrow =
 <?php include '../header.php'; ?>
 <main class="page-body">
 
-    <!-- Page Header -->
+     
     <div class="asset-details-header">
         <div>
             <h1>Asset Details</h1>
@@ -87,11 +87,11 @@ $canBorrow =
         </a>
     </div>
 
-    <!-- Asset Details -->
+     
     <div class="asset-details-wrapper">
         <div class="asset-main-box">
 
-            <!-- Asset Image -->
+             
             <div class="asset-image-box">
                 <?php if (!empty($asset['imageURL'])): ?>
                     <img
@@ -106,7 +106,7 @@ $canBorrow =
                 <?php endif; ?>
             </div>
 
-            <!-- Asset Information -->
+             
             <div class="asset-info">
                 <h2>
                     <?php echo htmlspecialchars($asset['assetName']); ?>
@@ -160,7 +160,7 @@ $canBorrow =
                     </tr>
                 </table>
 
-                <!-- Borrow Button -->
+                 
                 <div class="asset-detail-actions">
                     <?php if ($isOwner): ?>
                         <span class="request-borrow-btn disabled">
@@ -182,7 +182,7 @@ $canBorrow =
             </div>
         </div>
 
-        <!-- Description -->
+         
         <div class="asset-description-box">
             <h3>Description</h3>
             <p>

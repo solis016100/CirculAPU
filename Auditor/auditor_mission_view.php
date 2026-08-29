@@ -83,7 +83,7 @@
             <?php include '../header.php'; ?>
 
             <main class="page-body auditor-management-detail-page">
-                <!-- Breadcrumb -->
+                 
                 <div class="breadcrumb">
                     <a href="auditor_missions_management.php">
                         Mission Management
@@ -96,7 +96,7 @@
                     Mission Details
                 </h1>
 
-                <!-- Green bar showing Success Updation -->
+                 
                 <?php if (isset($_GET['success'])): ?>
                     <div class="alert alert-success">
                         Mission updated successfully.

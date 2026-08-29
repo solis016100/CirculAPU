@@ -110,7 +110,7 @@
                     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
-                <!-- Green bar showing Success Creation -->
+                 
                 <?php if (isset($_GET['success'])): ?>
                     <div class="alert alert-success">
                         Mission created successfully.
@@ -175,7 +175,7 @@
     </div>
 
 
-    <!-- Confirmation Pop Out Message -->
+     
     <div id="confirmPopOut" class="auditor-popout">
         <div class="auditor-popout-box">
 
@@ -200,7 +200,7 @@
         </div>
     </div>
 
-    <!-- Duplicate Mission Name Pop Out -->
+     
     <div id="duplicateMissionPopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Duplicate Mission Name</h2>
@@ -218,7 +218,7 @@
     </div>
 
 
-    <!-- Success Creation of Mission -->
+     
     <div id="successPopout" class="auditor-popout">
         <div class="auditor-popout-box success-box">
             <h2>Mission Created Successfully!</h2>

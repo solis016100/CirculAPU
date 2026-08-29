@@ -191,7 +191,7 @@
             <?php include '../header.php'; ?>
 
             <main class="page-body">
-                <!-- Page Heading -->
+                 
                 <section class="management-heading">
                     <div class="breadcrumb">
                         <a href="auditor_achievement_badges_management.php">
@@ -206,24 +206,24 @@
                     <p>Add a new achievement badge to CirculAPU.</p>
                 </section>
 
-                <!-- Error Message -->
+                 
                 <?php if ($errorMessage !== ''): ?>
                     <div class="alert alert-error">
                         <?php echo htmlspecialchars($errorMessage); ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Success Message -->
+                 
                 <?php if ($successMessage !== ''): ?>
                     <div class="alert alert-success">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Create Badge Form -->
+                 
                 <form method="POST" enctype="multipart/form-data" id="badgeForm" class="content-card mission-create-card">
                     <div class="mission-create-body">
-                        <!-- Badge ID -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="badgeID">
                                 Badge ID
@@ -231,7 +231,7 @@
                             <input type="text" id="badgeID" value="<?php echo htmlspecialchars($nextBadgeID); ?>" readonly>
                         </div>
 
-                        <!-- Badge Name -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="badgeName">
                                 Badge Name
@@ -240,7 +240,7 @@
                             <input type="text" id="badgeName" name="badgeName" maxlength="100" placeholder="Enter badge name" value="<?php echo htmlspecialchars($badgeName); ?>" required>
                         </div>
 
-                        <!-- Badge Description -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="badgeDescription">
                                 Description
@@ -249,7 +249,7 @@
                             <textarea id="badgeDescription" name="badgeDescription" rows="5" maxlength="500"placeholder="Enter badge description"required><?php echo htmlspecialchars($badgeDescription); ?></textarea>
                         </div>
 
-                        <!-- Requirement Type -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="requirementType">
                                 Requirement Type
@@ -265,7 +265,7 @@
                             </select>
                         </div>
 
-                        <!-- Requirement Value -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="requirementValue">
                                 Requirement Value
@@ -275,7 +275,7 @@
                             <input type="number" id="requirementValue" name="requirementValue" min="1" max="10000" placeholder="Enter value" required>
                         </div>
 
-                        <!-- Generated Requirement -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="badgeRequirement">
                                 Requirement
@@ -284,7 +284,7 @@
                             <input type="text" id="badgeRequirement" name="badgeRequirement" readonly required>
                         </div>
 
-                        <!-- Badge Icon -->
+                         
                         <div class="auditor-management-edit-row">
                             <label for="badgeIcon">
                                 Badge Icon
@@ -300,20 +300,20 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
+                     
                     <div class="auditor-create-actions">
-                        <!-- Back -->
+                         
                         <a href="auditor_achievement_badges_management.php" class="auditor-back-btn">
                             Back
                         </a>
 
-                        <!-- Clear -->
+                         
                         <button type="reset" class="auditor-management-detail-action">
                             <img src="../assets/icons/reset.png" alt="">
                             Clear
                         </button>
 
-                        <!-- Create -->
+                         
                         <button type="button" id="createBadgeButton" class="auditor-management-detail-action auditor-create-btn">
                             <img src="../assets/icons/create.png" alt="">
                             Create Badge
@@ -324,13 +324,13 @@
         </div>
     </div>
 
-    <!-- Achievement Badge Creation Confirmation -->
+     
     <div id="createBadgePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Achievement Badge Creation Confirmation</h2>
             <p>Are you sure you want to create this badge with these details?</p>
 
-            <!-- Badge Summary -->
+             
             <div class="auditor-summary">
                 <div>
                     <strong>Badge ID</strong>
@@ -360,7 +360,7 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+             
             <div class="auditor-popout-actions">
                 <button type="button" id="cancelCreateBadge">
                     No
@@ -373,7 +373,7 @@
         </div>
     </div>
 
-    <!-- Duplicate Badge Name Pop Out -->
+     
     <div id="duplicateBadgePopout" class="auditor-popout">
         <div class="auditor-popout-box">
             <h2>Duplicate Badge Name</h2>
@@ -386,7 +386,7 @@
         </div>
     </div>
 
-    <!-- Create Another Badge Pop Out -->
+     
     <?php if (isset($_GET['created'])): ?>
         <div id="createAnotherPopout" class="auditor-popout">
             <div class="auditor-popout-box">
@@ -417,7 +417,7 @@
         const duplicateBadgePopout = document.getElementById('duplicateBadgePopout');
         const duplicateBadgeOK = document.getElementById('duplicateBadgeOK');
 
-        // Badge Requirement
+
         function updateRequirement(){
             const type = requirementType.value;
             const value = requirementValue.value;
@@ -440,14 +440,14 @@
         requirementType.addEventListener('change', updateRequirement);
         requirementValue.addEventListener('input', updateRequirement);
 
-        // Open confirmation popup
+
         createBadgeButton.addEventListener('click', function () {
             if (!badgeForm.checkValidity()) {
                 badgeForm.reportValidity();
                 return;
             }
 
-            // Check Badge Name Before Showing Summary
+
             const formData = new FormData();
             formData.append('checkBadgeName', '1');
             formData.append('badgeName', document.getElementById('badgeName').value);
@@ -457,19 +457,19 @@
             })
             .then(response => response.text())
             .then(result => {
-                // Duplicate Name
+
                 if (result.trim() === 'exists') {
                     duplicateBadgePopout.classList.add('show');
                     return;
                 }
 
-                // Display Badge Information
+
                 document.getElementById('confirmBadgeID').textContent = document.getElementById('badgeID').value;
                 document.getElementById('confirmBadgeName').textContent = document.getElementById('badgeName').value;
                 document.getElementById('confirmBadgeDescription').textContent = document.getElementById('badgeDescription').value;
                 document.getElementById('confirmBadgeRequirement').textContent = document.getElementById('badgeRequirement').value;
 
-                // Display Badge Icon
+
                 const badgeIcon = document.getElementById('badgeIcon');
                 const confirmBadgeIcon = document.getElementById('confirmBadgeIcon');
                 if (badgeIcon.files.length > 0) {
@@ -478,7 +478,7 @@
                     confirmBadgeIcon.removeAttribute('src');
                 }
 
-                // Show Confirmation Popup pnly if Name is Available
+
                 createBadgePopout.classList.add('show');
             })
             .catch(error => {
@@ -486,7 +486,7 @@
             });
         });
 
-        // Action Buttons
+
         cancelCreateBadge.addEventListener('click', function () {
             createBadgePopout.classList.remove('show');
         });
@@ -495,7 +495,7 @@
             badgeForm.submit();
         });
 
-        // Duplicate Badge Name Popup
+
         duplicateBadgeOK.addEventListener('click', function () {
             duplicateBadgePopout.classList.remove('show');
             document.getElementById('badgeName').focus();

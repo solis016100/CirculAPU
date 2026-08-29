@@ -1,29 +1,29 @@
 <?php
 session_start();
 
-// Access Control Guard for Community Member Role
+ 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Member') {
     header("Location: ../login.php");
     exit();
 }
 
-// Get Member's information from login
+ 
 $memberID = $_SESSION['user_id'];
 $memberName = $_SESSION['user_name'] ?? 'Member';
 $userID = $memberID;
 
-// Connect to Database
+ 
 require_once '../db.php';
 if ($conn->connect_error) {
     $databaseError = "Unable to connect to the database.";
 } else {
-    // UTF-8 allows the database to handle different languages
+     
     $conn->set_charset("utf8mb4");
 }
 
-/* Borrow Request
-   Use borrowingStatus after the borrowing record has been created.
-   Before that, fall back to transaction requestStatus. */
+
+
+
 $borrowQuery = "
     SELECT
         a.assetName AS requestName,
@@ -46,7 +46,7 @@ if (!$borrowResult) {
     die("Borrow Query Failed: " . $conn->error);
 }
 
-/* Asset Update */
+ 
 $assetQuery = "
 SELECT
     assetID,
@@ -114,7 +114,7 @@ if (!$assetResult) {
                         </select>
                     </div>
 
-                    <!-- Borrow Request -->
+                     
                     <div id="borrow" class="request-content active">
                         <?php if ($borrowResult->num_rows > 0): ?>
                             <?php while ($request = $borrowResult->fetch_assoc()): ?>
@@ -164,7 +164,7 @@ if (!$assetResult) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Asset Update -->
+                     
                     <div id="asset" class="request-content">
                         <?php if ($assetResult->num_rows > 0): ?>
                             <?php while ($request = $assetResult->fetch_assoc()): ?>
@@ -172,7 +172,7 @@ if (!$assetResult) {
                                 $listingStatus = $request['listingStatus'];
                                 $verificationStatus = $request['verificationStatus'];
 
-                                // Listing Status Colour
+                                 
                                 if ($listingStatus == 'Published') {
                                     $listingClass = 'approved';
                                 } elseif ($listingStatus == 'Draft' || $listingStatus == 'Removed') {
@@ -181,7 +181,7 @@ if (!$assetResult) {
                                     $listingClass = 'pending';
                                 }
 
-                                // Verification Status Colour
+                                 
                                 $verificationClass = strtolower($verificationStatus);
                                 ?>
                                 <div class="request-item"
@@ -223,7 +223,7 @@ if (!$assetResult) {
                                     </div>
                                     <div class="request-item-action">
 
-                                        <!-- Draft Asset Can Be Modified -->
+                                         
                                         <?php if ($listingStatus == 'Draft'): ?>
                                             <a href="member_edit_asset.php?id=<?php echo urlencode($request['assetID']); ?>"
                                                class="view-details-btn member-btn secondary">
@@ -255,7 +255,7 @@ if (!$assetResult) {
                 <aside class="request-guide">
                     <h3>Request Guide</h3>
 
-                    <!-- Borrow Request Guide -->
+                     
                     <div id="borrowGuide">
                         <div class="guide-item">
                             <strong>Take Care of Items</strong>
@@ -297,7 +297,7 @@ if (!$assetResult) {
                         </div>
                     </div>
 
-                    <!-- Asset Update Guide -->
+                     
                     <div id="assetGuide" style="display:none;">
                         <div class="guide-item">
                             <strong>Draft</strong>
@@ -337,7 +337,7 @@ if (!$assetResult) {
     </div>
 </div>
 
-<!-- Borrow Popup -->
+ 
 <div id="borrowModal" class="request-modal">
     <div class="request-modal-box">
         <div class="request-modal-header">
@@ -370,7 +370,7 @@ if (!$assetResult) {
     </div>
 </div>
 
-<!-- Asset Popup -->
+ 
 <div id="assetModal" class="request-modal">
     <div class="request-modal-box">
         <div class="request-modal-header">

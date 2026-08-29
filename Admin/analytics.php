@@ -1,11 +1,11 @@
 <?php
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-// Include db.php from parent directory
+ 
 require_once '../db.php';
 require_once '../print.php';
 
-// Security: Restrict access strictly to System Administrators
+ 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
     header("Location: ../login.php");
     exit();
@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
 
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-// Timeframe Filter Handling. A semester is treated as the current Jan-Jun/Jul-Dec half-year.
+ 
 $allowed_timeframes = ['All Time', 'This Month', 'This Semester', 'This Year'];
 $timeframe = $_GET['timeframe'] ?? 'All Time';
 if (!in_array($timeframe, $allowed_timeframes, true)) {
@@ -33,7 +33,7 @@ if ($timeframe === 'This Month') {
 
 $date_sql = $start_date ? " >= '" . $conn->real_escape_string($start_date) . "'" : null;
 
-// 1. Fetch Total Assets Breakdown by Availability Status
+ 
 $asset_status_query = "SELECT availabilityStatus, COUNT(*) AS count FROM assets"
     . ($date_sql ? " WHERE createdDate$date_sql" : '')
     . " GROUP BY availabilityStatus";
@@ -57,7 +57,7 @@ if ($asset_status_res && $asset_status_res->num_rows > 0) {
     }
 }
 
-// 2. Fetch Completed Exchanges Breakdown by Category
+ 
 $exchange_query = "SELECT c.categoryName, COUNT(b.borrowID) AS count
                   FROM borrowings b
                   JOIN assets a ON a.assetID = b.assetID
@@ -77,7 +77,7 @@ if ($exchange_res && $exchange_res->num_rows > 0) {
         $total_exchanges += $cnt;
     }
 }
-// 3. Fetch Role Productivity (Actions per Manager/Auditor)
+ 
 $log_join_condition = $date_sql ? " AND l.timeLogged$date_sql" : '';
 $productivity_query = "SELECT u.name, u.role, COUNT(l.logID) AS actions
                       FROM user u
@@ -98,7 +98,7 @@ if ($productivity_res && $productivity_res->num_rows > 0) {
     }
 }
 
-// 4. Fetch real EcoPoint activity for the trend chart (latest six active dates).
+ 
 $ecopoint_query = "SELECT DATE(transactionDate) AS activityDate, SUM(ABS(points)) AS points
                    FROM ecopointstransaction"
                    . ($date_sql ? " WHERE transactionDate$date_sql" : '')
@@ -122,28 +122,28 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Analytics - CirculAPU</title>
-    <!-- Primary Global Stylesheet -->
+     
     <link rel="stylesheet" href="../style.css">
-    <!-- Secondary Admin Stylesheet -->
+     
     <link rel="stylesheet" href="admin_style.css">
 </head>
 <body class="role-admin analytics-page">
     <div class="dashboard-container">
         
-        <!-- Reusable Sidebar Component from parent directory -->
+         
         <?php include '../sidebar.php'; ?>
 
         <div class="main-content">
             
-            <!-- Global Header Component from parent directory -->
+             
             <?php include '../header.php'; ?>
 
             <main class="page-body">
                 
-                <!-- Page Breadcrumb & Timeframe Filter Bar -->
+                 
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">System Analytics</p>
+                        <p class="breadcrumb">System Analytics</p>
                         <h1 class="header-title">System Analytics</h1>
                     </div>
                     
@@ -169,14 +169,14 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
                     <p>Timeframe: <?php echo htmlspecialchars($timeframe, ENT_QUOTES, 'UTF-8'); ?> · Printed <?php echo date('d M Y, h:i A'); ?></p>
                 </section>
 
-                <!-- Two-Column Analytics Layout Grid -->
+                 
                 <div class="analytics-grid-container">
                     
-                    <!-- Left Column: Ecosystem KPI -->
+                     
                     <div class="analytics-card ecosystem-kpi-card">
                         <h2 class="analytics-card-title">Ecosystem KPI</h2>
 
-                        <!-- Donut Chart 1: Total Assets -->
+                         
                         <div class="kpi-section">
                             <h3 class="kpi-subtitle">Total Assets</h3>
                             <div class="donut-chart-container">
@@ -193,7 +193,7 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
                             <div class="kpi-total-summary">Total: <?php echo $total_assets; ?></div>
                         </div>
 
-                        <!-- Donut Chart 2: Completed Exchange -->
+                         
                         <div class="kpi-section">
                             <h3 class="kpi-subtitle">Completed Exchange</h3>
                             <div class="donut-chart-container">
@@ -221,7 +221,7 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
                             <div class="kpi-total-summary">Total: <?php echo $total_exchanges; ?></div>
                         </div>
 
-                        <!-- Trend Graph: EcoPoint Valuation -->
+                         
                         <div class="kpi-section trend-section">
                             <h3 class="kpi-subtitle">EcoPoint Valuation</h3>
                             <div class="line-chart-container">
@@ -235,7 +235,7 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
 
                     </div>
 
-                    <!-- Right Column: Role Productivity -->
+                     
                     <div class="analytics-card productivity-card">
                         <div class="productivity-card-header">
                             <h2 class="analytics-card-title">Role Productivity</h2>
@@ -252,12 +252,12 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
                             </div>
 
                             <div class="bar-chart-plot">
-                                <!-- Background Horizontal Grid Lines -->
+                                 
                                 <?php for ($line = 0; $line <= 5; $line++): ?>
                                     <div class="bar-grid-line" style="bottom: <?php echo $line * 20; ?>%;"></div>
                                 <?php endfor; ?>
 
-                                <!-- Bars Group -->
+                                 
                                 <div class="bars-flex-wrapper">
                                     <?php foreach ($productivity_data as $item): 
                                         $height_pct = min(100, ($item['actions'] / $productivity_chart_max) * 100);

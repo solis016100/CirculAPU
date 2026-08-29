@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Read user values directly from the active session
+ 
 $user_name  = $_SESSION['user_name']  ?? 'User';
 $user_email = $_SESSION['user_email'] ?? 'user@circulapu.edu.my';
 
@@ -41,8 +41,8 @@ $home_urls = [
 ];
 $home_url = $home_urls[$role] ?? '/CirculAPU/dashboard.php';
 
-// The header search is a role-aware feature finder. Keep these destinations
-// explicit so a user is never offered a page outside their current role.
+ 
+ 
 $role_search_items = [
     'Admin' => [
         ['label' => 'Dashboard', 'description' => 'View system activity and reports', 'url' => '/CirculAPU/Admin/admin_dashboard.php', 'keywords' => 'home overview logs reports'],
@@ -120,7 +120,7 @@ $search_items[] = ['label' => 'About CirculAPU', 'description' => 'Learn about t
 
     <div class="header-divider"></div>
 
-    <!-- Clickable Profile Pill to open Right Bar -->
+     
     <div id="profile-dropdown-btn" class="header-user-profile" title="View Account Settings" style="cursor: pointer;">
       <div class="user-avatar-circle">
         <img src="/CirculAPU/assets/icons/users.svg" alt="User Avatar" width="20" height="20">
@@ -137,7 +137,7 @@ $search_items[] = ['label' => 'About CirculAPU', 'description' => 'Learn about t
   </div>
 </header>
 
-<!-- Include the popup Right Bar -->
+ 
 <?php include_once 'right_bar.php'; ?>
 <?php include_once __DIR__ . '/bottom_nav.php'; ?>
 
@@ -239,7 +239,7 @@ $search_items[] = ['label' => 'About CirculAPU', 'description' => 'Learn about t
       if (featureSearch && !featureSearch.contains(event.target)) closeFeatureSearch();
     });
 
-    // Close Sidebar via Chevron Button
+
     if (closeRightBarBtn) {
       closeRightBarBtn.addEventListener("click", function() {
         rightBar.classList.remove("active");

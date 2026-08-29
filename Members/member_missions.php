@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-/* Member access */
+ 
 if (($_SESSION['user_role'] ?? '') !== 'Member' || empty($_SESSION['user_id'])) {
     header('Location: ../login.php');
     exit;
@@ -13,13 +13,13 @@ $memberName = $_SESSION['user_name'] ?? 'Member';
 $message = '';
 $error = '';
 
-/* Short helper for prepared SQL queries. */
+ 
 function runQuery($conn, $sql, $values = [])
 {
     return $conn->execute_query($sql, $values);
 }
 
-/* Generate S001, V001, ET001 or N001. */
+ 
 function nextID($conn, $table, $column, $prefix)
 {
     $start = strlen($prefix) + 1;
@@ -39,7 +39,7 @@ function notify($conn, $userID, $title, $content)
     ]);
 }
 
-/* Add missing EcoPoint records for approved missions. */
+ 
 $approved = runQuery($conn, "SELECT ms.submissionID,m.ecoPointsReward
                           FROM missionsubmission ms JOIN missions m ON m.missionID=ms.missionID
                           WHERE ms.userID=? AND ms.submissionStatus IN ('Approved','Verified')
@@ -57,7 +57,7 @@ while ($mission = $approved->fetch_assoc()) {
     ]);
 }
 
-/* Join a mission. */
+ 
 if (isset($_POST['joinMission'])) {
     $missionID = trim($_POST['missionID'] ?? '');
     $joined = runQuery($conn, 'SELECT 1 FROM missionsubmission WHERE userID=? AND missionID=? LIMIT 1',
@@ -73,7 +73,7 @@ if (isset($_POST['joinMission'])) {
     exit;
 }
 
-/* Upload mission proof. */
+ 
 if (isset($_POST['uploadProof'])) {
     $missionID = trim($_POST['missionID'] ?? '');
     $submission = runQuery($conn, "SELECT ms.submissionID,m.missionName
@@ -146,7 +146,7 @@ if (isset($_POST['uploadProof'])) {
 if (isset($_GET['joined'])) $message = 'Mission joined successfully.';
 if (isset($_GET['uploaded'])) $message = 'Proof uploaded successfully. Waiting for verification.';
 
-/* Mission detail. */
+ 
 $selectedMission = null;
 $missionJoined = false;
 $missionUserStatus = '';
@@ -168,7 +168,7 @@ if ($selectedMissionID = trim($_GET['mission'] ?? '')) {
     }
 }
 
-/* Mission lists. */
+ 
 $available = runQuery($conn, "SELECT m.* FROM missions m WHERE m.status='Active'
                            AND NOT EXISTS (SELECT 1 FROM missionsubmission ms
                                            WHERE ms.missionID=m.missionID AND ms.userID=?)
@@ -195,7 +195,7 @@ $myMissions = runQuery($conn, "SELECT m.*,ms.submissionStatus,ms.evidencePath,ms
             <?php if ($error): ?><div class="mission-alert error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
             <?php if ($message): ?><div class="mission-alert success"><?= htmlspecialchars($message) ?></div><?php endif; ?>
             <?php if ($selectedMission): ?>
-                <!-- Mission details -->
+                 
                 <div class="mission-detail-top">
                     <div><h1>Mission Details</h1><p>Learn more about this mission and make an impact.</p></div>
                     <a href="member_missions.php" class="mission-back-btn member-btn secondary">← Back to Missions</a>
@@ -277,7 +277,7 @@ $myMissions = runQuery($conn, "SELECT m.*,ms.submissionStatus,ms.evidencePath,ms
                     </div>
                 </div>
             <?php else: ?>
-                <!-- Mission lists -->
+                 
                 <div class="mission-page-header">
                     <h1>Sustainability Missions</h1>
                     <p>Join missions, take action and earn EcoPoints while helping our campus.</p>

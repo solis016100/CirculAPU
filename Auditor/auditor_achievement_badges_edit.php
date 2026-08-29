@@ -168,7 +168,7 @@
         }
     }
 
-    /* Keep Entered Values */
+     
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $badge['achieveBadgeName'] = $badgeName;
         $badge['achieveBadgeDescription'] = $badgeDescription;
@@ -202,7 +202,7 @@
 
                 <h1>Edit Achievement Badge Details</h1>
 
-                <!-- Error Message -->
+                 
                 <?php if ($errorMessage): ?>
                     <div class="management-error-message">
                         <?php echo htmlspecialchars($errorMessage); ?>
