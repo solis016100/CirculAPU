@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
         <main class="page-body tiers-page">
             <div class="admin-page-header">
                 <div>
-                    <p class="header-breadcrumb">Tier Management</p>
+                    <p class="breadcrumb">Tier Management</p>
                     <h1 class="header-title">Tier Management</h1>
                     <p class="header-subtitle">Configure member progression levels and EcoPoints thresholds</p>
                 </div>

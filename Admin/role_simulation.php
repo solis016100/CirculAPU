@@ -40,7 +40,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') 
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">Role View Simulation</p>
+                        <p class="breadcrumb">Role View Simulation</p>
                         <h1 class="header-title">Role Simulation</h1>
                     </div>
                 </div>

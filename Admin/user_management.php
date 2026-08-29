@@ -135,7 +135,7 @@ $notice = $_GET['notice'] ?? '';
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">User Management</p>
+                        <p class="breadcrumb">User Management</p>
                         <h1 class="header-title">User Management Dashboard</h1>
                         <p class="header-subtitle">Manage all existing users listed on the platform</p>
                     </div>

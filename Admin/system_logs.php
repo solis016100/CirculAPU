@@ -122,7 +122,7 @@ try {
         <main class="page-body">
             <div class="admin-page-header">
                 <div>
-                    <p class="header-breadcrumb"><a href="admin_dashboard.php">Dashboard</a> &gt; System Logs</p>
+                    <p class="breadcrumb"><a href="admin_dashboard.php">Dashboard</a> &gt; System Logs</p>
                     <h1 class="header-title">System Logs</h1>
                     <p class="header-subtitle">Review database-backed activity recorded across the platform.</p>
                 </div>

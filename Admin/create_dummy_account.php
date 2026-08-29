@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_account'])) {
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">User Management &gt; New Dummy Account</p>
+                        <p class="breadcrumb">User Management &gt; New Dummy Account</p>
                         <h1 class="header-title">User Details</h1>
                     </div>
                 </div>

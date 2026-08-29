@@ -128,7 +128,7 @@ function reportQueueUrl(int $target_page): string {
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">Reports Queue</p>
+                        <p class="breadcrumb">Reports Queue</p>
                         <h1 class="header-title">Reports Queue Dashboard</h1>
                     </div>
                 </div>

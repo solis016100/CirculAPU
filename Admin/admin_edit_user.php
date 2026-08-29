@@ -192,7 +192,7 @@ if (($_GET['updated'] ?? '') === '1') {
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">User Management &gt; User Details</p>
+                        <p class="breadcrumb">User Management &gt; User Details</p>
                         <h1 class="header-title">User Details</h1>
                     </div>
                 </div>

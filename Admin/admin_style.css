@@ -1,7 +1,7 @@
 /* ========================================================================== CirculAPU - Admin Module Stylesheet (admin_style.css) ========================================================================== */
 /* Page Header Component */
 .admin-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.admin-page-header .header-breadcrumb { margin: 0; color: #64748b; font-size: 0.85rem; }
+.admin-page-header .breadcrumb { margin: 0; color: #64748b; font-size: 0.85rem; }
 .admin-page-header .header-title { margin: 4px 0 0 0; font-size: 1.75rem; color: #0f172a; }
 .admin-page-header .header-subtitle { margin: 4px 0 0 0; color: #475569; font-size: 0.9rem; }
 /* Action Header Button */

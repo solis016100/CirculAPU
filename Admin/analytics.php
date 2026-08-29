@@ -143,7 +143,7 @@ $productivity_chart_max = (int)(ceil($productivity_max / 5) * 5);
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">System Analytics</p>
+                        <p class="breadcrumb">System Analytics</p>
                         <h1 class="header-title">System Analytics</h1>
                     </div>
                     

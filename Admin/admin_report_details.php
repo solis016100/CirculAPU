@@ -216,7 +216,7 @@ if ($evidence_path !== '') {
                  
                 <div class="admin-page-header">
                     <div>
-                        <p class="header-breadcrumb">Reports Queue &gt; Report Details</p>
+                        <p class="breadcrumb">Reports Queue &gt; Report Details</p>
                         <h1 class="header-title">Report Details</h1>
                     </div>
                 </div>
