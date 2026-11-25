@@ -79,9 +79,6 @@ while($badge=$badgeResult->fetch_assoc()){
     $badges[]=$badge;
 }
 
- 
-
- 
 $completedMissionQuery="
 SELECT COUNT(*) AS total
 FROM missionsubmission

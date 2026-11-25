@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 28, 2026 at 03:55 PM
+-- Generation Time: Aug 29, 2026 at 05:11 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,16 +42,16 @@ CREATE TABLE `achievementbadges` (
 --
 
 INSERT INTO `achievementbadges` (`achieveBadgeID`, `achieveBadgeName`, `achieveBadgeDescription`, `achieveBadgeRequirement`, `achieveBadgeIcon`) VALUES
-('AB001', 'First Step', 'Completed a first sustainability mission.', 'Complete 1 approved mission', 'badge_first_step.png'),
-('AB002', 'Mission Explorer', 'Completed five sustainability missions.', 'Complete 5 approved missions', 'badge_mission_explorer.png'),
-('AB003', 'Mission Master', 'Completed ten sustainability missions.', 'Complete 10 approved missions', 'badge_mission_master.png'),
+('AB001', 'Mission Starter', 'Completed a first sustainability mission.', 'Complete 1 mission', 'badge_mission_starter_1788016109.png'),
+('AB002', 'Mission Explorer', 'Completed five sustainability missions.', 'Complete 5 missions', 'badge_mission_explorer.png'),
+('AB003', 'Mission Master', 'Completed ten sustainability missions.', 'Complete 10 missions', 'badge_mission_master.png'),
 ('AB004', 'Eco Beginner', 'Earned the first 100 EcoPoints.', 'Reach 100 EcoPoints', 'badge_eco_beginner.png'),
 ('AB005', 'Eco Champion', 'Built a balance of 500 EcoPoints.', 'Reach 500 EcoPoints', 'badge_eco_champion.png'),
 ('AB006', 'Green Legend', 'Reached 1,000 EcoPoints through sustainable activity.', 'Reach 1,000 EcoPoints', 'badge_green_legend.png'),
-('AB007', 'Reuse Starter', 'Published three reusable assets.', 'Publish 3 approved assets', 'badge_reuse_starter.png'),
-('AB008', 'Reliable Borrower', 'Completed five asset loans responsibly.', 'Complete 5 borrowings', 'badge_reliable_borrower.png'),
+('AB007', 'Reuse Starter', 'Published three reusable assets.', 'Get 3 approved assets', 'badge_reuse_starter.png'),
+('AB008', 'Reliable Borrower', 'Completed five asset loans responsibly.', 'Borrow 5 assets', 'badge_reliable_borrower_1788015953.png'),
 ('AB009', 'Reward Collector', 'Redeemed three sustainability rewards.', 'Redeem 3 rewards', 'badge_reward_collector.png'),
-('AB010', 'Community Helper', 'Received recognition for sharing useful resources.', 'Complete 10 community exchanges', 'badge_community_helper.png');
+('AB010', 'Reward Enthusiast', 'Redeemed 10 or more rewards.', 'Redeem 10 rewards', 'badge_reward_enthusiast_1788016048.png');
 
 -- --------------------------------------------------------
 
@@ -303,7 +303,7 @@ CREATE TABLE `missions` (
 --
 
 INSERT INTO `missions` (`missionID`, `missionName`, `missionDescription`, `missionRequirement`, `ecoPointsReward`, `status`) VALUES
-('M001', 'Bring Your Own Bottle', 'Use a reusable water bottle on campus.', 'Upload a photo at an APU refill station', 50, 'Active'),
+('M001', 'Bring Your Own Bottle', 'Use a reusable water bottle on campus.', 'Upload a photo at an APU refill station', 50, 'Inactive'),
 ('M002', 'E-Waste Recycling Drive', 'Dispose of batteries or electronics responsibly.', 'Upload a photo at an approved e-waste point', 100, 'Active'),
 ('M003', 'Campus Clean Walk', 'Collect litter while walking around campus.', 'Upload before-and-after cleanup evidence', 150, 'Active'),
 ('M004', 'Reusable Bag Day', 'Avoid disposable shopping bags for one day.', 'Upload a photo of your reusable bag in use', 50, 'Active'),
@@ -509,10 +509,10 @@ CREATE TABLE `rewards` (
 INSERT INTO `rewards` (`rewardID`, `rewardName`, `rewardDescription`, `rewardImage`, `ecoPointsCost`, `quantity`, `availability`) VALUES
 ('R001', 'Campus Cafe RM5 Voucher', 'RM5 discount at participating campus cafes.', 'reward_cafe_rm5.png', 100, 42, 'Available'),
 ('R002', 'CirculAPU Tote Bag', 'Durable reusable tote bag with CirculAPU branding.', 'reward_tote_bag.png', 200, 24, 'Available'),
-('R003', 'Reusable Water Bottle', 'BPA-free bottle for daily campus use.', 'reward_water_bottle.png', 250, 18, 'Available'),
+('R003', 'Reusable Water Bottle', 'BPA-free bottle for daily campus use.', 'reward_reusable_water_bottle_1788016160.png', 250, 18, 'Available'),
 ('R004', 'Recycled Notebook', 'Notebook produced with recycled paper.', 'reward_notebook.png', 150, 31, 'Available'),
 ('R005', 'Reusable Coffee Cup', 'Leak-resistant cup for hot and cold beverages.', 'reward_coffee_cup.png', 200, 16, 'Available'),
-('R006', 'APU Stationery Set', 'A study set made with lower-impact materials.', 'reward_stationery.png', 350, 0, 'Unavailable'),
+('R006', 'APU Stationery Set', 'A study set made with lower-impact materials.', 'reward_apu_stationery_set_1788016196.png', 350, 0, 'Unavailable'),
 ('R007', 'Eco Shopping Bag', 'Foldable shopping bag for everyday errands.', 'reward_shopping_bag.png', 180, 27, 'Available'),
 ('R008', 'Reusable Lunch Box', 'Food-safe lunch box that replaces disposable packaging.', 'reward_lunch_box.png', 220, 13, 'Available'),
 ('R009', 'Campus Cafe RM10 Voucher', 'RM10 discount at participating campus cafes.', 'reward_cafe_rm10.png', 250, 15, 'Available'),
@@ -580,7 +580,22 @@ INSERT INTO `systemlog` (`logID`, `userID`, `actionType`, `refType`, `refID`, `d
 ('LOG039', 'U001', 'Login', 'User', 'U001', 'Administrator logged in successfully.', '2026-08-28 00:20:00'),
 ('LOG040', 'U007', 'Login', 'User', 'U007', 'Member logged in successfully.', '2026-08-28 00:25:00'),
 ('LOG041', 'U001', 'Login', 'User', 'U001', 'Logged in to system', '2026-08-28 13:46:22'),
-('LOG042', 'U008', 'Login', 'User', 'U008', 'Logged in to system', '2026-08-28 13:51:59');
+('LOG042', 'U008', 'Login', 'User', 'U008', 'Logged in to system', '2026-08-28 13:51:59'),
+('LOG043', 'U006', 'Login', 'User', 'U006', 'Logged in to system', '2026-08-29 14:54:18'),
+('LOG147', 'U006', 'Update', 'Mission', 'M001', 'Updated mission: Bring Your Own Bottle', '2026-08-29 14:55:40'),
+('LOG148', 'U006', 'Update', 'Badge', 'AB001', 'Updated achievement badge: Mission Starter', '2026-08-29 15:03:50'),
+('LOG149', 'U006', 'Update', 'Badge', 'AB002', 'Updated achievement badge: Mission Explorer', '2026-08-29 15:04:03'),
+('LOG150', 'U006', 'Update', 'Badge', 'AB003', 'Updated achievement badge: Mission Master', '2026-08-29 15:04:16'),
+('LOG151', 'U006', 'Update', 'Badge', 'AB007', 'Updated achievement badge: Reuse Starter', '2026-08-29 15:04:36'),
+('LOG152', 'U006', 'Update', 'Badge', 'AB008', 'Updated achievement badge: Reliable Borrower', '2026-08-29 15:05:12'),
+('LOG153', 'U006', 'Update', 'Badge', 'AB008', 'Updated achievement badge: Reliable Borrower', '2026-08-29 15:05:53'),
+('LOG154', 'U006', 'Update', 'Badge', 'AB010', 'Updated achievement badge: Community Helper', '2026-08-29 15:06:55'),
+('LOG155', 'U006', 'Update', 'Badge', 'AB010', 'Updated achievement badge: Reward Enthusiast', '2026-08-29 15:07:28'),
+('LOG156', 'U006', 'Update', 'Badge', 'AB001', 'Updated achievement badge: Mission Starter', '2026-08-29 15:07:49'),
+('LOG157', 'U006', 'Update', 'Badge', 'AB001', 'Updated achievement badge: Mission Starter', '2026-08-29 15:08:11'),
+('LOG158', 'U006', 'Update', 'Badge', 'AB001', 'Updated achievement badge: Mission Starter', '2026-08-29 15:08:29'),
+('LOG159', 'U006', 'Update', 'Reward', 'R003', 'Updated reward: Reusable Water Bottle', '2026-08-29 15:09:20'),
+('LOG160', 'U006', 'Update', 'Reward', 'R006', 'Updated reward: APU Stationery Set', '2026-08-29 15:09:56');
 
 -- --------------------------------------------------------
 
@@ -675,7 +690,7 @@ INSERT INTO `user` (`userID`, `name`, `email`, `password`, `role`, `status`, `ec
 ('U003', 'Farah Ahmad', 'manager@apu.edu.my', 'P@ssw0rd!23', 'Manager', 'Active', 0, '2026-01-08 01:30:00'),
 ('U004', 'Marcus Wong', 'manager2@apu.edu.my', 'P@ssw0rd!23', 'Manager', 'Active', 0, '2026-03-02 03:00:00'),
 ('U005', 'Nur Aisyah', 'auditor@apu.edu.my', 'P@ssw0rd!23', 'Auditor', 'Active', 0, '2026-01-10 00:45:00'),
-('U006', 'Jason Lim', 'auditor2@apu.edu.my', 'P@ssw0rd!23', 'Auditor', 'Active', 0, '2026-04-14 06:00:00'),
+('U006', 'Jason Lim', 'auditor2@apu.edu.my', '$2y$10$FdFCbtIFFev1a9RwlXhpo.DQ.xt/akkvNhc4OXB.9h41rxRDEx3hW', 'Auditor', 'Active', 0, '2026-04-14 06:00:00'),
 ('U007', 'Amir Hakim', 'amir@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 720, '2026-02-01 01:15:00'),
 ('U008', 'Mei Xin', 'meixin@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 480, '2026-02-12 02:20:00'),
 ('U009', 'Raj Kumar', 'raj@apu.edu.my', 'P@ssw0rd!23', 'Member', 'Active', 315, '2026-03-05 04:00:00'),
