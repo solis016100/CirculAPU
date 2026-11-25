@@ -47,12 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'leegynpaul123456@gmail.com';  
-        $mail->Password   = 'simwhsbszxrwmatu';                
+        $mail->Username   = 'xxxx@xxxx.com';  
+        $mail->Password   = 'xxxxxxxxxxxxxxxxxxxxxx';                
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        $mail->setFrom('leegynpaul123456@gmail.com', 'CirculAPU Password Recovery');
+        $mail->setFrom('xxxx@xxxx.com', 'CirculAPU Password Recovery');
         $mail->addAddress($email);
 
         $mail->isHTML(true);
