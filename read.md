@@ -86,7 +86,16 @@ CirculAPU/
 
 ## Email configuration
 
-Features such as OTP delivery and password reset use PHPMailer. Before using email in another environment, review the mail settings in the relevant PHP files and replace any local or development credentials with environment-specific values. Do not commit production passwords or API keys to source control.
+Signup and password reset emails use Gmail SMTP through PHPMailer. Set `CIRCULAPU_SMTP_USERNAME` to the Gmail address and `CIRCULAPU_SMTP_PASSWORD` to a newly generated Gmail app password. The Gmail address also serves as the sender address.
+
+For local XAMPP, open Apache's `httpd.conf` from the XAMPP Control Panel and add these directives. Replace the placeholders in that local Apache configuration and restart Apache.
+
+```apache
+SetEnv CIRCULAPU_SMTP_USERNAME "your-account@gmail.com"
+SetEnv CIRCULAPU_SMTP_PASSWORD "your-new-app-password"
+```
+
+Keep the actual values in the server configuration outside the repository.
 
 ## Upload permissions
 

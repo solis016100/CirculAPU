@@ -4,6 +4,8 @@ session_start();
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require_once __DIR__ . '/smtp_config.php';
+
 if (file_exists('PHPMailer/src/Exception.php')) {
     require 'PHPMailer/src/Exception.php';
     require 'PHPMailer/src/PHPMailer.php';
@@ -27,15 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $mail = new PHPMailer(true);
 
     try {
-        $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'leegynpaul123456@gmail.com';  
-        $mail->Password   = 'simwhsbszxrwmatu';                
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
-
-        $mail->setFrom('leegynpaul123456@gmail.com', 'CirculAPU Verification');
+        configureCirculApuSmtp($mail);
         $mail->addAddress($email);
 
         $mail->isHTML(true);
@@ -53,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->send();
         echo json_encode(['status' => 'success', 'message' => 'OTP sent successfully to ' . $email]);
     } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Mail delivery failed: ' . $mail->ErrorInfo]);
+        echo json_encode(['status' => 'error', 'message' => 'Email could not be sent. Please try again later.']);
     }
     exit();
 }
